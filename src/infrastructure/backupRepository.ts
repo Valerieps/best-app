@@ -10,6 +10,7 @@ import type { AppDatabase } from './db';
 
 const SNAPSHOT_ID = 'before-import';
 const LAST_BACKUP_KEY = 'lastBackupAt';
+const OVERWRITE_ALLOWED_KEY = 'autoBackupOverwriteAllowed';
 
 function userTables(db: AppDatabase) {
   return [db.blocks, db.sections, db.projects, db.days, db.events];
@@ -55,11 +56,29 @@ export async function previewImport(db: AppDatabase, backup: BackupFile): Promis
  * in the same transaction, so a failed import changes nothing and a finished one can be undone.
  */
 export async function importBackup(db: AppDatabase, backup: BackupFile, now: Date): Promise<void> {
-  await db.transaction('rw', [...userTables(db), db.snapshots], async () => {
+  await db.transaction('rw', [...userTables(db), db.snapshots, db.meta], async () => {
     const current = await readAllTables(db);
     await db.snapshots.put({ id: SNAPSHOT_ID, createdAt: now.toISOString(), tables: current });
     await replaceAllTables(db, backup.tables);
+    await allowAutoBackupOverwrite(db);
   });
+}
+
+/**
+ * After an import or an undo, the user chose the browser's data on purpose, so the next
+ * automatic backup may replace whatever the backup file holds. Persisted so it survives
+ * closing the tab before that write happens.
+ */
+async function allowAutoBackupOverwrite(db: AppDatabase): Promise<void> {
+  await db.meta.put({ key: OVERWRITE_ALLOWED_KEY, value: true });
+}
+
+export async function isAutoBackupOverwriteAllowed(db: AppDatabase): Promise<boolean> {
+  return (await db.meta.get(OVERWRITE_ALLOWED_KEY))?.value === true;
+}
+
+export async function clearAutoBackupOverwrite(db: AppDatabase): Promise<void> {
+  await db.meta.delete(OVERWRITE_ALLOWED_KEY);
 }
 
 export async function getImportSnapshotDate(db: AppDatabase): Promise<string | null> {
@@ -69,10 +88,11 @@ export async function getImportSnapshotDate(db: AppDatabase): Promise<string | n
 
 /** Restores the data as it was right before the last import. */
 export async function undoImport(db: AppDatabase): Promise<void> {
-  await db.transaction('rw', [...userTables(db), db.snapshots], async () => {
+  await db.transaction('rw', [...userTables(db), db.snapshots, db.meta], async () => {
     const snapshot = await db.snapshots.get(SNAPSHOT_ID);
     if (!snapshot) throw new Error('There is no import to undo');
     await replaceAllTables(db, snapshot.tables);
     await db.snapshots.delete(SNAPSHOT_ID);
+    await allowAutoBackupOverwrite(db);
   });
 }

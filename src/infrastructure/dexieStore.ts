@@ -12,11 +12,15 @@ function repository<T>(table: Table<T, string>): Repository<T> {
 }
 
 export class DexieStore implements Store {
-  constructor(private readonly db: AppDatabase) {}
+  /** @param onCommit called after every successful transaction, e.g. to schedule a backup */
+  constructor(
+    private readonly db: AppDatabase,
+    private readonly onCommit: () => void = () => {},
+  ) {}
 
-  transaction<T>(work: (tx: StoreTransaction) => Promise<T>): Promise<T> {
+  async transaction<T>(work: (tx: StoreTransaction) => Promise<T>): Promise<T> {
     const db = this.db;
-    return db.transaction('rw', [db.blocks, db.sections, db.projects, db.days, db.events], () =>
+    const result = await db.transaction('rw', [db.blocks, db.sections, db.projects, db.days, db.events], () =>
       work({
         blocks: repository(db.blocks),
         sections: repository(db.sections),
@@ -28,5 +32,7 @@ export class DexieStore implements Store {
         },
       }),
     );
+    this.onCommit();
+    return result;
   }
 }

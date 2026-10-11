@@ -9,14 +9,24 @@ import type { AppDatabase } from './db';
 
 const FILE_HANDLE_KEY = 'backupFileHandle';
 
+/** The parts of a FileSystemFileHandle the app uses; tests provide an in-memory version. */
+export interface BackupFileHandle {
+  readonly name: string;
+  queryPermission(options: { mode: 'readwrite' }): Promise<PermissionState>;
+  requestPermission(options: { mode: 'readwrite' }): Promise<PermissionState>;
+  getFile(): Promise<{ text(): Promise<string> }>;
+  createWritable(): Promise<{ write(data: string): Promise<void>; close(): Promise<void> }>;
+}
+
+/** Where the chosen backup file is remembered between sessions. */
+export interface HandleStorage {
+  load(): Promise<BackupFileHandle | null>;
+  save(handle: BackupFileHandle): Promise<void>;
+}
+
 interface SaveFilePickerOptions {
   suggestedName?: string;
   types?: { description: string; accept: Record<string, string[]> }[];
-}
-
-interface PermissionCapableHandle extends FileSystemFileHandle {
-  queryPermission(options: { mode: 'readwrite' }): Promise<PermissionState>;
-  requestPermission(options: { mode: 'readwrite' }): Promise<PermissionState>;
 }
 
 type PickerWindow = Window & {
@@ -28,17 +38,17 @@ export function backupFileName(now: Date): string {
   return `best-app-backup-${stamp}.json`;
 }
 
-function serialize(backup: BackupFile): string {
+export function serializeBackup(backup: BackupFile): string {
   return JSON.stringify(backup, null, 2);
 }
 
 export function canPickBackupFile(): boolean {
-  return typeof (window as PickerWindow).showSaveFilePicker === 'function';
+  return typeof window !== 'undefined' && typeof (window as PickerWindow).showSaveFilePicker === 'function';
 }
 
 /** Downloads the backup through a local Blob URL. Nothing leaves the machine. */
 export function downloadBackup(backup: BackupFile, now: Date): void {
-  const url = URL.createObjectURL(new Blob([serialize(backup)], { type: 'application/json' }));
+  const url = URL.createObjectURL(new Blob([serializeBackup(backup)], { type: 'application/json' }));
   const link = document.createElement('a');
   link.href = url;
   link.download = backupFileName(now);
@@ -46,42 +56,39 @@ export function downloadBackup(backup: BackupFile, now: Date): void {
   setTimeout(() => URL.revokeObjectURL(url), 0);
 }
 
-async function writeToHandle(handle: FileSystemFileHandle, backup: BackupFile): Promise<void> {
-  const writable = await handle.createWritable();
-  await writable.write(serialize(backup));
-  await writable.close();
-}
-
-/** Asks the user where to save, remembers the file, and writes the backup there. */
-export async function saveBackupToPickedFile(db: AppDatabase, backup: BackupFile, now: Date): Promise<void> {
+/**
+ * Asks the user where the automatic backup goes. Must run from a click. The name has no date
+ * because the same file is rewritten after every change.
+ */
+export async function pickBackupFile(): Promise<BackupFileHandle> {
   const picker = (window as PickerWindow).showSaveFilePicker;
   if (!picker) throw new Error('File System Access API is not available');
   const handle = await picker({
-    suggestedName: backupFileName(now),
+    suggestedName: 'best-app-backup.json',
     types: [{ description: 'Backup do Best App', accept: { 'application/json': ['.json'] } }],
   });
-  await writeToHandle(handle, backup);
-  await db.meta.put({ key: FILE_HANDLE_KEY, value: handle });
+  return handle as unknown as BackupFileHandle;
 }
 
-export async function getSavedBackupFileName(db: AppDatabase): Promise<string | null> {
-  const entry = await db.meta.get(FILE_HANDLE_KEY);
-  return entry?.value instanceof FileSystemHandle ? entry.value.name : null;
+export async function writeBackupToHandle(handle: BackupFileHandle, backup: BackupFile): Promise<void> {
+  const writable = await handle.createWritable();
+  await writable.write(serializeBackup(backup));
+  await writable.close();
 }
 
-/**
- * Quick backup: writes to the remembered file without asking where. Chrome may ask once per
- * session to allow writing. Returns false when no file is remembered or permission is denied.
- */
-export async function saveBackupToRememberedFile(db: AppDatabase, backup: BackupFile): Promise<boolean> {
-  const entry = await db.meta.get(FILE_HANDLE_KEY);
-  if (!(entry?.value instanceof FileSystemHandle)) return false;
-  const handle = entry.value as PermissionCapableHandle;
-  let permission = await handle.queryPermission({ mode: 'readwrite' });
-  if (permission === 'prompt') permission = await handle.requestPermission({ mode: 'readwrite' });
-  if (permission !== 'granted') return false;
-  await writeToHandle(handle, backup);
-  return true;
+/** Remembers the handle in IndexedDB, which can store file handles natively. */
+export function dexieHandleStorage(db: AppDatabase): HandleStorage {
+  return {
+    load: async () => {
+      const entry = await db.meta.get(FILE_HANDLE_KEY);
+      return typeof FileSystemHandle !== 'undefined' && entry?.value instanceof FileSystemHandle
+        ? (entry.value as unknown as BackupFileHandle)
+        : null;
+    },
+    save: async (handle) => {
+      await db.meta.put({ key: FILE_HANDLE_KEY, value: handle });
+    },
+  };
 }
 
 export async function readBackupFile(file: File): Promise<unknown> {

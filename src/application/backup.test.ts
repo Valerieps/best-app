@@ -1,22 +1,12 @@
 import { describe, expect, it } from 'vitest';
 import type { Project } from '../domain/entities';
 import type { DomainEvent } from '../domain/events';
-import { computeImportLoss, createBackup, needsBackupReminder, parseBackup, type BackupTables } from './backup';
+import { computeImportLoss, createBackup, hasAnyData, parseBackup, type BackupTables } from './backup';
 
-describe('needsBackupReminder', () => {
-  const now = new Date('2026-10-11T12:00:00Z');
-
-  it('stays quiet while there is nothing to protect', () => {
-    expect(needsBackupReminder(null, false, now)).toBe(false);
-  });
-
-  it('reminds when there was never a backup', () => {
-    expect(needsBackupReminder(null, true, now)).toBe(true);
-  });
-
-  it('reminds only after a week without backup', () => {
-    expect(needsBackupReminder('2026-10-05T12:00:01Z', true, now)).toBe(false);
-    expect(needsBackupReminder('2026-10-04T12:00:00Z', true, now)).toBe(true);
+describe('hasAnyData', () => {
+  it('is false only when every table is empty', () => {
+    expect(hasAnyData(tables())).toBe(false);
+    expect(hasAnyData(tables({ events: [event('e1')] }))).toBe(true);
   });
 });
 

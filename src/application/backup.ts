@@ -105,16 +105,8 @@ export function parseBackup(value: unknown): ParseResult {
   };
 }
 
-/** Days without a backup before the app shows a discreet reminder. */
-export const BACKUP_REMINDER_DAYS = 7;
-
-const DAY_MS = 24 * 60 * 60 * 1000;
-
-/** True when there is data worth protecting and the last backup is missing or old. */
-export function needsBackupReminder(lastBackupAt: string | null, hasData: boolean, now: Date): boolean {
-  if (!hasData) return false;
-  if (!lastBackupAt) return true;
-  return now.getTime() - Date.parse(lastBackupAt) >= BACKUP_REMINDER_DAYS * DAY_MS;
+export function hasAnyData(tables: BackupTables): boolean {
+  return BACKUP_TABLES.some((name) => tables[name].length > 0);
 }
 
 export interface TableLoss {
