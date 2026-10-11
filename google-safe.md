@@ -75,3 +75,11 @@ Ao projetar e gerar código para este projeto:
 - **Adapte o `SPEC.md` original:** Onde houver menção ao Firebase/Firestore, substitua automaticamente por chamadas assíncronas ao **IndexedDB**.
 - **Garanta código limpo, performático e independente de infraestrutura de backend.**
 - **Priorize arquitetura PWA estática** que possa ser servida via GitHub Pages/Vercel ou aberta localmente como arquivo local / extensão descompactada.
+
+- ### 7. Backup e Portabilidade via File System (Sem OAuth)
+- NÃO utilizar a Google Drive REST API nem autenticação OAuth (proibido por políticas de segurança).
+- Implementar integração com armazenamento em nuvem de forma indireta utilizando a **File System Access API** do navegador (`showSaveFilePicker` e `showOpenFilePicker`):
+  - Criar função `exportToDriveFile()`: permite que o usuário selecione diretamente um diretório local (incluindo pastas sincronizadas do Google Drive corporativo) para salvar o arquivo `backup.json`.
+  - Criar função `importFromDriveFile()`: carrega o arquivo de backup selecionado pelo usuário e atualiza as tabelas do `IndexedDB`.
+- Adicionar opção de "Auto-Save Prompt" ou botão de atalho rápido na barra superior para facilitar o backup antes de trocar de estação de trabalho.
+
