@@ -22,7 +22,9 @@ Não há onboarding: no primeiro uso eu já saio usando o ciclo diário, e os ri
 
 - Nesta primeira fase, o app roda só no Chrome do computador, como um web app instalável (PWA). O Android fica para uma fase posterior.
 - Os dados ficam só no navegador (IndexedDB), sem nuvem, login nem conexões externas, por causa das regras de segurança do meu trabalho. As regras estão em `google-safe.md`.
-- Como não há sincronização, o app tem exportar e importar backup em arquivo, que pode ficar numa pasta sincronizada do Google Drive.
+- Como não há sincronização, o app faz backup automático em arquivo: eu escolho o arquivo uma vez, por exemplo numa pasta sincronizada do Google Drive, e o app regrava esse arquivo alguns segundos depois de cada mudança. Também dá para baixar uma cópia e importar um backup a qualquer momento.
+- O backup automático nunca grava por cima de um arquivo que tenha dados que o navegador não tem, como quando o Chrome apagou os dados do site ou outro computador salvou dados mais novos no mesmo arquivo. Nesse caso, ele pausa e sugere importar o arquivo.
+- O Chrome pode pedir, a cada sessão, autorização para gravar no arquivo. Enquanto eu não autorizo, o backup fica pausado, com um aviso discreto e um botão para retomar.
 - Importar um backup substitui todos os dados. Se a importação for apagar alguma coisa, o app mostra um aviso em destaque com o que vai se perder, e eu confirmo. Antes de substituir, o app guarda uma cópia do estado anterior, e eu posso desfazer a importação.
 - O app é publicado como arquivos estáticos no Cloudflare Pages, para que outras pessoas também possam usar. Cada pessoa tem os próprios dados no próprio navegador, e nenhum dado passa pelo servidor.
 - O app funciona sem internet.

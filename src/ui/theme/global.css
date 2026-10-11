@@ -105,6 +105,24 @@ button.link {
   font-size: var(--font-size-sm);
 }
 
+.banner--danger {
+  background: var(--color-danger-bg);
+  border-bottom-color: var(--color-danger-border);
+  color: var(--color-danger);
+}
+
+.banner__actions {
+  display: flex;
+  gap: var(--space-4);
+  flex-shrink: 0;
+}
+
+.indicator--danger {
+  color: var(--color-danger);
+  font-size: var(--font-size-sm);
+  font-weight: 600;
+}
+
 /* Panels */
 .panel {
   background: var(--color-surface);

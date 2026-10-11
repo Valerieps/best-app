@@ -41,23 +41,23 @@ Technical decisions that fill gaps in `SPEC.md`. Product and business decisions 
 ## ADR-007: Backup to a user-chosen file
 
 **Date:** 2026-10-11
-**Decision:** "Salvar backup em…" uses `showSaveFilePicker` and stores the file handle in `meta`, so the top-bar quick backup writes to the same file (Chrome asks for write permission once per session). Without the File System Access API, it falls back to a Blob download. Import uses a plain file input.
+**Decision:** The user picks the backup file once with `showSaveFilePicker`; its handle is stored in `meta`. "Baixar uma cópia" uses a Blob download. Import uses a plain file input.
 **Why:** `google-safe.md` section 7: reach a synced Google Drive folder without OAuth or network calls.
 
-## ADR-008: CSP as a meta tag in production builds only
+## ADR-008: Automatic backup with an overwrite guard
+
+**Date:** 2026-10-11 (replaces a 7-day manual backup reminder)
+**Decision:** Every committed `Store` transaction schedules a write of the whole backup to the chosen file, debounced by `AUTO_BACKUP_DELAY_MS` (3 s), plus a flush when the tab is hidden and on startup. Before each automatic write, `decideAutoBackup` reads the file and refuses to write if the file holds records missing from the browser, newer versions of records, or events the browser lacks; it also never writes into a file that is not a valid backup. Import and undo set a persisted `autoBackupOverwriteAllowed` flag in `meta`, cleared after the next write, because there the user replaced the data on purpose. Picking a file is also explicit and writes without the guard. If Chrome has not granted write permission in this session, the backup pauses until the user clicks "Retomar" (`requestPermission` needs a user gesture).
+**Why:** The user asked not to have to remember backups. The guard prevents the worst case of automatic backups: Chrome clears the site data, the app opens empty, and the next write destroys the only good copy. It also protects data saved to the same synced file from another computer.
+
+## ADR-009: CSP as a meta tag in production builds only
 
 **Date:** 2026-10-11
 **Decision:** The CSP from `google-safe.md`, plus `object-src 'none'`, `base-uri 'none'` and `form-action 'none'`, is injected into `index.html` at build time. Cloudflare `_headers` sets the other security headers but not the CSP.
 **Why:** The Vite dev server needs a websocket that `connect-src 'none'` blocks. A CSP header would also apply to `sw.js`, and `connect-src 'none'` there would stop the service worker from caching the app's own files. The page's CSP still blocks every outbound request before it reaches the worker.
 
-## ADR-009: Hand-written service worker
+## ADR-010: Hand-written service worker
 
 **Date:** 2026-10-11
 **Decision:** `public/sw.js` caches same-origin GET requests: network first for pages (new versions show up when online), cache first for hashed assets. Registered only in production builds.
 **Why:** Offline support with no extra dependency. It never handles user data.
-
-## ADR-010: Backup reminder after 7 days
-
-**Date:** 2026-10-11
-**Decision:** When there is data and no backup in the last 7 days, a discreet banner offers "Salvar agora". It never blocks.
-**Why:** Data lives only in the browser. The threshold is a starting guess; change `BACKUP_REMINDER_DAYS` if it feels wrong.
