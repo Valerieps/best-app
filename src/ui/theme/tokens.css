@@ -1,0 +1,47 @@
+/*
+ * Design tokens: every color, font and spacing value used by the UI lives here.
+ * Change the look of the app by editing this file only.
+ */
+:root {
+  /* Colors */
+  --color-bg: #fbfaf7;
+  --color-surface: #ffffff;
+  --color-text: #1f2328;
+  --color-text-muted: #6b6f76;
+  --color-border: #e4e1da;
+  --color-accent: #2f5d50;
+  --color-accent-text: #ffffff;
+  --color-accent-soft: #e6efeb;
+  --color-warning-bg: #fff4dc;
+  --color-warning-border: #e8c46a;
+  --color-danger: #b42318;
+  --color-danger-bg: #fdecea;
+  --color-danger-border: #f0a8a0;
+
+  /* Typography: system fonts only, nothing is downloaded */
+  --font-body: system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  --font-mono: ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
+  --font-size-sm: 0.8125rem;
+  --font-size-md: 1rem;
+  --font-size-lg: 1.25rem;
+  --font-size-xl: 1.5rem;
+  --line-height: 1.6;
+
+  /* Spacing */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 24px;
+  --space-6: 32px;
+  --space-7: 48px;
+
+  /* Shape */
+  --radius-sm: 4px;
+  --radius-md: 8px;
+  --border-width: 1px;
+
+  /* Layout */
+  --content-width: 760px;
+  --topbar-height: 56px;
+}

@@ -20,21 +20,23 @@ Não há onboarding: no primeiro uso eu já saio usando o ciclo diário, e os ri
 
 ## Decisões técnicas
 
-- O app roda na web e no Android, como um único web app instalável (PWA).
-- Os dados ficam em nuvem, para manter tudo sincronizado entre os aparelhos.
-- O backend é o Firebase (Firestore, login e sincronização), que eu já uso em outro app.
-- O Firestore permite usar o app sem internet: o que eu escrevo sem conexão fica no aparelho e sincroniza quando ela volta.
-- O Firestore não faz consultas relacionais, então as métricas são calculadas no próprio app, a partir do histórico. O volume de dados de uma pessoa só é pequeno o bastante para isso.
-- O app não envia notificações: os lembretes reaparecem dentro dele. Isso dispensa um serviço de envio de avisos no Firebase.
-- O app é só para uma pessoa, sem compartilhamento.
+- Nesta primeira fase, o app roda só no Chrome do computador, como um web app instalável (PWA). O Android fica para uma fase posterior.
+- Os dados ficam só no navegador (IndexedDB), sem nuvem, login nem conexões externas, por causa das regras de segurança do meu trabalho. As regras estão em `google-safe.md`.
+- Como não há sincronização, o app tem exportar e importar backup em arquivo, que pode ficar numa pasta sincronizada do Google Drive.
+- Importar um backup substitui todos os dados. Se a importação for apagar alguma coisa, o app mostra um aviso em destaque com o que vai se perder, e eu confirmo. Antes de substituir, o app guarda uma cópia do estado anterior, e eu posso desfazer a importação.
+- O app é publicado como arquivos estáticos no Cloudflare Pages, para que outras pessoas também possam usar. Cada pessoa tem os próprios dados no próprio navegador, e nenhum dado passa pelo servidor.
+- O app funciona sem internet.
+- Não há servidor nem banco relacional, então as métricas são calculadas no próprio app, a partir do histórico. O volume de dados de uma pessoa só é pequeno o bastante para isso.
+- O app não envia notificações: os lembretes reaparecem dentro dele.
+- O app não tem compartilhamento: quem usa o app só vê os próprios dados, guardados no próprio navegador.
 - O app guarda um histórico de eventos: cada mudança (criação, adiamento, finalização, vínculo) com data e hora, e não só o estado atual. Todas as métricas, inclusive as que ainda não existem, saem desse histórico.
-- Cada bloco é um registro separado no Firestore, para evitar conflitos quando eu edito no celular e na web ao mesmo tempo.
+- Cada bloco é um registro separado no banco, para evitar conflitos entre abas abertas e para permitir juntar os dados de aparelhos diferentes no futuro.
 - Cada bloco existe uma vez só. Notas, projetos e wiki apontam para ele por vínculos, sem cópias.
 - A arquitetura é desenhada para o escopo completo da spec, e a implementação segue as partes em ordem.
 
 ## 1a. Ciclo diário: núcleo
 
-O núcleo tem só o necessário para testar a hipótese do app: capturar sem decidir e triar no checkout. São três telas (nota do dia, checkout e listas), e nesta entrega o app roda na web, com login e sincronização. O banco de dados já guarda tudo o que o 1b e as seções seguintes vão usar (datas, adiamentos, seção de origem, log de execução), mesmo sem tela para isso.
+O núcleo tem só o necessário para testar a hipótese do app: capturar sem decidir e triar no checkout. São três telas (nota do dia, checkout e listas), e nesta entrega o app roda no Chrome do computador, com os dados no navegador e backup em arquivo. O banco de dados já guarda tudo o que o 1b e as seções seguintes vão usar (datas, adiamentos, seção de origem, log de execução), mesmo sem tela para isso.
 
 ### Blocos e notas
 
@@ -46,7 +48,7 @@ O núcleo tem só o necessário para testar a hipótese do app: capturar sem dec
 - Toda seção nasce como quadro branco, ou seja, sem vínculo com projeto, a menos que eu escolha um projeto ao dar o título. O quadro branco é um estado, não um tipo: uma seção geral ou de reunião pode estar em quadro branco. A qualquer momento, ele pode ser convertido em um projeto novo ou vinculado a um projeto existente.
 - É possível abrir mais de uma seção geral. Separar o conteúdo em seções ao longo do dia funciona como uma pré-triagem.
 - Há dois tipos de bloco: tarefa e nota geral. Uma linha que começa com `[]` seguido de um espaço é tarefa, em qualquer tipo de seção; todo o resto é nota geral.
-- A wiki pessoal, para onde vão as notas gerais, é interna ao app. No núcleo, ela é uma lista em ordem cronológica. As notas não moram num lugar só: cada nota também fica ligada ao projeto da seção de onde veio, quando a seção tem um.
+- A wiki pessoal, para onde vão as notas gerais, é interna ao app. No núcleo, ela é uma lista em ordem cronológica, em que cada entrada reúne as notas de uma seção, com o título e o horário dela. As notas não moram num lugar só: cada nota também fica ligada ao projeto da seção de onde veio, quando a seção tem um.
 
 ### Tarefas
 
@@ -85,7 +87,9 @@ O checkout é em lote: o app chega com os destinos já aplicados ou pré-selecio
 
 - Finalizar significa que eu engajei com a tarefa, e gera um log de execução histórica, com os dados necessários para calcular métricas até o nível mensal. Tarefas podem ser finalizadas a qualquer momento e, depois disso, não passam mais por triagens.
 - Arquivar move a tarefa para uma lista de tarefas que podem ser reativadas depois; ela deixa de aparecer entre as tarefas que podem ser escolhidas para um dia.
-- Abandonar apaga a tarefa sem que ela tenha sido realizada, e não gera logs.
+- Abandonar tira a tarefa de circulação sem que ela tenha sido realizada: ela some de todas as listas e não gera log de execução, mas o histórico de eventos guarda o abandono.
+- Descartar tira as notas de circulação da mesma forma: elas não vão para a wiki, e o histórico de eventos guarda o descarte.
+- Num checkout atrasado, "dia seguinte" é o dia depois do dia triado, mas nunca antes de hoje.
 - Depois da triagem, eu faço o planejamento do dia seguinte: escolho, na lista de tarefas ativas, as que vão constar na próxima nota do dia.
 - Quando tudo for triado, aparece o botão "finalizar meu dia" com sonzinho de "plim" e uma rápida animação de fogos de artifício.
 
@@ -111,7 +115,7 @@ Estes itens já estão decididos e entram depois de uma semana de uso do núcleo
 
 - No topo da nota do dia, onde aparece a data, um botão de setinha pagina entre os dias. Ele passa somente pelas notas que ainda têm itens pendentes.
 - A wiki pessoal pode ser ordenada por linha temporal ou por ordem alfabética e tem um campo de busca textual. As notas também podem ser vistas por tipo ou por projeto vinculado.
-- O app pode ser instalado no Android como PWA.
+- O app pode ser instalado no computador como PWA. A instalação no Android fica para a fase do Android.
 
 ## 2. Semana e projetos
 
@@ -257,9 +261,9 @@ Esta parte acrescenta o compromisso como tipo de bloco e a detecção automátic
 - O tipo do bloco é detectado de acordo com formatos pré-definidos (por exemplo, `<data: __>` é compromisso). O que não encaixar em nenhum fica como nota geral.
 - Compromissos são blocos criados manualmente na nota do dia e ficam guardados no banco de dados do app. Os do dia já constam na nota do dia, junto das tarefas.
 - Compromissos, como as tarefas, só se vinculam a projetos.
-- A agenda externa é o Google Agenda. Migrar um compromisso cria o evento lá e marca o compromisso como migrado, o que conta como concluído. Sem a integração, eu marco como migrado à mão.
+- A agenda externa é o Google Agenda. Como o app não tem conexões externas, eu crio o evento lá e marco o compromisso como migrado à mão, o que conta como concluído. A integração automática fica para uma fase que permita conexões externas.
 
-No checkout, um compromisso pode ser migrado para o Google Agenda (ou marcado como migrado à mão), marcado como feito, descartado ou vinculado a um projeto (opcional).
+No checkout, um compromisso pode ser marcado como migrado, marcado como feito, descartado ou vinculado a um projeto (opcional).
 
 ## 6. Hábitos
 

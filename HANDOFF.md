@@ -7,6 +7,7 @@ Esta aba é para quem for continuar o trabalho, pessoa ou agente. A spec na aba 
 ## Onde paramos
 
 - A seção 1a (núcleo do ciclo diário) está completa, sem perguntas abertas. O próximo passo é construí-la no Claude Code.
+- Em 11/10/2026, o app passou a ser local-only nesta primeira fase: só Chrome no computador, dados no IndexedDB, sem Firebase, login ou conexões externas. As regras de segurança estão em `google-safe.md`. O Android e a sincronização ficam para uma fase posterior.
 - A seção 1b e as seções 2 a 6 estão decididas no que têm escrito. As seções 2 a 6 somam 14 perguntas abertas, listadas no início de cada uma.
 - A spec nasceu das notas manuscritas da Valeria de 03/10/2026 (`o_melhor_app_do_mundo1.pdf`), digitalizadas e reorganizadas em 04/10/2026.
 - O app é de uso pessoal da Valeria, que vai desenvolvê-lo com o Claude Code.
@@ -23,15 +24,19 @@ Esta aba é para quem for continuar o trabalho, pessoa ou agente. A spec na aba 
 | A nota do dia tem seções (geral e reunião); "nota de reunião" deixou de ser um tipo de bloco | A hierarquia nota, seção, bloco é mais simples de modelar, e o checkout tria as notas por seção |
 | Prioridades do mês são projetos; as da semana e do dia são tarefas | Cada horizonte fica com a granularidade certa, e o projeto continua prioritário enquanto as tarefas descem |
 | "Planejamento do dia seguinte" é diferente de "prioridade" | Planejar é escolher as tarefas de amanhã; prioridade é o destaque de até 3 delas, que só entra no 1b |
-| Firebase (Firestore), e não Supabase | A Valeria já tem um app no Firebase e conhece a plataforma, e o uso sem internet vem junto. O Supabase chegou a ser escolhido pelo modelo relacional; a troca custa calcular as métricas no app, o que é viável pelo volume pequeno de dados |
-| Um único web app instalável (PWA) para web e Android | Um código só para manter |
+| Local-only (IndexedDB), no lugar do Firebase | O app vai ser usado no computador do trabalho, com dados confidenciais, e a empresa não permite apps com conexões externas (`google-safe.md`). Antes, o Firebase tinha sido escolhido no lugar do Supabase porque a Valeria já o conhecia. As métricas continuam calculadas no app |
+| Um único web app instalável (PWA), primeiro só no Chrome do computador | Um código só para manter. O Android volta quando houver uma forma de sincronizar que respeite o `google-safe.md` |
+| Backup em arquivo, salvo numa pasta escolhida pela Valeria | Sem nuvem, o navegador é o único lugar dos dados. Uma pasta sincronizada do Google Drive serve para trocar de máquina sem OAuth |
+| Hospedagem no Cloudflare Pages, a partir do repositório privado | A Valeria quer que outras pessoas possam usar o app. Como ele é local-only, basta publicar os arquivos: cada pessoa ganha um banco próprio no navegador, sem contas. O plano gratuito permite uso comercial (o Hobby da Vercel não), e o código-fonte continua privado. O JavaScript compilado é visível para quem abre o app |
+| Importar substitui tudo, com aviso em destaque e cópia do estado anterior | Basta para trocar de máquina. O aviso mostra o que vai se perder, e a cópia permite desfazer |
+| Abandonar e descartar escondem, sem apagar | O histórico de eventos precisa continuar íntegro para as métricas |
 | Hábitos ficam por último | Decisão da Valeria para reduzir o escopo |
 | Projetos existem por baixo dos panos desde o 1a; toda seção nasce em quadro branco e só se vincula a um projeto por escolha | Leva a pré-triagem adiante: o vínculo já diz o destino. O quadro branco é um estado, não um tipo, para que uma reunião também possa ficar sem projeto, e o checkout oferece a última chance de vincular. As notas podem ser vistas por tipo ou por projeto, sem um lugar único. As tarefas chegam ao checkout com "dia seguinte" pré-selecionado, mas a Valeria confirma cada uma, para não virar adiamento automático |
 | Checkout em lote, com auto-triagem (aba AUTO-TRIAGEM) | Reduz o checkout a confirmar sugestões e cuidar das exceções. O app decide o óbvio e reversível, sugere o provável e nunca decide o que só a Valeria sabe ou o que tira coisas de circulação |
 | "Fechar dias pendentes" no lugar do "botão de pânico" | Nome descritivo, a pedido da Valeria. Aplica a auto-triagem a todos os dias pendentes; as tarefas voltam à lista de ativas sem data, para não virar uma pilha no dia do retorno |
-| Google Agenda com integração só de ida | Migrar marca o compromisso como migrado, que conta como concluído. Basta guardar o status e o identificador do evento; o app continua sendo a fonte da verdade |
+| Google Agenda com integração só de ida, numa fase futura | Migrar marca o compromisso como migrado, que conta como concluído. Basta guardar o status e o identificador do evento; o app continua sendo a fonte da verdade. Enquanto o app for local-only, a migração é só manual |
 | Assistentes de limpeza (aba ASSISTENTES) | Mesma mecânica do checkout em lote, para colocar ordem na casa sem esforço. Viram um componente genérico no código. O mural ficou de fora porque os lembretes dele não vencem |
-| Sem notificações: lembretes reaparecem dentro do app (contador na aba e faixa discreta na nota do dia) | A Valeria tem receio de que lembretes virem paisagem e sejam ignorados. Avisos passivos, no momento em que ela já está no app, e lembretes ignorados viram pergunta no checkout. Também dispensa um serviço de envio no Firebase |
+| Sem notificações: lembretes reaparecem dentro do app (contador na aba e faixa discreta na nota do dia) | A Valeria tem receio de que lembretes virem paisagem e sejam ignorados. Avisos passivos, no momento em que ela já está no app, e lembretes ignorados viram pergunta no checkout |
 
 ## Pendências
 

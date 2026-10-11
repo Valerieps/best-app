@@ -23,7 +23,7 @@ Cada regra vale a partir da parte da spec em que a funcionalidade dela aparece.
 | Automático | Notas de seções vinculadas a um projeto vão para a wiki, ligadas ao projeto | 1a |
 | Automático | Seção sem notas, só com tarefas, não aparece na triagem de notas | 1a |
 | Automático | Tarefa que já tem data de intenção futura, definida durante o dia, sai da triagem | 1b |
-| Automático | Compromisso com a integração do Google Agenda ativa é migrado assim que é criado | 5 |
+| Automático | Compromisso com a integração do Google Agenda ativa é migrado assim que é criado | Fase com conexões externas |
 | Sugerido | Tarefa não feita: "dia seguinte" pré-selecionado; a partir da seção 3, o próximo dia ativo | 1a |
 | Sugerido | Tarefa adiada 3 vezes ou mais ganha um destaque; a partir da seção 2, a sugestão passa a ser "decidir na reflexão semanal" | 1a |
 | Sugerido | Notas de seções em quadro branco: "mover para a wiki" pré-selecionado | 1a |

@@ -1,0 +1,7 @@
+node_modules/
+dist/
+*.local
+
+# Never commit personal data exported from the app.
+backup*.json
+best-app-backup*.json

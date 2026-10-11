@@ -1,0 +1,9 @@
+# Cloudflare Pages response headers.
+# The Content-Security-Policy lives in index.html (meta tag) so it applies to the page only:
+# a header here would also apply to sw.js, and `connect-src 'none'` would stop the
+# service worker from caching the app's own files.
+/*
+  X-Content-Type-Options: nosniff
+  X-Frame-Options: DENY
+  Referrer-Policy: no-referrer
+  Permissions-Policy: camera=(), microphone=(), geolocation=(), payment=(), usb=()
