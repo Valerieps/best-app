@@ -213,7 +213,7 @@ function DeferredTriage({ rows, projects, today }: { rows: TriageRow[]; projects
       ))}
       <div className="assistant__actions">
         <button type="button" className="primary" onClick={accept} disabled={busy}>
-          Aceitar sugestões
+          Confirmar decisões
         </button>
       </div>
     </>

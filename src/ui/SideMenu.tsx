@@ -1,5 +1,5 @@
 import { useEffect, useRef } from 'react';
-import { loadCleanup, loadMenuCounts } from '../application/queries';
+import { loadMenuCounts } from '../application/queries';
 import { navigate, type Route } from './hooks';
 import { reader } from './services';
 import { useLiveQuery } from './useLiveQuery';
@@ -10,11 +10,18 @@ interface Props {
   onClose(): void;
 }
 
-/** Side menu with the three lists, as in the drafts, plus data and backup. */
+interface Place {
+  route: Route;
+  label: string;
+  count?: number;
+}
+
+/**
+ * The ☰ drawer (SPEC.md, "Navegação"): only places, in groups. Rituals live in the global
+ * bar, and the screen's own actions in its header.
+ */
 export function SideMenu({ open, current, onClose }: Props) {
   const counts = useLiveQuery(() => loadMenuCounts(reader));
-  const cleanup = useLiveQuery(() => loadCleanup(reader));
-  const cleanupCount = cleanup ? cleanup.whiteboards.length + cleanup.duplicates.length : 0;
   const firstLink = useRef<HTMLButtonElement>(null);
 
   useEffect(() => {
@@ -27,16 +34,28 @@ export function SideMenu({ open, current, onClose }: Props) {
 
   if (!open) return null;
 
-  const items: { route: Route; label: string; count?: number }[] = [
-    { route: { name: 'day' }, label: 'Nota do dia' },
-    { route: { name: 'active' }, label: 'Tarefas ativas', count: counts?.active },
-    { route: { name: 'archived' }, label: 'Tarefas arquivadas', count: counts?.archived },
-    { route: { name: 'wiki' }, label: 'Wiki pessoal', count: counts?.wiki },
-    { route: { name: 'projects' }, label: 'Projetos', count: counts?.projects },
-    { route: { name: 'objectives' }, label: 'Objetivos' },
-    { route: { name: 'habits' }, label: 'Hábitos' },
-    { route: { name: 'reflection' }, label: 'Reflexão semanal' },
-    { route: { name: 'monthReflection' }, label: 'Reflexão mensal' },
+  const groups: { title: string; places: Place[] }[] = [
+    { title: 'Hoje', places: [{ route: { name: 'day' }, label: 'Nota do dia' }] },
+    {
+      title: 'Listas',
+      places: [
+        { route: { name: 'active' }, label: 'Tarefas ativas', count: counts?.active },
+        { route: { name: 'archived' }, label: 'Tarefas arquivadas', count: counts?.archived },
+        { route: { name: 'wiki' }, label: 'Wiki pessoal', count: counts?.wiki },
+      ],
+    },
+    {
+      title: 'Planejamento',
+      places: [
+        { route: { name: 'projects' }, label: 'Projetos', count: counts?.projects },
+        { route: { name: 'objectives' }, label: 'Objetivos' },
+        { route: { name: 'habits' }, label: 'Hábitos' },
+      ],
+    },
+  ];
+  const system: Place[] = [
+    { route: { name: 'data' }, label: 'Dados e backup' },
+    { route: { name: 'settings' }, label: 'Configurações' },
   ];
 
   const go = (route: Route) => {
@@ -44,45 +63,30 @@ export function SideMenu({ open, current, onClose }: Props) {
     onClose();
   };
 
+  const placeButton = (place: Place, first = false) => (
+    <button
+      key={place.route.name}
+      ref={first ? firstLink : undefined}
+      type="button"
+      className={`menu__item ${current === place.route.name ? 'menu__item--current' : ''}`}
+      aria-current={current === place.route.name ? 'page' : undefined}
+      onClick={() => go(place.route)}
+    >
+      <span>{place.label}</span>
+      {place.count !== undefined && <span className="muted">{place.count}</span>}
+    </button>
+  );
+
   return (
     <div className="menu-backdrop" onClick={onClose}>
       <nav className="menu" aria-label="Menu" onClick={(event) => event.stopPropagation()}>
-        {items.map((item, index) => (
-          <button
-            key={item.route.name}
-            ref={index === 0 ? firstLink : undefined}
-            type="button"
-            className={`menu__item ${current === item.route.name ? 'menu__item--current' : ''}`}
-            aria-current={current === item.route.name ? 'page' : undefined}
-            onClick={() => go(item.route)}
-          >
-            <span>{item.label}</span>
-            {item.count !== undefined && <span className="muted">{item.count}</span>}
-          </button>
+        {groups.map((group, index) => (
+          <div className="menu__group" key={group.title}>
+            <span className="menu__group-title">{group.title}</span>
+            {group.places.map((place, placeIndex) => placeButton(place, index === 0 && placeIndex === 0))}
+          </div>
         ))}
-        <hr className="menu__divider" />
-        <button
-          type="button"
-          className={`menu__item ${current === 'cleanup' ? 'menu__item--current' : ''}`}
-          onClick={() => go({ name: 'cleanup' })}
-        >
-          <span>Colocar ordem na casa</span>
-          {cleanupCount > 0 && <span className="muted">{cleanupCount}</span>}
-        </button>
-        <button
-          type="button"
-          className={`menu__item ${current === 'data' ? 'menu__item--current' : ''}`}
-          onClick={() => go({ name: 'data' })}
-        >
-          Dados e backup
-        </button>
-        <button
-          type="button"
-          className={`menu__item ${current === 'settings' ? 'menu__item--current' : ''}`}
-          onClick={() => go({ name: 'settings' })}
-        >
-          Configurações
-        </button>
+        <div className="menu__footer">{system.map((place) => placeButton(place))}</div>
       </nav>
     </div>
   );

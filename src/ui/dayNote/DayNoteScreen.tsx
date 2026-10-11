@@ -15,7 +15,7 @@ import {
   type NewBlockTarget,
 } from '../../application/notebook';
 import { setDayPriority, setDeadline, setIntendedDate, setSectionDetails } from '../../application/dayTools';
-import { loadDayNote, loadDayPriorities, loadPendingDays } from '../../application/queries';
+import { loadDayNote, loadDayPriorities } from '../../application/queries';
 import { detectKind } from '../../domain/blockKind';
 import type { DayKey } from '../../domain/day';
 import type { DayNoteSection } from '../../domain/dayNote';
@@ -29,9 +29,10 @@ import { BlockLine, GhostLine, type LineHandlers } from './BlockLine';
 import { requestFocus } from './focus';
 import { MeetingDetails } from './MeetingDetails';
 import { PendingDaysBanner } from './PendingDaysBanner';
-import { PrioritiesBlock } from './PrioritiesBlock';
-import { ReflectionBanner } from '../reflection/ReflectionBanner';
-import { MonthlyReflectionBanner } from '../reflection/MonthlyReflectionScreen';
+import { PrioritiesBlock, usePinnedPriorities } from './PrioritiesBlock';
+import { ScreenHeader } from '../components/ScreenHeader';
+import { formatLongDate } from '../format';
+import { navigate } from '../hooks';
 import { RemindersBanner } from '../opening/Reminders';
 import { SectionHeader } from './SectionHeader';
 
@@ -39,6 +40,8 @@ interface Props {
   /** The day shown: today, or a past day with pending items (1b). */
   day: DayKey;
   today: DayKey;
+  /** Past days with pending items, for the arrows (1b). */
+  pendingDays: DayKey[];
   /** Section 3: reminders that came back, shown in a discreet band at the top. */
   reminders?: Reminder[];
 }
@@ -94,11 +97,15 @@ function write(work: () => Promise<unknown>) {
   });
 }
 
-export function DayNoteScreen({ day, today, reminders = [] }: Props) {
+export function DayNoteScreen({ day, today, pendingDays, reminders = [] }: Props) {
   const isToday = day === today;
   const view = useLiveQuery(() => loadDayNote(reader, day), [day]);
   const priorities = useLiveQuery(() => loadDayPriorities(reader, today), [today]) ?? [];
-  const pendingDays = useLiveQuery(() => loadPendingDays(reader, today), [today]) ?? [];
+  const [pinned, setPinned] = usePinnedPriorities();
+  // The arrows page only through days that still have pending items (1b).
+  const previousDay = [...pendingDays].reverse().find((pending) => pending < day) ?? null;
+  const nextDay = pendingDays.find((pending) => pending > day) ?? (day < today ? today : null);
+  const goToDay = (target: DayKey) => navigate(target === today ? { name: 'day' } : { name: 'day', day: target });
   const [optimistic, setOptimistic] = useState<Optimistic[]>([]);
   // The section created from the day's empty first section keeps its screen key, so the line
   // being typed in is not rebuilt (and does not lose focus) when the section is saved.
@@ -237,15 +244,53 @@ export function DayNoteScreen({ day, today, reminders = [] }: Props) {
 
   return (
     <>
-      {isToday && <PendingDaysBanner days={pendingDays} today={today} />}
-      {isToday && <ReflectionBanner />}
-      {isToday && <MonthlyReflectionBanner today={today} />}
-      {isToday && <RemindersBanner reminders={reminders} />}
       <main className="page">
+        <ScreenHeader
+          title={
+            <span className="day-title">
+              <button
+                type="button"
+                className="icon-button day-title__arrow"
+                disabled={!previousDay}
+                onClick={() => previousDay && goToDay(previousDay)}
+                aria-label="Dia pendente anterior"
+              >
+                ‹
+              </button>
+              <h1 className="day-title__date">{formatLongDate(day)}</h1>
+              <button
+                type="button"
+                className="icon-button day-title__arrow"
+                disabled={!nextDay}
+                onClick={() => nextDay && goToDay(nextDay)}
+                aria-label="Próximo dia pendente"
+              >
+                ›
+              </button>
+            </span>
+          }
+          primary={{ label: 'Fazer checkout', onSelect: () => navigate({ name: 'checkout', day }) }}
+          more={
+            isToday
+              ? [
+                  { label: '+ Seção geral', onSelect: () => addSection('general') },
+                  { label: '+ Seção de reunião', onSelect: () => addSection('meeting') },
+                  { label: pinned ? 'Desafixar prioridades' : 'Fixar prioridades no topo', onSelect: () => setPinned(!pinned) },
+                ]
+              : []
+          }
+        />
+        {isToday && (
+          <div className="screen-notices">
+            <PendingDaysBanner days={pendingDays} today={today} />
+            <RemindersBanner reminders={reminders} />
+          </div>
+        )}
         {isToday && (
           <PrioritiesBlock
             priorities={priorities}
             today={today}
+            pinned={pinned}
             onToggleDone={(taskId, done) => write(() => setTaskDone(ctx, taskId, done))}
             onDemote={(taskId) => write(() => setDayPriority(ctx, taskId, false))}
           />
@@ -289,16 +334,6 @@ export function DayNoteScreen({ day, today, reminders = [] }: Props) {
             );
           })}
         </div>
-        {isToday && (
-          <div className="note__actions">
-            <button type="button" onClick={() => addSection('general')}>
-              + Seção geral
-            </button>
-            <button type="button" onClick={() => addSection('meeting')}>
-              + Seção de reunião
-            </button>
-          </div>
-        )}
       </main>
     </>
   );

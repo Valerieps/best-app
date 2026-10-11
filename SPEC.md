@@ -36,6 +36,29 @@ Não há onboarding: no primeiro uso eu já saio usando o ciclo diário, e os ri
 - Cada bloco existe uma vez só. Notas, projetos e wiki apontam para ele por vínculos, sem cópias.
 - A arquitetura é desenhada para o escopo completo da spec, e a implementação segue as partes em ordem.
 
+## Navegação
+
+Toda opção do app mora num de três níveis, e cada nível tem um lugar fixo, para eu saber onde procurar.
+
+### 1. Global: a barra de cima, igual em toda tela
+
+- ☰ abre uma gaveta por cima da tela, só com lugares, em grupos: Hoje (nota do dia); Listas (tarefas ativas, tarefas arquivadas, wiki); Planejamento (projetos, objetivos, hábitos); e, no rodapé, Dados e backup e Configurações.
+- "Hoje" volta para a nota do dia de qualquer tela.
+- "Rituais" abre a lista dos rituais: checkout de hoje e checkouts pendentes, reflexão semanal, reflexão mensal e "Colocar ordem na casa". Um contador soma os checkouts pendentes e as reflexões disponíveis. Os avisos de reflexão disponível vivem nesse contador, e não em faixas.
+- O status do backup fica sempre visível. A faixa de backup aparece em todas as telas só enquanto não houver nenhum backup, ou quando o backup estiver bloqueado ou com erro.
+
+### 2. Da tela: um cabeçalho logo abaixo da barra
+
+- Título à esquerda; à direita, no máximo uma ação principal e um "⋯" com as outras.
+- Na nota do dia, o título é a data com as setas entre dias pendentes, a ação principal é "Fazer checkout" daquele dia, e o "⋯" tem "+ Seção geral", "+ Seção de reunião" e "Fixar prioridades". O checkout fica nos dois lugares: em "Rituais" e na nota do dia.
+- Os avisos que dizem respeito só àquela tela ficam logo abaixo do cabeçalho dela, como o checkout pendente e os lembretes que voltaram, que aparecem só na nota do dia.
+- Nos fluxos (checkout e reflexões), a decisão fica no fim da página, porque eu leio de cima para baixo antes de decidir. O botão de confirmar a triagem se chama "Confirmar decisões".
+- A tela "Iniciar Dia" é a única sem barra: é uma tela branca só com um desenho simples de sol e o botão.
+
+### 3. Do item: ações no hover
+
+- Ações de uma linha ou de um item aparecem quando passo o mouse por cima, como data, prazo e prioridade numa tarefa.
+
 ## 1a. Ciclo diário: núcleo
 
 O núcleo tem só o necessário para testar a hipótese do app: capturar sem decidir e triar no checkout. São três telas (nota do dia, checkout e listas), e nesta entrega o app roda no Chrome do computador, com os dados no navegador e backup em arquivo. O banco de dados já guarda tudo o que o 1b e as seções seguintes vão usar (datas, adiamentos, seção de origem, log de execução), mesmo sem tela para isso.

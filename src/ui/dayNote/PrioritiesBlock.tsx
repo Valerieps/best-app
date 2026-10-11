@@ -13,40 +13,34 @@ function readPinned(): boolean {
   }
 }
 
-function savePinned(pinned: boolean): void {
-  try {
-    localStorage.setItem(PIN_KEY, pinned ? '1' : '0');
-  } catch {
-    // Only a convenience of this browser; nothing to do.
-  }
+/** Whether the priorities block stays visible on scroll. A convenience of this browser only. */
+export function usePinnedPriorities(): [boolean, (pinned: boolean) => void] {
+  const [pinned, setPinned] = useState(readPinned);
+  const update = (next: boolean) => {
+    try {
+      localStorage.setItem(PIN_KEY, next ? '1' : '0');
+    } catch {
+      // Nothing to do: the choice just won't be remembered.
+    }
+    setPinned(next);
+  };
+  return [pinned, update];
 }
 
 interface Props {
   priorities: DayPriority[];
   today: DayKey;
+  /** Pinned from the "⋯" of the day note's header. */
+  pinned: boolean;
   onToggleDone(taskId: string, done: boolean): void;
   onDemote(taskId: string): void;
 }
 
-/** "Prioridades do dia": up to 3 tasks, highlighted. Can be pinned to stay visible on scroll. */
-export function PrioritiesBlock({ priorities, today, onToggleDone, onDemote }: Props) {
-  const [pinned, setPinned] = useState(readPinned);
+/** "Prioridades do dia": up to 3 tasks, highlighted. */
+export function PrioritiesBlock({ priorities, today, pinned, onToggleDone, onDemote }: Props) {
   return (
     <section className={`priorities ${pinned ? 'priorities--pinned' : ''}`} aria-label="Prioridades do dia">
-      <header className="priorities__header">
-        <h2 className="priorities__title">Prioridades do dia</h2>
-        <button
-          type="button"
-          className="link"
-          aria-pressed={pinned}
-          onClick={() => {
-            savePinned(!pinned);
-            setPinned(!pinned);
-          }}
-        >
-          {pinned ? 'Desafixar' : 'Fixar no topo'}
-        </button>
-      </header>
+      <h2 className="priorities__title">Prioridades do dia</h2>
       {priorities.length === 0 ? (
         <p className="muted priorities__empty">Nenhuma prioridade agora. Promova uma tarefa com ★.</p>
       ) : (

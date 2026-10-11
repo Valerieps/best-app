@@ -274,7 +274,7 @@ export function CheckoutScreen({ day, today }: Props) {
                   : 'Tudo já tem destino sugerido'}
               </span>
               <button type="button" className="primary" onClick={accept} disabled={busy}>
-                {rows.length + automatic.length === 0 ? 'Continuar' : 'Aceitar sugestões'}
+                {rows.length + automatic.length === 0 ? 'Continuar' : 'Confirmar decisões'}
               </button>
             </footer>
           </>

@@ -126,7 +126,7 @@ function WhiteboardsAssistant({ groups, projects }: { groups: WhiteboardGroup[];
       </ul>
       <div className="assistant__actions">
         <button type="button" className="primary" onClick={accept} disabled={busy}>
-          Aceitar sugestões
+          Confirmar decisões
         </button>
       </div>
     </section>
@@ -177,7 +177,7 @@ function DuplicatesAssistant({ groups }: { groups: DuplicateGroup[] }) {
       </ul>
       <div className="assistant__actions">
         <button type="button" className="primary" onClick={accept} disabled={busy}>
-          Aceitar sugestões
+          Confirmar decisões
         </button>
       </div>
     </section>

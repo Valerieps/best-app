@@ -5,6 +5,8 @@ import type { BackupActions } from './useBackup';
 interface Props {
   state: AutoBackupState;
   hasData: boolean;
+  /** After the first backup, only problems (blocked, error) get a band; the rest is the bar's status. */
+  everBackedUp: boolean;
   actions: BackupActions;
 }
 
@@ -17,10 +19,10 @@ function Banner({ tone = 'warning', children }: { tone?: 'warning' | 'danger'; c
 }
 
 /** Only shows up when the automatic backup needs attention. Warns, never blocks. */
-export function BackupBanner({ state, hasData, actions }: Props) {
+export function BackupBanner({ state, hasData, everBackedUp, actions }: Props) {
   switch (state.status) {
     case 'noFile':
-      if (!hasData) return null;
+      if (!hasData || everBackedUp) return null;
       return (
         <Banner>
           <span>Seus dados ainda não têm backup. Escolha um arquivo, e o app passa a salvar sozinho a cada mudança.</span>
@@ -30,6 +32,7 @@ export function BackupBanner({ state, hasData, actions }: Props) {
         </Banner>
       );
     case 'needsPermission':
+      if (everBackedUp) return null;
       return (
         <Banner>
           <span>O backup automático está pausado até você autorizar o Chrome a gravar em "{state.fileName}".</span>
@@ -75,7 +78,7 @@ export function BackupBanner({ state, hasData, actions }: Props) {
         </Banner>
       );
     case 'unsupported':
-      if (!hasData) return null;
+      if (!hasData || everBackedUp) return null;
       return (
         <Banner>
           <span>Este navegador não permite backup automático. Use o Chrome, ou baixe backups em "Dados e backup".</span>

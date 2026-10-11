@@ -11,11 +11,24 @@ import { formatLongDate, pendingDaysSentence } from '../format';
 import { navigate } from '../hooks';
 import { appContext } from '../services';
 
-/** "Uma tela branca com o botão Iniciar Dia" (section 3). */
-export function StartDayScreen({ today }: { today: DayKey }) {
+/** A simple line drawing of a sun, in the theme's colors. */
+function Sun() {
+  const rays = [0, 45, 90, 135, 180, 225, 270, 315];
+  return (
+    <svg className="opening__sun" width="120" height="120" viewBox="0 0 120 120" aria-hidden="true">
+      <circle cx="60" cy="60" r="20" />
+      {rays.map((angle) => (
+        <line key={angle} x1="60" y1="16" x2="60" y2="28" transform={`rotate(${angle} 60 60)`} />
+      ))}
+    </svg>
+  );
+}
+
+/** "Uma tela branca" with a sun and the "Iniciar Dia" button, and nothing else (SPEC.md, "Navegação"). */
+export function StartDayScreen() {
   return (
     <main className="opening">
-      <p className="opening__date">{formatLongDate(today)}</p>
+      <Sun />
       <button type="button" className="primary opening__start" onClick={() => void startDay(appContext)}>
         Iniciar Dia
       </button>
