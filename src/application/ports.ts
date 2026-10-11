@@ -1,4 +1,19 @@
-import type { Block, DayRecord, Project, Section } from '../domain/entities';
+import type { DayKey } from '../domain/day';
+import type {
+  Block,
+  DayRecord,
+  Habit,
+  HabitLog,
+  Objective,
+  PriorityList,
+  Project,
+  Reflection,
+  Reminder,
+  Resource,
+  Section,
+  Settings,
+  TaskStatus,
+} from '../domain/entities';
 import type { DomainEvent } from '../domain/events';
 
 export interface Clock {
@@ -12,6 +27,7 @@ export interface IdGenerator {
 export interface Repository<T> {
   get(key: string): Promise<T | undefined>;
   put(entity: T): Promise<void>;
+  delete(key: string): Promise<void>;
 }
 
 /** Everything a use case can touch inside one atomic unit of work. */
@@ -20,6 +36,17 @@ export interface StoreTransaction {
   sections: Repository<Section>;
   projects: Repository<Project>;
   days: Repository<DayRecord>;
+  priorities: Repository<PriorityList>;
+  reflections: Repository<Reflection>;
+  settings: Repository<Settings>;
+  reminders: Repository<Reminder>;
+  objectives: Repository<Objective>;
+  resources: Repository<Resource>;
+  habits: Repository<Habit>;
+  habitLogs: Repository<HabitLog>;
+  blocksInSection(sectionId: string): Promise<Block[]>;
+  blocksOfProject(projectId: string): Promise<Block[]>;
+  sectionsOfProject(projectId: string): Promise<Section[]>;
   appendEvent(event: DomainEvent): Promise<void>;
 }
 
@@ -29,6 +56,38 @@ export interface Store {
    * or nothing is saved if `work` throws.
    */
   transaction<T>(work: (tx: StoreTransaction) => Promise<T>): Promise<T>;
+}
+
+/** Read side used by the queries. Implementations must be reactive-friendly (no side effects). */
+export interface Reader {
+  sectionsOfDay(day: DayKey): Promise<Section[]>;
+  sectionsByIds(ids: string[]): Promise<Section[]>;
+  /** Sections whose notes or whiteboard decision may still be pending. */
+  sectionsNeedingTriage(): Promise<Section[]>;
+  wikiSections(): Promise<Section[]>;
+  blocksInSections(sectionIds: string[]): Promise<Block[]>;
+  tasksIntendedFor(day: DayKey): Promise<Block[]>;
+  tasksWithStatus(status: TaskStatus): Promise<Block[]>;
+  projects(): Promise<Project[]>;
+  blocksByIds(ids: string[]): Promise<Block[]>;
+  tasksWithDeadline(day: DayKey): Promise<Block[]>;
+  priorityList(id: string): Promise<PriorityList | undefined>;
+  sectionsWithStatus(decision: Section['whiteboardDecision']): Promise<Section[]>;
+  sectionsWithNotesDestination(destination: Section['notesDestination']): Promise<Section[]>;
+  tasksAwaitingReflection(): Promise<Block[]>;
+  eventsBetween(startDay: DayKey, endDay: DayKey): Promise<DomainEvent[]>;
+  reflection(id: string): Promise<Reflection | undefined>;
+  settings(): Promise<Settings | undefined>;
+  blocksOfProject(projectId: string): Promise<Block[]>;
+  sectionsOfProject(projectId: string): Promise<Section[]>;
+  pendingReminders(): Promise<Reminder[]>;
+  dayRecord(day: DayKey): Promise<DayRecord | undefined>;
+  objectives(): Promise<Objective[]>;
+  resourcesOf(ownerId: string): Promise<Resource[]>;
+  habits(): Promise<Habit[]>;
+  habitLogsBetween(startDay: DayKey, endDay: DayKey): Promise<HabitLog[]>;
+  /** Priority lists whose ids are between `fromId` and `toId` (e.g. every day of a month). */
+  priorityListsBetween(fromId: string, toId: string): Promise<PriorityList[]>;
 }
 
 export interface AppContext {

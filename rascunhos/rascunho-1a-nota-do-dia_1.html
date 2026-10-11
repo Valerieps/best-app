@@ -1,0 +1,127 @@
+<!doctype html>
+<html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>1a - Nota do dia</title><style>
+:root {
+  --surface-0: #f5f4ef; --surface-1: #faf9f5; --surface-2: #ffffff;
+  --text-primary: #1a1a18; --text-secondary: #5f5e5a; --text-muted: #888780;
+  --text-accent: #185fa5; --bg-accent: #e6f1fb; --border-accent: #378add;
+  --text-warning: #633806; --bg-warning: #faeeda;
+  --text-success: #27500a; --bg-success: #eaf3de;
+  --text-purple: #3c3489; --bg-purple: #eeedfe;
+  --border: rgba(0,0,0,0.12); --border-strong: rgba(0,0,0,0.25);
+  --radius: 8px;
+}
+* { box-sizing: border-box; }
+body { margin: 0; padding: 32px 16px; background: var(--surface-0); color: var(--text-primary);
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; font-size: 14px; }
+.caption { max-width: 720px; margin: 0 auto 10px; font-size: 12px; color: var(--text-muted); }
+.frame { max-width: 720px; margin: 0 auto 32px; background: var(--surface-2); border: 1px solid var(--border);
+  border-radius: 12px; overflow: hidden; }
+.frame.wide { max-width: 880px; }
+.caption.wide { max-width: 880px; }
+button { font: inherit; font-size: 13px; background: transparent; border: 1px solid var(--border-strong);
+  border-radius: var(--radius); padding: 6px 12px; color: var(--text-primary); cursor: pointer; }
+button.primary { background: var(--text-primary); color: #fff; border-color: var(--text-primary); }
+.topbar { display: flex; align-items: center; gap: 12px; padding: 10px 16px; border-bottom: 1px solid var(--border); }
+.title { flex: 1; text-align: center; font-size: 15px; font-weight: 500; }
+.ic { font-size: 16px; line-height: 1; color: var(--text-secondary); }
+.banner { display: flex; align-items: center; gap: 12px; padding: 8px 16px; background: var(--bg-warning);
+  color: var(--text-warning); font-size: 13px; flex-wrap: wrap; }
+.banner .act { font-weight: 500; }
+.tag { font-size: 12px; padding: 1px 8px; border-radius: var(--radius); white-space: nowrap; }
+.tag.gray { background: var(--surface-1); color: var(--text-secondary); border: 1px solid var(--border); }
+.tag.blue { background: var(--bg-accent); color: var(--text-accent); }
+.tag.purple { background: var(--bg-purple); color: var(--text-purple); }
+.tag.green { background: var(--bg-success); color: var(--text-success); }
+.tag.amber { background: var(--bg-warning); color: var(--text-warning); }
+.body { padding: 14px 20px 20px; }
+.section { border-left: 2px solid var(--border-strong); padding: 2px 0 2px 14px; margin-bottom: 4px; }
+.section.meeting { border-left-color: var(--border-accent); }
+.section.linked { border-left-color: #7f77dd; }
+.head { display: flex; align-items: center; gap: 8px; font-size: 12px; color: var(--text-muted); margin-bottom: 6px; flex-wrap: wrap; }
+.head .name { color: var(--text-primary); font-weight: 500; font-size: 14px; }
+.section p { margin: 6px 0; line-height: 1.6; }
+.task { display: flex; align-items: center; gap: 8px; padding: 3px 0; }
+.between { display: flex; gap: 14px; justify-content: center; padding: 8px 0; font-size: 12px; color: var(--text-muted); }
+.muted { color: var(--text-muted); }
+.small { font-size: 12px; }
+.input { display: inline-flex; align-items: center; border: 1px solid var(--border-accent); border-radius: var(--radius);
+  padding: 3px 8px; font-size: 14px; min-width: 200px; background: var(--surface-2); }
+.dropdown { position: absolute; top: 30px; left: 0; width: 260px; background: var(--surface-2); border: 1px solid var(--border);
+  border-radius: var(--radius); box-shadow: 0 6px 18px rgba(0,0,0,0.08); padding: 4px; z-index: 2; font-size: 13px; color: var(--text-primary); }
+.dropdown div { padding: 6px 8px; border-radius: 6px; }
+.dropdown .hl { background: var(--surface-1); }
+.group { border: 1px solid var(--border); border-radius: 10px; margin-bottom: 14px; overflow: hidden; }
+.group-h { display: flex; align-items: center; gap: 8px; padding: 10px 14px; background: var(--surface-1); border-bottom: 1px solid var(--border); font-size: 13px; flex-wrap: wrap; }
+.row { display: flex; align-items: center; gap: 10px; padding: 8px 14px; border-bottom: 1px solid var(--border); flex-wrap: wrap; }
+.row:last-child { border-bottom: none; }
+.row .grow { flex: 1; min-width: 160px; }
+.seg { display: inline-flex; border: 1px solid var(--border-strong); border-radius: var(--radius); overflow: hidden; font-size: 12px; }
+.seg span { padding: 3px 9px; border-right: 1px solid var(--border); color: var(--text-secondary); }
+.seg span:last-child { border-right: none; }
+.seg span.on { background: var(--text-primary); color: #fff; }
+.steps { display: flex; gap: 8px; align-items: center; font-size: 12px; color: var(--text-muted); }
+.steps .on { color: var(--text-primary); font-weight: 500; }
+.footer { display: flex; gap: 10px; align-items: center; justify-content: flex-end; padding: 12px 20px; border-top: 1px solid var(--border); flex-wrap: wrap; }
+.h2 { font-size: 13px; font-weight: 500; margin: 4px 0 8px; display: flex; gap: 8px; align-items: center; }
+</style></head>
+<body>
+<div class="caption">1a · Nota do dia. Sem prioridades, sem ações no hover e sem setas entre dias (tudo isso é 1b).</div>
+<div class="frame">
+  <div class="topbar">
+    <span class="ic" style="font-size:20px">☰</span>
+    <div class="title">Domingo, 11 de outubro</div>
+    <button>Fazer checkout</button>
+  </div>
+  <div class="banner">
+    <span>⚠</span>
+    <span style="flex:1">Sexta e sábado estão com checkout pendente</span>
+    <span class="act">Fazer checkout</span>
+    <span class="act">Fechar dias pendentes</span>
+  </div>
+  <div class="body">
+
+    <div class="section">
+      <div class="head"><span class="tag gray">Geral</span><span>08:42</span><span>Sem título</span><span class="tag amber">quadro branco</span></div>
+      <div class="task"><input type="checkbox"><span>Pagar o IPTU</span></div>
+      <div class="task"><input type="checkbox"><span>Revisar a spec do app</span></div>
+      <p>Ideia: chamar o assistente de limpeza de "colocar ordem na casa".</p>
+      <div class="task"><input type="checkbox" checked><span class="muted" style="text-decoration:line-through">Marcar dentista</span></div>
+      <p>Ler depois: artigo sobre revisão semanal.</p>
+    </div>
+
+    <div class="between"><span>+ Geral</span><span>+ Reunião</span></div>
+
+    <div class="section meeting linked">
+      <div class="head"><span class="tag blue">Reunião</span><span>10:30</span><span class="name">Data Studios</span><span class="tag purple">projeto</span></div>
+      <p>Painel novo sai na próxima sprint. Falta a validação dos números com o financeiro.</p>
+      <div class="task"><input type="checkbox"><span>Enviar o painel para validação</span></div>
+      <div class="task"><input type="checkbox"><span>Marcar revisão com o financeiro</span></div>
+    </div>
+
+    <div class="between"><span>+ Geral</span><span>+ Reunião</span></div>
+
+    <div class="section">
+      <div class="head" style="position:relative">
+        <span class="tag gray">Geral</span><span>14:05</span>
+        <span style="position:relative">
+          <span class="input">Data St<span style="border-left:1px solid var(--text-primary);height:16px;margin-left:1px"></span></span>
+          <div class="dropdown">
+            <div class="hl">Data Studios <span class="tag purple" style="margin-left:6px">projeto</span></div>
+            <div>Data Studio Pro <span class="tag purple" style="margin-left:6px">projeto</span></div>
+            <div class="muted">Usar "Data St" só como título (quadro branco)</div>
+          </div>
+        </span>
+      </div>
+      <div style="height:140px"></div>
+      <p class="muted">[] digite e a linha vira tarefa</p>
+    </div>
+
+    <div style="display:flex;gap:8px;margin-top:16px">
+      <button>+ Seção geral</button>
+      <button>+ Seção de reunião</button>
+    </div>
+  </div>
+</div>
+<div class="caption">Legenda: a primeira seção geral já vem criada, com as tarefas do dia no topo, sem distinção visual. Toda seção nasce em quadro branco; escolher um projeto da lista ao dar o título vincula a seção (barra lateral roxa e etiqueta "projeto").</div>
+</body></html>

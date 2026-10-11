@@ -3,10 +3,13 @@ import { AutoBackup } from '../infrastructure/autoBackup';
 import { canPickBackupFile, dexieHandleStorage, pickBackupFile } from '../infrastructure/backupFiles';
 import { systemClock, randomIds } from '../infrastructure/browser';
 import { AppDatabase } from '../infrastructure/db';
+import { DexieReader } from '../infrastructure/dexieReader';
 import { DexieStore } from '../infrastructure/dexieStore';
 
 /** Single database and context for the running app. Tests build their own. */
 export const db = new AppDatabase();
+
+export const reader = new DexieReader(db);
 
 export const autoBackup = new AutoBackup({
   db,

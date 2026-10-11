@@ -35,7 +35,7 @@ Cada regra vale a partir da parte da spec em que a funcionalidade dela aparece.
 
 ## Fechar dias pendentes
 
-- Quando há dias com checkout pendente, por exemplo depois de vários dias úteis sem abrir o app, o app sugere "Fechar dias pendentes".
+- Quando há mais de um dia com checkout pendente, por exemplo depois de vários dias úteis sem abrir o app, o aviso da nota do dia sugere "Fechar dias pendentes". Com um dia só, o aviso oferece apenas "Fazer checkout".
 - Ele aplica as decisões automáticas e as sugestões a todos os dias pendentes de uma vez.
 - As tarefas não feitas desses dias voltam para a lista de tarefas ativas, sem data de intenção, para não criar uma pilha no dia de hoje. Elas contam como adiamento.
 - Seções em quadro branco ficam sem vínculo, como no fim de um dia comum.

@@ -8,7 +8,8 @@ import type { DayKey } from './day';
 
 export type BlockKind = 'task' | 'note';
 
-export type TaskStatus = 'active' | 'done' | 'archived' | 'abandoned';
+/** converted (section 6): the task became a habit at checkout and left circulation. */
+export type TaskStatus = 'active' | 'done' | 'archived' | 'abandoned' | 'converted';
 
 export interface Block {
   id: string;
@@ -30,15 +31,27 @@ export interface Block {
   postponeCount: number;
   /** When the task was finished, archived or abandoned. */
   closedAt: string | null;
+  /**
+   * Latest day whose checkout decided this task. A task is pending on a day it shows up in
+   * only while this is earlier than that day. Null until the first triage.
+   */
+  lastTriagedDay: DayKey | null;
+  /** Prazo máximo (1b), optional. Absent in records saved before 1b. */
+  deadline?: DayKey | null;
+  /** Section 2: left for the weekly reflection to decide ("decidir na reflexão semanal"). */
+  awaitingReflection?: boolean;
 }
 
 export type SectionKind = 'general' | 'meeting';
 
 /** Where a section's notes go at checkout. All notes of a section are triaged together. */
-export type NotesDestination = 'pending' | 'wiki' | 'discarded';
+export type NotesDestination = 'pending' | 'wiki' | 'discarded' | 'weeklyReflection';
 
-/** Checkout decision for a section still on whiteboard (no project). */
-export type WhiteboardDecision = 'pending' | 'leftUnlinked';
+/**
+ * Checkout decision for a section still on whiteboard (no project). `keptUnlinked` means the
+ * whiteboards assistant was told to leave it as it is, so it stops suggesting it.
+ */
+export type WhiteboardDecision = 'pending' | 'leftUnlinked' | 'keptUnlinked';
 
 export interface Section {
   id: string;
@@ -51,9 +64,13 @@ export interface Section {
   projectId: string | null;
   notesDestination: NotesDestination;
   whiteboardDecision: WhiteboardDecision;
+  /** Meeting sections only (1b). Absent in records saved before 1b. */
+  participants?: string | null;
+  docLink?: string | null;
 }
 
-export type ProjectStatus = 'active' | 'finished';
+/** `merged` projects were joined into another one (`mergedInto`) by the duplicates assistant. */
+export type ProjectStatus = 'active' | 'finished' | 'merged';
 
 export interface Project {
   id: string;
@@ -62,11 +79,135 @@ export interface Project {
   createdAt: string;
   updatedAt: string;
   finishedAt: string | null;
+  mergedInto?: string | null;
+  /** Projects the duplicates assistant was told are not the same as this one. */
+  keepSeparateFrom?: string[];
+  /** Section 4: at most one objective. */
+  objectiveId?: string | null;
 }
 
 /** Per-day bookkeeping. Whether a checkout is pending is derived from the blocks. */
 export interface DayRecord {
   day: DayKey;
   lastCheckoutAt: string | null;
+  updatedAt: string;
+  /** Section 3: when "Iniciar Dia" was pressed. */
+  startedAt?: string | null;
+  /** Section 3: result of each warm-up item that day. */
+  warmup?: Record<string, WarmupResult>;
+  /** Section 3: when "Iniciar o Flow de Execução" was pressed. */
+  executionStartedAt?: string | null;
+}
+
+export type WarmupResult = 'done' | 'skipped' | 'later';
+
+/**
+ * Ordered priorities of a period. Ids look like `day:2026-10-11`; weeks and months come in
+ * sections 2 and 4. Day and week priorities are tasks; month priorities are projects.
+ */
+export interface PriorityList {
+  id: string;
+  /** `month` (section 4) lists projects; `day` lists tasks. */
+  scope: 'day' | 'month';
+  /** A day (AAAA-MM-DD) or a month (AAAA-MM). */
+  period: string;
+  itemIds: string[];
+  updatedAt: string;
+}
+
+/** A weekly reflection (section 2). Id like `week:2026-W41`; monthly ones come in section 4. */
+export interface Reflection {
+  id: string;
+  kind: 'week' | 'month';
+  period: string;
+  start: DayKey;
+  end: DayKey;
+  bestMoments: string;
+  improvements: string;
+  closedAt: string | null;
+  updatedAt: string;
+}
+
+/** User settings, a single record with id `main`. Goes into backups. */
+export interface Settings {
+  id: 'main';
+  /** When the weekly reflection becomes available: weekday (0 = Sunday) and hour. */
+  weeklyReflection: { weekday: number; hour: number } | null;
+  /** Section 3: weekdays the user works (0 = Sunday). Absent means every day. */
+  activeDays?: number[];
+  /** Section 3: the warm-up checklist, in order. Empty or absent means no warm up. */
+  warmupItems?: WarmupItem[];
+  updatedAt: string;
+}
+
+export interface WarmupItem {
+  id: string;
+  text: string;
+}
+
+/**
+ * Section 3: something that comes back inside the app after a chosen time, like a warm-up item
+ * asked again at XXh. The app never sends notifications.
+ */
+export interface Reminder {
+  id: string;
+  source: 'warmup';
+  sourceId: string;
+  /** Day the reminder was created for. */
+  day: DayKey;
+  text: string;
+  dueAt: string;
+  status: 'pending' | 'done' | 'dropped';
+  createdAt: string;
+  updatedAt: string;
+}
+/**
+ * Section 4: an objective is a goal (a sentence the user decides was reached or not), a
+ * motivation (provisional name), projects and resources.
+ */
+export interface Objective {
+  id: string;
+  goal: string;
+  motivation: string;
+  status: 'active' | 'finished';
+  /** Set when finished: whether the goal was reached. */
+  achieved: boolean | null;
+  createdAt: string;
+  updatedAt: string;
+  finishedAt: string | null;
+}
+
+/** Section 4: notes or links that support an objective or a project. */
+export interface Resource {
+  id: string;
+  ownerType: 'objective' | 'project';
+  ownerId: string;
+  /** Notes of a section linked as a resource at checkout. */
+  sectionId: string | null;
+  /** Or a link added by hand. */
+  url: string | null;
+  title: string;
+  createdAt: string;
+}
+
+/** Section 6: an action with a recurrence and a "done" criterion; logged as yes or no. */
+export interface Habit {
+  id: string;
+  name: string;
+  criterion: string;
+  /** Weekdays it is expected (0 = Sunday). */
+  weekdays: number[];
+  objectiveId: string | null;
+  status: 'active' | 'archived';
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface HabitLog {
+  /** `${habitId}:${day}` */
+  id: string;
+  habitId: string;
+  day: DayKey;
+  done: boolean;
   updatedAt: string;
 }

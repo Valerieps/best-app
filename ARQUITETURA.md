@@ -83,18 +83,18 @@ Cada entidade é um registro separado. Um bloco existe uma vez só: notas, proje
 
 | Fase | Mudança |
 | --- | --- |
-| 1b | `blocks.deadline` (prazo máximo). `sections.participants` e `sections.docLink` |
-| 1b | Tabela `priorities`: id `escopo:período` (por exemplo `day:2026-10-11`), lista ordenada de até 3 ids. No dia e na semana guarda tarefas; no mês, projetos |
-| 2 | `blocks.deferredTo` e `sections.notesDestination = 'weeklyReflection'`, para o "decidir na reflexão semanal" |
-| 2 | Tabela `reflections`: id `week:2026-W41` ou `month:2026-10`, textos livres (melhores momentos, o que pode melhorar) e `closedAt` |
-| 2, 3 | Tabela `settings`: dias ativos, agendamento da reflexão semanal |
-| 3 | Tabela `warmupItems`: texto, posição, ativo. O andamento do warm up de cada dia vem dos eventos |
+| 1b (feito) | `blocks.deadline` (prazo máximo). `sections.participants` e `sections.docLink`. `projects.mergedInto` e `keepSeparateFrom` (assistente de duplicados) |
+| 1b (feito) | Tabela `priorities`: id `escopo:período` (por exemplo `day:2026-10-11`), lista ordenada de ids escolhidos à mão. As tarefas com prazo no dia entram na leitura (ADR-017). No dia e na semana guarda tarefas; no mês, projetos |
+| 2 (feito) | `blocks.awaitingReflection` e `sections.notesDestination = 'weeklyReflection'`, para o "decidir na reflexão semanal" |
+| 2 (feito) | Tabela `reflections`: id `week:2026-W41` (`month:2026-10` na seção 4), textos livres (melhores momentos, o que pode melhorar) e `closedAt` |
+| 2 (feito), 3 | Tabela `settings`: agendamento da reflexão semanal; os dias ativos entram na seção 3 |
+| 3 (feito) | O checklist de warm up fica em `settings.warmupItems`; o andamento de cada dia em `days.warmup`, `startedAt` e `executionStartedAt` |
 | 3 | Tabela `muralPhrases`: texto e frequência (`low`, `medium` ou `high`). As frases escolhidas para o dia (abertura e 13h) ficam em `days` |
-| 3 | Tabela `reminders`: origem, texto, `dueAt`, `status` (`pending`, `done`, `later` ou `dropped`) |
-| 4 | Tabela `objectives`: meta, motivação, `status`. `projects.objectiveId` |
-| 4 | Tabela `resources`: dono (objetivo ou projeto) e o recurso, que pode ser uma seção cujas notas foram vinculadas ou um link |
+| 3 (feito) | Tabela `reminders`: origem, texto, `dueAt`, `status` (`pending`, `done` ou `dropped`) |
+| 4 (feito) | Tabela `objectives`: meta, motivação, `status`, `achieved`. `projects.objectiveId` |
+| 4 (feito) | Tabela `resources`: dono (objetivo ou projeto) e o recurso, que pode ser uma seção cujas notas foram vinculadas ou um link |
 | 5 | `blocks.kind = 'appointment'`, com `appointmentAt` e `migratedAt` |
-| 6 | Tabelas `habits` (recorrência, critério de feito, `objectiveId`) e `habitLogs` (dia, sim ou não) |
+| 6 (feito) | Tabelas `habits` (dias da semana, critério de feito, `objectiveId`) e `habitLogs` (dia, sim ou não) |
 
 Cada mudança no esquema sobe a versão do banco no Dexie e a `BACKUP_SCHEMA_VERSION`, e o `parseBackup` aprende a converter backups antigos.
 
@@ -170,11 +170,11 @@ Um adiamento gera `task.postponed` e soma 1 em `postponeCount`. Ele acontece em 
 | Fase | Estado | Conteúdo técnico |
 | --- | --- | --- |
 | 0. Fundação | Feita | Projeto, banco, histórico de eventos, backup automático, importação, CSP, offline, tokens de tema |
-| 1a. Núcleo | Próxima | Editor de blocos, nota do dia, checkout com auto-triagem, listas, "Fechar dias pendentes" |
-| 1b. Acabamento | Planejada | Prazo máximo, prioridades do dia, reunião com participantes, paginação entre dias, busca na wiki, assistentes |
-| 2. Semana e projetos | Planejada | Reflexão semanal, prioridades da semana, primeiras métricas |
-| 3. Abertura do dia | Planejada | Warm up, dashboard, mural, lembretes, dias ativos |
-| 4. Mês e objetivos | Planejada | Objetivos, recursos, prioridades do mês, reflexão mensal |
-| 5. Tipos de bloco | Planejada | Compromisso, detecção de tipo, migração manual para a agenda |
-| 6. Hábitos | Planejada | Hábitos e registros |
+| 1a. Núcleo | Feita | Editor de blocos, nota do dia, checkout com auto-triagem, listas, "Fechar dias pendentes" |
+| 1b. Acabamento | Feita, menos a instalação no Android e o assistente de tarefas paradas | Prazo máximo, prioridades do dia, atalhos no hover, reunião com participantes e link, paginação entre dias, busca e filtros na wiki, assistentes de quadros brancos e projetos duplicados |
+| 2. Semana e projetos | Feita em parte | Feito: projetos (tela, finalizar, vincular no checkout), "decidir na reflexão semanal", reflexão semanal com triagem, arquivadas, métricas, textos e "Fechar semana", agendamento. Falta o que tem pergunta em aberto: sugestão de projetos e prioridades da semana |
+| 3. Abertura do dia | Feita em parte | Feito: "Iniciar Dia", warm up com "pular hoje" e "perguntar de novo", dashboard com "Iniciar o Flow de Execução", "registrar pensamentos" e checkout pendente, lembretes (faixa, contador na aba, ponto no ícone, pergunta no checkout), dias ativos. Falta o que tem pergunta em aberto: mural e prioridades da semana no dashboard |
+| 4. Mês e objetivos | Feita em parte | Feito: objetivos (meta, motivação, projetos, recursos, finalizar dizendo se atingiu), recursos pelo checkout e por link, prioridades do mês, reflexão mensal com sugestão de objetivos, duas visões, finalizar projetos e raio-x parcial. Falta o que tem pergunta em aberto: métricas de blocos sem projeto e de engajamento, puxar tarefa para prioridade da semana |
+| 5. Tipos de bloco | Bloqueada | Espera a definição dos formatos que identificam cada tipo e de como corrigir um tipo detectado errado |
+| 6. Hábitos | Feita em parte | Feito: hábitos com dias da semana, critério e objetivo, registro sim ou não no dashboard e na tela de hábitos, converter tarefa em hábito no checkout, sequência e completude na reflexão semanal, hábitos na reflexão mensal. Falta o que tem pergunta em aberto: "agendar lembrete" |
 | Depois | Futura | Android e sincronização (juntando aparelhos pelo histórico de eventos) |

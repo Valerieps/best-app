@@ -1,14 +1,14 @@
 import { describe, expect, it } from 'vitest';
 import type { Project } from '../domain/entities';
 import { decideAutoBackup } from './autoBackup';
-import { createBackup, type BackupTables } from './backup';
+import { createBackup, emptyTables, type BackupTables } from './backup';
 
 function project(id: string, updatedAt = '2026-10-11T10:00:00Z'): Project {
   return { id, name: id, status: 'active', createdAt: updatedAt, updatedAt, finishedAt: null };
 }
 
 function tables(projects: Project[]): BackupTables {
-  return { blocks: [], sections: [], projects, days: [], events: [] };
+  return { ...emptyTables(), projects };
 }
 
 function fileWith(projects: Project[]): string {

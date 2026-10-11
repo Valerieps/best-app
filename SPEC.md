@@ -57,7 +57,7 @@ O núcleo tem só o necessário para testar a hipótese do app: capturar sem dec
 - Tarefas que ainda não foram finalizadas, arquivadas ou abandonadas moram na lista de tarefas ativas. É dela que eu escolho as tarefas no planejamento do dia seguinte.
 - Toda tarefa guarda o vínculo com a seção em que foi originalmente criada, com o título e o horário da seção. Se a seção está vinculada a um projeto, a tarefa também fica vinculada a ele.
 - A tarefa tem uma data de intenção de execução, definida no checkout. Definir essa data é escolher o dia em que a tarefa aparece na nota do dia. Quando a data chega, a tarefa aparece sozinha na nota daquele dia.
-- Conta como adiamento toda mudança da data de intenção para depois, e também a tarefa que passa pelo checkout sem ter sido feita no dia da intenção.
+- Conta como adiamento toda mudança da data de intenção para depois, e também a tarefa que passa pelo checkout sem ter sido feita no dia da intenção. Tirar a data de intenção, deixando a tarefa sem data, também conta como adiamento.
 - O app guarda stats de quantos adiamentos e da distância entre a primeira intenção de execução e a ação final (finalizar, arquivar, abandonar).
 
 ### Execução
@@ -66,6 +66,7 @@ O núcleo tem só o necessário para testar a hipótese do app: capturar sem dec
 - O dia abre com uma seção geral já criada. As tarefas com data de intenção para aquele dia, incluindo as escolhidas no checkout do dia anterior, entram no topo dela, sem distinção visual das tarefas criadas no dia.
 - Ao longo do dia eu vou coletando tudo em uma única nota, de forma sequencial, como um bloco de notas. A ideia é não gastar processamento mental escolhendo onde salvar cada coisa.
 - Cada tarefa tem um checkbox para finalizar.
+- Enquanto escrevo, posso apagar uma linha ou tirar o `[]` do começo para mudar o tipo, como num editor de texto, mas só em blocos criados no dia e ainda não triados. Uma tarefa que veio de outro dia não some quando eu apago o texto: para tirá-la de circulação, eu arquivo ou abandono.
 - Se eu abrir o app sem ter feito o checkout do dia anterior, a nota de hoje abre normalmente, com um aviso no topo e um botão para fazer o checkout pendente.
 - Um menu lateral simples dá acesso a três listas: tarefas ativas, tarefas arquivadas e wiki pessoal.
 - No final do dia, eu clico em "fazer checkout".
@@ -111,7 +112,9 @@ Estes itens já estão decididos e entram depois de uma semana de uso do núcleo
 - Data de intenção é diferente de prioridade: as prioridades são um destaque dentro das tarefas do dia.
 - As 3 prioridades do dia são sempre tarefas, e a qualquer momento uma tarefa pode ser promovida a prioridade do dia. A tarefa priorizada aparece nos dois lugares: no bloco de prioridades e na seção em que está. O bloco de prioridades pode ser fixado no topo, para não sumir quando eu rolar a nota.
 - No dia do prazo máximo, a tarefa se torna prioridade automaticamente. Se as 3 prioridades do dia já estiverem definidas, ela ocupa o lugar da terceira, sem criar uma quarta.
-- A lista pode estar vazia: no primeiro uso, quando o checkout do dia anterior não foi feito, ou quando as 3 prioridades já foram completadas.
+- A lista pode estar vazia: no primeiro uso, quando o checkout do dia anterior não foi feito, ou quando as 3 prioridades já foram completadas. Prioridades finalizadas saem da lista.
+- Promover uma tarefa quando as 3 prioridades já estão definidas não é bloqueado: a nova ocupa o lugar da terceira.
+- Se mais de uma tarefa tiver o prazo máximo no mesmo dia, cada uma ocupa o lugar da última prioridade escolhida à mão, sem tirar outra que entrou pelo prazo.
 
 ### Navegação e plataforma
 
@@ -143,14 +146,14 @@ Esta parte acrescenta os projetos, que agrupam tarefas, e a reflexão semanal, q
 
 ### Flow de Reflexão Semanal
 
-A reflexão semanal é disparada por um agendamento pré-definido por mim ou manualmente.
+A reflexão semanal é disparada por um agendamento pré-definido por mim ou manualmente. A semana vai de segunda a domingo. No horário agendado, um aviso aparece na nota do dia até a semana ser fechada. Uma reflexão feita de segunda a quarta avalia a semana que acabou; de quinta em diante, a semana atual.
 
 1. Triagem do que foi movido para cá, com a mesma rotina do checkout diário
 2. Revisita das tarefas arquivadas, que podem ser reativadas
 3. Sugestão de agregar tarefas em projetos, apresentada pela primeira vez na primeira reflexão semanal
 4. Report de métricas:
-   - quantas tarefas adiadas
-   - precisão da data de intenção de execução: realizar a tarefa no dia da intenção, independente de quantos adiamentos. O objetivo é estimular adiamentos e abandonos intencionais
+   - quantas tarefas adiadas: cada tarefa conta uma vez, mesmo que tenha sido adiada várias vezes na semana
+   - precisão da data de intenção de execução: realizar a tarefa no dia da intenção, independente de quantos adiamentos. O objetivo é estimular adiamentos e abandonos intencionais. Entram na conta só as tarefas finalizadas que tinham data de intenção
    - tarefas executadas
 5. Melhores momentos e o que pode melhorar: textos livres vinculados à semana avaliada
 6. Definição de prioridades da próxima semana
@@ -172,7 +175,7 @@ Esta parte acrescenta o warm up e o dashboard, que abrem o dia, e define o que a
 
 ### Warm up
 
-- O app abre em uma tela branca com o botão "Iniciar Dia", que triga a rotina de warm up.
+- O app abre em uma tela branca com o botão "Iniciar Dia", que triga a rotina de warm up. Enquanto o checklist de warm up estiver vazio, o app abre direto na nota do dia, como nas primeiras semanas de uso.
 - O checklist de warm up é definido manualmente por mim. Isso pode ser feito a qualquer momento ou sugerido na primeira reflexão semanal.
 - O que eu não quero realizar agora, eu posso "pular hoje" ou "perguntar de novo às XXh".
 - Ao terminar o warm up, o app segue para o dashboard.
@@ -185,7 +188,7 @@ A tela de boas-vindas mostra:
 - a lista das 3 prioridades da semana
 - um mural com lembretes de mim para mim mesma (tipo frases mesmo). Ele mostra uma frase por vez, em rodízio. Aparecem no máximo 2 frases diferentes por dia: uma ao abrir o app, que é trocada às 13h. Cada frase tem uma frequência, baixa, média ou alta, em proporção: para cada vez que uma frase de frequência baixa aparece, uma média aparece 2 vezes e uma alta, 4. O rodízio segue uma ordem que respeita essas proporções, em vez de sorteio, para evitar que a mesma frase se repita seguidamente
 - o botão "Iniciar o Flow de Execução", o mais proeminente
-- botão de ação opcional: registrar pensamentos (entram em uma seção geral da nota do dia)
+- botão de ação opcional: registrar pensamentos (entram em uma seção geral nova da nota do dia, com o título "Pensamentos", uma nota por linha)
 - o botão de checkout, caso ele não tenha sido feito no dia anterior
 
 ### Lembretes
@@ -193,7 +196,8 @@ A tela de boas-vindas mostra:
 - Lembretes tendem a virar paisagem, então o app não envia notificações. Um lembrete é um item que reaparece dentro do app depois do horário pedido, como no "perguntar de novo às XXh" do warm up.
 - No desktop, com a aba do app aberta em segundo plano, o título da aba ganha um contador e o ícone ganha um ponto, sem som nem pop-up. Se o app estiver instalado no computador (Windows ou macOS), o mesmo contador pode aparecer no ícone da barra de tarefas.
 - Ao voltar para o app, uma faixa discreta no topo da nota do dia mostra o que voltou, com três ações: feito, mais tarde e largar. Ela não cobre o texto. No Android, essa faixa é o único sinal: lá, o ícone de um app instalado pelo navegador só ganha um ponto quando há notificações, e o app não envia notificações.
-- Se eu ignorar a faixa, ela continua ali até o checkout, onde o item vira pergunta: manter, mudar ou largar.
+- Se eu ignorar a faixa, ela continua ali até o checkout, onde o item vira pergunta: manter, mudar ou largar. "Manter" vem pré-selecionado, porque largar tira o item de circulação.
+- Um lembrete de warm up marcado como feito marca o item como feito naquele dia.
 
 ### Rituais pulados
 
@@ -226,8 +230,9 @@ Esta parte acrescenta os objetivos, as prioridades do mês e a reflexão mensal,
 - Recursos são pensamentos, anotações e links que dão suporte a um objetivo ou projeto.
 - Um projeto pode existir sem objetivo e se vincula a no máximo um objetivo.
 - Projetos sem objetivo não são proibidos: viram métrica na reflexão mensal.
-- Objetivos só são finalizados manualmente: eu abro o objetivo e finalizo.
-- No checkout, as notas de uma seção ganham o destino "vincular a um objetivo ou projeto como recurso".
+- Objetivos só são finalizados manualmente: eu abro o objetivo e finalizo, dizendo se atingi a meta ou não. Um objetivo finalizado pode ser reaberto.
+- No checkout, as notas de uma seção ganham o destino "vincular a um objetivo ou projeto como recurso". As notas vinculadas como recurso também vão para a wiki, porque as notas não moram num lugar só.
+- Links entram como recurso direto na página do objetivo ou do projeto.
 
 ### Prioridades do mês
 
@@ -238,7 +243,7 @@ Esta parte acrescenta os objetivos, as prioridades do mês e a reflexão mensal,
 
 ### Flow de Reflexão Mensal
 
-Quando um mês termina, aparece a opção de reflexão mensal: um dashboard de objetivos e projetos.
+Quando um mês termina, aparece a opção de reflexão mensal: um dashboard de objetivos e projetos. O aviso aparece na nota do dia a partir do primeiro dia do mês seguinte, se houve atividade no mês, até a reflexão ser fechada.
 
 - O app só sugere objetivos aqui: propõe criá-los a partir dos projetos que já existem.
 - Projetos ativos e o objetivo associado, em duas visões: objetivo como root, expandindo os projetos; ou projeto como root, expandindo o objetivo associado.
@@ -278,6 +283,9 @@ Hábitos ficam para a última fase e se encaixam nos flows que já existem.
 ### Regras
 
 - Hábitos são ações com recorrência e critério de "feito"; por enquanto, o registro é só sim ou não.
+- A recorrência é a escolha dos dias da semana. O percentual de completude conta só os dias esperados desde que o hábito existe; dias anteriores contam se eu os registrei.
+- Um hábito pode ser arquivado: ele para de ser perguntado, e os registros continuam nas métricas.
+- Uma tarefa convertida em hábito no checkout sai de circulação e vira um hábito com o mesmo texto, esperado todos os dias até eu editar.
 - Um hábito faz parte de um objetivo, mas também pode existir sem objetivo. Hábitos sem objetivo não são proibidos: viram métrica na reflexão mensal.
 
 ### Onde entram nos flows

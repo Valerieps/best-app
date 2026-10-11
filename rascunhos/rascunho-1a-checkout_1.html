@@ -1,0 +1,164 @@
+<!doctype html>
+<html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>1a - Checkout</title><style>
+:root {
+  --surface-0: #f5f4ef; --surface-1: #faf9f5; --surface-2: #ffffff;
+  --text-primary: #1a1a18; --text-secondary: #5f5e5a; --text-muted: #888780;
+  --text-accent: #185fa5; --bg-accent: #e6f1fb; --border-accent: #378add;
+  --text-warning: #633806; --bg-warning: #faeeda;
+  --text-success: #27500a; --bg-success: #eaf3de;
+  --text-purple: #3c3489; --bg-purple: #eeedfe;
+  --border: rgba(0,0,0,0.12); --border-strong: rgba(0,0,0,0.25);
+  --radius: 8px;
+}
+* { box-sizing: border-box; }
+body { margin: 0; padding: 32px 16px; background: var(--surface-0); color: var(--text-primary);
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; font-size: 14px; }
+.caption { max-width: 720px; margin: 0 auto 10px; font-size: 12px; color: var(--text-muted); }
+.frame { max-width: 720px; margin: 0 auto 32px; background: var(--surface-2); border: 1px solid var(--border);
+  border-radius: 12px; overflow: hidden; }
+.frame.wide { max-width: 880px; }
+.caption.wide { max-width: 880px; }
+button { font: inherit; font-size: 13px; background: transparent; border: 1px solid var(--border-strong);
+  border-radius: var(--radius); padding: 6px 12px; color: var(--text-primary); cursor: pointer; }
+button.primary { background: var(--text-primary); color: #fff; border-color: var(--text-primary); }
+.topbar { display: flex; align-items: center; gap: 12px; padding: 10px 16px; border-bottom: 1px solid var(--border); }
+.title { flex: 1; text-align: center; font-size: 15px; font-weight: 500; }
+.ic { font-size: 16px; line-height: 1; color: var(--text-secondary); }
+.banner { display: flex; align-items: center; gap: 12px; padding: 8px 16px; background: var(--bg-warning);
+  color: var(--text-warning); font-size: 13px; flex-wrap: wrap; }
+.banner .act { font-weight: 500; }
+.tag { font-size: 12px; padding: 1px 8px; border-radius: var(--radius); white-space: nowrap; }
+.tag.gray { background: var(--surface-1); color: var(--text-secondary); border: 1px solid var(--border); }
+.tag.blue { background: var(--bg-accent); color: var(--text-accent); }
+.tag.purple { background: var(--bg-purple); color: var(--text-purple); }
+.tag.green { background: var(--bg-success); color: var(--text-success); }
+.tag.amber { background: var(--bg-warning); color: var(--text-warning); }
+.body { padding: 14px 20px 20px; }
+.section { border-left: 2px solid var(--border-strong); padding: 2px 0 2px 14px; margin-bottom: 4px; }
+.section.meeting { border-left-color: var(--border-accent); }
+.section.linked { border-left-color: #7f77dd; }
+.head { display: flex; align-items: center; gap: 8px; font-size: 12px; color: var(--text-muted); margin-bottom: 6px; flex-wrap: wrap; }
+.head .name { color: var(--text-primary); font-weight: 500; font-size: 14px; }
+.section p { margin: 6px 0; line-height: 1.6; }
+.task { display: flex; align-items: center; gap: 8px; padding: 3px 0; }
+.between { display: flex; gap: 14px; justify-content: center; padding: 8px 0; font-size: 12px; color: var(--text-muted); }
+.muted { color: var(--text-muted); }
+.small { font-size: 12px; }
+.input { display: inline-flex; align-items: center; border: 1px solid var(--border-accent); border-radius: var(--radius);
+  padding: 3px 8px; font-size: 14px; min-width: 200px; background: var(--surface-2); }
+.dropdown { position: absolute; top: 30px; left: 0; width: 260px; background: var(--surface-2); border: 1px solid var(--border);
+  border-radius: var(--radius); box-shadow: 0 6px 18px rgba(0,0,0,0.08); padding: 4px; z-index: 2; font-size: 13px; }
+.dropdown div { padding: 6px 8px; border-radius: 6px; }
+.dropdown .hl { background: var(--surface-1); }
+.group { border: 1px solid var(--border); border-radius: 10px; margin-bottom: 14px; overflow: hidden; }
+.group-h { display: flex; align-items: center; gap: 8px; padding: 10px 14px; background: var(--surface-1); border-bottom: 1px solid var(--border); font-size: 13px; flex-wrap: wrap; }
+.row { display: flex; align-items: center; gap: 10px; padding: 8px 14px; border-bottom: 1px solid var(--border); flex-wrap: wrap; }
+.row:last-child { border-bottom: none; }
+.row .grow { flex: 1; min-width: 160px; }
+.seg { display: inline-flex; border: 1px solid var(--border-strong); border-radius: var(--radius); overflow: hidden; font-size: 12px; }
+.seg span { padding: 3px 9px; border-right: 1px solid var(--border); color: var(--text-secondary); }
+.seg span:last-child { border-right: none; }
+.seg span.on { background: var(--text-primary); color: #fff; }
+.steps { display: flex; gap: 8px; align-items: center; font-size: 12px; color: var(--text-muted); }
+.steps .on { color: var(--text-primary); font-weight: 500; }
+.footer { display: flex; gap: 10px; align-items: center; justify-content: flex-end; padding: 12px 20px; border-top: 1px solid var(--border); flex-wrap: wrap; }
+.h2 { font-size: 13px; font-weight: 500; margin: 4px 0 8px; display: flex; gap: 8px; align-items: center; }
+</style></head>
+<body>
+
+<div class="caption">1a · Checkout, passo 1: triagem em lote. As sugestões já vêm marcadas; os destaques mostram onde vale olhar antes de aceitar.</div>
+<div class="frame">
+  <div class="topbar">
+    <span class="ic">←</span>
+    <div class="title">Checkout · Domingo, 11 de outubro</div>
+    <div class="steps"><span class="on">1 Triagem</span><span>›</span><span>2 Amanhã</span></div>
+  </div>
+  <div class="body">
+    <div class="small muted" style="margin-bottom:12px">11 itens · 9 com sugestão · 2 pedem atenção</div>
+
+    <div class="h2">Pedem atenção</div>
+    <div class="group">
+      <div class="group-h"><span class="tag gray">Geral</span><span>14:05</span><span class="name">Ideias soltas</span><span class="tag amber">quadro branco</span><span class="muted">cita "Data Studios"</span></div>
+      <div class="row"><span class="grow">Vínculo desta seção</span>
+        <span class="seg"><span>Converter em projeto</span><span class="on">Vincular a Data Studios</span><span>Deixar sem vínculo</span></span></div>
+      <div class="row"><span class="grow">Revisar a spec do app <span class="tag amber" style="margin-left:6px">adiada 3 vezes</span></span>
+        <span class="seg"><span>Finalizar</span><span class="on">Amanhã</span><span>Outra data</span><span>Arquivar</span><span>Abandonar</span></span></div>
+    </div>
+
+    <div class="h2" style="margin-top:18px">Sugestões</div>
+    <div class="group">
+      <div class="group-h"><span class="tag gray">Geral</span><span>08:42</span><span>Sem título</span><span class="tag amber">quadro branco</span></div>
+      <div class="row"><span class="grow">Vínculo desta seção</span>
+        <span class="seg"><span>Converter em projeto</span><span>Vincular a…</span><span class="on">Deixar sem vínculo</span></span></div>
+      <div class="row"><span class="grow">Notas desta seção (2)</span>
+        <span class="seg"><span class="on">Wiki</span><span>Descartar</span></span></div>
+      <div class="row"><span class="grow">Pagar o IPTU</span>
+        <span class="seg"><span>Finalizar</span><span class="on">Amanhã</span><span>Outra data</span><span>Arquivar</span><span>Abandonar</span></span></div>
+    </div>
+    <div class="group">
+      <div class="group-h"><span class="tag blue">Reunião</span><span>10:30</span><span class="name">Data Studios</span><span class="tag purple">projeto</span></div>
+      <div class="row"><span class="grow">Enviar o painel para validação</span>
+        <span class="seg"><span>Finalizar</span><span class="on">Amanhã</span><span>Outra data</span><span>Arquivar</span><span>Abandonar</span></span></div>
+      <div class="row"><span class="grow">Marcar revisão com o financeiro</span>
+        <span class="seg"><span>Finalizar</span><span class="on">Amanhã</span><span>Outra data</span><span>Arquivar</span><span>Abandonar</span></span></div>
+    </div>
+
+    <div class="h2" style="margin-top:18px">Já resolvido automaticamente <span class="muted small" style="font-weight:400">desfazer</span></div>
+    <div class="group">
+      <div class="row"><span class="tag green">✓</span><span class="grow">Notas de "Data Studios" foram para a wiki, ligadas ao projeto</span></div>
+      <div class="row"><span class="tag green">✓</span><span class="grow">"Marcar dentista" foi finalizada durante o dia e saiu da triagem</span></div>
+    </div>
+  </div>
+  <div class="footer">
+    <span class="small muted" style="flex:1">Confira os 2 itens destacados; o resto já está decidido</span>
+    <button class="primary">Aceitar sugestões</button>
+  </div>
+</div>
+
+<div class="caption">1a · Checkout, passo 2: planejamento do dia seguinte. Escolho, na lista de tarefas ativas, o que entra na nota de amanhã.</div>
+<div class="frame">
+  <div class="topbar">
+    <span class="ic">←</span>
+    <div class="title">Checkout · Domingo, 11 de outubro</div>
+    <div class="steps"><span>1 Triagem</span><span>›</span><span class="on">2 Amanhã</span></div>
+  </div>
+  <div class="body">
+    <div class="h2">Na nota de amanhã (4)</div>
+    <div class="group">
+      <div class="row"><input type="checkbox" checked><span class="grow">Pagar o IPTU</span></div>
+      <div class="row"><input type="checkbox" checked><span class="grow">Enviar o painel para validação</span><span class="tag purple">Data Studios</span></div>
+      <div class="row"><input type="checkbox" checked><span class="grow">Marcar revisão com o financeiro</span><span class="tag purple">Data Studios</span></div>
+      <div class="row"><input type="checkbox" checked><span class="grow">Revisar a spec do app</span><span class="small muted">adiada 4 vezes</span></div>
+    </div>
+    <div class="h2" style="margin-top:18px">Outras tarefas ativas</div>
+    <div class="group">
+      <div class="row"><input type="checkbox"><span class="grow">Trocar o filtro da água</span><span class="small muted">sem data</span></div>
+      <div class="row"><input type="checkbox"><span class="grow">Renovar o passaporte</span><span class="small muted">sem data</span></div>
+      <div class="row"><input type="checkbox"><span class="grow">Comprar presente de aniversário</span><span class="small muted">intenção: 14/10</span></div>
+    </div>
+  </div>
+  <div class="footer">
+    <button>Voltar</button>
+    <button class="primary">Finalizar meu dia ✦</button>
+  </div>
+</div>
+
+<div class="caption">1a · Fechar dias pendentes. Aparece pelo aviso da nota do dia quando há mais de um dia sem checkout.</div>
+<div class="frame">
+  <div class="body" style="padding:22px 24px">
+    <div style="font-size:16px;font-weight:500;margin-bottom:6px">Fechar 3 dias pendentes</div>
+    <div class="muted" style="margin-bottom:14px">Quinta, sexta e sábado. As regras da auto-triagem são aplicadas a todos de uma vez.</div>
+    <div class="group">
+      <div class="row"><span class="grow">7 tarefas não feitas voltam para a lista de ativas, sem data</span><span class="small muted">contam como adiamento</span></div>
+      <div class="row"><span class="grow">Notas de 5 seções vão para a wiki</span></div>
+      <div class="row"><span class="grow">2 seções em quadro branco ficam sem vínculo</span></div>
+      <div class="row"><span class="grow muted">Nada é apagado, arquivado ou abandonado</span></div>
+    </div>
+  </div>
+  <div class="footer">
+    <button>Revisar dia a dia</button>
+    <button class="primary">Fechar dias pendentes</button>
+  </div>
+</div>
+</body></html>

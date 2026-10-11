@@ -17,8 +17,8 @@ Technical decisions that fill gaps in `SPEC.md`. Product and business decisions 
 ## ADR-003: Entity change and event saved in one transaction
 
 **Date:** 2026-10-11
-**Decision:** Every use case goes through `Store.transaction`, which writes entity changes and their events atomically. Events are written with `add`, so an existing event can never be overwritten. Counters on entities (e.g. `postponeCount`) are read caches rebuildable from events.
-**Why:** The spec requires every change to be in the history; a change without its event would silently corrupt metrics.
+**Decision:** Every use case goes through `Store.transaction`, which writes entity changes and their events atomically. Events are written with `add`, so an existing event can never be overwritten. Counters on entities (e.g. `postponeCount`) are read caches rebuildable from events. `DexieStore` hands use cases tables taken from the Dexie `Transaction` object and wraps the work in `Dexie.waitFor`, so use cases can be plain nested async functions.
+**Why:** The spec requires every change to be in the history; a change without its event would silently corrupt metrics. Without `waitFor`, Dexie aborted transactions whose async functions awaited other async functions (`PrematureCommitError`); tables bound to the transaction keep every write inside it, which the rollback test verifies.
 
 ## ADR-004: No event for plain text edits
 
@@ -61,3 +61,99 @@ Technical decisions that fill gaps in `SPEC.md`. Product and business decisions 
 **Date:** 2026-10-11
 **Decision:** `public/sw.js` caches same-origin GET requests: network first for pages (new versions show up when online), cache first for hashed assets. Registered only in production builds.
 **Why:** Offline support with no extra dependency. It never handles user data.
+
+## ADR-011: Triage state per task (`lastTriagedDay`)
+
+**Date:** 2026-10-11
+**Decision:** A task shows up on the day it was written and on its intended day. It is pending on such a day while it is active, `lastTriagedDay` is earlier than that day, and its intended date is not later. Every checkout decision sets `lastTriagedDay` to the triaged day. Reopening a finished task moves `lastTriagedDay` back to yesterday at most, so it is pending today without reopening older days. Whether a day is pending is always computed, never stored.
+**Why:** The spec allows several checkouts a day, late checkouts and "Fechar dias pendentes", and items added after a checkout make it pending again. A per-task marker answers "did this day's checkout decide this task?" in all of these cases; a per-day flag could not.
+
+## ADR-012: Automatic triage decisions are applied on "Aceitar sugestões"
+
+**Date:** 2026-10-11
+**Decision:** The checkout shows the automatic decisions (finished tasks, notes of project sections) as already done, with "desfazer", but writes them together with the rest when the user accepts. Leaving the checkout without accepting changes nothing.
+**Why:** Same experience as applying them on open, without half-finished checkouts in the database or an undo that has to write twice.
+
+## ADR-013: The day's first section exists only on screen until something is written
+
+**Date:** 2026-10-11
+**Decision:** The day note always shows a general section first; it is saved with the first line typed in it. Sections are ordered by creation time, so new sections always go at the end (the drafts' "+ Geral / + Reunião" between sections were left out, since a section cannot be placed in the middle).
+**Why:** "O dia abre com uma seção geral já criada" without filling the database with empty sections on days the app was only opened.
+
+## ADR-014: Lines appear before they are saved; editor writes run in order
+
+**Date:** 2026-10-11
+**Decision:** On Enter (and on the first keystroke in an empty section) the screen chooses the new block's id, shows the line right away and moves the focus to it; the database write follows. All editor writes go through a queue (`ui/writeQueue.ts`) that runs them one after another. Lines keep local text and save it 400 ms after the last keystroke.
+**Why:** Testing showed text typed right after Enter landing in the previous line, a second section being created, and kind changes failing for blocks not yet saved. Choosing ids up front keeps the same React element (and the focus) when the saved block arrives; the queue guarantees each write sees the previous ones.
+
+## ADR-015: Reactivating an archived task clears its date without counting a postponement
+
+**Date:** 2026-10-11
+**Decision:** "Reativar" puts the task back in the active list without an intended date. The event keeps the previous date.
+**Why:** An old date would make the task overdue at once. It is not a postponement because the task was out of circulation, not moved.
+
+## ADR-016: Database and backup version 2 (1b)
+
+**Date:** 2026-10-11
+**Decision:** Version 2 adds the `priorities` table and an index on `blocks.deadline`. New fields (`deadline`, `participants`, `docLink`, `mergedInto`, `keepSeparateFrom`) are optional, so records saved before 1b stay valid without a data migration. `parseBackup` upgrades version 1 backups by adding an empty `priorities` table.
+**Why:** Optional fields avoid rewriting every record on upgrade; the backup upgrade keeps old backups importable.
+
+## ADR-017: Day priorities are partly computed
+
+**Date:** 2026-10-11
+**Decision:** Only the priorities chosen by hand are stored (`priorities`, id `day:YYYY-MM-DD`). Tasks whose deadline is the day are added when reading (`buildDayPriorities`), so they never need a job that runs at midnight.
+**Why:** The app has no background processes; computing on read keeps the rule exact for any day that is opened.
+
+## ADR-018: Paging between days uses the route
+
+**Date:** 2026-10-11
+**Decision:** `#/dia/AAAA-MM-DD` shows a past day with pending items. On a past day the note does not show the empty first section, Enter does not create lines, and new sections cannot be added; text, checkboxes and shortcuts still work.
+**Why:** New lines belong to today. Writing into a past day would create items that make that day pending forever.
+
+## ADR-019: Database and backup version 3 (section 2)
+
+**Date:** 2026-10-11
+**Decision:** Version 3 adds `reflections` (id `week:AAAA-Www`) and `settings` (a single record `main`), both included in backups; `parseBackup` adds them empty to older backups. "Decidir na reflexão semanal" is a flag on the task (`awaitingReflection`) and a notes destination (`weeklyReflection`) on the section. Settling the task in the reflection clears the flag.
+**Why:** Same reasons as ADR-016. A flag keeps the task's dates and history intact while it waits.
+
+## ADR-020: Weeks are ISO weeks, and the reflection evaluates a default week
+
+**Date:** 2026-10-11
+**Decision:** Weeks run Monday to Sunday (ISO). Opened from Monday to Wednesday, the reflection evaluates the week that just ended; from Thursday on, the current week. The arrows on the reflection screen pick any other week. The scheduled reflection becomes "due" at the chosen weekday and hour and stays due until its week is closed; it only shows a banner in the day note.
+**Why:** A reflection scheduled on Monday morning is about the past week, one on Friday afternoon about the current one. A fixed rule avoids asking which week every time.
+
+## ADR-021: Weekly metrics come from events only
+
+**Date:** 2026-10-11
+**Decision:** `weeklyMetrics` reads `task.postponed` and `task.finished` events whose `day` falls in the week. "Fechar semana" stores the metrics shown in the `reflection.closed` event, so the past report stays as it was seen even if the formulas change.
+**Why:** The spec requires metrics to come from the history. A snapshot keeps old reports stable.
+
+## ADR-022: Database and backup version 4 (section 3)
+
+**Date:** 2026-10-11
+**Decision:** Version 4 adds `reminders` (indexed by `status` and `dueAt`). The day's opening state lives in optional fields of `days` (`startedAt`, `warmup`, `executionStartedAt`); active days and the warm-up checklist live in `settings`. `parseBackup` adds an empty `reminders` table to older backups.
+**Why:** Same reasons as ADR-016.
+
+## ADR-023: The day's stage is computed
+
+**Date:** 2026-10-11
+**Decision:** `dayStage` derives "start", "warmup", "dashboard" or "execution" from today's `days` record and the checklist; the app renders the matching screen at `#/`. Paging to past days and every other screen skip the opening.
+**Why:** Nothing has to run at midnight; opening the app on a new day naturally shows "Iniciar Dia".
+
+## ADR-024: Reminder signals without notifications
+
+**Date:** 2026-10-11
+**Decision:** Due reminders are checked every minute. They show in a band on the day note, as a counter in the tab title, as a dot on the favicon (an inline SVG `data:` URL, allowed by `img-src`), and as the installed app's badge (`navigator.setAppBadge`, local only). The checkout lists reminders due by the end of the day being checked out.
+**Why:** SPEC section 3 asks for passive signals only; all of these stay on the machine.
+
+## ADR-025: Database and backup version 5 (sections 4 and 6)
+
+**Date:** 2026-10-11
+**Decision:** Version 5 adds `objectives`, `resources` (indexed by `ownerId`), `habits` and `habitLogs` (id `habitId:day`, indexed by `habitId` and `day`). Month priorities reuse the `priorities` table with ids `month:AAAA-MM`; monthly reflections reuse `reflections` with ids `month:AAAA-MM`. A task converted to a habit gets the status `converted`. `parseBackup` adds the four new tables empty to older backups.
+**Why:** Same reasons as ADR-016; reusing `priorities` and `reflections` keeps one mechanism per concept.
+
+## ADR-026: Monthly metrics with open questions are left out
+
+**Date:** 2026-10-11
+**Decision:** The monthly "raio-x" shows active projects without objective, habits without objective, and how many day priorities of the month were tasks of month-priority projects. "Blocos sem projeto" (blocks vs. tasks is undecided) and "objetivos com pouco engajamento" (no definition yet) are not computed; the screen says so. The week-priority half of the last metric waits for week priorities.
+**Why:** Computing a metric with a guessed definition would show numbers the user might trust.

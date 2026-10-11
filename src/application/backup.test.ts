@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import type { Project } from '../domain/entities';
 import type { DomainEvent } from '../domain/events';
-import { computeImportLoss, createBackup, hasAnyData, parseBackup, type BackupTables } from './backup';
+import { computeImportLoss, createBackup, emptyTables, hasAnyData, parseBackup, type BackupTables } from './backup';
 
 describe('hasAnyData', () => {
   it('is false only when every table is empty', () => {
@@ -27,7 +27,7 @@ function event(id: string): DomainEvent {
 }
 
 function tables(overrides: Partial<BackupTables> = {}): BackupTables {
-  return { blocks: [], sections: [], projects: [], days: [], events: [], ...overrides };
+  return { ...emptyTables(), ...overrides };
 }
 
 describe('parseBackup', () => {
@@ -58,6 +58,13 @@ describe('parseBackup', () => {
     ],
   ])('rejects %s', (_label, value) => {
     expect(parseBackup(value).ok).toBe(false);
+  });
+
+  it('upgrades a version 1 backup, from before the priorities table', () => {
+    const v1 = { format: 'best-app-backup', schemaVersion: 1, exportedAt: '2026-10-11', tables: tables() } as Record<string, unknown>;
+    for (const name of ['priorities', 'reflections', 'settings', 'reminders', 'objectives', 'resources', 'habits', 'habitLogs']) delete (v1.tables as Record<string, unknown>)[name];
+    const result = parseBackup(v1);
+    expect(result).toMatchObject({ ok: true, backup: { schemaVersion: 5, tables: { priorities: [], reflections: [], settings: [], reminders: [], habits: [], habitLogs: [] } } });
   });
 
   it('rejects a backup from a newer version of the app', () => {

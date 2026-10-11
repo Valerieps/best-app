@@ -1,4 +1,17 @@
-import type { Block, DayRecord, Project, Section } from '../domain/entities';
+import type {
+  Block,
+  DayRecord,
+  Habit,
+  HabitLog,
+  Objective,
+  PriorityList,
+  Project,
+  Reflection,
+  Reminder,
+  Resource,
+  Section,
+  Settings,
+} from '../domain/entities';
 import type { DomainEvent } from '../domain/events';
 
 /**
@@ -8,7 +21,7 @@ import type { DomainEvent } from '../domain/events';
  */
 
 export const BACKUP_FORMAT = 'best-app-backup';
-export const BACKUP_SCHEMA_VERSION = 1;
+export const BACKUP_SCHEMA_VERSION = 5;
 
 export interface BackupTables {
   blocks: Block[];
@@ -16,11 +29,37 @@ export interface BackupTables {
   projects: Project[];
   days: DayRecord[];
   events: DomainEvent[];
+  /** Added in version 2 (1b). */
+  priorities: PriorityList[];
+  /** Added in version 3 (section 2). */
+  reflections: Reflection[];
+  settings: Settings[];
+  /** Added in version 4 (section 3). */
+  reminders: Reminder[];
+  /** Added in version 5 (sections 4 and 6). */
+  objectives: Objective[];
+  resources: Resource[];
+  habits: Habit[];
+  habitLogs: HabitLog[];
 }
 
 export type BackupTableName = keyof BackupTables;
 
-export const BACKUP_TABLES: readonly BackupTableName[] = ['blocks', 'sections', 'projects', 'days', 'events'];
+export const BACKUP_TABLES: readonly BackupTableName[] = [
+  'blocks',
+  'sections',
+  'projects',
+  'days',
+  'events',
+  'priorities',
+  'reflections',
+  'settings',
+  'reminders',
+  'objectives',
+  'resources',
+  'habits',
+  'habitLogs',
+];
 
 /** Primary key field of each table. */
 export const TABLE_KEYS: Record<BackupTableName, string> = {
@@ -29,6 +68,14 @@ export const TABLE_KEYS: Record<BackupTableName, string> = {
   projects: 'id',
   days: 'day',
   events: 'id',
+  priorities: 'id',
+  reflections: 'id',
+  settings: 'id',
+  reminders: 'id',
+  objectives: 'id',
+  resources: 'id',
+  habits: 'id',
+  habitLogs: 'id',
 };
 
 export interface BackupFile {
@@ -53,6 +100,26 @@ function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null && !Array.isArray(value);
 }
 
+/**
+ * Brings the tables of an older backup to the current version. Each version only adds
+ * tables or optional fields, so older backups stay importable.
+ */
+function upgradeTables(tables: Record<string, unknown>, version: number): Record<string, unknown> {
+  const upgraded = { ...tables };
+  if (version < 2) upgraded.priorities = []; // 1b added day priorities.
+  if (version < 3) {
+    // Section 2 added weekly reflections and settings.
+    upgraded.reflections = [];
+    upgraded.settings = [];
+  }
+  if (version < 4) upgraded.reminders = []; // Section 3 added reminders.
+  if (version < 5) {
+    // Sections 4 and 6 added objectives, resources and habits.
+    for (const name of ['objectives', 'resources', 'habits', 'habitLogs']) upgraded[name] = [];
+  }
+  return upgraded;
+}
+
 /** Validates a parsed JSON value. Error messages are shown to the user, in Portuguese. */
 export function parseBackup(value: unknown): ParseResult {
   if (!isRecord(value) || value.format !== BACKUP_FORMAT) {
@@ -75,7 +142,7 @@ export function parseBackup(value: unknown): ParseResult {
     return { ok: false, error: 'O backup está incompleto.' };
   }
 
-  const tables = value.tables;
+  const tables = upgradeTables(value.tables, version);
   for (const name of BACKUP_TABLES) {
     const rows = tables[name];
     if (!Array.isArray(rows)) {
@@ -98,10 +165,28 @@ export function parseBackup(value: unknown): ParseResult {
     ok: true,
     backup: {
       format: BACKUP_FORMAT,
-      schemaVersion: version,
+      schemaVersion: BACKUP_SCHEMA_VERSION,
       exportedAt: value.exportedAt,
       tables: tables as unknown as BackupTables,
     },
+  };
+}
+
+export function emptyTables(): BackupTables {
+  return {
+    blocks: [],
+    sections: [],
+    projects: [],
+    days: [],
+    events: [],
+    priorities: [],
+    reflections: [],
+    settings: [],
+    reminders: [],
+    objectives: [],
+    resources: [],
+    habits: [],
+    habitLogs: [],
   };
 }
 

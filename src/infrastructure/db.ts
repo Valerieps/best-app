@@ -1,6 +1,19 @@
 import Dexie, { type Table } from 'dexie';
 import type { BackupTables } from '../application/backup';
-import type { Block, DayRecord, Project, Section } from '../domain/entities';
+import type {
+  Block,
+  DayRecord,
+  Habit,
+  HabitLog,
+  Objective,
+  PriorityList,
+  Project,
+  Reflection,
+  Reminder,
+  Resource,
+  Section,
+  Settings,
+} from '../domain/entities';
 import type { DomainEvent } from '../domain/events';
 
 /** App settings and bookkeeping that never go into a backup (e.g. file handles). */
@@ -26,10 +39,19 @@ export class AppDatabase extends Dexie {
   events!: Table<DomainEvent, string>;
   meta!: Table<MetaEntry, string>;
   snapshots!: Table<Snapshot, string>;
+  priorities!: Table<PriorityList, string>;
+  reflections!: Table<Reflection, string>;
+  settings!: Table<Settings, string>;
+  reminders!: Table<Reminder, string>;
+  objectives!: Table<Objective, string>;
+  resources!: Table<Resource, string>;
+  habits!: Table<Habit, string>;
+  habitLogs!: Table<HabitLog, string>;
 
   constructor(name = DATABASE_NAME) {
     super(name);
-    // Version 1 matches BACKUP_SCHEMA_VERSION 1. Only indexed fields are listed here.
+    // Each database version matches the BACKUP_SCHEMA_VERSION of the same number.
+    // Only indexed fields are listed here.
     this.version(1).stores({
       blocks: 'id, sectionId, status, intendedDate, projectId',
       sections: 'id, day, projectId',
@@ -38,6 +60,27 @@ export class AppDatabase extends Dexie {
       events: 'id, at, day, type, entityId',
       meta: 'key',
       snapshots: 'id, createdAt',
+    });
+    // 1b: day priorities, and deadlines become searchable.
+    this.version(2).stores({
+      blocks: 'id, sectionId, status, intendedDate, projectId, deadline',
+      priorities: 'id',
+    });
+    // Section 2: weekly reflections and user settings.
+    this.version(3).stores({
+      reflections: 'id',
+      settings: 'id',
+    });
+    // Section 3: reminders that come back inside the app.
+    this.version(4).stores({
+      reminders: 'id, status, dueAt',
+    });
+    // Sections 4 and 6: objectives, their resources, habits and their logs.
+    this.version(5).stores({
+      objectives: 'id, status',
+      resources: 'id, ownerId',
+      habits: 'id, status',
+      habitLogs: 'id, habitId, day',
     });
   }
 }

@@ -1,0 +1,177 @@
+import { toDayKey, type DayKey } from '../domain/day';
+import type { Objective, Resource } from '../domain/entities';
+import type { MonthlyMetrics } from '../domain/monthMetrics';
+import type { MonthRange } from '../domain/month';
+import { record } from './events';
+import type { AppContext, StoreTransaction } from './ports';
+
+/** Section 4: objectives, resources, month priorities and the monthly reflection. */
+
+function today(ctx: AppContext): DayKey {
+  return toDayKey(ctx.clock.now());
+}
+
+function nowIso(ctx: AppContext): string {
+  return ctx.clock.now().toISOString();
+}
+
+async function addObjective(ctx: AppContext, tx: StoreTransaction, goal: string, motivation: string): Promise<Objective> {
+  const at = nowIso(ctx);
+  const objective: Objective = {
+    id: ctx.ids.next(),
+    goal: goal.trim(),
+    motivation: motivation.trim(),
+    status: 'active',
+    achieved: null,
+    createdAt: at,
+    updatedAt: at,
+    finishedAt: null,
+  };
+  await tx.objectives.put(objective);
+  await record(ctx, tx, 'objective.created', 'objective', objective.id, today(ctx), { goal: objective.goal });
+  return objective;
+}
+
+export function createObjective(ctx: AppContext, goal: string, motivation = ''): Promise<Objective> {
+  if (!goal.trim()) throw new Error('The goal must not be empty');
+  return ctx.store.transaction((tx) => addObjective(ctx, tx, goal, motivation));
+}
+
+async function linkProject(ctx: AppContext, tx: StoreTransaction, projectId: string, objectiveId: string | null) {
+  const project = await tx.projects.get(projectId);
+  if (!project || (project.objectiveId ?? null) === objectiveId) return;
+  await tx.projects.put({ ...project, objectiveId, updatedAt: nowIso(ctx) });
+  await record(ctx, tx, 'project.linkedToObjective', 'project', project.id, today(ctx), { objectiveId });
+}
+
+/** A project belongs to at most one objective; null unlinks it. */
+export async function linkProjectToObjective(ctx: AppContext, projectId: string, objectiveId: string | null): Promise<void> {
+  await ctx.store.transaction((tx) => linkProject(ctx, tx, projectId, objectiveId));
+}
+
+/** "O app sugere objetivos a partir dos projetos que já existem": the project's name starts the goal. */
+export async function createObjectiveFromProject(ctx: AppContext, projectId: string): Promise<Objective | null> {
+  return ctx.store.transaction(async (tx) => {
+    const project = await tx.projects.get(projectId);
+    if (!project) return null;
+    const objective = await addObjective(ctx, tx, project.name, '');
+    await linkProject(ctx, tx, project.id, objective.id);
+    return objective;
+  });
+}
+
+export async function updateObjective(ctx: AppContext, id: string, fields: { goal: string; motivation: string }): Promise<void> {
+  const goal = fields.goal.trim();
+  const motivation = fields.motivation.trim();
+  if (!goal) return;
+  await ctx.store.transaction(async (tx) => {
+    const objective = await tx.objectives.get(id);
+    if (!objective || (objective.goal === goal && objective.motivation === motivation)) return;
+    await tx.objectives.put({ ...objective, goal, motivation, updatedAt: nowIso(ctx) });
+    await record(ctx, tx, 'objective.updated', 'objective', id, today(ctx), { goal, motivation });
+  });
+}
+
+/** Objectives are only finished by hand; the user says whether the goal was reached. */
+export async function finishObjective(ctx: AppContext, id: string, achieved: boolean): Promise<void> {
+  await ctx.store.transaction(async (tx) => {
+    const objective = await tx.objectives.get(id);
+    if (!objective || objective.status === 'finished') return;
+    const at = nowIso(ctx);
+    await tx.objectives.put({ ...objective, status: 'finished', achieved, finishedAt: at, updatedAt: at });
+    await record(ctx, tx, 'objective.finished', 'objective', id, today(ctx), { achieved });
+  });
+}
+
+export async function reopenObjective(ctx: AppContext, id: string): Promise<void> {
+  await ctx.store.transaction(async (tx) => {
+    const objective = await tx.objectives.get(id);
+    if (!objective || objective.status === 'active') return;
+    await tx.objectives.put({ ...objective, status: 'active', achieved: null, finishedAt: null, updatedAt: nowIso(ctx) });
+    await record(ctx, tx, 'objective.reopened', 'objective', id, today(ctx));
+  });
+}
+
+/** Adds a resource inside a transaction: the notes of a section, or a link. */
+export async function addResourceIn(
+  ctx: AppContext,
+  tx: StoreTransaction,
+  owner: { ownerType: Resource['ownerType']; ownerId: string },
+  content: { sectionId?: string; url?: string; title: string },
+): Promise<Resource> {
+  const resource: Resource = {
+    id: ctx.ids.next(),
+    ownerType: owner.ownerType,
+    ownerId: owner.ownerId,
+    sectionId: content.sectionId ?? null,
+    url: content.url?.trim() || null,
+    title: content.title.trim(),
+    createdAt: nowIso(ctx),
+  };
+  await tx.resources.put(resource);
+  await record(ctx, tx, 'resource.added', 'resource', resource.id, today(ctx), {
+    ownerType: resource.ownerType,
+    ownerId: resource.ownerId,
+    sectionId: resource.sectionId,
+  });
+  return resource;
+}
+
+export function addLinkResource(
+  ctx: AppContext,
+  owner: { ownerType: Resource['ownerType']; ownerId: string },
+  url: string,
+  title: string,
+): Promise<Resource> {
+  return ctx.store.transaction((tx) => addResourceIn(ctx, tx, owner, { url, title: title || url }));
+}
+
+export async function removeResource(ctx: AppContext, resourceId: string): Promise<void> {
+  await ctx.store.transaction(async (tx) => {
+    const resource = await tx.resources.get(resourceId);
+    if (!resource) return;
+    await tx.resources.delete(resourceId);
+    await record(ctx, tx, 'resource.removed', 'resource', resourceId, today(ctx), { ownerId: resource.ownerId });
+  });
+}
+
+export function monthPriorityListId(month: string): string {
+  return `month:${month}`;
+}
+
+/** Month priorities are always projects. */
+export async function setMonthPriority(ctx: AppContext, month: string, projectId: string, on: boolean): Promise<void> {
+  await ctx.store.transaction(async (tx) => {
+    const id = monthPriorityListId(month);
+    const list = (await tx.priorities.get(id)) ?? { id, scope: 'month' as const, period: month, itemIds: [], updatedAt: '' };
+    const itemIds = on
+      ? list.itemIds.includes(projectId)
+        ? list.itemIds
+        : [...list.itemIds, projectId]
+      : list.itemIds.filter((item) => item !== projectId);
+    if (itemIds.join() === list.itemIds.join()) return;
+    await tx.priorities.put({ ...list, itemIds, updatedAt: nowIso(ctx) });
+    await record(ctx, tx, on ? 'priority.added' : 'priority.removed', 'priorities', id, today(ctx), { projectId, itemIds });
+  });
+}
+
+/** Closes the monthly reflection, keeping the metrics shown as a snapshot. */
+export async function closeMonth(ctx: AppContext, month: MonthRange, metrics: MonthlyMetrics): Promise<void> {
+  await ctx.store.transaction(async (tx) => {
+    const id = `month:${month.key}`;
+    const at = nowIso(ctx);
+    const current = (await tx.reflections.get(id)) ?? {
+      id,
+      kind: 'month' as const,
+      period: month.key,
+      start: month.start,
+      end: month.end,
+      bestMoments: '',
+      improvements: '',
+      closedAt: null,
+      updatedAt: at,
+    };
+    await tx.reflections.put({ ...current, closedAt: at, updatedAt: at });
+    await record(ctx, tx, 'reflection.closed', 'reflection', id, today(ctx), { month: month.key, metrics });
+  });
+}

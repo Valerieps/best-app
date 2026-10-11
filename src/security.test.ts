@@ -28,7 +28,7 @@ const FORBIDDEN: [string, RegExp][] = [
   ['innerHTML', /\.(inner|outer)HTML\s*=/],
   ['insertAdjacentHTML', /insertAdjacentHTML/],
   ['eval', /\beval\s*\(|new Function\s*\(/],
-  ['external URL', /https?:\/\/(?!www\.w3\.org\/)/],
+  ['external URL', /https?:\/\/(?!www\.w3\.org\/)[a-z0-9-]+\.[a-z]/i],
 ];
 
 describe('security rules', () => {

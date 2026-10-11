@@ -2,7 +2,7 @@
 
 Atualizado em Oct 11, 2026
 
-O que ficou para trás na fase 0 (fundação e backup automático), de propósito ou por falta de como verificar. Cada item diz o risco e o que fazer. Quando um item for resolvido, ele sai daqui.
+O que ficou para trás, de propósito ou por falta de como verificar, da fase 0 até as seções 2 a 6. Cada item diz o risco e o que fazer. Quando um item for resolvido, ele sai daqui.
 
 ## 1. Depende de você
 
@@ -17,17 +17,30 @@ Estes pontos não puderam ser testados no navegador embutido do Claude Code.
 
 ### Configuração e publicação
 
-- [ ] **Commits.** O `git` não funciona no terminal do Claude Code, então todo o trabalho da fase 0 ainda precisa ser commitado por você, incluindo o `package-lock.json`. O `.gitignore` já impede que arquivos de backup entrem no repositório.
+- [ ] **Commits.** O `git` não funciona no terminal do Claude Code, então todo o trabalho ainda precisa ser commitado por você, incluindo o `package-lock.json`. O `.gitignore` já impede que arquivos de backup entrem no repositório.
 - [ ] **Cloudflare Pages.** Criar a conta e o projeto, conectar o repositório privado, usar `npm run build` como comando de build e `dist` como pasta de saída. Um domínio próprio é opcional.
 - [ ] **Política da empresa.** O `google-safe.md` aceita hospedagem estática como o Cloudflare Pages, mas o código do app ainda é baixado de um servidor externo. Vale confirmar que isso é aceito antes de usar o app com dados reais.
-- [ ] **Rascunhos de tela.** Copiar o conteúdo de `C:\Users\valer\Desktop\best app` para a pasta do projeto, como o `prompt.md` pede.
-
 ### Decisões de produto
 
 - [ ] **Nome e ícone do app.** "Best App" e o ícone de check são provisórios.
-- [ ] **Perguntas em aberto da spec.** São 14 nas seções 2 a 6, mais as de `AUTO-TRIAGEM.md` e `ASSISTENTES.md`. Nenhuma bloqueia o 1a.
-- [ ] **Métrica mensal.** Decidir se ela conta "blocos" ou "tarefas" sem projeto (pendência no `HANDOFF.md`).
 - [ ] **Página de privacidade.** Antes de outras pessoas usarem o app, uma página curta explicando que nada sai da máquina. O texto é decisão sua.
+- [ ] **Revisar as lacunas que o agente decidiu.** Pequenas regras que a spec não cobria foram decididas e escritas no próprio texto de `SPEC.md`, `AUTO-TRIAGEM.md` e `ASSISTENTES.md`. Por exemplo: a quarta prioridade ocupa o lugar da terceira; a precisão da intenção conta só tarefas com data; o warm up só começa quando o checklist tem itens.
+
+### Features esperando resposta às perguntas em aberto
+
+Estas partes da spec não foram construídas porque dependem de uma pergunta em aberto:
+
+- **Prioridades da semana (seção 2):** quantas são. Sem isso, faltam a etapa 6 da reflexão semanal, as prioridades da semana no dashboard, puxar uma prioridade da semana no planejamento e no checkout, metade da métrica mensal de prioridades e o assistente de prioridades encalhadas.
+- **Sugestão de agregar tarefas em projetos (seção 2):** se o app propõe os grupos ou se a Valeria agrupa. A etapa 3 da reflexão semanal mostra só um aviso.
+- **Mural (seção 3):** onde os lembretes do mural são criados e editados.
+- **Checkout pendente no dashboard (seção 3):** a pergunta continua aberta; hoje o dashboard só avisa, sem bloquear, pelo princípio "avisa em vez de bloquear".
+- **Reflexão mensal pulada (seção 4):** hoje o aviso só continua aparecendo.
+- **Métricas mensais:** "blocos" ou "tarefas" sem projeto, e como medir "objetivos com pouco engajamento".
+- **Nome definitivo do campo "motivação" (seção 4).**
+- **Seção 5 inteira (compromissos):** os formatos que identificam cada tipo e como corrigir um tipo detectado errado.
+- **"Agendar lembrete" nos hábitos (seção 6).**
+- **Prazos de "parado" e "antigo" (`ASSISTENTES.md`):** sem eles, faltam os assistentes de tarefas paradas, arquivo e projetos parados.
+- **Limite de 3 adiamentos (`AUTO-TRIAGEM.md`):** está em 3, como proposto; muda numa constante.
 
 ## 2. Segurança e privacidade
 
@@ -52,7 +65,7 @@ Estes pontos não puderam ser testados no navegador embutido do Claude Code.
 
 ## 4. Testes e qualidade
 
-- **Não há testes de interface.** Só o domínio, o banco e o backup têm testes. As telas foram conferidas à mão no navegador embutido.
+- **Não há testes de interface.** O domínio, os casos de uso, as consultas e o backup têm testes (191 no total). As telas foram conferidas à mão no navegador embutido, e um erro de interface só aparece usando.
 - **Não há teste ponta a ponta** (Playwright ou similar) para os fluxos inteiros, como escolher um arquivo, importar e desfazer.
 - **Os testes não rodam no deploy.** O build do Cloudflare roda `tsc` e `vite build`, mas não o `vitest`. Dá para incluir os testes no `npm run build` ou configurar GitHub Actions.
 - **Não há lint.** O ESLint ficou de fora para ter menos dependências.
@@ -67,9 +80,18 @@ Estes pontos não puderam ser testados no navegador embutido do Claude Code.
 
 ## 6. Arquitetura
 
-- **A interface lê o banco direto.** O `useLiveQuery` consulta o Dexie, pulando a camada de aplicação. No 1a, as consultas da nota do dia, da wiki e das listas devem virar funções da camada de aplicação.
-- **Peças declaradas e ainda sem uso.** O campo `position` (ordem dos blocos) ainda não tem gerador, e a tabela `days` ainda não é usada. As duas entram no 1a.
+- **Algumas leituras ainda pulam a camada de aplicação.** As telas usam as consultas de `application/queries.ts`, mas a contagem de eventos do aviso de backup e a lista de projetos do checkout leem o banco direto.
 - **O dia segue o fuso do computador.** Quem viaja entre fusos pode ver uma tarefa mudar de dia. Num app pessoal, é aceitável.
+- **Algumas consultas varrem a tabela inteira.** As seções pendentes, a wiki e os quadros brancos filtram todas as seções na memória. Com anos de uso, vale criar índices para esses estados.
+- **O editor depende de truques para digitação rápida.** As linhas novas aparecem antes de serem salvas, e as gravações rodam em fila (ADR-014). Funciona nos testes, mas colar várias linhas de uma vez ainda vira um bloco só, com quebras de linha dentro.
+- **Texto digitado em menos de 400 ms antes de fechar a aba pode se perder.** A linha salva ao perder o foco e ao sair da tela, mas fechar o Chrome no meio da digitação não dá tempo.
+
+## Editor e telas (1a e 1b)
+
+- **Links no editor não são clicáveis.** Na nota do dia o texto é editável; os links viram clicáveis só na wiki, nas listas e no checkout.
+- **Mover uma linha para outra seção** (arrastar ou atalho) não existe.
+- **Converter um quadro branco em projeto direto no cabeçalho** só funciona pelo título; não há botão separado.
+- **O seletor de datas dos atalhos** usa o calendário nativo do Chrome; limpar a data depende do botão "Limpar" dele.
 
 ## Adiado de propósito
 
@@ -77,4 +99,4 @@ Estes itens não são débito, mas aparecem aqui para não serem esquecidos:
 
 - **App no Android e sincronização entre aparelhos:** fase posterior.
 - **Integração com o Google Agenda:** só numa fase que permita conexões externas.
-- **Tela "Colocar ordem na casa" e os outros assistentes:** a partir do 1b.
+- **Assistente de tarefas paradas:** espera a definição dos prazos de "parado" e "antigo" (`ASSISTENTES.md`).

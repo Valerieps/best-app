@@ -7,6 +7,7 @@ Esta aba é para quem for continuar o trabalho, pessoa ou agente. A spec na aba 
 ## Onde paramos
 
 - A seção 1a (núcleo do ciclo diário) está completa, sem perguntas abertas. O próximo passo é construí-la no Claude Code.
+- Em 11/10/2026, o 1a e o 1b foram construídos, e as seções 2, 3, 4 e 6 foram construídas em tudo o que não depende de pergunta em aberto. A seção 5 espera respostas. O estado de cada fase está em `ARQUITETURA.md`, e o que espera decisão está em `DEBITO-TECNICO.md`. Lacunas pequenas da spec foram decididas pelo agente e registradas no próprio texto da spec; vale a Valeria revisar.
 - Em 11/10/2026, o app passou a ser local-only nesta primeira fase: só Chrome no computador, dados no IndexedDB, sem Firebase, login ou conexões externas. As regras de segurança estão em `google-safe.md`. O Android e a sincronização ficam para uma fase posterior.
 - A seção 1b e as seções 2 a 6 estão decididas no que têm escrito. As seções 2 a 6 somam 14 perguntas abertas, listadas no início de cada uma.
 - A spec nasceu das notas manuscritas da Valeria de 03/10/2026 (`o_melhor_app_do_mundo1.pdf`), digitalizadas e reorganizadas em 04/10/2026.

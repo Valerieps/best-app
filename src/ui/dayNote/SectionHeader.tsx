@@ -1,0 +1,147 @@
+import { useEffect, useRef, useState, type KeyboardEvent } from 'react';
+import type { Project, Section } from '../../domain/entities';
+import { normalizeForMatch } from '../../domain/text';
+import { formatTime } from '../format';
+import { KindChip, ProjectChip, WhiteboardChip } from '../components/Chips';
+
+interface Props {
+  section: Section | null;
+  kind: Section['kind'];
+  projects: Project[];
+  onSaveTitle(title: string): void;
+  onLinkProject(project: Project): void;
+  onCreateProject(name: string): void;
+}
+
+type Option =
+  | { type: 'project'; project: Project }
+  | { type: 'create'; name: string }
+  | { type: 'titleOnly'; name: string };
+
+const MAX_SUGGESTIONS = 5;
+
+/**
+ * Section header: kind, time and an optional title. While typing the title of a whiteboard
+ * section, existing projects are suggested; choosing one links the section to it.
+ */
+export function SectionHeader({ section, kind, projects, onSaveTitle, onLinkProject, onCreateProject }: Props) {
+  const [title, setTitle] = useState(section?.title ?? '');
+  const [open, setOpen] = useState(false);
+  const [highlight, setHighlight] = useState(0);
+  const inputRef = useRef<HTMLInputElement>(null);
+  const project = section?.projectId ? projects.find((p) => p.id === section.projectId) ?? null : null;
+  const whiteboard = section !== null && section.projectId === null;
+
+  useEffect(() => {
+    if (document.activeElement !== inputRef.current) setTitle(section?.title ?? '');
+  }, [section?.title]);
+
+  const typed = title.trim();
+  const options: Option[] = [];
+  if (whiteboard && open && typed) {
+    const query = normalizeForMatch(typed);
+    projects
+      .filter((p) => p.status === 'active' && normalizeForMatch(p.name).includes(query))
+      .slice(0, MAX_SUGGESTIONS)
+      .forEach((p) => options.push({ type: 'project', project: p }));
+    if (!projects.some((p) => normalizeForMatch(p.name) === query)) options.push({ type: 'create', name: typed });
+    options.push({ type: 'titleOnly', name: typed });
+  }
+
+  function choose(option: Option) {
+    setOpen(false);
+    if (option.type === 'project') {
+      setTitle(option.project.name);
+      onLinkProject(option.project);
+    } else if (option.type === 'create') {
+      onCreateProject(option.name);
+    } else {
+      onSaveTitle(option.name);
+    }
+    inputRef.current?.blur();
+  }
+
+  function onKeyDown(event: KeyboardEvent<HTMLInputElement>) {
+    if (event.key === 'Escape') {
+      setOpen(false);
+      return;
+    }
+    if (event.key === 'Enter') {
+      event.preventDefault();
+      if (options.length > 0) choose(options[Math.min(highlight, options.length - 1)]);
+      else {
+        onSaveTitle(title);
+        inputRef.current?.blur();
+      }
+      return;
+    }
+    if (options.length === 0) return;
+    if (event.key === 'ArrowDown') {
+      event.preventDefault();
+      setHighlight((highlight + 1) % options.length);
+    } else if (event.key === 'ArrowUp') {
+      event.preventDefault();
+      setHighlight((highlight - 1 + options.length) % options.length);
+    }
+  }
+
+  return (
+    <div className="section__header">
+      <KindChip kind={kind} />
+      {section && <span className="section__time">{formatTime(section.createdAt)}</span>}
+      <div className="title-field">
+        <input
+          ref={inputRef}
+          className="section__title"
+          value={title}
+          placeholder="Sem título"
+          disabled={!section}
+          onChange={(event) => {
+            setTitle(event.target.value);
+            setOpen(true);
+            setHighlight(0);
+          }}
+          onFocus={() => setOpen(true)}
+          onBlur={() => {
+            // Let a click on a suggestion land before closing.
+            setTimeout(() => setOpen(false), 150);
+            if (title.trim() !== (section?.title ?? '')) onSaveTitle(title);
+          }}
+          onKeyDown={onKeyDown}
+          aria-label="Título da seção"
+          aria-expanded={options.length > 0}
+          aria-autocomplete="list"
+          role="combobox"
+        />
+        {options.length > 0 && (
+          <ul className="suggestions" role="listbox">
+            {options.map((option, index) => (
+              <li
+                key={option.type === 'project' ? option.project.id : option.type}
+                role="option"
+                aria-selected={index === highlight}
+                className={`suggestions__item ${index === highlight ? 'suggestions__item--active' : ''}`}
+                onMouseDown={(event) => {
+                  event.preventDefault();
+                  choose(option);
+                }}
+              >
+                {option.type === 'project' && (
+                  <>
+                    {option.project.name} <ProjectChip />
+                  </>
+                )}
+                {option.type === 'create' && <>Criar o projeto “{option.name}”</>}
+                {option.type === 'titleOnly' && (
+                  <span className="muted">Usar “{option.name}” só como título (quadro branco)</span>
+                )}
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
+      {whiteboard && <WhiteboardChip />}
+      {project && <ProjectChip />}
+    </div>
+  );
+}

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { createBackup } from '../application/backup';
+import { createBackup, emptyTables } from '../application/backup';
 import { createProject } from '../application/projects';
 import { createTestContext } from '../test/fixtures';
 import { AutoBackup } from './autoBackup';
@@ -140,7 +140,7 @@ describe('AutoBackup', () => {
     await auto.init();
     expect(auto.getState()).toMatchObject({ status: 'blocked' });
 
-    await importBackup(db, createBackup({ blocks: [], sections: [], projects: [], days: [], events: [] }, NOW), NOW);
+    await importBackup(db, createBackup(emptyTables(), NOW), NOW);
     await auto.flush();
 
     expect(auto.getState()).toMatchObject({ status: 'active' });

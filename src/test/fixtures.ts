@@ -1,5 +1,6 @@
 import type { AppContext } from '../application/ports';
 import { AppDatabase } from '../infrastructure/db';
+import { DexieReader } from '../infrastructure/dexieReader';
 import { DexieStore } from '../infrastructure/dexieStore';
 
 let databaseCounter = 0;
@@ -25,11 +26,13 @@ export function sequentialIds(prefix = 'id') {
   return { next: () => `${prefix}-${++counter}` };
 }
 
+/** Times are local (no Z), so day keys match what a user in any time zone would see. */
 export function createTestContext(db = createTestDatabase(), now = '2026-10-11T12:00:00') {
+  const clock = fixedClock(now);
   const ctx: AppContext = {
     store: new DexieStore(db),
-    clock: fixedClock(now),
+    clock,
     ids: sequentialIds(),
   };
-  return { db, ctx };
+  return { db, ctx, clock, reader: new DexieReader(db) };
 }

@@ -1,31 +1,60 @@
 /*
  * Design tokens: every color, font and spacing value used by the UI lives here.
- * Change the look of the app by editing this file only.
+ * Change the look of the app by editing this file only. Palette taken from the 1a drafts.
  */
 :root {
-  /* Colors */
-  --color-bg: #fbfaf7;
+  /* Base */
+  --color-bg: #f4f2ed;
   --color-surface: #ffffff;
-  --color-text: #1f2328;
-  --color-text-muted: #6b6f76;
-  --color-border: #e4e1da;
-  --color-accent: #2f5d50;
+  --color-surface-soft: #faf8f4;
+  --color-text: #1f1f1f;
+  --color-text-muted: #85817a;
+  --color-border: #e4e0d8;
+  --color-border-strong: #cfcac0;
+
+  /* Actions */
+  --color-accent: #1c1c1c;
   --color-accent-text: #ffffff;
-  --color-accent-soft: #e6efeb;
-  --color-warning-bg: #fff4dc;
-  --color-warning-border: #e8c46a;
+  --color-focus: #3b6fd8;
+  --color-check: #2f6fe0;
+  --color-link: #7a4a12;
+
+  /* Section and tag colors */
+  --color-general-bg: #f6f4ef;
+  --color-general-border: #d8d4cc;
+  --color-general-bar: #d1ccc3;
+  --color-meeting-bg: #e7efff;
+  --color-meeting-text: #2459c9;
+  --color-project-bg: #ece9fb;
+  --color-project-text: #4b3fb3;
+  --color-project-bar: #8b7fe0;
+  --color-whiteboard-bg: #fbebd3;
+  --color-whiteboard-text: #8a5a12;
+
+  /* Feedback */
+  --color-warning-bg: #f8ead6;
+  --color-warning-border: #ecd2ac;
+  --color-warning-text: #6b4210;
+  --color-success-bg: #e6f2e4;
+  --color-success-text: #3d7a35;
   --color-danger: #b42318;
   --color-danger-bg: #fdecea;
   --color-danger-border: #f0a8a0;
 
+  /* Fireworks */
+  --color-firework-1: #e8a33d;
+  --color-firework-2: #8b7fe0;
+  --color-firework-3: #2f6fe0;
+  --color-firework-4: #e0607e;
+
   /* Typography: system fonts only, nothing is downloaded */
   --font-body: system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-  --font-mono: ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
+  --font-size-xs: 0.75rem;
   --font-size-sm: 0.8125rem;
   --font-size-md: 1rem;
-  --font-size-lg: 1.25rem;
-  --font-size-xl: 1.5rem;
-  --line-height: 1.6;
+  --font-size-lg: 1.125rem;
+  --font-size-xl: 1.375rem;
+  --line-height: 1.55;
 
   /* Spacing */
   --space-1: 4px;
@@ -37,11 +66,16 @@
   --space-7: 48px;
 
   /* Shape */
-  --radius-sm: 4px;
-  --radius-md: 8px;
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 14px;
+  --radius-pill: 999px;
   --border-width: 1px;
+  --section-bar-width: 3px;
 
   /* Layout */
   --content-width: 760px;
+  --content-width-wide: 860px;
   --topbar-height: 56px;
+  --menu-width: 280px;
 }
