@@ -2,6 +2,8 @@
 
 Oct 4, 2026 · @Valerie
 
+Este é um app pessoal para eu capturar tudo ao longo do dia sem decidir onde guardar, e decidir o destino de cada coisa só no checkout, no fim do dia. Rituais diários, semanais e mensais entram aos poucos e ligam o dia a dia a projetos e objetivos, mostrando onde minha energia está indo e o quanto isso se desconecta do que eu quero. O documento segue a ordem de construção: primeiro o núcleo do ciclo diário, e cada parte seguinte acrescenta um ritual ou conceito.
+
 ## Princípios
 
 - O app sempre avisa em vez de bloquear.
@@ -23,6 +25,12 @@ Não há onboarding: no primeiro uso eu já saio usando o ciclo diário, e os ri
 - O backend é o Firebase (Firestore, login e sincronização), que eu já uso em outro app.
 - O Firestore permite usar o app sem internet: o que eu escrevo sem conexão fica no aparelho e sincroniza quando ela volta.
 - O Firestore não faz consultas relacionais, então as métricas são calculadas no próprio app, a partir do histórico. O volume de dados de uma pessoa só é pequeno o bastante para isso.
+- O app não envia notificações: os lembretes reaparecem dentro dele. Isso dispensa um serviço de envio de avisos no Firebase.
+- O app é só para uma pessoa, sem compartilhamento.
+- O app guarda um histórico de eventos: cada mudança (criação, adiamento, finalização, vínculo) com data e hora, e não só o estado atual. Todas as métricas, inclusive as que ainda não existem, saem desse histórico.
+- Cada bloco é um registro separado no Firestore, para evitar conflitos quando eu edito no celular e na web ao mesmo tempo.
+- Cada bloco existe uma vez só. Notas, projetos e wiki apontam para ele por vínculos, sem cópias.
+- A arquitetura é desenhada para o escopo completo da spec, e a implementação segue as partes em ordem.
 
 ## 1a. Ciclo diário: núcleo
 
@@ -34,15 +42,16 @@ O núcleo tem só o necessário para testar a hipótese do app: capturar sem dec
 - A nota do dia é um agrupamento de blocos que só existe enquanto houver blocos vinculados a ela. Depois do checkout completo, ela desaparece.
 - A nota do dia é dividida em seções, como um notebook do Colab. Há dois tipos de seção: geral e reunião.
 - Ao longo do dia, se eu entrar em reunião, abro uma seção de reunião para deixar separadas as notas que tomei naquela reunião.
-- Toda seção guarda o horário de criação como metadado e pode ter um título opcional.
+- Toda seção guarda o horário de criação como metadado e pode ter um título opcional. Ao digitar o título, o app sugere os projetos que já existem, como "Data Studios"; escolher um deles vincula a seção ao projeto. Por baixo dos panos, os projetos existem desde o 1a, ainda sem funcionalidades próprias: eles só agrupam as seções, tarefas e notas vinculadas.
+- Toda seção nasce como quadro branco, ou seja, sem vínculo com projeto, a menos que eu escolha um projeto ao dar o título. O quadro branco é um estado, não um tipo: uma seção geral ou de reunião pode estar em quadro branco. A qualquer momento, ele pode ser convertido em um projeto novo ou vinculado a um projeto existente.
 - É possível abrir mais de uma seção geral. Separar o conteúdo em seções ao longo do dia funciona como uma pré-triagem.
 - Há dois tipos de bloco: tarefa e nota geral. Uma linha que começa com `[]` seguido de um espaço é tarefa, em qualquer tipo de seção; todo o resto é nota geral.
-- A wiki pessoal, para onde vão as notas gerais, é interna ao app. No núcleo, ela é uma lista em ordem cronológica.
+- A wiki pessoal, para onde vão as notas gerais, é interna ao app. No núcleo, ela é uma lista em ordem cronológica. As notas não moram num lugar só: cada nota também fica ligada ao projeto da seção de onde veio, quando a seção tem um.
 
 ### Tarefas
 
 - Tarefas que ainda não foram finalizadas, arquivadas ou abandonadas moram na lista de tarefas ativas. É dela que eu escolho as tarefas no planejamento do dia seguinte.
-- Toda tarefa guarda o vínculo com a seção em que foi originalmente criada, com o título e o horário da seção.
+- Toda tarefa guarda o vínculo com a seção em que foi originalmente criada, com o título e o horário da seção. Se a seção está vinculada a um projeto, a tarefa também fica vinculada a ele.
 - A tarefa tem uma data de intenção de execução, definida no checkout. Definir essa data é escolher o dia em que a tarefa aparece na nota do dia. Quando a data chega, a tarefa aparece sozinha na nota daquele dia.
 - Conta como adiamento toda mudança da data de intenção para depois, e também a tarefa que passa pelo checkout sem ter sido feita no dia da intenção.
 - O app guarda stats de quantos adiamentos e da distância entre a primeira intenção de execução e a ação final (finalizar, arquivar, abandonar).
@@ -61,7 +70,8 @@ O núcleo tem só o necessário para testar a hipótese do app: capturar sem dec
 
 - O dia só vira depois da meia-noite.
 - O checkout pode ser feito antes de o dia terminar e mais de uma vez por dia. Ao fim dele, eu posso continuar o mesmo dia normalmente. Se eu adicionar itens depois do checkout, ele volta a ficar pendente.
-- Em qualquer seção, geral ou de reunião, todas as notas são triadas como um bloco só, e as tarefas são triadas separadamente, como qualquer outra tarefa. O destino das notas de reunião é o mesmo das notas gerais.
+- Em qualquer seção, geral ou de reunião, todas as notas são triadas como um bloco só, e as tarefas são triadas separadamente, como qualquer outra tarefa. O destino das notas de reunião é o mesmo das notas gerais. Numa seção vinculada a um projeto, as notas continuam ligadas a ele, e as tarefas chegam à triagem vinculadas ao projeto e com "dia seguinte" pré-selecionado; eu confirmo o destino de cada uma.
+- Para cada seção ainda em quadro branco, o checkout oferece uma última chance: converter em projeto, vincular a um projeto existente ou deixar sem vínculo. É um aviso, não um bloqueio: se o dia terminar com a seção em quadro branco, todo o conteúdo dela fica sem vínculo com projeto.
 - Um checkout é considerado finalizado quando o dia termina sem nenhum item pendente para triagem.
 
 Tudo o que foi coletado naquele dia precisa de destino, e cada tipo de bloco tem os seus:
@@ -70,6 +80,8 @@ Tudo o que foi coletado naquele dia precisa de destino, e cada tipo de bloco tem
 | --- | --- |
 | Tarefa | Finalizar; arquivar; abandonar; alterar data de intenção de execução (atalho para mover para o dia seguinte) |
 | Notas de uma seção (geral ou de reunião) | Mover para a wiki pessoal; descartar |
+
+O checkout é em lote: o app chega com os destinos já aplicados ou pré-selecionados, e eu aceito as sugestões de uma vez, cuidando só das exceções. As regras estão na aba Auto-triagem.
 
 - Finalizar significa que eu engajei com a tarefa, e gera um log de execução histórica, com os dados necessários para calcular métricas até o nível mensal. Tarefas podem ser finalizadas a qualquer momento e, depois disso, não passam mais por triagens.
 - Arquivar move a tarefa para uma lista de tarefas que podem ser reativadas depois; ela deixa de aparecer entre as tarefas que podem ser escolhidas para um dia.
@@ -98,7 +110,7 @@ Estes itens já estão decididos e entram depois de uma semana de uso do núcleo
 ### Navegação e plataforma
 
 - No topo da nota do dia, onde aparece a data, um botão de setinha pagina entre os dias. Ele passa somente pelas notas que ainda têm itens pendentes.
-- A wiki pessoal pode ser ordenada por linha temporal ou por ordem alfabética e tem um campo de busca textual.
+- A wiki pessoal pode ser ordenada por linha temporal ou por ordem alfabética e tem um campo de busca textual. As notas também podem ser vistas por tipo ou por projeto vinculado.
 - O app pode ser instalado no Android como PWA.
 
 ## 2. Semana e projetos
@@ -113,7 +125,7 @@ Esta parte acrescenta os projetos, que agrupam tarefas, e a reflexão semanal, q
 
 ### Projetos
 
-- Um projeto é uma coleção de tarefas que fazem sentido juntas.
+- Um projeto é uma coleção de tarefas que fazem sentido juntas. Os projetos já existem por baixo dos panos desde o 1a, criados a partir de seções em quadro branco convertidas; esta parte dá a eles funcionalidades próprias.
 - Uma tarefa pode existir sem projeto e se vincula a no máximo um projeto.
 - Projetos só são finalizados manualmente: eu abro o projeto e finalizo.
 
@@ -149,10 +161,8 @@ Esta parte acrescenta o warm up e o dashboard, que abrem o dia, e define o que a
 
 ### Em aberto
 
-- [ ] Como chega o "perguntar de novo às XXh" (notificação, aviso dentro do app) e o que acontece se o dia acabar sem resposta?
 - [ ] Onde eu crio e edito os lembretes do mural?
 - [ ] Checkout pendente do dia anterior bloqueia o "Iniciar o Flow de Execução" ou é só um botão a mais? E se houver vários dias pendentes?
-- [ ] O que o "botão de pânico" faz, e qual será o nome definitivo dele?
 
 ### Warm up
 
@@ -167,10 +177,17 @@ Esta parte acrescenta o warm up e o dashboard, que abrem o dia, e define o que a
 A tela de boas-vindas mostra:
 
 - a lista das 3 prioridades da semana
-- um mural com lembretes de mim para mim mesma (tipo frases mesmo)
+- um mural com lembretes de mim para mim mesma (tipo frases mesmo). Ele mostra uma frase por vez, em rodízio. Aparecem no máximo 2 frases diferentes por dia: uma ao abrir o app, que é trocada às 13h. Cada frase tem uma frequência, baixa, média ou alta, em proporção: para cada vez que uma frase de frequência baixa aparece, uma média aparece 2 vezes e uma alta, 4. O rodízio segue uma ordem que respeita essas proporções, em vez de sorteio, para evitar que a mesma frase se repita seguidamente
 - o botão "Iniciar o Flow de Execução", o mais proeminente
 - botão de ação opcional: registrar pensamentos (entram em uma seção geral da nota do dia)
 - o botão de checkout, caso ele não tenha sido feito no dia anterior
+
+### Lembretes
+
+- Lembretes tendem a virar paisagem, então o app não envia notificações. Um lembrete é um item que reaparece dentro do app depois do horário pedido, como no "perguntar de novo às XXh" do warm up.
+- No desktop, com a aba do app aberta em segundo plano, o título da aba ganha um contador e o ícone ganha um ponto, sem som nem pop-up. Se o app estiver instalado no computador (Windows ou macOS), o mesmo contador pode aparecer no ícone da barra de tarefas.
+- Ao voltar para o app, uma faixa discreta no topo da nota do dia mostra o que voltou, com três ações: feito, mais tarde e largar. Ela não cobre o texto. No Android, essa faixa é o único sinal: lá, o ícone de um app instalado pelo navegador só ganha um ponto quando há notificações, e o app não envia notificações.
+- Se eu ignorar a faixa, ela continua ali até o checkout, onde o item vira pergunta: manter, mudar ou largar.
 
 ### Rituais pulados
 
@@ -181,7 +198,7 @@ Pular um ritual não bloqueia o app, e qualquer ritual pode ser acionado depois,
 | Item do warm up | Posso "pular hoje" ou pedir para "perguntar de novo às XXh" |
 | Checkout do dia anterior | O dashboard mostra o botão de checkout, e o dia pode começar sem prioridades |
 | Dias não ativos | Não contam como pulados: eu configuro os dias ativos e, na sexta-feira, por exemplo, o dia seguinte é a segunda |
-| Vários dias úteis sem abrir o app | Aparece a sugestão do "botão de pânico" (nome provisório: a feature precisa de um nome mais gentil). O comportamento dele ainda será definido |
+| Vários dias úteis sem abrir o app | Aparece a sugestão de "Fechar dias pendentes", que aplica a auto-triagem a todos os dias pendentes de uma vez |
 | Reflexão semanal | Os itens não triados acumulam, e o contador de adiamento aumenta de acordo |
 | Reflexão mensal | A definir |
 
@@ -233,7 +250,6 @@ Esta parte acrescenta o compromisso como tipo de bloco e a detecção automátic
 
 - [ ] Quais são os formatos pré-definidos que identificam cada tipo de bloco?
 - [ ] Como eu corrijo um bloco que foi detectado com o tipo errado?
-- [ ] Com qual agenda externa o app se integra, e o que "mover para a agenda" faz na prática?
 
 ### Regras
 
@@ -241,9 +257,9 @@ Esta parte acrescenta o compromisso como tipo de bloco e a detecção automátic
 - O tipo do bloco é detectado de acordo com formatos pré-definidos (por exemplo, `<data: __>` é compromisso). O que não encaixar em nenhum fica como nota geral.
 - Compromissos são blocos criados manualmente na nota do dia e ficam guardados no banco de dados do app. Os do dia já constam na nota do dia, junto das tarefas.
 - Compromissos, como as tarefas, só se vinculam a projetos.
-- A agenda é um app externo.
+- A agenda externa é o Google Agenda. Migrar um compromisso cria o evento lá e marca o compromisso como migrado, o que conta como concluído. Sem a integração, eu marco como migrado à mão.
 
-No checkout, um compromisso pode ser movido para a agenda, marcado como feito, descartado ou vinculado a um projeto (opcional).
+No checkout, um compromisso pode ser migrado para o Google Agenda (ou marcado como migrado à mão), marcado como feito, descartado ou vinculado a um projeto (opcional).
 
 ## 6. Hábitos
 
