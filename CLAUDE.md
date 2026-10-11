@@ -9,6 +9,8 @@ day-to-day to projects and objectives.
 - `AUTO-TRIAGEM.md` - rules for the batch checkout (automatic, suggested, always manual).
 - `ASSISTENTES.md` - cleanup assistants, built on the same batch mechanism as the checkout.
 - `HANDOFF.md` - where the work stands, why decisions were made, and how the owner likes to work.
+- `ARQUITETURA.md` - technical design for the whole spec (data model, events, editor, triage,
+  metrics, phases). Keep it in sync when the design changes.
 - `DEBITO-TECNICO.md` - technical debt left behind, starting with what depends on the owner.
   Remove an item when it is resolved; add one when you knowingly leave something behind.
 - `google-safe.md` - security and compliance rules (local-only, no network, CSP, backups).
