@@ -2,7 +2,7 @@
 
 Atualizado em Oct 11, 2026
 
-Esta aba é para quem for continuar o trabalho, pessoa ou agente. A spec na aba principal é a fonte da verdade; aqui fica o que não cabe nela: onde paramos, o porquê das decisões e o que falta.
+Este documento é para quem for continuar o trabalho, pessoa ou agente. O `SPEC.md` é a fonte da verdade; as antigas abas do Google Docs não valem mais. Aqui fica o que não cabe nela: onde paramos, o porquê das decisões e o que falta.
 
 ## Onde paramos
 
@@ -33,19 +33,18 @@ Esta aba é para quem for continuar o trabalho, pessoa ou agente. A spec na aba 
 | Abandonar e descartar escondem, sem apagar | O histórico de eventos precisa continuar íntegro para as métricas |
 | Hábitos ficam por último | Decisão da Valeria para reduzir o escopo |
 | Projetos existem por baixo dos panos desde o 1a; toda seção nasce em quadro branco e só se vincula a um projeto por escolha | Leva a pré-triagem adiante: o vínculo já diz o destino. O quadro branco é um estado, não um tipo, para que uma reunião também possa ficar sem projeto, e o checkout oferece a última chance de vincular. As notas podem ser vistas por tipo ou por projeto, sem um lugar único. As tarefas chegam ao checkout com "dia seguinte" pré-selecionado, mas a Valeria confirma cada uma, para não virar adiamento automático |
-| Checkout em lote, com auto-triagem (aba AUTO-TRIAGEM) | Reduz o checkout a confirmar sugestões e cuidar das exceções. O app decide o óbvio e reversível, sugere o provável e nunca decide o que só a Valeria sabe ou o que tira coisas de circulação |
+| Checkout em lote, com auto-triagem (`AUTO-TRIAGEM.md`) | Reduz o checkout a confirmar sugestões e cuidar das exceções. O app decide o óbvio e reversível, sugere o provável e nunca decide o que só a Valeria sabe ou o que tira coisas de circulação |
 | "Fechar dias pendentes" no lugar do "botão de pânico" | Nome descritivo, a pedido da Valeria. Aplica a auto-triagem a todos os dias pendentes; as tarefas voltam à lista de ativas sem data, para não virar uma pilha no dia do retorno |
 | Google Agenda com integração só de ida, numa fase futura | Migrar marca o compromisso como migrado, que conta como concluído. Basta guardar o status e o identificador do evento; o app continua sendo a fonte da verdade. Enquanto o app for local-only, a migração é só manual |
-| Assistentes de limpeza (aba ASSISTENTES) | Mesma mecânica do checkout em lote, para colocar ordem na casa sem esforço. Viram um componente genérico no código. O mural ficou de fora porque os lembretes dele não vencem |
+| Assistentes de limpeza (`ASSISTENTES.md`) | Mesma mecânica do checkout em lote, para colocar ordem na casa sem esforço. Viram um componente genérico no código. O mural ficou de fora porque os lembretes dele não vencem |
 | Sem notificações: lembretes reaparecem dentro do app (contador na aba e faixa discreta na nota do dia) | A Valeria tem receio de que lembretes virem paisagem e sejam ignorados. Avisos passivos, no momento em que ela já está no app, e lembretes ignorados viram pergunta no checkout |
 
 ## Pendências
 
-- [ ] Exportar as abas SPEC, AUTO-TRIAGEM, ASSISTENTES e HANDOFF como Markdown, salvar na pasta do projeto e colar no Claude Code o texto da aba PROMPT. Ele pede um plano de arquitetura para a spec inteira e a implementação só do 1a. Telas desenhadas não são pré-requisito.
 - [ ] Fazer o rascunho da tela de checkout do 1a. É a tela que prova a hipótese do app e ainda não tem desenho.
 - [ ] Fazer uma versão enxuta do rascunho da nota do dia e do prompt do Stitch, só com o 1a. Os atuais mostram itens do 1b.
 - [x] Escrever um parágrafo de abertura para a spec. A introdução foi removida, e o texto começa direto em "Princípios".
-- [ ] Responder às perguntas que restam no "Em aberto" de cada seção e das abas AUTO-TRIAGEM e ASSISTENTES.
+- [ ] Responder às perguntas que restam no "Em aberto" de cada seção e de `AUTO-TRIAGEM.md` e `ASSISTENTES.md`.
 - [ ] Decidir se a métrica mensal conta "blocos" ou "tarefas" sem projeto. Só tarefas e compromissos se vinculam a projetos.
 - [ ] Escolher o nome definitivo do campo "motivação".
 

@@ -135,6 +135,11 @@ Revisada em 12/10/2026. Ordenado por prioridade.
 - **O rascunho e a página do projeto divergem no hover das tarefas.** O rascunho escondia data e "adiada" no hover; a página segue o padrão da nota do dia (etiquetas sempre visíveis), como diz o `SPEC.md` (ADR-032).
 - **O resto do roadmap de `AVALIACAO-UX.md`.** Os sete itens de "Fazer já" foram feitos em 12/10/2026; "Planejar", "Ajustes finos" e "Depois" continuam abertos.
 
+## A spec mudou e o código ainda não (12/10/2026)
+
+- **Aviso de reflexão na nota do dia.** O `SPEC.md` ("Navegação") agora pede o aviso de reflexão disponível no contador de "Rituais" e na nota do dia, em último lugar na fila de avisos. Hoje ele só aparece no contador: `ReflectionBanner` e `MonthlyReflectionBanner` (`ui/reflection/`) existem, mas nenhuma tela os usa, e `pickTopNotice` (`ui/notices.ts`) não conhece esse aviso.
+- **Quando o dashboard aparece.** O `SPEC.md` ("Dashboard") agora pede o dashboard só quando há checklist de warm up, frases no mural ou prioridades da semana. `dayStage` (`domain/dayFlow.ts`) olha só o checklist: com itens no warm up, o dashboard aparece mesmo vazio; sem itens, nunca aparece. Mural e prioridades da semana ainda esperam perguntas em aberto, então a diferença hoje é só o dashboard vazio depois do warm up.
+
 ## Lista de projetos, página do projeto e prioritários da semana (12/10/2026)
 
 ### Não verificado

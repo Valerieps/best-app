@@ -44,16 +44,16 @@ Toda opção do app mora num de três níveis, e cada nível tem um lugar fixo, 
 
 - ☰ abre uma gaveta por cima da tela, só com lugares, em grupos: Hoje (próximos dias); Listas (tarefas ativas, tarefas arquivadas, wiki); Planejamento (projetos, objetivos, hábitos); e, no rodapé, Dados e backup e Configurações.
 - "Hoje" volta para a nota do dia de qualquer tela.
-- "Rituais" abre a lista dos rituais: checkout de hoje e checkouts pendentes, reflexão semanal, reflexão mensal e "Colocar ordem na casa". Um contador soma os checkouts pendentes e as reflexões disponíveis. Os avisos de reflexão disponível vivem nesse contador, e não em faixas.
+- "Rituais" abre a lista dos rituais: checkout de hoje e checkouts pendentes, reflexão semanal, reflexão mensal e "Colocar ordem na casa". Um contador soma os checkouts pendentes e as reflexões disponíveis. Uma reflexão disponível aparece nos dois lugares: no contador e num aviso na nota do dia.
 - O status do backup fica sempre visível, como um ponto colorido com um rótulo curto ("Backup 14:32", "Sem backup", "Backup pausado"). Clicar nele abre "Dados e backup". A faixa de backup aparece em todas as telas só enquanto não houver nenhum backup, ou quando o backup estiver bloqueado ou com erro.
-- Só um aviso aparece por vez no topo, nesta ordem: backup bloqueado ou com erro, checkout pendente, backup ainda não ativado. Quando um some, o próximo aparece. Os lembretes que voltaram ficam fora dessa fila e aparecem sempre, porque são o único sinal deles.
+- Só um aviso aparece por vez no topo, nesta ordem: backup bloqueado ou com erro, checkout pendente, backup ainda não ativado, reflexão disponível. Quando um some, o próximo aparece. Os lembretes que voltaram ficam fora dessa fila e aparecem sempre, porque são o único sinal deles.
 - O aviso de checkout pendente e o de backup não ativado têm "Lembrar depois", que os esconde até o dia seguinte. O contador de "Rituais" continua mostrando os checkouts pendentes. O aviso de backup bloqueado ou com erro não pode ser adiado.
 
 ### 2. Da tela: um cabeçalho logo abaixo da barra
 
 - Título à esquerda; à direita, no máximo uma ação principal e um "⋯" com as outras.
 - Na nota do dia, o título é a data com as setas entre dias pendentes, a ação principal é "Fazer checkout" daquele dia, e o "⋯" tem "Fixar prioridades". Os botões "+ Seção geral" e "+ Seção de reunião" ficam sempre visíveis no fim da nota, porque abrir seção é parte da captura. As seções seguem a ordem em que foram criadas, então não há botão entre elas. O checkout fica nos dois lugares: em "Rituais" e na nota do dia.
-- Os avisos que dizem respeito só àquela tela ficam logo abaixo do cabeçalho dela, como o checkout pendente e os lembretes que voltaram, que aparecem só na nota do dia.
+- Os avisos que dizem respeito só àquela tela ficam logo abaixo do cabeçalho dela, como o checkout pendente, a reflexão disponível e os lembretes que voltaram, que aparecem só na nota do dia.
 - Nos fluxos (checkout e reflexões), a decisão fica no fim da página, porque eu leio de cima para baixo antes de decidir. O botão de confirmar a triagem se chama "Confirmar decisões".
 - A tela "Iniciar Dia" é a única sem barra: é uma tela branca só com um desenho simples de sol e o botão.
 
@@ -113,7 +113,7 @@ Tudo o que foi coletado naquele dia precisa de destino, e cada tipo de bloco tem
 | Tarefa | Finalizar; arquivar; abandonar; alterar data de intenção de execução (atalho para mover para o dia seguinte) |
 | Notas de uma seção (geral ou de reunião) | Mover para a wiki pessoal; descartar |
 
-O checkout é em lote: o app chega com os destinos já aplicados ou pré-selecionados, e eu aceito as sugestões de uma vez, cuidando só das exceções. As regras estão na aba Auto-triagem.
+O checkout é em lote: o app chega com os destinos já aplicados ou pré-selecionados, e eu aceito as sugestões de uma vez, cuidando só das exceções. As regras estão em `AUTO-TRIAGEM.md`.
 
 - Finalizar significa que eu engajei com a tarefa, e gera um log de execução histórica, com os dados necessários para calcular métricas até o nível mensal. Tarefas podem ser finalizadas a qualquer momento e, depois disso, não passam mais por triagens.
 - Arquivar move a tarefa para uma lista de tarefas que podem ser reativadas depois; ela deixa de aparecer entre as tarefas que podem ser escolhidas para um dia.
@@ -233,13 +233,15 @@ Esta parte acrescenta o warm up e o dashboard, que abrem o dia, e define o que a
 
 ### Warm up
 
-- O app abre em uma tela branca com o botão "Iniciar Dia", que triga a rotina de warm up. Enquanto o checklist de warm up estiver vazio, o app abre direto na nota do dia, como nas primeiras semanas de uso.
+- O app abre em uma tela branca com o botão "Iniciar Dia", que triga a rotina de warm up. Enquanto o checklist de warm up estiver vazio, o app pula essa tela e o warm up.
 - O checklist de warm up é definido manualmente por mim. Isso pode ser feito a qualquer momento ou sugerido na primeira reflexão semanal.
 - O que eu não quero realizar agora, eu posso "pular hoje" ou "perguntar de novo às XXh".
-- Ao terminar o warm up, o app segue para o dashboard.
+- Ao terminar o warm up, o app segue para o dashboard, se ele tiver o que mostrar (veja "Dashboard"); senão, segue para a nota do dia.
 - Se eu reabrir o app depois de já ter iniciado o dia, caio na nota do dia.
 
 ### Dashboard
+
+O dashboard aparece na abertura do dia quando há pelo menos um destes: checklist de warm up, frases no mural ou prioridades da semana. Sem nenhum deles, o app abre direto na nota do dia, como nas primeiras semanas de uso: o dashboard não aparece só para oferecer "registrar pensamentos", "registrar hábitos" ou o checkout pendente.
 
 A tela de boas-vindas mostra:
 
