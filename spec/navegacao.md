@@ -7,11 +7,14 @@ Toda opção do app mora num de três níveis, e cada nível tem um lugar fixo, 
 
 ## 1. Global: a barra lateral, igual em toda tela
 
-- Tudo o que é global fica numa única barra lateral fixa, à esquerda, sempre aberta. Não há barra de cima nem gaveta: o centro fica limpo para eu focar no trabalho. O rascunho é o `rascunhos/rascunho-barra-lateral_1.png`, mas dele vale só a barra lateral, e os itens são os desta lista.
-- A barra lateral tem só lugares, em grupos: Hoje (Hoje, próximos dias e Rituais); Listas (tarefas ativas, tarefas arquivadas, wiki); Planejamento (projetos, objetivos, hábitos); e, no rodapé, Dados e backup, Configurações e o status do backup.
+- Tudo o que é global fica numa única barra lateral fixa, à esquerda. Não há barra de cima nem gaveta: o centro fica limpo para eu focar no trabalho. O rascunho é o `rascunhos/rascunho-barra-lateral_1.png`, mas dele vale só a barra lateral, e os itens são os desta lista.
+- O app ainda não tem versão para celular: a barra lateral é pensada para a tela do computador.
+- Eu posso recolher a barra lateral num botão no topo dela. Recolhida, ela vira uma faixa estreita só com o botão de abrir e o contador de "Rituais". O app lembra se deixei a barra aberta ou recolhida.
+- No topo da barra fica o nome do app, "Best App" por enquanto. Clicar nele abre a nota do dia.
+- A barra lateral tem só lugares, em grupos, nesta ordem: Hoje (Hoje, próximos dias e Rituais); Planejamento (projetos, objetivos, hábitos); Listas (tarefas ativas, tarefas arquivadas, wiki); e, no rodapé, Dados e backup e Configurações.
 - "Hoje" volta para a nota do dia de qualquer tela.
-- "Rituais" abre a lista dos rituais: checkout de hoje e checkouts pendentes, reflexão semanal, reflexão mensal e "Colocar ordem na casa". Um contador soma os checkouts pendentes e as reflexões disponíveis. Uma reflexão disponível aparece nos dois lugares: no contador e num aviso na nota do dia.
-- O status do backup fica sempre visível, como um ponto colorido com um rótulo curto ("Backup 14:32", "Sem backup", "Backup pausado"). Clicar nele abre "Dados e backup". A faixa de backup aparece em todas as telas só enquanto não houver nenhum backup, ou quando o backup estiver bloqueado ou com erro.
+- "Rituais" abre, ali mesmo na barra, a lista dos rituais: checkout de hoje e checkouts pendentes, reflexão semanal, reflexão mensal e "Colocar ordem na casa". A lista começa fechada, e já aberta quando estou numa tela de ritual. Um contador soma os checkouts pendentes e as reflexões disponíveis. Uma reflexão disponível aparece nos dois lugares: no contador e num aviso na nota do dia.
+- O status do backup fica sempre visível, na mesma linha de "Dados e backup", como um ponto colorido com um rótulo curto ("Backup 14:32", "Sem backup", "Backup pausado"). Clicar nele abre "Dados e backup", também quando o backup pede autorização de novo; o botão de retomar fica lá. A faixa de backup aparece em todas as telas só enquanto não houver nenhum backup, ou quando o backup estiver bloqueado ou com erro.
 - Só um aviso aparece por vez no topo da tela, nesta ordem: backup bloqueado ou com erro, checkout pendente, backup ainda não ativado, reflexão disponível. Quando um some, o próximo aparece. Os lembretes que voltaram ficam fora dessa fila e aparecem sempre, porque são o único sinal deles.
 - O aviso de checkout pendente e o de backup não ativado têm "Lembrar depois", que os esconde até o dia seguinte. O contador de "Rituais" continua mostrando os checkouts pendentes. O aviso de backup bloqueado ou com erro não pode ser adiado.
 

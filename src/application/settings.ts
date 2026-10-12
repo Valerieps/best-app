@@ -49,6 +49,11 @@ export function setProjectListGroupOpen(ctx: AppContext, group: ProjectListGroup
   return updateSettings(ctx, (current) => ({ projectListGroups: { ...current.projectListGroups, [group]: open } }));
 }
 
+/** Whether the sidebar is collapsed. Kept with the settings, like the other interface choices. */
+export function setSidebarCollapsed(ctx: AppContext, collapsed: boolean): Promise<void> {
+  return updateSettings(ctx, { sidebarCollapsed: collapsed });
+}
+
 /** Section 3: the warm-up checklist, defined by hand. Empty turns the warm up off. */
 export function setWarmupItems(ctx: AppContext, items: WarmupItem[]): Promise<void> {
   return updateSettings(ctx, {

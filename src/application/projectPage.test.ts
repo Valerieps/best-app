@@ -6,7 +6,7 @@ import { createBlock, linkSectionToProject, setTaskDone } from './notebook';
 import { renameResource, addLinkResource } from './objectives';
 import { createProject, createProjectTask, setProjectFinished, setProjectIcon } from './projects';
 import { loadDayNote, loadDayTriage, loadPendingDays, loadProject, loadProjectList } from './queries';
-import { setProjectListGroupOpen, setProjectPanelPinned } from './settings';
+import { setProjectListGroupOpen, setProjectPanelPinned, setSidebarCollapsed } from './settings';
 
 const TODAY = '2026-10-11';
 
@@ -163,5 +163,16 @@ describe('project page details', () => {
     const { ctx, reader } = createTestContext();
     await setProjectPanelPinned(ctx, true);
     expect((await reader.settings())?.projectPanelPinned).toBe(true);
+  });
+});
+
+describe('sidebar', () => {
+  it('remembers whether it is collapsed, in the settings', async () => {
+    const { ctx, reader } = createTestContext();
+    expect((await reader.settings())?.sidebarCollapsed).toBeUndefined();
+    await setSidebarCollapsed(ctx, true);
+    expect((await reader.settings())?.sidebarCollapsed).toBe(true);
+    await setSidebarCollapsed(ctx, false);
+    expect((await reader.settings())?.sidebarCollapsed).toBe(false);
   });
 });

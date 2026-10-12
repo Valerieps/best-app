@@ -113,6 +113,7 @@
   --content-width: 760px;
   --content-width-wide: 860px;
   --topbar-height: 56px;
-  --menu-width: 280px;
+  --sidebar-width: 260px;
+  --sidebar-collapsed-width: 48px;
   --project-panel-width: 260px;
 }

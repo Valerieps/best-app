@@ -1,6 +1,4 @@
 import type { AutoBackupState } from '../../infrastructure/autoBackup';
-import { navigate } from '../hooks';
-import type { BackupActions } from './useBackup';
 
 function timeLabel(iso: string): string {
   return new Date(iso).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
@@ -39,23 +37,17 @@ function statusOf(state: AutoBackupState): Status | null {
 }
 
 /**
- * Compact backup status for the top bar: a colored dot and a short label. Clicking it opens
- * "Dados e backup", or resumes a paused backup, which needs a click to ask Chrome again.
+ * Compact backup status, shown in the sidebar's "Dados e backup" row: a colored dot and a short
+ * label. The row opens "Dados e backup", where a paused backup is resumed.
  */
-export function BackupIndicator({ state, actions }: { state: AutoBackupState; actions: BackupActions }) {
+export function BackupStatus({ state }: { state: AutoBackupState }) {
   const status = statusOf(state);
   if (!status) return null;
-  const onClick = state.status === 'needsPermission' ? actions.resume : () => navigate({ name: 'data' });
   return (
-    <button
-      type="button"
-      className={`tertiary backup-status backup-status--${status.tone}`}
-      title={status.detail}
-      aria-label={status.detail}
-      onClick={onClick}
-    >
+    <span className={`backup-status backup-status--${status.tone}`} title={status.detail}>
       <span className="backup-status__dot" aria-hidden="true" />
       <span className="backup-status__label">{status.label}</span>
-    </button>
+      <span className="visually-hidden">: {status.detail}</span>
+    </span>
   );
 }

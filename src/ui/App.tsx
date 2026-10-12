@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { loadDayOpening, loadPendingDays } from '../application/queries';
 import { getLastBackupAt } from '../infrastructure/backupRepository';
 import { requestPersistentStorage } from '../infrastructure/browser';
@@ -10,7 +10,6 @@ import { CheckoutScreen } from './checkout/CheckoutScreen';
 import { CleanupScreen } from './cleanup/CleanupScreen';
 import { ScreenHeader } from './components/ScreenHeader';
 import { DayNoteScreen } from './dayNote/DayNoteScreen';
-import { GlobalBar } from './GlobalBar';
 import { HabitsScreen } from './habits/HabitsScreen';
 import { useRoute, useToday } from './hooks';
 import { ActiveTasksScreen, ArchivedTasksScreen } from './lists/ListScreens';
@@ -25,7 +24,7 @@ import { MonthlyReflectionScreen } from './reflection/MonthlyReflectionScreen';
 import { ReflectionScreen } from './reflection/ReflectionScreen';
 import { autoBackup, db, reader } from './services';
 import { SettingsScreen } from './settings/SettingsScreen';
-import { SideMenu } from './SideMenu';
+import { Sidebar } from './Sidebar';
 import { useLiveQuery } from './useLiveQuery';
 
 export function App() {
@@ -33,11 +32,9 @@ export function App() {
   const today = useToday();
   const backup = useBackup();
   const backupState = useAutoBackupState();
-  const [menuOpen, setMenuOpen] = useState(false);
   const [storagePersisted, setStoragePersisted] = useState<boolean | null>(null);
   const hasData = useLiveQuery(async () => (await db.events.count()) > 0) ?? false;
   const everBackedUp = useLiveQuery(async () => (await getLastBackupAt(db)) !== null) ?? false;
-  const closeMenu = useCallback(() => setMenuOpen(false), []);
 
   useEffect(() => {
     requestPersistentStorage().then(setStoragePersisted, () => setStoragePersisted(false));
@@ -69,65 +66,59 @@ export function App() {
   });
 
   if (onToday && stage === null) return null;
-  // "Iniciar Dia" is the only screen without the global bar (spec/navegacao.md, "Navegação").
+  // "Iniciar Dia" is the only screen without the sidebar (spec/navegacao.md, "Navegação").
   if (onToday && stage === 'start') return <StartDayScreen />;
 
   return (
-    <>
-      <GlobalBar
-        today={today}
-        pendingDays={pendingDays}
-        onToday={onToday}
-        onOpenMenu={() => setMenuOpen(true)}
-        backupState={backupState}
-        backup={backup}
-      />
-      {(notice === 'backupProblem' || notice === 'backupSetup') && (
-        <BackupBanner state={backupState} actions={backup} onSnooze={() => snooze('backupSetup')} />
-      )}
-      <SideMenu open={menuOpen} current={route.name} onClose={closeMenu} />
+    <div className="shell">
+      <Sidebar route={route} today={today} pendingDays={pendingDays} backupState={backupState} />
+      <div className="shell__main">
+        {(notice === 'backupProblem' || notice === 'backupSetup') && (
+          <BackupBanner state={backupState} actions={backup} onSnooze={() => snooze('backupSetup')} />
+        )}
 
-      {route.name === 'day' && stage === 'warmup' && opening && <WarmupScreen view={opening} />}
-      {route.name === 'day' && stage === 'dashboard' && opening && <DashboardScreen view={opening} today={today} />}
-      {route.name === 'day' && stage === 'execution' && (
-        <DayNoteScreen
-          key={shownDay}
-          day={shownDay}
-          today={today}
-          pendingDays={pendingDays}
-          reminders={dueReminders}
-          showPendingNotice={notice === 'pendingCheckout'}
-          onSnoozePending={() => snooze('pendingCheckout')}
-        />
-      )}
-      {route.name === 'checkout' && <CheckoutScreen key={route.day} day={route.day} today={today} />}
-      {route.name === 'active' && <ActiveTasksScreen today={today} />}
-      {route.name === 'archived' && <ArchivedTasksScreen today={today} />}
-      {route.name === 'wiki' && <WikiScreen focus={route.section} />}
-      {route.name === 'cleanup' && <CleanupScreen today={today} assistant={route.assistant} />}
-      {route.name === 'reflection' && <ReflectionScreen weekKey={route.week} today={today} />}
-      {route.name === 'projects' && <ProjectsScreen today={today} />}
-      {route.name === 'project' && <ProjectScreen key={route.id} id={route.id} tab={route.tab ?? 'tasks'} today={today} />}
-      {route.name === 'settings' && <SettingsScreen />}
-      {route.name === 'objectives' && <ObjectivesScreen />}
-      {route.name === 'objective' && <ObjectiveScreen id={route.id} />}
-      {route.name === 'habits' && <HabitsScreen today={today} />}
-      {route.name === 'monthReflection' && <MonthlyReflectionScreen month={route.month} today={today} />}
-      {route.name === 'data' && (
-        <main className="page">
-          <ScreenHeader title="Dados e backup" />
-          <BackupPanel state={backupState} actions={backup} storagePersisted={storagePersisted} />
-        </main>
-      )}
+        {route.name === 'day' && stage === 'warmup' && opening && <WarmupScreen view={opening} />}
+        {route.name === 'day' && stage === 'dashboard' && opening && <DashboardScreen view={opening} today={today} />}
+        {route.name === 'day' && stage === 'execution' && (
+          <DayNoteScreen
+            key={shownDay}
+            day={shownDay}
+            today={today}
+            pendingDays={pendingDays}
+            reminders={dueReminders}
+            showPendingNotice={notice === 'pendingCheckout'}
+            onSnoozePending={() => snooze('pendingCheckout')}
+          />
+        )}
+        {route.name === 'checkout' && <CheckoutScreen key={route.day} day={route.day} today={today} />}
+        {route.name === 'active' && <ActiveTasksScreen today={today} />}
+        {route.name === 'archived' && <ArchivedTasksScreen today={today} />}
+        {route.name === 'wiki' && <WikiScreen focus={route.section} />}
+        {route.name === 'cleanup' && <CleanupScreen today={today} assistant={route.assistant} />}
+        {route.name === 'reflection' && <ReflectionScreen weekKey={route.week} today={today} />}
+        {route.name === 'projects' && <ProjectsScreen today={today} />}
+        {route.name === 'project' && <ProjectScreen key={route.id} id={route.id} tab={route.tab ?? 'tasks'} today={today} />}
+        {route.name === 'settings' && <SettingsScreen />}
+        {route.name === 'objectives' && <ObjectivesScreen />}
+        {route.name === 'objective' && <ObjectiveScreen id={route.id} />}
+        {route.name === 'habits' && <HabitsScreen today={today} />}
+        {route.name === 'monthReflection' && <MonthlyReflectionScreen month={route.month} today={today} />}
+        {route.name === 'data' && (
+          <main className="page">
+            <ScreenHeader title="Dados e backup" />
+            <BackupPanel state={backupState} actions={backup} storagePersisted={storagePersisted} />
+          </main>
+        )}
 
-      {backup.pendingImport && (
-        <ImportDialog
-          backup={backup.pendingImport.backup}
-          loss={backup.pendingImport.loss}
-          onConfirm={backup.confirmImport}
-          onCancel={backup.cancelImport}
-        />
-      )}
-    </>
+        {backup.pendingImport && (
+          <ImportDialog
+            backup={backup.pendingImport.backup}
+            loss={backup.pendingImport.loss}
+            onConfirm={backup.confirmImport}
+            onCancel={backup.cancelImport}
+          />
+        )}
+      </div>
+    </div>
   );
 }
