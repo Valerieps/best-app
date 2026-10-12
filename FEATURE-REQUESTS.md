@@ -112,3 +112,44 @@ Para manter a captura rápida, livre e sem atritos (sem exigir que o usuário de
 ### 3. Integração com a Wiki Pessoal
 * Ao vincular blocos específicos de uma reunião a diferentes projetos durante o checkout, as anotações e tarefas voam diretamente para as respectivas páginas dos projetos na Wiki Pessoal.
 * Isso garante que, ao abrir a página de um projeto na Wiki, o usuário consiga enxergar todo o histórico de conversas e decisões daquele projeto, independentemente de em qual reunião elas tenham sido anotadas.
+
+# Feature Request: Reorganização e Hierarquia do Menu Lateral (Gaveta)
+
+## Contexto e Motivação
+A estrutura atual do menu de navegação coloca listas descontextualizadas (como tarefas soltas ou todas as notas gerais da wiki) em posição de grande destaque. Na prática, visualizar tarefas ou notas sem a camada de projeto funciona apenas como um "arquivo morto" genérico e tem pouco valor no dia a dia. 
+
+A consulta e execução de **Projetos** é o verdadeiro motor de produtividade do usuário e precisa estar no topo do menu. Além disso, ter as tarefas espalhadas em telas separadas por status (ativas, finalizadas, arquivadas) fragmenta a experiência.
+
+---
+
+## Especificações Técnicas e de Comportamento
+
+### 1. Consolidação da Tela de Tarefas
+* **Visão Unificada de Tarefas:** Criar uma única tela de **Tarefas** que reúne tarefas ativas, finalizadas e arquivadas.
+* **Filtros/Abas Internas:** A alternância entre tarefas ativas, finalizadas e arquivadas deve ser feita via abas, seletores de status ou filtros na própria tela, eliminando a necessidade de três links separados no menu lateral.
+
+### 2. Nova Hierarquia do Menu Lateral (Priorização de Acesso)
+Reorganizar os grupos da gaveta de navegação (`☰`) para refletir a frequência e a utilidade real de uso:
+
+1. **Topo - Hoje & Execução Rápida:**
+   * **Hoje:** Volta para a nota do dia.
+   * **Próximos Dias:** Visão de agenda/planejamento dos próximos dias.
+   * **Rituais:** Acesso aos checkouts e reflexões pendentes.
+
+2. **Destaque - Planejamento & Acompanhamento (Mais alto no menu):**
+   * **Projetos:** Lista e páginas de projetos (elevado para o topo das consultas, permitindo acesso rápido ao que está ativo e em andamento).
+   * **Objetivos:** Visão de longo prazo ligada aos projetos.
+   * **Hábitos:** Acompanhamento de rotinas.
+
+3. **Rodapé / Utilitários (Mover para a parte inferior):**
+   * Mover as listas de "arquivo/consulta geral" (Tarefas unificadas e Wiki/Notas gerais sem filtro de projeto) para a seção inferior do menu, junto com:
+     * **Todas as Tarefas** (Visão global consolidada)
+     * **Wiki / Notas Gerais**
+     * **Dados e Backup**
+     * **Configurações**
+
+---
+
+## Resultado Esperado na Interface
+O menu ganha uma estrutura lógica baseada na prioridade de uso:
+* **Executar o Dia** $\rightarrow$ **Gerenciar Projetos & Objetivos** $\rightarrow$ **Consultar Arquivo Global & Configurações**.
