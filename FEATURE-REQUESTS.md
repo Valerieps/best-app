@@ -54,3 +54,35 @@ Na nota do dia e na tela "Próximos dias", organizar as tarefas já agendadas em
   - [ ] "Adiadas para hoje" quer dizer toda tarefa agendada para hoje que não está nos outros grupos, ou só as que já foram adiadas pelo menos uma vez?
   - [ ] Na tela "Próximos dias", os grupos se repetem para cada dia? "Prazo máximo hoje" e "prioridades do dia" só fazem sentido para hoje.
   - [ ] As tarefas agendadas saem do topo da primeira seção, ou aparecem nos dois lugares?
+
+
+# Feature Requests: Reforços Positivos, Gamificação e Leveza
+
+Esta seção lista as melhorias para incentivar a manutenção de tarefas e projetos com foco em reforço positivo, celebrando o progresso e evitando uma abordagem punitiva (removendo a sensação de "culpa" por atrasos).
+
+## 1. Ressignificação do "Colocar Ordem na Casa"
+* **Objetivo:** Mudar o tom de "recuperação de crise" para "pausa consciente de alinhamento e clareza".
+* **Especificações:**
+  * Renomear o ritual nas interfaces e textos do app de "Colocar ordem na casa" para **"Reset de Energia"** (ou **"Recalibrar Foco"**).
+  * Ajustar o texto de introdução do fluxo para focar em leveza: *"Sua vida muda rápido e os planos também. Vamos simplificar o backlog e renovar os compromissos com o que realmente importa hoje?"*
+
+## 2. Micro-Celebrações e Reforço Positivo no Checkout Diário
+* **Objetivo:** Destacar o que foi feito e o ganho de clareza, recompensando a consistência do usuário.
+* **Especificações:**
+  * **Métrica de Intenção Cumprida:** Em vez de focar apenas no número de adiadas, exibir uma mensagem positiva ao finalizar o dia (ex: *"Você concluiu X% do que planejou para hoje!"* ou *"X tarefas executadas no dia pretendido!"*).
+  * **Celebração do Descarte Consciente:** Destacar o abandono de tarefas/notas que perderam o sentido como um ato saudável de gestão de energia (ex: *"Você libertou espaço mental ao descartar itens obsoletos"*).
+  * **Animação/Som de Sucesso:** Manter e enriquecer a animação de fogos de artifício e o som de "plim" ao finalizar o dia, acompanhados de uma frase de conclusão leve e encorajadora.
+
+## 3. Gestão Positiva e "Momentum" nos Projetos
+* **Objetivo:** Evitar o efeito punitivo de itens travados e dar visibilidade ao ritmo real de evolução.
+* **Especificações:**
+  * **Selo de Ritmo Ativo ("Com Gás"):** Adicionar um destaque visual sutil nos cards de projetos que possuem atividade regular no mapa estilo GitHub (16/8 semanas), valorizando a consistência.
+  * **Resgate Amigável de Projetos Parados:** Substituir o rótulo de alerta agressivo por uma ação convidativa de micro-passos (ex: sugerir escolher *uma* tarefa simples sem data para dar vida nova ao projeto, em vez de apenas exibir "Parado há N dias" com tom de cobrança).
+
+## 4. Destaque de Vitórias na Reflexão Semanal
+* **Objetivo:** Balancear a análise de métricas trazendo o progresso e as conquistas para o topo do relatório semanal.
+* **Especificações:**
+  * **Bloco "Vitórias da Semana":** Inserir uma seção no início da reflexão semanal exibindo:
+    * Total de tarefas executadas com sucesso.
+    * O projeto que mais evoluiu na semana.
+    * Mensagem amigável contextualizando a taxa de precisão de datas (reforçando que adiar intencionalmente faz parte da gestão de energia e flexibilidade).
