@@ -86,3 +86,29 @@ Esta seção lista as melhorias para incentivar a manutenção de tarefas e proj
     * Total de tarefas executadas com sucesso.
     * O projeto que mais evoluiu na semana.
     * Mensagem amigável contextualizando a taxa de precisão de datas (reforçando que adiar intencionalmente faz parte da gestão de energia e flexibilidade).
+
+
+# Feature Request: Vínculo Granular de Projetos em Seções de Reunião
+
+## Contexto e Motivação
+Atualmente, as seções de reunião em formato monolítico ou a tentativa de transformar títulos de reuniões em projetos geram rigidez. Na prática, uma única reunião (como um alinhamento geral ou uma 1:1) frequentemente aborda múltiplos assuntos e tópicos conectados a diferentes projetos. 
+
+Para manter a captura rápida, livre e sem atritos (sem exigir que o usuário decida onde salvar cada coisa durante a conversa), o vínculo com projetos deve ser descentralizado da seção inteira e passar a pertencer aos **blocos individuais** (tarefas e notas gerais).
+
+---
+
+## Especificações Técnicas e de Comportamento
+
+### 1. A Seção de Reunião como Contexto Temporal (Guarda-Chuva)
+* A seção de reunião nasce sem vínculo obrigatório com nenhum projeto ("quadro branco" temporal).
+* O seu propósito é servir apenas como espaço de anotação sequencial ao longo do tempo, podendo conter opcionalmente metadados leves (como links para documentos ou lista de participantes, conforme a fase 1b).
+* O título da reunião é um rótulo livre e descritivo e **não** se converte em um projeto.
+
+### 2. Atribuição de Projetos por Bloco (Granularidade)
+* Como cada linha/parágrafo ou tarefa é um registro independente no banco de dados, diferentes assuntos tratados na mesma reunião podem ser direcionados a projetos distintos.
+* **Na captura:** O usuário anota tudo de forma contínua e sequencial dentro da seção de reunião, sem se preocupar com categorizações prévias.
+* **No checkout (ou via atalhos de hover):** O processo de triagem apresenta os blocos gerados na reunião individualmente. Cada bloco (seja uma tarefa ou uma nota geral) pode ser vinculado a um projeto diferente ou deixado sem projeto (avulso).
+
+### 3. Integração com a Wiki Pessoal
+* Ao vincular blocos específicos de uma reunião a diferentes projetos durante o checkout, as anotações e tarefas voam diretamente para as respectivas páginas dos projetos na Wiki Pessoal.
+* Isso garante que, ao abrir a página de um projeto na Wiki, o usuário consiga enxergar todo o histórico de conversas e decisões daquele projeto, independentemente de em qual reunião elas tenham sido anotadas.
