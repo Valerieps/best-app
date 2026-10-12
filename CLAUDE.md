@@ -8,7 +8,7 @@ day-to-day to projects and objectives.
 
 ### What to read
 
-Do not read every doc up front: together they are about 55k tokens. Read only what the task
+Do not read every doc up front: together they are about 60k tokens. Read only what the task
 needs, and only the relevant section: find it with Grep on the doc's headings (`^#`) or a key
 term, then Read with `offset`/`limit`. Re-read a doc only if it may have changed since (the owner
 edits docs between messages).
@@ -16,9 +16,9 @@ edits docs between messages).
 | Task | Read |
 | --- | --- |
 | Any code change | The hard rules below; `google-safe.md` in full only when the change touches storage, backup, links or rendered user text, dependencies, or anything network-like |
-| Implementing or changing a feature | Its file in `spec/` (the table in `SPEC.md` says which); its row in `ROADMAP.md`; the matching part of `ARQUITETURA.md`; ADRs found by grepping the topic |
+| Implementing or changing a feature | Its file in `spec/` (the table in `SPEC.md` says which); its row in `ROADMAP.md`; the matching part of `ARQUITETURA.md`; ADRs found in the index or by grepping `adr/` |
 | Answering a product question or deciding a rule | The relevant file in `spec/` and its "Em aberto"; `GLOSSARIO.md` for the terms; `DECISOES.md` only when the "why" matters |
-| Working on a feature request | Its entry in `FEATURE-REQUESTS.md` and the `spec/` files it cites |
+| Working on a feature request | Its file in `pedidos/` (the table in `FEATURE-REQUESTS.md` says which) and the `spec/` files it cites |
 | Fixing a bug or refactoring | `DEBITO-TECNICO.md` (grep the area) and the relevant ADRs |
 | Reviewing or reorganizing the docs | All of them; this is the only task that needs the whole set |
 
@@ -44,13 +44,14 @@ in this table. Never copy content between docs: link to the home instead (see `s
 | Terms | `GLOSSARIO.md` | One term, one meaning. Use these names in UI text and docs |
 | Why product decisions were made; origin; product risks | `DECISOES.md` | The rule itself stays in `spec/` |
 | What is built, what is missing, where code lags behind the spec, what is deferred | `ROADMAP.md` | The only place that tracks progress. Update it whenever you build or skip something |
-| Feature requests not yet decided | `FEATURE-REQUESTS.md` | When decided: rule to `spec/`, progress to `ROADMAP.md`, item removed |
+| Feature requests not yet decided | `pedidos/`, one file per request | `FEATURE-REQUESTS.md` is the index. When decided: rule to `spec/`, progress to `ROADMAP.md`, request file and index row removed |
 | Contradictions between docs | `INCOERENCIAS.md` | Temporary: remove an item once it is resolved |
 | Technical design (data model, events, editor, triage, metrics) | `ARQUITETURA.md` | Design only, no progress. Keep it in sync when the design changes |
-| Technical decisions | `architecture-decision-records.md` | Technical only; product rules go to `spec/` |
+| Technical decisions | `adr/`, one file per decision | `architecture-decision-records.md` is the index, with each ADR's status. Technical only; product rules go to `spec/` |
 | Technical debt, unverified behavior, known bugs | `DEBITO-TECNICO.md` | Remove an item when resolved; add one when you knowingly leave something behind |
 | Security and compliance (local-only, no network, CSP, backups) | `google-safe.md` | Mandatory for every change |
-| UX review of 12/10/2026 | `AVALIACAO-UX.md` | Frozen report; do not update. Open items live in `FEATURE-REQUESTS.md` |
+| Screen drafts and implementation briefs | `rascunhos/` | `rascunhos/README.md` gives each draft's status; the spec wins over a draft |
+| UX review of 12/10/2026 | `AVALIACAO-UX.md` | Frozen report; do not update. Open items live in `pedidos/14-avaliacao-de-ux-pendencias.md` |
 
 New docs start with what goes in them and what does not ("Entra aqui" / "Não entra aqui"). Product docs are written in Brazilian
 Portuguese; ADRs, code and this file in English.

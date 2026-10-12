@@ -197,7 +197,7 @@ Reativar uma tarefa arquivada limpa a data sem contar adiamento (ADR-015).
 
 - São funções puras no domínio que recebem os eventos de um período (`domain/metrics.ts`, `monthMetrics.ts`, `projectActivity.ts`, `habits.ts`). Ficam testáveis sem banco, e uma métrica nova não exige migração.
 - As métricas semanais vêm só dos eventos (ADR-021). As mensais que dependem de pergunta em aberto ficaram de fora (ADR-026).
-- O volume de dados de uma pessoa é pequeno o bastante para calcular tudo no navegador. A lista de projetos é o primeiro ponto onde isso já pesa (seção "Lista de projetos" de `DEBITO-TECNICO.md`).
+- O volume de dados de uma pessoa é pequeno o bastante para calcular tudo no navegador. A lista de projetos é o primeiro ponto onde isso já pesa (seção 8 de `DEBITO-TECNICO.md`, "Projetos e prioritários da semana").
 
 | Fase | Métricas | Função |
 | --- | --- | --- |

@@ -1,0 +1,5 @@
+# ADR-031: Tasks written on a project page live in a hidden section of the project
+
+**Date:** 2026-10-12
+**Decision:** Every block needs a section, so `createProjectTask` puts the task in one section per project flagged `projectPage: true`, created on first use (kind `general`, already linked, `notesDestination: 'wiki'` since it never holds notes). `isDaySection` in `domain/projectPage.ts` keeps these sections out of `loadDayNote`, `loadDayTriage`, the pending days (the task has no origin day, only its intended date counts) and the project's section count. The task is recorded with the usual `block.created` event and the section with `section.created` (`projectPage: true`). The field is optional and unindexed, so the database and backup stay at version 5.
+**Why:** The user decided the task stays out of today's note and checkout (spec/projetos.md, "Projetos"). A nullable `sectionId` or a new section kind would touch every reader of blocks and sections; one flag filtered in three queries keeps the change small, and the task behaves like any other once it gets an intended date.

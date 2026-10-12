@@ -2,7 +2,7 @@
 
 12/10/2026 · Valeria
 
-> **Relatório congelado.** Este documento registra a avaliação como ela foi feita e não é mais atualizado. O que foi construído virou regra no `SPEC.md`; o que falta está em `FEATURE-REQUESTS.md` ("Avaliação de UX: o que falta"), e o andamento, no `ROADMAP.md`.
+> **Relatório congelado.** Este documento registra a avaliação como ela foi feita e não é mais atualizado. O que foi construído virou regra no `SPEC.md`; o que falta está no pedido 14 (`pedidos/14-avaliacao-de-ux-pendencias.md`), e o andamento, no `ROADMAP.md`.
 
 ## Resumo executivo
 

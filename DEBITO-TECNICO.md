@@ -17,6 +17,12 @@ Estes pontos não puderam ser testados no navegador embutido do Claude Code.
 - [ ] **Backup automático no Google Drive.** Escolha um arquivo numa pasta sincronizada do Drive, faça uma mudança e confira que o arquivo foi atualizado. Feche e reabra o Chrome para ver o pedido de autorização e o "Retomar".
 - [ ] **"Permitir em todas as visitas".** Confira se o Chrome da máquina corporativa oferece essa opção ao app instalado. Sem ela, o backup automático pede um clique por sessão. Uma política da empresa pode bloqueá-la.
 - [ ] **Instalação como app.** Confira se o Chrome oferece "Instalar". O ícone atual é só um SVG provisório, e o Chrome pode exigir ícones PNG de 192 e 512 px (veja a seção 5).
+- [ ] **Migração da versão 6 num banco de verdade.** Os testes cobrem o `upgrade` do Dexie (com um banco de teste) e o backup da versão 5, mas não um navegador com dados reais do mês. Vale abrir o app no Chrome com os dados atuais e conferir que os prioritários de outubro viraram os da semana.
+- [ ] **Troca na reflexão semanal, pela interface.** No navegador, desmarcar um prioritário e marcar outro em seguida deixou a lista com só 2 projetos. Provavelmente o segundo clique caiu antes de a caixa ser liberada (a tela leva cerca de 700 ms para atualizar), mas pode ser bug. Os testes do caso de uso passam.
+- [ ] **Finalizar um prioritário pela interface** (deve liberar a vaga e mostrar o card tracejado). Só os testes do caso de uso cobrem.
+- [ ] **"Nova data" das tarefas travadas.** Abre o calendário nativo com `showPicker`, que o navegador embutido não mostra; não foi conferido que a data escolhida é gravada.
+- [ ] **Layout em telas estreitas** (cards empilhados abaixo de 900 px, mapa das linhas escondido abaixo de 640 px) e com nomes longos.
+- [ ] **Tooltip do mapa nas bordas.** Os das 2 primeiras e das 3 últimas colunas abrem para dentro; não foi conferido em todos os tamanhos de card.
 
 ### Configuração e publicação
 
@@ -65,6 +71,8 @@ Ordenado por prioridade: os primeiros são os mais graves ou os que têm mais ch
 - **Os testes não rodam no deploy.** O build do Cloudflare roda `tsc` e `vite build`, mas não o `vitest`. Dá para incluir os testes no `npm run build` ou configurar GitHub Actions.
 - **Não há lint.** O ESLint ficou de fora para ter menos dependências.
 - **Os tipos do Node valem para o app inteiro.** O `tsconfig.json` inclui `node` por causa dos testes, então o código do app poderia usar uma API do Node sem erro de tipo. Um `tsconfig` separado para os testes resolve.
+- **Os dados sintéticos ganharam um "Curso de inglês"** de cerca de 4 meses antes da história principal, para os mapas de 16 semanas terem histórico. Isso muda a narrativa de "primeiros dias sem projetos".
+- **O `.claude/launch.json` ganhou uma configuração temporária `dev-verify`** (porta 65021), criada para testar sem apagar os dados da porta 5173. Pode ser removida.
 
 ## 5. PWA e modo offline
 
@@ -72,6 +80,7 @@ Ordenado por prioridade: os primeiros são os mais graves ou os que têm mais ch
 - **O cache só é limpo quando o nome dele muda.** Arquivos de versões antigas se acumulam até alguém trocar `best-app-v1` no `sw.js`.
 - **O app não avisa quando há uma versão nova.** A versão nova aparece só ao recarregar a página com internet.
 - **Faltam ícones PNG** de 192 e 512 px, e um ícone "maskable", para instalação e atalhos.
+- **O pacote principal passa de 500 kB.** O `npm run build` avisa desde 12/10/2026. Num app offline, pesa só na primeira carga; dividir com `import()` dinâmico resolveria.
 
 ## 6. Arquitetura
 
@@ -101,7 +110,7 @@ Revisada em 12/10/2026. Ordenado por prioridade.
 14. **Texto digitado em menos de 400 ms antes de fechar a aba pode se perder.** A linha salva ao perder o foco e ao sair da tela, mas fechar o Chrome no meio da digitação não dá tempo.
 15. **`application/queries.ts` concentra todas as leituras** (cerca de 630 linhas, de nota do dia a hábitos). Ainda é fácil de seguir, mas vale dividir por área quando crescer.
 
-## Editor e telas (1a e 1b)
+## 7. Editor e telas
 
 - **Links no editor não são clicáveis.** Na nota do dia o texto é editável; os links viram clicáveis só na wiki, nas listas e no checkout.
 - **Mover uma linha para outra seção** (arrastar ou atalho) não existe.
@@ -110,26 +119,14 @@ Revisada em 12/10/2026. Ordenado por prioridade.
 - **Não há botão de nova seção entre seções.** As seções seguem a ordem de criação e não têm posição própria; inserir no meio exigiria mudar o modelo (decisão de 12/10/2026, N2 em `AVALIACAO-UX.md`).
 - **A estrela parece não responder quando um prazo ocupa a terceira prioridade.** A tarefa promovida entra na lista, mas a do prazo toma o lugar dela na tela, pela regra do 1b. Vale um aviso curto ou mostrar a quarta como "na fila".
 - **"Lembrar depois" vale só neste navegador.** O dia adiado fica no `localStorage`, como a escolha de fixar as prioridades.
+
+## 8. Projetos e prioritários da semana
+
 - **Página do projeto: tarefas criadas nela não podem ser apagadas.** Como na nota do dia, uma tarefa só sai de circulação pelo checkout ou pela reflexão; não há "apagar" para um erro de digitação logo depois de criar.
 - **Página do projeto: juntar projetos repetidos pode deixar duas seções escondidas no mesmo projeto** (ADR-031). Funciona, porque a nova tarefa vai para a primeira, mas o assistente poderia juntar as duas.
 - **Página do projeto: abaixo de 900 px, a coluna fixada só abre pelo botão da linha das abas**, em vez de aparecer sozinha por cima do conteúdo. O brief pedia que ela "se comportasse como espiando".
 - **O rascunho e a página do projeto divergem no hover das tarefas.** O rascunho escondia data e "adiada" no hover; a página segue o padrão da nota do dia (etiquetas sempre visíveis), como diz o `spec/navegacao.md` (ADR-032).
-
-## Lista de projetos, página do projeto e prioritários da semana (12/10/2026)
-
-### Não verificado
-
-- [ ] **`npm run build` não foi rodado** depois desta mudança. O `npm test` (296 testes) e o `tsc --noEmit` passaram.
-- [ ] **Migração da versão 6 num banco de verdade.** Os testes cobrem o `upgrade` do Dexie (com um banco de teste) e o backup da versão 5, mas não um navegador com dados reais do mês. Vale abrir o app no Chrome com os dados atuais e conferir que os prioritários de outubro viraram os da semana.
-- [ ] **Troca na reflexão semanal, pela interface.** No navegador, desmarcar um prioritário e marcar outro em seguida deixou a lista com só 2 projetos. Provavelmente o segundo clique caiu antes de a caixa ser liberada (a tela leva cerca de 700 ms para atualizar), mas pode ser bug. Os testes do caso de uso passam.
-- [ ] **Finalizar um prioritário pela interface** (deve liberar a vaga e mostrar o card tracejado). Só os testes do caso de uso cobrem.
-- [ ] **"Nova data" das tarefas travadas.** Abre o calendário nativo com `showPicker`, que o navegador embutido não mostra; não foi conferido que a data escolhida é gravada.
-- [ ] **Layout em telas estreitas** (cards empilhados abaixo de 900 px, mapa das linhas escondido abaixo de 640 px) e com nomes longos.
-- [ ] **Tooltip do mapa nas bordas.** Os das 2 primeiras e das 3 últimas colunas abrem para dentro; não foi conferido em todos os tamanhos de card.
-- [ ] **Acessibilidade do mapa.** Cada mapa tem só um resumo para leitor de tela ("N dias com atividade"); o detalhe de cada dia só aparece com o mouse e não é alcançável pelo teclado.
-
-### Possíveis bugs e limitações
-
+- **Acessibilidade do mapa.** Cada mapa tem só um resumo para leitor de tela ("N dias com atividade"); o detalhe de cada dia só aparece com o mouse e não é alcançável pelo teclado.
 - **A lista de projetos demora a atualizar.** Ela relê os eventos de todos os projetos a cada mudança (cerca de 700 ms no modo de desenvolvimento, com os dados sintéticos). Os grupos já abrem na hora, mas adicionar um prioritário ou finalizar um projeto só aparece depois. Com anos de uso vale um índice ou cache da atividade por dia.
 - **Finalizar no meio da semana muda a semana inteira.** O projeto sai da lista da semana atual a partir de segunda, então o raio-x mensal deixa de contar as prioridades do dia daquele projeto nos dias anteriores da mesma semana.
 - **Reabrir um projeto numa semana passada.** As listas de semanas passadas guardam o projeto; como a lista mostrada filtra só os ativos, reabrir faz ele reaparecer ao olhar uma semana passada (não a atual).
@@ -139,5 +136,3 @@ Revisada em 12/10/2026. Ordenado por prioridade.
 - **Reflexão de uma semana antiga:** o passo 6 fica só leitura quando a semana seguinte já passou, mas uma reflexão da semana passada ainda pode mudar a lista da semana atual.
 - **Prioritários num projeto sem atividade:** o card mostra "Nenhuma atividade ainda" ou "Parado há N dias" contados desde a criação, não desde que virou prioritário.
 - **"desde" nas tarefas travadas** usa a primeira data de intenção (ou o dia em que a tarefa foi escrita), não o dia do primeiro adiamento.
-- **Os dados sintéticos ganharam um "Curso de inglês"** de cerca de 4 meses antes da história principal, para os mapas de 16 semanas terem histórico. Isso muda a narrativa de "primeiros dias sem projetos".
-- **O `.claude/launch.json` ganhou uma configuração temporária `dev-verify`** (porta 65021), criada para testar sem apagar os dados da porta 5173. Pode ser removida.

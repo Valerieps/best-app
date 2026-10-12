@@ -5,7 +5,7 @@
 Regras que se contradizem ou ficaram ambíguas entre `SPEC.md`, `spec/checkout.md`, `spec/assistentes.md`, `DECISOES.md`, `ARQUITETURA.md`, `DEBITO-TECNICO.md`, `AVALIACAO-UX.md`, `google-safe.md` e as ADRs. As incoerências dos feature requests estão no próprio `FEATURE-REQUESTS.md`, logo após cada pedido.
 
 - **Entra aqui:** contradições e ambiguidades entre os documentos, com a pergunta que resolve cada uma.
-- **Não entra aqui:** incoerências de um pedido (ficam no `FEATURE-REQUESTS.md`), bugs (`DEBITO-TECNICO.md`) e perguntas em aberto que não vêm de uma contradição (`SPEC.md`, "Em aberto").
+- **Não entra aqui:** incoerências de um pedido (ficam no arquivo do pedido, em `pedidos/`), bugs (`DEBITO-TECNICO.md`) e perguntas em aberto que não vêm de uma contradição (`SPEC.md`, "Em aberto").
 
 Quando um item for decidido, a regra vai para o `SPEC.md` e o item sai daqui.
 
@@ -26,7 +26,7 @@ Remover a frase tira a contradição do texto, mas não resolve os casos concret
 - **Onde a frase é contrariada hoje:**
   - Arquivar e abandonar só aparecem como destinos do checkout e da reflexão.
   - Trocar ou tirar um projeto prioritário só é possível na reflexão semanal (`spec/prioridades.md`, "Projetos prioritários da semana").
-  - Tarefas criadas na página do projeto não entram no checkout e, por isso, não têm como sair de circulação (`DEBITO-TECNICO.md`, "Editor e telas").
+  - Tarefas criadas na página do projeto não entram no checkout e, por isso, não têm como sair de circulação (`DEBITO-TECNICO.md`, "Projetos e prioritários da semana").
 - **Onde a frase sustenta regras:** finalizar uma tarefa a qualquer momento, promover uma prioridade a qualquer momento, converter um quadro branco a qualquer momento, criar tarefas na página do projeto.
 - **Ambiguidade que continua sem ela:** o `spec/nota-do-dia.md` ("Execução") diz que, para tirar de circulação uma tarefa que veio de outro dia, "eu arquivo ou abandono", sem dizer se isso é possível durante o dia.
 - **Alternativa a remover:** trocar a frase por uma regra precisa. Por exemplo: "Criar, editar, agendar e finalizar é livre a qualquer hora. Tirar coisas de circulação (arquivar, abandonar, descartar) e trocar prioritários são decisões dos rituais." Ou o contrário, se o pedido 1 do `FEATURE-REQUESTS.md` (arquivar de qualquer tela) for aceito.
@@ -93,7 +93,7 @@ As fases do `SPEC.md` deveriam poder ser construídas em ordem, mas:
 
 ### 2.11 Projetos prioritários: regra e implementação
 
-- A ADR-035 diz que um projeto finalizado continua contando nas semanas em que foi escolhido. O `DEBITO-TECNICO.md` ("Possíveis bugs") mostra que ele sai da semana inteira, inclusive dos dias anteriores ao fim.
+- A ADR-035 diz que um projeto finalizado continua contando nas semanas em que foi escolhido. O `DEBITO-TECNICO.md` ("Projetos e prioritários da semana") mostra que ele sai da semana inteira, inclusive dos dias anteriores ao fim.
 - O `spec/prioridades.md` diz que reabrir não devolve o projeto à lista. O `DEBITO-TECNICO.md` mostra que, ao olhar uma semana passada, ele reaparece.
 - Juntar projetos repetidos com um prioritário: o destino não herda a vaga, e não há regra para isso.
 
