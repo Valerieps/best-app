@@ -8,9 +8,12 @@
   --color-surface: #ffffff;
   --color-surface-soft: #faf8f4;
   --color-text: #1f1f1f;
-  --color-text-muted: #85817a;
+  /* 5:1 on --color-bg and 5.6:1 on --color-surface, above WCAG AA's 4.5:1 for small text */
+  --color-text-muted: #6b675f;
   --color-border: #e4e0d8;
   --color-border-strong: #cfcac0;
+  /* Background of tertiary buttons on hover, and of the current item */
+  --color-hover: #efece5;
 
   /* Actions */
   --color-accent: #1c1c1c;
@@ -40,6 +43,15 @@
   --color-danger: #b42318;
   --color-danger-bg: #fdecea;
   --color-danger-border: #f0a8a0;
+
+  /* Status dots, such as the backup indicator */
+  --color-dot-ok: #3d7a35;
+  --color-dot-attention: #b38900;
+  --color-dot-problem: #b42318;
+  --color-dot-off: #a8a39a;
+
+  /* Loading skeleton */
+  --color-skeleton: #ebe8e1;
 
   /* Cleanup dashboard status, from em dia (0) to urgente (3) */
   --color-status0-bg: #eef6ec;

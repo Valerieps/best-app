@@ -5,6 +5,7 @@ import type { DayKey } from '../../domain/day';
 import type { Section } from '../../domain/entities';
 import { ProjectChip } from '../components/Chips';
 import { Linkified } from '../components/Linkified';
+import { LoadingPage } from '../components/Skeleton';
 import { formatShortDate, formatTime, postponedLabel, relativeDay } from '../format';
 import { routeHash } from '../hooks';
 import { appContext, reader } from '../services';
@@ -59,7 +60,7 @@ function TaskRow({ item, today, action }: { item: TaskListItem; today: DayKey; a
 
 export function ActiveTasksScreen({ today }: { today: DayKey }) {
   const items = useLiveQuery(() => loadActiveTasks(reader));
-  if (!items) return null;
+  if (!items) return <LoadingPage title="Tarefas ativas" />;
   return (
     <ListPage title="Tarefas ativas">
       {items.length === 0 ? (
@@ -92,7 +93,7 @@ export function ActiveTasksScreen({ today }: { today: DayKey }) {
 
 export function ArchivedTasksScreen({ today }: { today: DayKey }) {
   const items = useLiveQuery(() => loadArchivedTasks(reader));
-  if (!items) return null;
+  if (!items) return <LoadingPage title="Tarefas arquivadas" />;
   return (
     <ListPage title="Tarefas arquivadas">
       {items.length === 0 ? (

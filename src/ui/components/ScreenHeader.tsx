@@ -39,7 +39,7 @@ export function ScreenHeader({ title, primary, more = [], back, children }: Prop
             </button>
           )}
           {more.length > 0 && (
-            <Dropdown trigger="⋯" label="Mais ações desta tela" className="screen-header__more">
+            <Dropdown trigger="⋯" label="Mais ações desta tela" className="screen-header__more" triggerClassName="tertiary">
               {(close) =>
                 more.map((action) => (
                   <DropdownItem

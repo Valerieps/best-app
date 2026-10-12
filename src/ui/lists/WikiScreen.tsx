@@ -3,6 +3,7 @@ import { loadWiki, type WikiEntry } from '../../application/queries';
 import { normalizeForMatch } from '../../domain/text';
 import { ProjectChip } from '../components/Chips';
 import { Linkified } from '../components/Linkified';
+import { LoadingPage } from '../components/Skeleton';
 import { formatShortDate, formatTime } from '../format';
 import { reader } from '../services';
 import { useLiveQuery } from '../useLiveQuery';
@@ -46,7 +47,7 @@ export function WikiScreen({ focus }: { focus?: string }) {
       : filtered;
   }, [entries, query, order, filter]);
 
-  if (!entries) return null;
+  if (!entries) return <LoadingPage title="Wiki pessoal" />;
 
   return (
     <main className="page">

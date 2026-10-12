@@ -4,8 +4,15 @@ import { pendingDaysSentence } from '../format';
 import { navigate } from '../hooks';
 import { ClosePendingDaysDialog } from './ClosePendingDaysDialog';
 
+interface Props {
+  days: DayKey[];
+  today: DayKey;
+  /** "Lembrar depois": hides the band until tomorrow; "Rituais" keeps counting the days. */
+  onSnooze(): void;
+}
+
 /** Warns about past days without checkout. The day note opens normally: it never blocks. */
-export function PendingDaysBanner({ days, today }: { days: DayKey[]; today: DayKey }) {
+export function PendingDaysBanner({ days, today, onSnooze }: Props) {
   const [closing, setClosing] = useState(false);
   if (days.length === 0) return null;
   return (
@@ -24,6 +31,9 @@ export function PendingDaysBanner({ days, today }: { days: DayKey[]; today: DayK
               Fechar dias pendentes
             </button>
           )}
+          <button type="button" className="link" onClick={onSnooze}>
+            Lembrar depois
+          </button>
         </span>
       </div>
       {closing && <ClosePendingDaysDialog today={today} onClose={() => setClosing(false)} />}

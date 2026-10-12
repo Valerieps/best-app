@@ -1,0 +1,348 @@
+<!doctype html>
+<html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Página do projeto - proposta v1</title><style>
+/* Palette from src/ui/theme/tokens.css. --muted uses the darker gray proposed in AVALIACAO-UX.md (P1). */
+:root {
+  --bg: #f4f2ed; --surface: #ffffff; --surface-soft: #faf8f4;
+  --text: #1f1f1f; --muted: #6b675f; --border: #e4e0d8; --border-strong: #cfcac0;
+  --accent: #1c1c1c; --check: #2f6fe0;
+  --project-bg: #ece9fb; --project-text: #4b3fb3;
+  --meeting-bg: #e7efff; --meeting-text: #2459c9;
+  --whiteboard-bg: #fbebd3; --whiteboard-text: #8a5a12;
+  --warning-bg: #f8ead6; --warning-text: #6b4210;
+  --success-bg: #e6f2e4; --success-text: #3d7a35;
+  --danger-bg: #fdecea; --danger-text: #b42318;
+  --radius: 10px;
+}
+* { box-sizing: border-box; }
+body { margin: 0; padding: 32px 16px; background: var(--bg); color: var(--text);
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; font-size: 14px; }
+.caption { max-width: 960px; margin: 0 auto 10px; font-size: 12px; color: var(--muted); line-height: 1.5; }
+.controls { max-width: 960px; margin: 0 auto 12px; display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
+.controls button.on { background: var(--accent); color: #fff; border-color: var(--accent); }
+button { font: inherit; font-size: 13px; background: var(--surface); border: 1px solid var(--border-strong);
+  border-radius: 8px; padding: 6px 12px; color: var(--text); cursor: pointer; }
+button.ghost { border-color: transparent; background: transparent; padding: 4px 8px; }
+button.ghost:hover { background: var(--surface-soft); }
+svg.i { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; vertical-align: -4px; flex: none; }
+svg.i.sm { width: 14px; height: 14px; vertical-align: -2px; }
+svg.i.filled { fill: currentColor; }
+.muted { color: var(--muted); }
+.small { font-size: 12px; }
+
+.frame { max-width: 960px; margin: 0 auto 40px; background: var(--surface); border: 1px solid var(--border-strong);
+  border-radius: 12px; overflow: hidden; }
+.topbar { display: flex; align-items: center; gap: 12px; padding: 10px 16px; border-bottom: 1px solid var(--border); }
+.topbar .brand { flex: 1; font-weight: 600; }
+.body { position: relative; display: flex; min-height: 620px; }
+.main { flex: 1; min-width: 0; padding: 24px 32px 40px; }
+
+.crumb { display: flex; align-items: center; gap: 4px; font-size: 12px; color: var(--muted); margin-bottom: 14px; }
+.crumb a { color: inherit; text-decoration: none; }
+.crumb a:hover { color: var(--text); }
+.head { display: flex; align-items: center; gap: 14px; }
+.picon { width: 44px; height: 44px; border-radius: 11px; display: flex; align-items: center; justify-content: center;
+  border: none; padding: 0; cursor: pointer; position: relative; }
+.picon svg.i { width: 24px; height: 24px; }
+.title { flex: 1; min-width: 0; }
+.title h1 { font-size: 26px; font-weight: 600; margin: 0; line-height: 1.2; padding: 2px 4px; margin-left: -4px; border-radius: 6px; }
+.title h1:hover { background: var(--surface-soft); }
+.title .sub { font-size: 12px; color: var(--muted); margin-top: 2px; }
+.pill { display: inline-flex; align-items: center; gap: 5px; font-size: 12px; padding: 3px 10px; border-radius: 999px;
+  border: 1px solid transparent; cursor: pointer; background: var(--surface-soft); color: var(--muted); }
+.pill.prio-on { background: var(--whiteboard-bg); color: var(--whiteboard-text); }
+.pill.obj { background: transparent; border: 1px dashed var(--border-strong); }
+
+.stats { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; margin: 22px 0 8px; }
+.stat { background: var(--surface-soft); border-radius: var(--radius); padding: 12px 14px; }
+.stat .label { font-size: 12px; color: var(--muted); }
+.stat .value { font-size: 20px; font-weight: 600; margin-top: 2px; }
+.stat .value.text { font-size: 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-top: 5px; }
+.bar { height: 4px; border-radius: 2px; background: var(--border); margin-top: 8px; }
+.bar > div { height: 4px; border-radius: 2px; background: var(--check); }
+
+.tabs { display: flex; align-items: center; gap: 20px; border-bottom: 1px solid var(--border); margin-top: 22px; }
+.tabs button { background: none; border: none; border-radius: 0; padding: 8px 0; color: var(--muted);
+  border-bottom: 2px solid transparent; margin-bottom: -1px; }
+.tabs button.on { color: var(--text); font-weight: 600; border-bottom-color: var(--text); }
+.tabs .spacer { flex: 1; }
+
+.grp { display: flex; justify-content: space-between; font-size: 12px; color: var(--muted); margin: 18px 8px 4px; }
+.grp.toggle { cursor: pointer; justify-content: flex-start; gap: 6px; }
+.task { display: flex; align-items: center; gap: 10px; padding: 8px; border-radius: 8px; }
+.task:hover { background: var(--surface-soft); }
+.task .box { width: 16px; height: 16px; border: 1.5px solid var(--border-strong); border-radius: 4px; flex: none; }
+.task .txt { flex: 1; min-width: 0; }
+.task .actions { display: none; gap: 2px; }
+.task:hover .actions { display: flex; }
+.task:hover .meta { display: none; }
+.chip { font-size: 11px; padding: 2px 8px; border-radius: 999px; }
+.chip.warn { background: var(--warning-bg); color: var(--warning-text); }
+.task.new { color: var(--muted); cursor: text; }
+
+.timeline { border-left: 1.5px solid var(--border); margin: 18px 0 0 6px; padding-left: 20px; }
+.entry { position: relative; margin-bottom: 18px; }
+.entry .dot { position: absolute; left: -25px; top: 5px; width: 9px; height: 9px; border-radius: 50%; background: var(--border-strong); }
+.entry.meeting .dot { background: var(--meeting-text); }
+.entry .when { font-size: 12px; color: var(--muted); }
+.entry .when b { font-weight: 500; color: var(--meeting-text); }
+.entry p { margin: 4px 0 0; line-height: 1.6; }
+
+/* Side column: rail (closed), overlay (peek) or docked column (pinned). */
+.rail { width: 48px; flex: none; border-left: 1px solid var(--border); display: flex; flex-direction: column;
+  align-items: center; gap: 6px; padding-top: 18px; background: var(--surface); }
+.rail button { position: relative; width: 34px; height: 34px; padding: 0; display: flex; align-items: center;
+  justify-content: center; border: none; background: none; color: var(--muted); }
+.rail button:hover { background: var(--surface-soft); color: var(--text); }
+.rail .badge { position: absolute; top: 1px; right: -1px; font-size: 10px; min-width: 15px; height: 15px; line-height: 15px;
+  border-radius: 8px; background: var(--check); color: #fff; text-align: center; }
+.panel { width: 260px; flex: none; border-left: 1px solid var(--border); background: var(--surface); padding: 18px 18px 24px; }
+.panel.peek { position: absolute; top: 0; bottom: 0; right: 48px; border: 1px solid var(--border-strong);
+  box-shadow: -8px 0 24px rgb(0 0 0 / 0.06); }
+.panel-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; }
+.panel h4 { font-size: 12px; font-weight: 600; color: var(--muted); margin: 0 0 8px; }
+.kv { display: flex; justify-content: space-between; align-items: center; font-size: 13px; padding: 5px 0; }
+.kv a { color: var(--check); text-decoration: none; }
+.res { display: flex; align-items: center; gap: 10px; padding: 7px 6px; margin: 0 -6px; border-radius: 8px; }
+.res:hover { background: var(--surface-soft); }
+.res .ico { width: 28px; height: 28px; border-radius: 7px; background: var(--surface-soft); display: flex;
+  align-items: center; justify-content: center; flex: none; color: var(--muted); }
+.res .name { font-size: 13px; line-height: 1.3; }
+.drop { border: 1px dashed var(--border-strong); border-radius: 8px; padding: 9px; text-align: center; font-size: 12px;
+  color: var(--muted); margin-top: 10px; }
+
+/* Icon picker */
+.picker { position: absolute; top: 52px; left: 0; z-index: 5; background: var(--surface); border: 1px solid var(--border-strong);
+  border-radius: 12px; padding: 12px; box-shadow: 0 8px 24px rgb(0 0 0 / 0.08); width: 236px; }
+.picker .grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-top: 8px; }
+.picker .grid button { width: 44px; height: 44px; padding: 0; border: 2px solid transparent; border-radius: 11px;
+  display: flex; align-items: center; justify-content: center; }
+.picker .grid button.on { border-color: var(--text); }
+.picker .grid svg.i { width: 22px; height: 22px; }
+.t-lilac { background: var(--project-bg); color: var(--project-text); }
+.t-blue { background: var(--meeting-bg); color: var(--meeting-text); }
+.t-amber { background: var(--whiteboard-bg); color: var(--whiteboard-text); }
+.t-green { background: var(--success-bg); color: var(--success-text); }
+.t-pink { background: var(--danger-bg); color: var(--danger-text); }
+</style></head><body>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="i-chevron-right" viewBox="0 0 24 24"><path d="M9 6l6 6l-6 6"/></symbol>
+  <symbol id="i-chevron-down" viewBox="0 0 24 24"><path d="M6 9l6 6l6-6"/></symbol>
+  <symbol id="i-dots" viewBox="0 0 24 24"><circle cx="5" cy="12" r="1"/><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/></symbol>
+  <symbol id="i-star" viewBox="0 0 24 24"><path d="M12 17.75l-6.172 3.245l1.179-6.873l-5-4.867l6.9-1l3.086-6.253l3.086 6.253l6.9 1l-5 4.867l1.179 6.873z"/></symbol>
+  <symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol>
+  <symbol id="i-calendar" viewBox="0 0 24 24"><rect x="4" y="5" width="16" height="16" rx="2"/><path d="M16 3v4M8 3v4M4 11h16"/></symbol>
+  <symbol id="i-flag" viewBox="0 0 24 24"><path d="M5 5v16M5 5a5 5 0 0 1 7 0a5 5 0 0 0 7 0v9a5 5 0 0 1-7 0a5 5 0 0 0-7 0"/></symbol>
+  <symbol id="i-link" viewBox="0 0 24 24"><path d="M9 15l6-6M11 6l.463-.536a5 5 0 0 1 7.071 7.072l-.534.464M13 18l-.397.534a5.068 5.068 0 0 1-7.127 0a4.972 4.972 0 0 1 0-7.071l.524-.463"/></symbol>
+  <symbol id="i-notes" viewBox="0 0 24 24"><rect x="5" y="3" width="14" height="18" rx="2"/><path d="M9 7h6M9 11h6M9 15h4"/></symbol>
+  <symbol id="i-info" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 9h.01M11 12h1v4h1"/></symbol>
+  <symbol id="i-clip" viewBox="0 0 24 24"><path d="M15 7l-6.5 6.5a1.5 1.5 0 0 0 3 3l6.5-6.5a3 3 0 0 0-6-6l-6.5 6.5a4.5 4.5 0 0 0 9 9l6.5-6.5"/></symbol>
+  <symbol id="i-pin" viewBox="0 0 24 24"><path d="M15 4.5l-4 4l-4 1.5l-1.5 1.5l7 7l1.5-1.5l1.5-4l4-4z"/><path d="M9 15l-4.5 4.5M14.5 4l5.5 5.5"/></symbol>
+  <symbol id="i-sidebar" viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" rx="2"/><path d="M15 4v16"/></symbol>
+  <symbol id="i-pot" viewBox="0 0 24 24"><path d="M4 11h16M6 11v6a3 3 0 0 0 3 3h6a3 3 0 0 0 3-3v-6M3 11h1M20 11h1M10 7c0-1 1-2 1-3M14 7c0-1 1-2 1-3"/></symbol>
+  <symbol id="i-home" viewBox="0 0 24 24"><path d="M5 12h-2l9-9l9 9h-2M5 12v7a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-7M9 21v-6a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v6"/></symbol>
+  <symbol id="i-briefcase" viewBox="0 0 24 24"><rect x="3" y="7" width="18" height="13" rx="2"/><path d="M8 7v-2a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M3 13h18"/></symbol>
+  <symbol id="i-book" viewBox="0 0 24 24"><path d="M3 19a9 9 0 0 1 9 0a9 9 0 0 1 9 0M3 6a9 9 0 0 1 9 0a9 9 0 0 1 9 0M3 6v13M12 6v13M21 6v13"/></symbol>
+  <symbol id="i-heart" viewBox="0 0 24 24"><path d="M19.5 12.572l-7.5 7.428l-7.5-7.428a5 5 0 1 1 7.5-6.566a5 5 0 1 1 7.5 6.572"/></symbol>
+  <symbol id="i-plane" viewBox="0 0 24 24"><path d="M10 14l11-11M21 3l-6.5 18a.55.55 0 0 1-1 0l-3.5-7l-7-3.5a.55.55 0 0 1 0-1l18-6.5"/></symbol>
+  <symbol id="i-code" viewBox="0 0 24 24"><path d="M7 8l-4 4l4 4M17 8l4 4l-4 4M14 4l-4 16"/></symbol>
+  <symbol id="i-balloon" viewBox="0 0 24 24"><path d="M12 3a5 6 0 0 1 5 6c0 3.5-2.5 6-5 6s-5-2.5-5-6a5 6 0 0 1 5-6zM12 15l-1 2h2l-1-2M12 17v4"/></symbol>
+</svg>
+
+<p class="caption">Proposta da página do projeto (ver <code>rascunhos/rascunho-projeto-pagina.md</code>). Dados reais do projeto "Reforma da cozinha" dos dados sintéticos; os dois recursos são exemplos, porque o projeto não tem nenhum. Use os botões abaixo para ver os três estados da coluna lateral. Clique no ícone do projeto para abrir o seletor de ícones. Abaixo de 900 px, o estado "fixada" vira "espiando".</p>
+<div class="controls" role="group" aria-label="Estado da coluna lateral">
+  <span class="small muted">Coluna lateral:</span>
+  <button data-state="closed" class="on">Recolhida</button>
+  <button data-state="peek">Espiando</button>
+  <button data-state="pinned">Fixada</button>
+</div>
+
+<div class="frame">
+  <div class="topbar"><span class="brand">Best App</span><button>Hoje</button><button>Rituais</button></div>
+  <div class="body" id="body">
+    <main class="main" id="main">
+      <nav class="crumb"><a href="#">Projetos</a><svg class="i sm"><use href="#i-chevron-right"/></svg><span>Reforma da cozinha</span></nav>
+
+      <div class="head" style="position:relative">
+        <button class="picon t-lilac" id="picon" aria-label="Trocar o ícone do projeto" aria-expanded="false"><svg class="i"><use href="#i-pot"/></svg></button>
+        <div class="picker" id="picker" hidden>
+          <div class="small muted">Ícone do projeto</div>
+          <div class="grid" id="picker-grid">
+            <button class="t-lilac on" data-icon="i-pot" aria-label="Panela"><svg class="i"><use href="#i-pot"/></svg></button>
+            <button class="t-amber" data-icon="i-home" aria-label="Casa"><svg class="i"><use href="#i-home"/></svg></button>
+            <button class="t-blue" data-icon="i-briefcase" aria-label="Maleta"><svg class="i"><use href="#i-briefcase"/></svg></button>
+            <button class="t-green" data-icon="i-book" aria-label="Livro"><svg class="i"><use href="#i-book"/></svg></button>
+            <button class="t-pink" data-icon="i-heart" aria-label="Coração"><svg class="i"><use href="#i-heart"/></svg></button>
+            <button class="t-blue" data-icon="i-plane" aria-label="Viagem"><svg class="i"><use href="#i-plane"/></svg></button>
+            <button class="t-lilac" data-icon="i-code" aria-label="Código"><svg class="i"><use href="#i-code"/></svg></button>
+            <button class="t-amber" data-icon="i-balloon" aria-label="Festa"><svg class="i"><use href="#i-balloon"/></svg></button>
+          </div>
+        </div>
+        <div class="title">
+          <h1 contenteditable="true" spellcheck="false">Reforma da cozinha</h1>
+          <div class="sub">Ativo desde 08/09 · última nota em 07/10</div>
+        </div>
+        <button class="pill prio-on" id="prio" aria-pressed="true"><svg class="i sm filled"><use href="#i-star"/></svg>Prioridade de outubro</button>
+        <button class="ghost" aria-label="Mais ações (finalizar projeto)" title="Finalizar projeto"><svg class="i"><use href="#i-dots"/></svg></button>
+      </div>
+
+      <div class="stats">
+        <div class="stat"><div class="label">Progresso</div><div class="value">4 de 10</div><div class="bar"><div style="width:40%"></div></div></div>
+        <div class="stat"><div class="label">Travadas</div><div class="value" style="color:var(--warning-text)">2</div><div class="label">adiadas 3+ vezes ou com data vencida</div></div>
+        <div class="stat"><div class="label">Próxima</div><div class="value text">Pagar a segunda parcela do Seu Jorge</div><div class="label">amanhã</div></div>
+      </div>
+
+      <div class="tabs" role="tablist">
+        <button class="on" data-tab="tasks" role="tab">Tarefas 6</button>
+        <button data-tab="notes" role="tab">Notas 4</button>
+        <span class="spacer"></span>
+        <button class="ghost" style="color:var(--muted);border:none" id="toggle-side" aria-label="Mostrar ou esconder a coluna lateral" title="Coluna lateral"><svg class="i"><use href="#i-sidebar"/></svg></button>
+      </div>
+
+      <section id="tab-tasks">
+        <div class="grp"><span>Atrasadas</span><span>2</span></div>
+        <div class="task"><span class="box"></span><span class="txt">Pedir orçamento de bancada de granito</span>
+          <span class="meta"><span class="chip warn">adiada 3×</span> <span class="small muted">18/09</span></span>
+          <span class="actions"><button class="ghost" title="Data de intenção"><svg class="i sm"><use href="#i-calendar"/></svg></button><button class="ghost" title="Prazo máximo"><svg class="i sm"><use href="#i-flag"/></svg></button><button class="ghost" title="Promover a prioridade do dia"><svg class="i sm"><use href="#i-star"/></svg></button></span></div>
+        <div class="task"><span class="box"></span><span class="txt">Comprar o porcelanato</span>
+          <span class="meta small muted">09/10 · adiada 1 vez</span>
+          <span class="actions"><button class="ghost" title="Data de intenção"><svg class="i sm"><use href="#i-calendar"/></svg></button><button class="ghost" title="Prazo máximo"><svg class="i sm"><use href="#i-flag"/></svg></button><button class="ghost" title="Promover a prioridade do dia"><svg class="i sm"><use href="#i-star"/></svg></button></span></div>
+
+        <div class="grp"><span>Próximos dias</span><span>1</span></div>
+        <div class="task"><span class="box"></span><span class="txt">Pagar a segunda parcela do Seu Jorge</span>
+          <span class="meta small muted">amanhã</span>
+          <span class="actions"><button class="ghost" title="Data de intenção"><svg class="i sm"><use href="#i-calendar"/></svg></button><button class="ghost" title="Prazo máximo"><svg class="i sm"><use href="#i-flag"/></svg></button><button class="ghost" title="Promover a prioridade do dia"><svg class="i sm"><use href="#i-star"/></svg></button></span></div>
+
+        <div class="grp"><span>Sem data</span><span>3</span></div>
+        <div class="task"><span class="box"></span><span class="txt">Pesquisar fornecedores de porcelanato</span><span class="meta small muted">adiada 1 vez</span></div>
+        <div class="task"><span class="box"></span><span class="txt">Confirmar a data de entrega do piso</span><span class="meta"></span></div>
+        <div class="task"><span class="box"></span><span class="txt">Reservar a caçamba para o entulho</span><span class="meta"></span></div>
+        <div class="task new"><svg class="i sm"><use href="#i-plus"/></svg><span>Nova tarefa</span></div>
+
+        <div class="grp toggle"><svg class="i sm"><use href="#i-chevron-right"/></svg><span>Feitas (4)</span></div>
+      </section>
+
+      <section id="tab-notes" hidden>
+        <div class="timeline">
+          <div class="entry"><span class="dot"></span><div class="when">07/10 · 08:38 · Geral</div>
+            <p>Semana 1: demolição e elétrica. Semana 2: piso. Semana 3: armários e bancada.</p>
+            <p>O Marcão confirmou a elétrica para a primeira semana.</p></div>
+          <div class="entry"><span class="dot"></span><div class="when">27/09 · 08:38 · Geral</div>
+            <p>O eletricista (Marcão) vem na quinta para avaliar.</p>
+            <p>Precisa de um circuito separado para o forno elétrico.</p></div>
+          <div class="entry"><span class="dot"></span><div class="when">14/09 · 09:22 · Geral</div>
+            <p>Indicação de marceneiro: Seu Jorge, falar com a vizinha do 302.</p></div>
+          <div class="entry"><span class="dot"></span><div class="when">08/09 · 09:18 · Geral</div>
+            <p>Trocar a bancada por granito ou quartzo.</p>
+            <p>Armários planejados até o teto, com nicho para o micro-ondas.</p>
+            <p>Mudar a tomada do fogão de lugar e colocar mais duas na bancada.</p>
+            <p>Piso: porcelanato claro, que não mostre sujeira.</p></div>
+        </div>
+        <p class="small muted">Seções de reunião ganham ponto e rótulo azuis: <span style="color:var(--meeting-text)">Reunião</span>, com os participantes.</p>
+      </section>
+    </main>
+
+    <aside class="panel" id="panel" hidden aria-label="Sobre o projeto">
+      <div class="panel-head">
+        <span style="font-weight:600;font-size:13px">Sobre o projeto</span>
+        <button class="ghost" id="pin" aria-label="Fixar coluna" title="Fixar coluna"><svg class="i"><use href="#i-pin"/></svg></button>
+      </div>
+      <h4>Detalhes</h4>
+      <div class="kv"><span class="muted">Objetivo</span><a href="#">Vincular</a></div>
+      <div class="kv"><span class="muted">Status</span><span>Ativo</span></div>
+      <div class="kv" style="margin-bottom:18px"><span class="muted">Seções</span><span>4</span></div>
+      <h4>Recursos</h4>
+      <div class="res"><span class="ico"><svg class="i"><use href="#i-link"/></svg></span><span class="name">Orçamento da marmoraria<br><span class="small muted">drive.google.com</span></span></div>
+      <div class="res"><span class="ico"><svg class="i"><use href="#i-notes"/></svg></span><span class="name">Ideias do layout<br><span class="small muted">nota · 08/09</span></span></div>
+      <div class="drop"><svg class="i sm"><use href="#i-plus"/></svg> Colar link</div>
+    </aside>
+
+    <nav class="rail" id="rail" aria-label="Coluna lateral recolhida">
+      <button data-open aria-label="Detalhes" title="Detalhes"><svg class="i"><use href="#i-info"/></svg></button>
+      <button data-open aria-label="Recursos, 2" title="Recursos"><svg class="i"><use href="#i-clip"/></svg><span class="badge">2</span></button>
+    </nav>
+  </div>
+</div>
+
+<script>
+(function () {
+  var panel = document.getElementById('panel');
+  var rail = document.getElementById('rail');
+  var pin = document.getElementById('pin');
+  var controls = document.querySelectorAll('.controls [data-state]');
+  var narrow = window.matchMedia('(max-width: 900px)');
+  var state = 'closed';
+  try { if (localStorage.getItem('mock-project-panel') === 'pinned') state = 'pinned'; } catch (e) {}
+
+  function render() {
+    // Pinned degrades to peek on narrow screens, so the task list is never squeezed.
+    var shown = state === 'pinned' && narrow.matches ? 'peek' : state;
+    controls.forEach(function (b) { b.classList.toggle('on', b.dataset.state === state); });
+    panel.hidden = shown === 'closed';
+    panel.classList.toggle('peek', shown === 'peek');
+    rail.hidden = shown === 'pinned';
+    rail.style.display = shown === 'pinned' ? 'none' : 'flex';
+    pin.querySelector('svg').classList.toggle('filled', state === 'pinned');
+    pin.setAttribute('aria-label', state === 'pinned' ? 'Desafixar coluna' : 'Fixar coluna');
+    pin.title = pin.getAttribute('aria-label');
+  }
+  function set(next) {
+    state = next;
+    try { localStorage.setItem('mock-project-panel', state === 'pinned' ? 'pinned' : 'closed'); } catch (e) {}
+    render();
+  }
+
+  controls.forEach(function (b) { b.addEventListener('click', function () { set(b.dataset.state); }); });
+  rail.querySelectorAll('[data-open]').forEach(function (b) {
+    b.addEventListener('click', function () { set(state === 'peek' ? 'closed' : 'peek'); });
+  });
+  pin.addEventListener('click', function () { set(state === 'pinned' ? 'closed' : 'pinned'); });
+  document.getElementById('toggle-side').addEventListener('click', function (e) {
+    e.stopPropagation();
+    set(state === 'closed' ? 'peek' : 'closed');
+  });
+  document.getElementById('main').addEventListener('click', function () { if (state === 'peek') set('closed'); });
+  document.addEventListener('keydown', function (e) {
+    if (e.key === 'Escape') { if (state === 'peek') set('closed'); picker.hidden = true; }
+  });
+  narrow.addEventListener('change', render);
+
+  document.querySelectorAll('.tabs [data-tab]').forEach(function (b) {
+    b.addEventListener('click', function () {
+      document.querySelectorAll('.tabs [data-tab]').forEach(function (o) { o.classList.toggle('on', o === b); });
+      document.getElementById('tab-tasks').hidden = b.dataset.tab !== 'tasks';
+      document.getElementById('tab-notes').hidden = b.dataset.tab !== 'notes';
+    });
+  });
+
+  var prio = document.getElementById('prio');
+  prio.addEventListener('click', function () {
+    var on = prio.getAttribute('aria-pressed') !== 'true';
+    prio.setAttribute('aria-pressed', String(on));
+    prio.classList.toggle('prio-on', on);
+    prio.querySelector('svg').classList.toggle('filled', on);
+  });
+
+  var picon = document.getElementById('picon');
+  var picker = document.getElementById('picker');
+  picon.addEventListener('click', function (e) {
+    e.stopPropagation();
+    picker.hidden = !picker.hidden;
+    picon.setAttribute('aria-expanded', String(!picker.hidden));
+  });
+  picker.addEventListener('click', function (e) { e.stopPropagation(); });
+  document.querySelectorAll('#picker-grid button').forEach(function (b) {
+    b.addEventListener('click', function () {
+      document.querySelectorAll('#picker-grid button').forEach(function (o) { o.classList.toggle('on', o === b); });
+      picon.className = 'picon ' + b.className.replace(' on', '');
+      picon.querySelector('use').setAttribute('href', '#' + b.dataset.icon);
+      picker.hidden = true;
+    });
+  });
+  document.addEventListener('click', function () { picker.hidden = true; });
+
+  render();
+})();
+</script>
+</body></html>

@@ -33,18 +33,23 @@ interface Props {
   handlers: LineHandlers;
 }
 
-/** A hidden date field opened by a shortcut button. */
+/** Hint on an empty line, shown only while the line is being written (P3 in AVALIACAO-UX.md). */
+export const NOTE_HINT = 'Escreva, ou comece com [] e espaço para criar uma tarefa';
+
+/** A hidden date field opened by a button: a shortcut, or the chip of a date already set. */
 function DatePicker({
   label,
   value,
   min,
   onChange,
+  className,
   children,
 }: {
   label: string;
   value: DayKey | null;
   min?: DayKey;
   onChange(date: DayKey | null): void;
+  className: string;
   children: string;
 }) {
   const ref = useRef<HTMLInputElement>(null);
@@ -52,7 +57,7 @@ function DatePicker({
     <span className="line__picker">
       <button
         type="button"
-        className="line__action"
+        className={className}
         title={label}
         aria-label={label}
         onClick={() => {
@@ -153,6 +158,19 @@ export function BlockLine({ block, free, day, today, isPriority, allowNewLines, 
   const active = isTask && block.status === 'active';
   const deadline = block.deadline ?? null;
   const showDate = isTask && block.intendedDate !== null && block.intendedDate !== day;
+  const dateLabel = showDate ? relativeDay(block.intendedDate!, today) : '';
+  const deadlineLabel = deadline ? `prazo ${relativeDay(deadline, today)}` : '';
+  const pickDate = (label: string, className: string, children: string) => (
+    <DatePicker label={label} className={className} value={block.intendedDate} min={today} onChange={(date) => handlers.onSetDate(block, date)}>
+      {children}
+    </DatePicker>
+  );
+  const pickDeadline = (label: string, className: string, children: string) => (
+    <DatePicker label={label} className={className} value={deadline} onChange={(date) => handlers.onSetDeadline(block, date)}>
+      {children}
+    </DatePicker>
+  );
+  const priorityLabel = isPriority ? 'Tirar das prioridades do dia' : 'Promover a prioridade do dia';
 
   return (
     <div className={`line line--${block.kind} ${done ? 'line--done' : ''}`}>
@@ -174,43 +192,38 @@ export function BlockLine({ block, free, day, today, isPriority, allowNewLines, 
         onChange={(event) => onChange(event.target.value)}
         onKeyDown={onKeyDown}
         onBlur={flush}
+        placeholder={block.kind === 'note' && free && allowNewLines ? NOTE_HINT : undefined}
         aria-label={isTask ? 'Tarefa' : 'Nota'}
       />
+      {/* Dates already set are chips; an active task's chip changes the date. */}
       <span className="line__meta">
-        {isPriority && <span className="line__star" title="Prioridade do dia">★</span>}
-        {showDate && <span className="muted">{relativeDay(block.intendedDate!, today)}</span>}
-        {deadline && <span className="chip chip--muted">prazo {relativeDay(deadline, today)}</span>}
+        {showDate &&
+          (active ? pickDate('Mudar a data de intenção', 'line__chip', dateLabel) : <span className="muted">{dateLabel}</span>)}
+        {deadline &&
+          (active ? pickDeadline('Mudar o prazo máximo', 'line__chip', deadlineLabel) : <span className="chip chip--muted">{deadlineLabel}</span>)}
       </span>
+      {/* Shortcuts on hover and focus. The checkbox finalizes, so there is no separate button for it. */}
       <span className="line__actions">
-        {active && (
-          <>
-            <button type="button" className="line__action" title="Finalizar" aria-label="Finalizar" onClick={() => handlers.onToggleDone(block, true)}>
-              ✓
-            </button>
-            <DatePicker label="Data de intenção" value={block.intendedDate} min={today} onChange={(date) => handlers.onSetDate(block, date)}>
-              Data
-            </DatePicker>
-            <DatePicker label="Prazo máximo" value={deadline} onChange={(date) => handlers.onSetDeadline(block, date)}>
-              Prazo
-            </DatePicker>
-            <button
-              type="button"
-              className={`line__action ${isPriority ? 'line__action--on' : ''}`}
-              title={isPriority ? 'Tirar das prioridades do dia' : 'Promover a prioridade do dia'}
-              aria-label={isPriority ? 'Tirar das prioridades do dia' : 'Promover a prioridade do dia'}
-              aria-pressed={isPriority}
-              onClick={() => handlers.onTogglePriority(block, !isPriority)}
-            >
-              ★
-            </button>
-          </>
-        )}
+        {active && !showDate && pickDate('Data de intenção', 'line__action', 'Data')}
+        {active && !deadline && pickDeadline('Prazo máximo', 'line__action', 'Prazo')}
         {block.kind === 'note' && free && (
           <button type="button" className="line__action" onClick={() => handlers.onMakeTask(block, text)}>
             Converter em tarefa
           </button>
         )}
       </span>
+      {active && (
+        <button
+          type="button"
+          className={`line__star ${isPriority ? 'line__star--on' : 'line__reveal'}`}
+          title={priorityLabel}
+          aria-label={priorityLabel}
+          aria-pressed={isPriority}
+          onClick={() => handlers.onTogglePriority(block, !isPriority)}
+        >
+          {isPriority ? '★' : '☆'}
+        </button>
+      )}
     </div>
   );
 }

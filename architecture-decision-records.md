@@ -169,3 +169,15 @@ Technical decisions that fill gaps in `SPEC.md`. Product and business decisions 
 **Date:** 2026-10-12
 **Decision:** The color of each cleanup assistant is computed on read (`domain/cleanupStatus.ts`) from the number of items it finds, compared with three limits (yellow, orange, red). The limits live in the optional `Settings.cleanupLimits` field, one entry per assistant; a missing entry means the default. Since the field is optional and `settings` has no index on it, the database and backup stay at version 5. Editing a limit in the settings makes the edited value win and moves the other two out of its way. Each assistant opens on its own route (`#/ordem/dias-em-aberto` and so on), so the back button returns to the dashboard.
 **Why:** A stored status would go stale whenever data changes; counting is cheap. Keeping the limits as settings means they travel with the backup.
+
+## ADR-029: Top warnings are picked in the UI, snoozes stay in this browser
+
+**Date:** 2026-10-12
+**Decision:** Which warning shows at the top is a pure function, `pickTopNotice` in `src/ui/notices.ts`, fed by the backup state, the pending days and the snoozes; `App` renders the backup band or tells the day note to render the pending checkout band. "Lembrar depois" stores the day it was pressed per warning in `localStorage` (`best-app:snoozedNotices`), wrapped in try/catch, and a warning counts as snoozed only on that day. Nothing about it goes to the database or the event history.
+**Why:** The queue spans a global band (backup) and a screen band (pending checkout), so it has to be decided where both are known. Snoozing is a convenience of one browser, like pinning the priorities; recording it as an event would put noise in the history and in the backup.
+
+## ADR-030: Loading screens show the title and a delayed skeleton
+
+**Date:** 2026-10-12
+**Decision:** Screens that wait for a live query render `LoadingPage` (title, when known, plus gray lines) or `SkeletonLines` instead of nothing. The skeleton fades in with a 150 ms CSS delay, so fast queries never flash it, and the fade is skipped under `prefers-reduced-motion`. The day note builds its header before the query returns.
+**Why:** A blank screen for half a second reads as an error (N4 in `AVALIACAO-UX.md`). A pure CSS delay avoids a timer per screen.

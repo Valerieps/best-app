@@ -65,7 +65,7 @@ Estas partes da spec não foram construídas porque dependem de uma pergunta em 
 
 ## 4. Testes e qualidade
 
-- **Não há testes de interface.** O domínio, os casos de uso, as consultas e o backup têm testes (191 no total). As telas foram conferidas à mão no navegador embutido, e um erro de interface só aparece usando.
+- **Não há testes de interface.** O domínio, os casos de uso, as consultas e o backup têm testes (224 no total). As telas foram conferidas à mão no navegador embutido, e um erro de interface só aparece usando.
 - **Não há teste ponta a ponta** (Playwright ou similar) para os fluxos inteiros, como escolher um arquivo, importar e desfazer.
 - **Os testes não rodam no deploy.** O build do Cloudflare roda `tsc` e `vite build`, mas não o `vitest`. Dá para incluir os testes no `npm run build` ou configurar GitHub Actions.
 - **Não há lint.** O ESLint ficou de fora para ter menos dependências.
@@ -92,6 +92,11 @@ Estas partes da spec não foram construídas porque dependem de uma pergunta em 
 - **Mover uma linha para outra seção** (arrastar ou atalho) não existe.
 - **Converter um quadro branco em projeto direto no cabeçalho** só funciona pelo título; não há botão separado.
 - **O seletor de datas dos atalhos** usa o calendário nativo do Chrome; limpar a data depende do botão "Limpar" dele.
+- **Não há botão de nova seção entre seções.** As seções seguem a ordem de criação e não têm posição própria; inserir no meio exigiria mudar o modelo (decisão de 12/10/2026, N2 em `AVALIACAO-UX.md`).
+- **A estrela parece não responder quando um prazo ocupa a terceira prioridade.** A tarefa promovida entra na lista, mas a do prazo toma o lugar dela na tela, pela regra do 1b. Vale um aviso curto ou mostrar a quarta como "na fila".
+- **O menu "/" do editor (P3 em `AVALIACAO-UX.md`) não existe.** Só a dica na linha vazia foi feita.
+- **"Lembrar depois" vale só neste navegador.** O dia adiado fica no `localStorage`, como a escolha de fixar as prioridades.
+- **O resto do roadmap de `AVALIACAO-UX.md`.** Os sete itens de "Fazer já" foram feitos em 12/10/2026; "Planejar", "Ajustes finos" e "Depois" continuam abertos.
 
 ## Adiado de propósito
 

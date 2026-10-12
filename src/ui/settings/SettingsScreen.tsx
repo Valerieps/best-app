@@ -6,6 +6,7 @@ import { ALL_DAYS } from '../../domain/dayFlow';
 import type { Settings, WarmupItem } from '../../domain/entities';
 import { ASSISTANT_INFO } from '../cleanup/assistantInfo';
 import { appContext, reader } from '../services';
+import { LoadingPage } from '../components/Skeleton';
 import { useLiveQuery } from '../useLiveQuery';
 
 const WEEKDAYS = ['domingo', 'segunda', 'terça', 'quarta', 'quinta', 'sexta', 'sábado'];
@@ -15,7 +16,7 @@ const WEEK_ORDER = [1, 2, 3, 4, 5, 6, 0];
 /** User settings: weekly reflection (section 2), active days and warm up (section 3). */
 export function SettingsScreen() {
   const settings = useLiveQuery(async () => (await reader.settings()) ?? null);
-  if (settings === undefined) return null;
+  if (settings === undefined) return <LoadingPage title="Configurações" />;
   const schedule = settings?.weeklyReflection ?? null;
   const activeDays = settings?.activeDays ?? [...ALL_DAYS];
 

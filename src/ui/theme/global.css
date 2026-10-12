@@ -60,6 +60,26 @@ button.small {
   padding: 0 var(--space-2);
 }
 
+/*
+ * Three button levels: primary (solid, at most one per screen), secondary (the default
+ * outlined button) and tertiary (text only, with a background on hover), for bars and toolbars.
+ */
+button.tertiary {
+  border-color: transparent;
+  background: transparent;
+  color: var(--color-text);
+}
+
+button.tertiary:hover:not(:disabled),
+button.tertiary[aria-expanded='true'] {
+  background: var(--color-hover);
+}
+
+button.tertiary[aria-current='page'] {
+  background: var(--color-hover);
+  font-weight: 600;
+}
+
 .icon-button {
   border: none;
   background: none;
@@ -162,12 +182,6 @@ input[type='checkbox'] {
   display: flex;
   gap: var(--space-4);
   flex-shrink: 0;
-}
-
-.indicator--danger {
-  color: var(--color-danger);
-  font-size: var(--font-size-sm);
-  font-weight: 600;
 }
 
 /* Page */
@@ -338,8 +352,13 @@ input[type='checkbox'] {
   color: var(--color-text-muted);
 }
 
-.line--ghost .line__text::placeholder {
+.line__text::placeholder {
   color: var(--color-text-muted);
+}
+
+/* The hint of an empty line only shows on the line being written; the ghost line always shows it. */
+.line:not(.line--ghost) .line__text:not(:focus)::placeholder {
+  color: transparent;
 }
 
 /* Line shortcuts (1b): shown on hover or while the line is being edited */
@@ -356,7 +375,39 @@ input[type='checkbox'] {
   font-size: var(--font-size-sm);
 }
 
+.line__meta:empty {
+  display: none;
+}
+
+/* Dates already set are chips on the line; clicking one changes the date. */
+.line__chip {
+  border: var(--border-width) solid transparent;
+  border-radius: var(--radius-pill);
+  background: var(--color-general-bg);
+  color: var(--color-text-muted);
+  font-size: var(--font-size-sm);
+  line-height: 1.4;
+  padding: 1px var(--space-2);
+  white-space: nowrap;
+}
+
+.line__chip:hover {
+  color: var(--color-text);
+  border-color: var(--color-border-strong);
+}
+
+/* One star: the indicator of a day priority and the button that toggles it. */
 .line__star {
+  border: none;
+  background: none;
+  padding: 0 var(--space-1);
+  font-size: var(--font-size-md);
+  line-height: 1.5;
+  color: var(--color-text-muted);
+}
+
+.line__star:hover,
+.line__star--on {
   color: var(--color-firework-1);
 }
 
@@ -365,11 +416,21 @@ input[type='checkbox'] {
   align-items: center;
   gap: var(--space-1);
   flex-shrink: 0;
+  padding-top: 2px;
+}
+
+.line__reveal {
+  display: none;
 }
 
 .line:hover .line__actions,
 .line:focus-within .line__actions {
   display: flex;
+}
+
+.line:hover .line__reveal,
+.line:focus-within .line__reveal {
+  display: inline-block;
 }
 
 .line__action {
@@ -382,14 +443,9 @@ input[type='checkbox'] {
   line-height: 1.8;
 }
 
-.line__action:hover,
-.line__action--on {
+.line__action:hover {
   color: var(--color-text);
   border-color: var(--color-border-strong);
-}
-
-.line__action--on {
-  color: var(--color-firework-1);
 }
 
 .line__picker {
@@ -965,10 +1021,66 @@ input[type='checkbox'] {
   margin-top: var(--space-3);
 }
 
+/* New sections, at the end of the day note */
 .note__actions {
   display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  margin-top: var(--space-3);
+  padding-top: var(--space-3);
+  border-top: var(--border-width) solid var(--color-border);
+}
+
+.note__actions button {
+  color: var(--color-text-muted);
+  font-size: var(--font-size-sm);
+}
+
+.note__actions button:hover {
+  color: var(--color-text);
+}
+
+/* Loading: the title shows at once, gray lines stand in for the content */
+.skeleton {
+  display: grid;
   gap: var(--space-3);
-  margin-top: var(--space-4);
+  padding: var(--space-2) 0;
+  /* Fast queries never show the skeleton: it fades in only after a short wait. */
+  animation: skeleton-in 200ms ease-out 150ms both;
+}
+
+.skeleton__line {
+  display: block;
+  height: 14px;
+  border-radius: var(--radius-sm);
+  background: var(--color-skeleton);
+}
+
+.skeleton__line:nth-child(3n + 1) {
+  width: 92%;
+}
+
+.skeleton__line:nth-child(3n + 2) {
+  width: 74%;
+}
+
+.skeleton__line:nth-child(3n) {
+  width: 56%;
+}
+
+@keyframes skeleton-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .skeleton {
+    animation-duration: 0s;
+  }
 }
 
 /* Cards (checkout, dialogs) */
@@ -1346,12 +1458,50 @@ input[type='checkbox'] {
   font-weight: 600;
 }
 
+.global-bar__name,
+.global-bar button {
+  white-space: nowrap;
+}
+
 .global-bar__spacer {
   flex: 1;
 }
 
-.global-bar__button--current {
-  border-color: var(--color-accent);
+/* Backup status: a colored dot and a short label; details on hover and in "Dados e backup" */
+button.backup-status {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: var(--font-size-sm);
+  color: var(--color-text-muted);
+}
+
+.backup-status__dot {
+  width: 8px;
+  height: 8px;
+  border-radius: var(--radius-pill);
+  flex-shrink: 0;
+  background: var(--color-dot-off);
+}
+
+.backup-status--ok .backup-status__dot { background: var(--color-dot-ok); }
+.backup-status--attention .backup-status__dot { background: var(--color-dot-attention); }
+.backup-status--problem .backup-status__dot { background: var(--color-dot-problem); }
+
+button.backup-status--problem {
+  color: var(--color-danger);
+  font-weight: 600;
+}
+
+@media (max-width: 640px) {
+  .backup-status__label {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    white-space: nowrap;
+  }
 }
 
 .badge {

@@ -4,6 +4,7 @@ import { loadHabits, type HabitView } from '../../application/queries';
 import type { DayKey } from '../../domain/day';
 import type { Habit, Objective } from '../../domain/entities';
 import { appContext, reader } from '../services';
+import { LoadingPage } from '../components/Skeleton';
 import { useLiveQuery } from '../useLiveQuery';
 
 const WEEKDAYS = ['dom', 'seg', 'ter', 'qua', 'qui', 'sex', 'sáb'];
@@ -125,7 +126,7 @@ export function HabitsScreen({ today }: { today: DayKey }) {
   const objectives = useLiveQuery(() => reader.objectives()) ?? [];
   const [editing, setEditing] = useState<string | null>(null);
   const [creating, setCreating] = useState(false);
-  if (!views) return null;
+  if (!views) return <LoadingPage title="Hábitos" />;
   const active = views.filter((view) => view.habit.status === 'active');
   const archived = views.filter((view) => view.habit.status === 'archived');
   const fieldsOf = (habit: Habit): HabitFields => ({

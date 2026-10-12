@@ -8,6 +8,7 @@ import { monthKey, shiftMonth } from '../../domain/month';
 import { formatShortDate } from '../format';
 import { navigate, routeHash } from '../hooks';
 import { appContext, reader } from '../services';
+import { LoadingPage } from '../components/Skeleton';
 import { useLiveQuery } from '../useLiveQuery';
 
 const MONTH_NAMES = [
@@ -37,7 +38,7 @@ export function MonthlyReflectionScreen({ month, today }: { month?: string; toda
   const key = month ?? shiftMonth(monthKey(today), -1);
   const view = useLiveQuery(() => loadMonthlyReflection(reader, key), [key]);
   const [mode, setMode] = useState<View>('objective');
-  if (!view) return null;
+  if (!view) return <LoadingPage title="Reflexão mensal" />;
 
   const closed = Boolean(view.reflection?.closedAt);
   const activeProjects = view.projects.filter((project) => project.status === 'active');

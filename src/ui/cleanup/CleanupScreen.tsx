@@ -7,6 +7,7 @@ import type { DayKey } from '../../domain/day';
 import type { Project } from '../../domain/entities';
 import { ScreenHeader } from '../components/ScreenHeader';
 import { Segmented } from '../components/Segmented';
+import { LoadingPage } from '../components/Skeleton';
 import { ClosePendingDaysDialog } from '../dayNote/ClosePendingDaysDialog';
 import { listDays, plural } from '../format';
 import { navigate } from '../hooks';
@@ -27,7 +28,7 @@ interface Props {
 export function CleanupScreen({ today, assistant }: Props) {
   const dashboard = useLiveQuery(() => loadCleanupDashboard(reader, today), [today]);
   const projects = useLiveQuery(() => reader.projects()) ?? [];
-  if (!dashboard) return null;
+  if (!dashboard) return <LoadingPage title={assistant ? undefined : 'Colocar ordem na casa'} />;
   return assistant ? (
     <AssistantScreen id={assistant} dashboard={dashboard} projects={projects} today={today} />
   ) : (

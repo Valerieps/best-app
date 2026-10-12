@@ -10,6 +10,7 @@ import { loadObjective, loadObjectives } from '../../application/queries';
 import { plural } from '../format';
 import { navigate, routeHash } from '../hooks';
 import { appContext, reader } from '../services';
+import { LoadingPage } from '../components/Skeleton';
 import { useLiveQuery } from '../useLiveQuery';
 import { Resources } from './Resources';
 
@@ -19,7 +20,7 @@ export function ObjectivesScreen() {
   const [goal, setGoal] = useState('');
   const [motivation, setMotivation] = useState('');
   const [showFinished, setShowFinished] = useState(false);
-  if (!summaries) return null;
+  if (!summaries) return <LoadingPage title="Objetivos" />;
   const active = summaries.filter((summary) => summary.objective.status === 'active');
   const finished = summaries.filter((summary) => summary.objective.status === 'finished');
 
@@ -92,7 +93,7 @@ export function ObjectiveScreen({ id }: { id: string }) {
     setMotivation(view.objective.motivation);
   }, [view?.objective.goal, view?.objective.motivation]);
 
-  if (view === undefined) return null;
+  if (view === undefined) return <LoadingPage />;
   if (view === null) {
     return (
       <main className="page">

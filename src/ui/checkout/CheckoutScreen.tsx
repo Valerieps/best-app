@@ -18,6 +18,7 @@ import {
 import { Fireworks, playPlim } from '../components/Celebration';
 import { ProjectChip } from '../components/Chips';
 import { Linkified } from '../components/Linkified';
+import { LoadingPage, SkeletonLines } from '../components/Skeleton';
 import { formatLongDate, plural, postponedLabel, relativeDay } from '../format';
 import { navigate } from '../hooks';
 import { appContext, reader } from '../services';
@@ -101,7 +102,7 @@ export function CheckoutScreen({ day, today }: Props) {
     return [...triage.rows, ...reopened];
   }, [triage, undone]);
 
-  if (!triage) return null;
+  if (!triage) return <LoadingPage title={`Checkout · ${formatLongDate(day)}`} />;
   const automatic = triage.automatic.filter((item) => !undone.has(automaticKey(item)));
   const attention = rows.filter((row) => row.attention);
   const suggestions = rows.filter((row) => !row.attention);
@@ -313,7 +314,7 @@ function PlanningStep({ day, target, today, onBack }: PlanningProps) {
   const [busy, setBusy] = useState(false);
   const finish = useCallback(() => navigate({ name: 'day' }), []);
 
-  if (!view) return null;
+  if (!view) return <SkeletonLines />;
   const isChecked = (id: string, planned: boolean) => toggles.get(id) ?? planned;
   const toggle = (id: string, checked: boolean) => setToggles((previous) => new Map(previous).set(id, checked));
   const plannedCount =

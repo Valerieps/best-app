@@ -7,6 +7,7 @@ import type { DayKey } from '../../domain/day';
 import { monthKey } from '../../domain/month';
 import { Resources } from '../objectives/Resources';
 import { Linkified } from '../components/Linkified';
+import { LoadingPage } from '../components/Skeleton';
 import { formatShortDate, formatTime, plural, postponedLabel, relativeDay } from '../format';
 import { navigate, routeHash } from '../hooks';
 import { appContext, reader } from '../services';
@@ -16,7 +17,7 @@ import { useLiveQuery } from '../useLiveQuery';
 export function ProjectsScreen() {
   const summaries = useLiveQuery(() => loadProjects(reader));
   const [showFinished, setShowFinished] = useState(false);
-  if (!summaries) return null;
+  if (!summaries) return <LoadingPage title="Projetos" />;
   const active = summaries.filter((summary) => summary.project.status === 'active');
   const finished = summaries.filter((summary) => summary.project.status === 'finished');
 
@@ -68,7 +69,12 @@ export function ProjectScreen({ id, today }: { id: string; today: DayKey }) {
     if (view) setName(view.project.name);
   }, [view?.project.name]);
 
-  if (view === undefined) return null;
+  const back = (
+    <button type="button" className="link" onClick={() => navigate({ name: 'projects' })}>
+      ← Projetos
+    </button>
+  );
+  if (view === undefined) return <LoadingPage before={back} />;
   if (view === null) {
     return (
       <main className="page">
@@ -81,9 +87,7 @@ export function ProjectScreen({ id, today }: { id: string; today: DayKey }) {
 
   return (
     <main className="page">
-      <button type="button" className="link" onClick={() => navigate({ name: 'projects' })}>
-        ← Projetos
-      </button>
+      {back}
       <div className="project__header">
         <input
           className="project__name"

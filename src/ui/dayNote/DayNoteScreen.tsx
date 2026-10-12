@@ -25,12 +25,13 @@ import { canEditFreely } from '../../domain/tasks';
 import { appContext as ctx, reader } from '../services';
 import { useLiveQuery } from '../useLiveQuery';
 import { enqueue } from '../writeQueue';
-import { BlockLine, GhostLine, type LineHandlers } from './BlockLine';
+import { BlockLine, GhostLine, NOTE_HINT, type LineHandlers } from './BlockLine';
 import { requestFocus } from './focus';
 import { MeetingDetails } from './MeetingDetails';
 import { PendingDaysBanner } from './PendingDaysBanner';
 import { PrioritiesBlock, usePinnedPriorities } from './PrioritiesBlock';
 import { ScreenHeader } from '../components/ScreenHeader';
+import { SkeletonLines } from '../components/Skeleton';
 import { formatLongDate } from '../format';
 import { navigate } from '../hooks';
 import { RemindersBanner } from '../opening/Reminders';
@@ -44,6 +45,10 @@ interface Props {
   pendingDays: DayKey[];
   /** Section 3: reminders that came back, shown in a discreet band at the top. */
   reminders?: Reminder[];
+  /** Whether the pending checkout band is the one warning shown now (see `pickTopNotice`). */
+  showPendingNotice?: boolean;
+  /** "Lembrar depois" on the pending checkout band. */
+  onSnoozePending?(): void;
 }
 
 /** A section of the screen, with its stable key and the lines shown in it. */
@@ -97,7 +102,14 @@ function write(work: () => Promise<unknown>) {
   });
 }
 
-export function DayNoteScreen({ day, today, pendingDays, reminders = [] }: Props) {
+export function DayNoteScreen({
+  day,
+  today,
+  pendingDays,
+  reminders = [],
+  showPendingNotice = false,
+  onSnoozePending = () => {},
+}: Props) {
   const isToday = day === today;
   const view = useLiveQuery(() => loadDayNote(reader, day), [day]);
   const priorities = useLiveQuery(() => loadDayPriorities(reader, today), [today]) ?? [];
@@ -146,7 +158,49 @@ export function DayNoteScreen({ day, today, pendingDays, reminders = [] }: Props
     [entries],
   );
 
-  if (!view) return null;
+  // The header needs nothing from the database, so it shows at once, with a skeleton below.
+  const header = (
+    <ScreenHeader
+      title={
+        <span className="day-title">
+          <button
+            type="button"
+            className="icon-button day-title__arrow"
+            disabled={!previousDay}
+            onClick={() => previousDay && goToDay(previousDay)}
+            aria-label="Dia pendente anterior"
+          >
+            ‹
+          </button>
+          <h1 className="day-title__date">{formatLongDate(day)}</h1>
+          <button
+            type="button"
+            className="icon-button day-title__arrow"
+            disabled={!nextDay}
+            onClick={() => nextDay && goToDay(nextDay)}
+            aria-label="Próximo dia pendente"
+          >
+            ›
+          </button>
+        </span>
+      }
+      primary={{ label: 'Fazer checkout', onSelect: () => navigate({ name: 'checkout', day }) }}
+      more={
+        isToday
+          ? [{ label: pinned ? 'Desafixar prioridades' : 'Fixar prioridades no topo', onSelect: () => setPinned(!pinned) }]
+          : []
+      }
+    />
+  );
+
+  if (!view) {
+    return (
+      <main className="page" aria-busy="true">
+        {header}
+        <SkeletonLines />
+      </main>
+    );
+  }
 
   const draftIds = new Set(optimistic.map((item) => item.block.id));
   const slotOf = (block: Block) => lines.find((line) => line.block.id === block.id);
@@ -245,44 +299,10 @@ export function DayNoteScreen({ day, today, pendingDays, reminders = [] }: Props
   return (
     <>
       <main className="page">
-        <ScreenHeader
-          title={
-            <span className="day-title">
-              <button
-                type="button"
-                className="icon-button day-title__arrow"
-                disabled={!previousDay}
-                onClick={() => previousDay && goToDay(previousDay)}
-                aria-label="Dia pendente anterior"
-              >
-                ‹
-              </button>
-              <h1 className="day-title__date">{formatLongDate(day)}</h1>
-              <button
-                type="button"
-                className="icon-button day-title__arrow"
-                disabled={!nextDay}
-                onClick={() => nextDay && goToDay(nextDay)}
-                aria-label="Próximo dia pendente"
-              >
-                ›
-              </button>
-            </span>
-          }
-          primary={{ label: 'Fazer checkout', onSelect: () => navigate({ name: 'checkout', day }) }}
-          more={
-            isToday
-              ? [
-                  { label: '+ Seção geral', onSelect: () => addSection('general') },
-                  { label: '+ Seção de reunião', onSelect: () => addSection('meeting') },
-                  { label: pinned ? 'Desafixar prioridades' : 'Fixar prioridades no topo', onSelect: () => setPinned(!pinned) },
-                ]
-              : []
-          }
-        />
-        {isToday && (
+        {header}
+        {isToday && (showPendingNotice || reminders.length > 0) && (
           <div className="screen-notices">
-            <PendingDaysBanner days={pendingDays} today={today} />
+            {showPendingNotice && <PendingDaysBanner days={pendingDays} today={today} onSnooze={onSnoozePending} />}
             <RemindersBanner reminders={reminders} />
           </div>
         )}
@@ -326,13 +346,23 @@ export function DayNoteScreen({ day, today, pendingDays, reminders = [] }: Props
                 {isToday && entry.blocks.length === 0 && (
                   <GhostLine
                     id={`ghost:${section?.id ?? DAY_ENTRY}`}
-                    placeholder="Escreva aqui. [] e espaço no começo da linha viram tarefa"
+                    placeholder={NOTE_HINT}
                     onCreate={(text) => createFirstLine(entry, text)}
                   />
                 )}
               </section>
             );
           })}
+          {isToday && (
+            <div className="note__actions">
+              <button type="button" className="tertiary" onClick={() => addSection('general')}>
+                + Seção geral
+              </button>
+              <button type="button" className="tertiary" onClick={() => addSection('meeting')}>
+                + Seção de reunião
+              </button>
+            </div>
+          )}
         </div>
       </main>
     </>

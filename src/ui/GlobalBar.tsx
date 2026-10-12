@@ -42,7 +42,7 @@ export function GlobalBar({ today, pendingDays, onToday, onOpenMenu, backupState
       <span className="global-bar__spacer" />
       <button
         type="button"
-        className={`global-bar__button ${onToday ? 'global-bar__button--current' : ''}`}
+        className="tertiary"
         aria-current={onToday ? 'page' : undefined}
         onClick={() => navigate({ name: 'day' })}
       >
@@ -51,6 +51,7 @@ export function GlobalBar({ today, pendingDays, onToday, onOpenMenu, backupState
       <Dropdown
         label="Rituais"
         className="global-bar__rituals"
+        triggerClassName="tertiary"
         trigger={
           <>
             Rituais <Badge count={dueCount} />

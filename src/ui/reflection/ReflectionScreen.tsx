@@ -10,6 +10,7 @@ import { NotesRowView, rowKey, TaskRowView, GroupHeader, type Decision } from '.
 import { formatShortDate } from '../format';
 import { navigate } from '../hooks';
 import { appContext, reader } from '../services';
+import { LoadingPage } from '../components/Skeleton';
 import { useLiveQuery } from '../useLiveQuery';
 
 interface Props {
@@ -23,7 +24,7 @@ export function ReflectionScreen({ weekKey, today }: Props) {
   const view = useLiveQuery(() => loadReflection(reader, week, today), [week.key, today]);
   const goToWeek = (target: WeekRange) => navigate({ name: 'reflection', week: target.key });
 
-  if (!view) return null;
+  if (!view) return <LoadingPage title="Reflexão semanal" />;
   const closed = Boolean(view.reflection?.closedAt);
   const isCurrentOrPast = week.start <= today;
 

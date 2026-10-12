@@ -19,6 +19,7 @@ import { ObjectiveScreen, ObjectivesScreen } from './objectives/ObjectiveScreens
 import { DashboardScreen, StartDayScreen, WarmupScreen } from './opening/OpeningScreens';
 import { useDueReminders, useReminderSignals } from './opening/Reminders';
 import { ProjectScreen, ProjectsScreen } from './projects/ProjectScreens';
+import { backupNoticeLevel, pickTopNotice, useSnoozedNotices } from './notices';
 import { MonthlyReflectionScreen } from './reflection/MonthlyReflectionScreen';
 import { ReflectionScreen } from './reflection/ReflectionScreen';
 import { autoBackup, db, reader } from './services';
@@ -57,6 +58,14 @@ export function App() {
   const stage = onToday ? (opening?.stage ?? null) : 'execution';
   const dueReminders = useDueReminders();
   useReminderSignals(dueReminders.length);
+  // One warning at a time at the top; reminders that came back are not in this queue.
+  const [snoozed, snooze] = useSnoozedNotices(today);
+  const notice = pickTopNotice({
+    backup: backupNoticeLevel(backupState, hasData, everBackedUp),
+    pendingCheckout: onToday && stage === 'execution' && pendingDays.length > 0,
+    onDataScreen: route.name === 'data',
+    snoozed,
+  });
 
   if (onToday && stage === null) return null;
   // "Iniciar Dia" is the only screen without the global bar (SPEC.md, "Navegação").
@@ -72,13 +81,23 @@ export function App() {
         backupState={backupState}
         backup={backup}
       />
-      <BackupBanner state={backupState} hasData={hasData} everBackedUp={everBackedUp} actions={backup} />
+      {(notice === 'backupProblem' || notice === 'backupSetup') && (
+        <BackupBanner state={backupState} actions={backup} onSnooze={() => snooze('backupSetup')} />
+      )}
       <SideMenu open={menuOpen} current={route.name} onClose={closeMenu} />
 
       {route.name === 'day' && stage === 'warmup' && opening && <WarmupScreen view={opening} />}
       {route.name === 'day' && stage === 'dashboard' && opening && <DashboardScreen view={opening} today={today} />}
       {route.name === 'day' && stage === 'execution' && (
-        <DayNoteScreen key={shownDay} day={shownDay} today={today} pendingDays={pendingDays} reminders={dueReminders} />
+        <DayNoteScreen
+          key={shownDay}
+          day={shownDay}
+          today={today}
+          pendingDays={pendingDays}
+          reminders={dueReminders}
+          showPendingNotice={notice === 'pendingCheckout'}
+          onSnoozePending={() => snooze('pendingCheckout')}
+        />
       )}
       {route.name === 'checkout' && <CheckoutScreen key={route.day} day={route.day} today={today} />}
       {route.name === 'active' && <ActiveTasksScreen today={today} />}

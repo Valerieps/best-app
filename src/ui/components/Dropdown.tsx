@@ -8,10 +8,12 @@ interface Props {
   children(close: () => void): ReactNode;
   align?: 'left' | 'right';
   className?: string;
+  /** Button level of the trigger, e.g. "tertiary" in bars. */
+  triggerClassName?: string;
 }
 
 /** A button that opens a small list below it. Closes on outside click and on Escape. */
-export function Dropdown({ trigger, label, children, align = 'right', className = '' }: Props) {
+export function Dropdown({ trigger, label, children, align = 'right', className = '', triggerClassName = '' }: Props) {
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
 
@@ -31,7 +33,7 @@ export function Dropdown({ trigger, label, children, align = 'right', className 
 
   return (
     <div className={`dropdown ${className}`} ref={ref}>
-      <button type="button" className="dropdown__trigger" aria-haspopup="menu" aria-expanded={open} aria-label={label} onClick={() => setOpen(!open)}>
+      <button type="button" className={`dropdown__trigger ${triggerClassName}`} aria-haspopup="menu" aria-expanded={open} aria-label={label} onClick={() => setOpen(!open)}>
         {trigger}
       </button>
       {open && (
