@@ -1,10 +1,42 @@
 import { describe, expect, it } from 'vitest';
-import type { Project } from '../domain/entities';
+import type { Block, Project } from '../domain/entities';
+import type { DomainEvent } from '../domain/events';
 import { decideAutoBackup } from './autoBackup';
 import { createBackup, emptyTables, type BackupTables } from './backup';
 
 function project(id: string, updatedAt = '2026-10-11T10:00:00Z'): Project {
   return { id, name: id, status: 'active', createdAt: updatedAt, updatedAt, finishedAt: null };
+}
+
+function block(id: string): Block {
+  return {
+    id,
+    kind: 'note',
+    text: id,
+    sectionId: 's1',
+    position: 'a0',
+    projectId: null,
+    createdAt: '2026-10-11T10:00:00Z',
+    updatedAt: '2026-10-11T10:00:00Z',
+    status: null,
+    intendedDate: null,
+    firstIntendedDate: null,
+    postponeCount: 0,
+    closedAt: null,
+    lastTriagedDay: null,
+  };
+}
+
+function blockDeleted(blockId: string): DomainEvent {
+  return {
+    id: `e-${blockId}`,
+    type: 'block.deleted',
+    entityType: 'block',
+    entityId: blockId,
+    at: '2026-10-11T12:01:00Z',
+    day: '2026-10-11',
+    data: { kind: 'note', text: blockId },
+  };
 }
 
 function tables(projects: Project[]): BackupTables {
@@ -37,6 +69,18 @@ describe('decideAutoBackup', () => {
       false,
     );
     expect(decision).toMatchObject({ kind: 'blocked', reason: 'fileHasMoreData', loss: { projects: { reverted: 1 } } });
+  });
+
+  it('writes after a line the file still has was deleted in the browser', () => {
+    const file = JSON.stringify(createBackup({ ...emptyTables(), blocks: [block('b1')] }, new Date('2026-10-11T12:00:00Z')));
+    const current = { ...emptyTables(), events: [blockDeleted('b1')] };
+    expect(decideAutoBackup(file, current, false)).toEqual({ kind: 'write' });
+  });
+
+  it('still protects a line that disappeared without a deletion in the browser', () => {
+    const file = JSON.stringify(createBackup({ ...emptyTables(), blocks: [block('b1')] }, new Date('2026-10-11T12:00:00Z')));
+    const decision = decideAutoBackup(file, emptyTables(), false);
+    expect(decision).toMatchObject({ kind: 'blocked', reason: 'fileHasMoreData', loss: { blocks: { removed: 1 } } });
   });
 
   it('overwrites after the user explicitly imported or undid an import', () => {

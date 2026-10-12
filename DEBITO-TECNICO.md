@@ -53,19 +53,32 @@ Estas partes da spec não foram construídas porque dependem de uma pergunta em 
 
 ## 3. Backup e dados
 
-- **O backup regrava o arquivo inteiro a cada mudança.** O histórico de eventos só cresce, então o arquivo e o tempo de gravação crescem junto. Hoje é irrelevante; com anos de uso, vale medir e talvez gravar só o que mudou.
-- **Dois computadores no mesmo arquivo não se juntam.** A proteção impede que um apague os dados do outro, mas a saída é importar e perder as mudanças locais. Juntar os dados pelo histórico de eventos fica para a fase de sincronização.
-- **A proteção compara horários de computadores diferentes.** Se o relógio de uma máquina estiver errado, ela pode achar que a versão mais velha é a mais nova.
-- **Várias abas abertas gravam o mesmo arquivo.** Cada aba tem o próprio backup automático. Não perde dados, mas duplica gravações. Um `BroadcastChannel` ou Web Locks (ambos locais, sem rede) coordenaria as abas.
-- **A importação valida pouco.** Ela confere o formato, a versão e as chaves dos registros, mas não os campos de cada um. Um backup editado à mão com um campo errado entraria no banco.
-- **Importar não entra no histórico de eventos.** Importar e desfazer substituem tudo sem registrar um evento, então o histórico não mostra que houve uma importação.
-- **Só existe uma cópia para desfazer.** Uma segunda importação substitui a cópia da primeira.
-- **Não há migração de versões ainda.** Quando o banco passar da versão 1, o `parseBackup` vai precisar converter backups antigos, e isso precisa de teste.
-- **O armazenamento persistente pode ser negado.** Se o Chrome não garantir a persistência, o app só avisa. O backup automático é a proteção de verdade.
+Ordenado por prioridade: os primeiros são os mais graves ou os que têm mais chance de acontecer.
+
+### Alta
+
+1. **Um erro nos dados do navegador sobrescreve o único backup.** Há um arquivo só, regravado a cada mudança. A proteção olha só blocos, seções, projetos, dias e eventos, e só pega registros que sumiram ou voltaram a uma versão anterior. Uma migração com defeito (a da versão 6 apaga e regrava `priorities`) ou um bug que estrague campos chegaria ao arquivo em segundos. O histórico de versões do Drive não salva: ele guarda um número limitado de versões, e gravações a cada poucos segundos as esgotam rápido. **O que fazer:** manter cópias datadas no mesmo lugar (por exemplo, uma por dia, guardando as últimas 7 a 14) e uma cópia antes de cada migração do banco.
+2. **O backup pode parar sem aviso claro.** Se o Chrome não oferecer "Permitir em todas as visitas" (seção 1), cada sessão pede um clique em "Retomar". Depois do primeiro backup, `backupNoticeLevel` (`ui/notices.ts`) não mostra mais banner nesse estado, só o indicador discreto. Dá para passar semanas sem backup sem perceber. **O que fazer:** um aviso forte quando o último backup passar de um prazo (por exemplo, 24 horas) ou de um número de eventos.
+
+### Média
+
+3. **Dois computadores no mesmo arquivo não se juntam.** A proteção impede que um apague os dados do outro, mas a saída é importar e perder as mudanças locais. Juntar os dados pelo histórico de eventos fica para a fase de sincronização.
+4. **A proteção compara horários de computadores diferentes.** Se o relógio de uma máquina estiver errado, ela pode achar que a versão mais velha é a mais nova. O impacto é limitado: afeta só a contagem de registros "revertidos", porque os eventos são comparados pelo id.
+5. **A importação valida pouco.** Ela confere o formato, a versão e as chaves dos registros, mas não os campos de cada um. Um backup editado à mão com um campo errado entraria no banco. O mesmo vale para o arquivo lido pelo backup automático.
+6. **Só existe uma cópia para desfazer.** Uma segunda importação substitui a cópia da primeira. O item 1 (cópias datadas) também resolveria isso.
+7. **Migrações de versão sem teste com dados reais.** O banco já está na versão 6 e `parseBackup` converte backups antigos (`upgradeTables`), com testes. Falta conferir num navegador com dados reais (veja "Não verificado" mais abaixo), e cada nova versão precisa do seu passo em `upgradeTables` e do seu teste.
+8. **Uma exclusão nova precisa entrar na lista da proteção.** A proteção só aceita que um registro sumiu do navegador se o histórico tiver um evento de exclusão para ele (`DELETION_EVENTS` em `application/backup.ts`, hoje `block.deleted` e `resource.removed`). Um caso de uso novo que apague um registro de vez sem entrar nessa lista vai pausar o backup automático com um aviso falso.
+
+### Baixa
+
+9. **O backup regrava o arquivo inteiro a cada mudança.** E antes de cada gravação lê e interpreta o arquivo inteiro e lê o banco inteiro, tudo na thread da interface e com o JSON indentado. O histórico de eventos só cresce, então isso cresce junto. Hoje é irrelevante; com anos de uso, vale medir e talvez gravar sem indentação, num worker, ou só o que mudou.
+10. **Importar não entra no histórico de eventos.** Importar e desfazer substituem tudo sem registrar um evento, então o histórico não mostra que houve uma importação.
+11. **Várias abas abertas gravam o mesmo arquivo.** Cada aba tem o próprio backup automático. Não perde dados, porque todas leem o mesmo banco, mas duplica gravações. Um `BroadcastChannel` ou Web Locks (ambos locais, sem rede) coordenaria as abas.
+12. **O armazenamento persistente pode ser negado.** Se o Chrome não garantir a persistência, o app só avisa. O backup automático é a proteção de verdade, o que torna os itens 1 e 2 mais importantes.
 
 ## 4. Testes e qualidade
 
-- **Não há testes de interface.** O domínio, os casos de uso, as consultas e o backup têm testes (296 no total). As telas foram conferidas à mão no navegador embutido, e um erro de interface só aparece usando.
+- **Não há testes de interface.** O domínio, os casos de uso, as consultas e o backup têm testes (300 no total). As telas foram conferidas à mão no navegador embutido, e um erro de interface só aparece usando.
 - **Não há teste ponta a ponta** (Playwright ou similar) para os fluxos inteiros, como escolher um arquivo, importar e desfazer.
 - **Os testes não rodam no deploy.** O build do Cloudflare roda `tsc` e `vite build`, mas não o `vitest`. Dá para incluir os testes no `npm run build` ou configurar GitHub Actions.
 - **Não há lint.** O ESLint ficou de fora para ter menos dependências.

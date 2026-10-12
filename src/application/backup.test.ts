@@ -119,4 +119,18 @@ describe('computeImportLoss', () => {
     expect(loss.missingEvents).toBe(2);
     expect(loss.hasLoss).toBe(true);
   });
+
+  it('does not count a line the backup deleted on purpose', () => {
+    const deleted: DomainEvent = { ...event('e1'), type: 'block.deleted', entityType: 'block', entityId: 'b1' };
+    const line = { id: 'b1', updatedAt: '2026-10-11' } as BackupTables['blocks'][number];
+    const loss = computeImportLoss(tables({ blocks: [line] }), tables({ events: [deleted] }));
+    expect(loss.blocks).toEqual({ removed: 0, reverted: 0 });
+    expect(loss.hasLoss).toBe(false);
+  });
+
+  it('only excuses the kind of record the deletion was about', () => {
+    const deleted: DomainEvent = { ...event('e1'), type: 'block.deleted', entityType: 'block', entityId: 'p1' };
+    const loss = computeImportLoss(tables({ projects: [project('p1', '2026-10-10')] }), tables({ events: [deleted] }));
+    expect(loss.projects.removed).toBe(1);
+  });
 });

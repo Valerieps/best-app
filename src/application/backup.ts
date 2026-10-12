@@ -12,7 +12,7 @@ import type {
   Section,
   Settings,
 } from '../domain/entities';
-import type { DomainEvent } from '../domain/events';
+import type { DomainEvent, EntityType, EventType } from '../domain/events';
 import { migrateMonthPriorityLists } from '../domain/priorityProjects';
 
 /**
@@ -218,18 +218,43 @@ function keyOf(name: BackupTableName, row: object): string {
   return (row as Record<string, string>)[TABLE_KEYS[name]];
 }
 
+/** Events that record a row being removed from its table, as opposed to changed. */
+const DELETION_EVENTS: ReadonlySet<EventType> = new Set<EventType>(['block.deleted', 'resource.removed']);
+
+const ENTITY_OF: Record<'blocks' | 'sections' | 'projects' | 'days', EntityType> = {
+  blocks: 'block',
+  sections: 'section',
+  projects: 'project',
+  days: 'day',
+};
+
+function deletionKey(entityType: EntityType, id: string): string {
+  return `${entityType}:${id}`;
+}
+
+/** Rows the history says were deleted on purpose, keyed by `deletionKey`. */
+function deletedRows(events: DomainEvent[]): Set<string> {
+  return new Set(
+    events.filter((event) => DELETION_EVENTS.has(event.type)).map((event) => deletionKey(event.entityType, event.entityId)),
+  );
+}
+
 function tableLoss<T extends { updatedAt: string }>(
-  name: BackupTableName,
+  name: keyof typeof ENTITY_OF,
   current: T[],
   incoming: T[],
+  deletedInIncoming: Set<string>,
 ): TableLoss {
   const incomingByKey = new Map(incoming.map((row) => [keyOf(name, row), row]));
   let removed = 0;
   let reverted = 0;
   for (const row of current) {
-    const match = incomingByKey.get(keyOf(name, row));
-    if (!match) removed++;
-    else if (row.updatedAt > match.updatedAt) reverted++;
+    const key = keyOf(name, row);
+    const match = incomingByKey.get(key);
+    // A row the incoming side deleted on purpose is not lost: its deletion is newer than the row.
+    if (!match) {
+      if (!deletedInIncoming.has(deletionKey(ENTITY_OF[name], key))) removed++;
+    } else if (row.updatedAt > match.updatedAt) reverted++;
   }
   return { removed, reverted };
 }
@@ -237,11 +262,12 @@ function tableLoss<T extends { updatedAt: string }>(
 /** What an import would destroy, so the user can be warned before confirming. */
 export function computeImportLoss(current: BackupTables, incoming: BackupTables): ImportLoss {
   const incomingEvents = new Set(incoming.events.map((event) => event.id));
+  const deleted = deletedRows(incoming.events);
   const loss = {
-    blocks: tableLoss('blocks', current.blocks, incoming.blocks),
-    sections: tableLoss('sections', current.sections, incoming.sections),
-    projects: tableLoss('projects', current.projects, incoming.projects),
-    days: tableLoss('days', current.days, incoming.days),
+    blocks: tableLoss('blocks', current.blocks, incoming.blocks, deleted),
+    sections: tableLoss('sections', current.sections, incoming.sections, deleted),
+    projects: tableLoss('projects', current.projects, incoming.projects, deleted),
+    days: tableLoss('days', current.days, incoming.days, deleted),
     missingEvents: current.events.filter((event) => !incomingEvents.has(event.id)).length,
   };
   const hasLoss =
