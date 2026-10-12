@@ -9,7 +9,7 @@ Regras que se contradizem ou ficaram ambíguas entre `SPEC.md`, `spec/checkout.m
 
 Quando um item for decidido, a regra vai para o `SPEC.md` e o item sai daqui.
 
-Já resolvidos e retirados desta lista: a fonte da verdade (o `SPEC.md`; o `prompt.md` foi apagado), o aviso de reflexão (contador e nota do dia), quando o dashboard aparece, o `HANDOFF.md` (dividido entre `CLAUDE.md` e `DECISOES.md`), a lista de documentos do `CLAUDE.md`, os nomes dos assistentes no `DEBITO-TECNICO.md` a fase 1b da `ARQUITETURA.md` (o estado das fases foi para o `ROADMAP.md`) e as seções 6 e 7 do `google-safe.md`, que citavam Firebase, Vercel e funções que o app não usa.
+Já resolvidos e retirados desta lista: a fonte da verdade (o `SPEC.md`; o `prompt.md` foi apagado), o aviso de reflexão (contador e nota do dia), quando o dashboard aparece, o `HANDOFF.md` (dividido entre `CLAUDE.md` e `DECISOES.md`), a lista de documentos do `CLAUDE.md`, os nomes dos assistentes no `DEBITO-TECNICO.md` a fase 1b da `ARQUITETURA.md` (o estado das fases foi para o `ROADMAP.md`) as seções 6 e 7 do `google-safe.md`, que citavam Firebase, Vercel e funções que o app não usa, e quantas são as prioridades da semana (elas deixaram de existir).
 
 ## 1. Em decisão
 
@@ -24,8 +24,8 @@ Já resolvidos e retirados desta lista: a fonte da verdade (o `SPEC.md`; o `prom
 Remover a frase tira a contradição do texto, mas não resolve os casos concretos, e ela sustenta outras regras.
 
 - **Onde a frase é contrariada hoje:**
-  - Arquivar e abandonar só aparecem como destinos do checkout e da reflexão.
-  - Trocar ou tirar um projeto prioritário só é possível na reflexão semanal (`spec/prioridades.md`, "Projetos prioritários da semana").
+  - Arquivar e abandonar só aparecem como destinos do checkout e da Revisão de Foco.
+  - Trocar ou tirar um projeto em foco só é possível na Revisão de Foco (`spec/prioridades.md`, "Projetos em foco").
   - Tarefas criadas na página do projeto não entram no checkout e, por isso, não têm como sair de circulação (`DEBITO-TECNICO.md`, "Projetos e prioritários da semana").
 - **Onde a frase sustenta regras:** finalizar uma tarefa a qualquer momento, promover uma prioridade a qualquer momento, converter um quadro branco a qualquer momento, criar tarefas na página do projeto.
 - **Ambiguidade que continua sem ela:** o `spec/nota-do-dia.md` ("Execução") diz que, para tirar de circulação uma tarefa que veio de outro dia, "eu arquivo ou abandono", sem dizer se isso é possível durante o dia.
@@ -40,10 +40,6 @@ Remover a frase tira a contradição do texto, mas não resolve os casos concret
 - Não está definido o que acontece com 4 ou mais tarefas com prazo no mesmo dia.
 - O `spec/prioridades.md` diz que a lista fica vazia "quando o checkout do dia anterior não foi feito", o que sugere que o checkout define prioridades. Mas o planejamento do dia seguinte (`spec/checkout.md`) só escolhe tarefas, e o `DECISOES.md` separa "planejar" de "priorizar".
 - **Pergunta:** quem ganha a vaga, a escolha manual ou o prazo? O planejamento do dia seguinte inclui escolher as prioridades?
-
-### 2.2 Quantas são as prioridades da semana
-
-- O dashboard já mostra "a lista das 3 prioridades da semana" (`spec/abertura-do-dia.md`), mas "quantas prioridades a semana tem" é pergunta em aberto do `spec/prioridades.md`.
 
 ### 2.3 Pergunta em aberto que o princípio já responde
 
@@ -73,7 +69,7 @@ As fases do `SPEC.md` deveriam poder ser construídas em ordem, mas:
 
 - O 1b ("Próximos dias") usa os dias ativos, que só existem na seção 3.
 - A seção 2 ("Projetos") usa objetivo e recursos, que são da seção 4.
-- A primeira reflexão semanal (seção 2) sugere o checklist de warm up, que é da seção 3 ("Primeiro uso").
+- A primeira Revisão de Foco (seção 2) sugere o checklist de warm up, que é da seção 3 ("Primeiro uso").
 
 ### 2.8 "Primeiros dias sem projetos"
 
@@ -88,16 +84,15 @@ As fases do `SPEC.md` deveriam poder ser construídas em ordem, mas:
 
 ### 2.10 Termos para coisas paradas
 
-- "Travada" vale para tarefas de projeto (adiadas 3 vezes ou com a data vencida) e para "Prioridades travadas" (`spec/assistentes.md`: prioridades da semana que nunca desceram para o dia).
 - A pergunta em aberto do `spec/assistentes.md` ("os prazos que definem 'parado' ou 'antigo'") parece valer para todos os assistentes, mas os 14 dias de "Projetos parados" já estão definidos. Ela vale só para "Tarefas esquecidas", "Arquivo antigo" e "Hábitos sumidos" (`ROADMAP.md`, "Assistentes").
 
-### 2.11 Projetos prioritários: regra e implementação
+### 2.11 Projetos em foco: regra e implementação
 
-- A ADR-035 diz que um projeto finalizado continua contando nas semanas em que foi escolhido. O `DEBITO-TECNICO.md` ("Projetos e prioritários da semana") mostra que ele sai da semana inteira, inclusive dos dias anteriores ao fim.
+- A ADR-035 diz que um projeto finalizado continua contando nas semanas em que foi escolhido. Com a Revisão de Foco, os projetos em foco deixam de pertencer à semana, então essa parte da ADR também precisa mudar (`ROADMAP.md`, "O SPEC mudou e o código ainda não"). O `DEBITO-TECNICO.md` ("Projetos e prioritários da semana") mostra que ele sai da semana inteira, inclusive dos dias anteriores ao fim.
 - O `spec/prioridades.md` diz que reabrir não devolve o projeto à lista. O `DEBITO-TECNICO.md` mostra que, ao olhar uma semana passada, ele reaparece.
-- Juntar projetos repetidos com um prioritário: o destino não herda a vaga, e não há regra para isso.
+- Juntar projetos repetidos com um projeto em foco: o destino não herda a vaga, e não há regra para isso.
 
-### 2.12 Sugestão de projetos na reflexão semanal
+### 2.12 Sugestão de projetos na Revisão de Foco
 
 - Uma das opções da pergunta em aberto do `spec/rituais.md` é sugerir "com IA", o que contradiz o local-only (`spec/principios.md`, "Plataforma e dados"; `google-safe.md`).
 - A terceira opção (converter títulos de quadro branco repetidos) já existe como o assistente "Seções soltas" (`spec/assistentes.md`).
@@ -120,7 +115,7 @@ As fases do `SPEC.md` deveriam poder ser construídas em ordem, mas:
 
 - "Vários dias úteis sem abrir o app" (`spec/rituais.md`, "Rituais pulados") contra "mais de um dia com checkout pendente" (`spec/checkout.md`) para sugerir "Fechar dias pendentes".
 - O objetivo é "meta, motivação, projetos e recursos" (`spec/objetivos.md`), mas o `spec/habitos.md` diz que um hábito faz parte de um objetivo.
-- A revisita da reflexão semanal mostra todas as arquivadas, mas o assistente que ela reaproveita ("Arquivo antigo") só encontra as arquivadas "há meses" (`spec/assistentes.md`).
+- A revisita da Revisão de Foco mostra todas as arquivadas, mas o assistente que ela reaproveita ("Arquivo antigo") só encontra as arquivadas "há meses" (`spec/assistentes.md`).
 
 ## 3. Produto contra técnica
 

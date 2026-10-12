@@ -34,7 +34,7 @@ Os termos marcados com ⚠ ainda têm mais de um sentido nos documentos; o item 
 - **Descartar:** as notas de uma seção saem de circulação e não vão para a wiki. Só para notas (e, na seção 5, compromissos). (`spec/checkout.md`)
 - **Largar:** um lembrete sai de circulação. (`spec/abertura-do-dia.md`)
 - **Migrar:** marcar que um compromisso foi criado no Google Agenda. Conta como concluído. (`spec/compromissos.md`)
-- **Decidir na reflexão semanal:** deixar um item para ser triado na reflexão semanal. (`spec/checkout.md`)
+- **Decidir na Revisão de Foco:** deixar um item para ser triado na Revisão de Foco. (`spec/checkout.md`)
 
 ## Checkout e triagem
 
@@ -47,8 +47,7 @@ Os termos marcados com ⚠ ainda têm mais de um sentido nos documentos; o item 
 ## Prioridades
 
 - **Prioridades do dia:** até 3 tarefas em destaque dentro das tarefas do dia. (`spec/prioridades.md`)
-- **Prioridades da semana:** tarefas em destaque na semana, numa lista separada da do dia. A quantidade ainda está em aberto. (`spec/prioridades.md`)
-- **Projetos prioritários da semana:** até 3 projetos, numa lista separada das prioridades de tarefas. (`spec/prioridades.md`)
+- **Projetos em foco:** até 3 projetos, escolhidos na Revisão de Foco e válidos até a próxima. Antes se chamavam "projetos prioritários da semana". (`spec/prioridades.md`)
 
 ## Projetos e objetivos
 
@@ -59,16 +58,18 @@ Os termos marcados com ⚠ ainda têm mais de um sentido nos documentos; o item 
 - **Meta:** a frase que digo se atingi ou não. (`spec/objetivos.md`)
 - **Motivação:** o que me faz querer engajar com o objetivo. Nome provisório. (`spec/objetivos.md`)
 - **Recurso:** pensamento, anotação ou link que dá suporte a um objetivo ou projeto. (`spec/objetivos.md`)
-- **Raio-x / métricas de desconexão:** as métricas mensais que mostram o quanto o dia a dia se desconecta dos objetivos. (`spec/rituais.md`)
+- **Raio-x / métricas de desconexão:** as métricas da Revisão de Rumo que mostram o quanto o dia a dia se desconecta dos objetivos. (`spec/rituais.md`)
 - **Hábito:** uma ação com recorrência e critério de "feito", registrada como sim ou não. (`spec/habitos.md`)
 
 ## Rituais e abertura do dia
 
-- **Ritual:** warm up, checkout, reflexão semanal e reflexão mensal (`spec/rituais.md`, "Rituais pulados"). O menu "Rituais" lista os checkouts, as reflexões e "Colocar ordem na casa" (`spec/navegacao.md`, "Navegação").
-- **Reflexão semanal / mensal:** os rituais que fecham a semana e o mês. (`spec/rituais.md`)
+- **Ritual:** warm up, checkout, Revisão de Foco e Revisão de Rumo (`spec/rituais.md`, "Rituais pulados"). O menu "Rituais" lista os checkouts, as revisões e "Colocar ordem na casa" (`spec/navegacao.md`, "Navegação").
+- **Revisão de Foco:** a revisão frequente, dos projetos: "no que eu estou trabalhando agora?". Substitui a reflexão semanal. (`spec/rituais.md`)
+- **Revisão de Rumo:** a revisão rara, dos objetivos: "estou indo para onde eu quero ir?". Substitui a reflexão mensal. (`spec/rituais.md`)
+- **Cadência (de uma revisão):** quantos checkouts (Foco) ou Revisões de Foco (Rumo) até a revisão ficar disponível. (`spec/rituais.md`)
 - **Iniciar Dia:** a tela branca que abre o dia e começa o warm up. (`spec/abertura-do-dia.md`)
 - **Warm up:** o checklist que eu defino para começar o dia. (`spec/abertura-do-dia.md`)
-- **Dashboard:** a tela de boas-vindas depois do warm up, com prioridades da semana, mural e "Iniciar o Flow de Execução". ⚠ A `ARQUITETURA.md` e o código também chamam "Colocar ordem na casa" de dashboard (`INCOERENCIAS.md`, seção 3).
+- **Dashboard:** a tela de boas-vindas depois do warm up, com os projetos em foco, mural e "Iniciar o Flow de Execução". ⚠ A `ARQUITETURA.md` e o código também chamam "Colocar ordem na casa" de dashboard (`INCOERENCIAS.md`, seção 3).
 - **Flow de Execução:** o trabalho na nota do dia, que começa pelo botão "Iniciar o Flow de Execução" do dashboard. (`spec/abertura-do-dia.md`)
 - **Mural:** as frases de mim para mim mesma que o dashboard mostra em rodízio. ⚠ O `spec/abertura-do-dia.md` também as chama de "lembretes" (`INCOERENCIAS.md`, 2.9).
 - **Lembrete:** um item que volta dentro do app depois de um horário, como no "perguntar de novo às XXh" do warm up. Nunca é uma notificação. ⚠ Veja "Mural". (`spec/abertura-do-dia.md`)

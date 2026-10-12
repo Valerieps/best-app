@@ -13,7 +13,7 @@ Os assistentes de limpeza colocam ordem na casa: cada um encontra o que está fo
 
 - Uma tela "Colocar ordem na casa" lista só os assistentes que têm algo a limpar, cada um com o número de itens.
 - Cada assistente mostra os itens encontrados com uma ação pré-selecionada e o botão "Aceitar sugestões". Eu posso trocar qualquer ação antes.
-- As reflexões semanal e mensal reaproveitam os assistentes como etapas. A revisita das tarefas arquivadas na reflexão semanal, por exemplo, é o assistente de arquivo.
+- As Revisões de Foco e de Rumo reaproveitam os assistentes como etapas. A revisita das tarefas arquivadas na Revisão de Foco, por exemplo, é o assistente de arquivo.
 - No 1a, só o "Fechar dias pendentes" tem tela, pelo aviso de checkout pendente. A tela "Colocar ordem na casa" e os outros assistentes entram a partir do 1b, para manter o núcleo enxuto.
 - O mural não tem assistente, porque os lembretes dele não vencem.
 - Seções soltas: seções sem título ficam de fora, porque não há como agrupá-las nem dar nome a um projeto. "Deixar como está" faz o assistente parar de sugerir aquelas seções.
@@ -29,7 +29,6 @@ Os assistentes de limpeza colocam ordem na casa: cada um encontra o que está fo
 | Projetos repetidos | Projetos com nomes parecidos, como "Data Studios" e "DataStudios" | Juntar em um projeto só | 1b |
 | Arquivo antigo | Tarefas arquivadas há meses | Reativar ou abandonar de vez | 2 |
 | Projetos parados | Projetos sem nenhuma atividade há 14 dias ou mais (`projetos.md`, "Lista de projetos") | Finalizar ou manter | 2 |
-| Prioridades travadas | Tarefas prioritárias da semana que nunca desceram para o dia. Os projetos prioritários ficam de fora: só se trocam na reflexão semanal | Manter, trocar ou retirar | 2 |
 | Warm up | Itens do checklist que eu quase sempre pulo | Tirar do checklist | 3 |
 | Objetivos soltos | Objetivos sem projeto ativo, ou com a meta talvez atingida | Finalizar ou vincular projetos | 4 |
 | Compromissos passados | Compromissos passados que não foram migrados nem marcados | Marcar como feito ou descartar | 5 |
