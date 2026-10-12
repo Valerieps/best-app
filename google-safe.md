@@ -1,7 +1,10 @@
 # Diretrizes de Desenvolvimento Seguro: Aplicativo de Produtividade Local-Only para Ambiente Corporativo Google
 
+- **Entra aqui:** as regras de segurança e de compliance que todo código do app precisa seguir.
+- **Não entra aqui:** como cada regra foi implementada em detalhe (ADRs em `adr/`, citadas abaixo) e o que ainda falta verificar (`DEBITO-TECNICO.md`, "Segurança e privacidade").
+
 ## 1. Contexto e Objetivo
-Este documento define as regras arquiteturais, de segurança e de compliance para o desenvolvimento do aplicativo de produtividade pessoal baseado no arquivo `SPEC.md`.
+Este documento define as regras arquiteturais, de segurança e de compliance para o desenvolvimento do aplicativo de produtividade pessoal descrito na spec (`SPEC.md` e a pasta `spec/`).
 O aplicativo será utilizado no Google Chrome dentro de uma máquina corporativa (gLinux/Macbook) com dados reais e confidenciais de trabalho.
 O código-fonte é mantido em um repositório pessoal externo com objetivo de retenção de propriedade intelectual (IP) e eventual comercialização futura.
 
@@ -29,7 +32,7 @@ Para cumprir as diretrizes de segurança da informação (prevenção de exfiltr
 ## 3. Diretrizes de Armazenamento e Persistência Local (IndexedDB)
 
 1. **Modelo de Dados Orientado a Eventos:**
-   - Implementar o histórico de eventos de produtividade (conforme especificado na seção de métricas do `SPEC.md`) diretamente em uma tabela do `IndexedDB`.
+   - Implementar o histórico de eventos de produtividade (conforme `spec/principios.md`, "Plataforma e dados") diretamente em uma tabela do `IndexedDB`.
 2. **Rotina de Backup / Portabilidade Segura:**
    - Como os dados no navegador podem ser apagados por limpeza de cache ou políticas de retenção de perfil, o app **deve** incluir:
      - Botão de **Exportar Dados**: gera e baixa um arquivo local `.json` diretamente no disco do usuário via `Blob` e link de download client-side.
@@ -43,8 +46,9 @@ Para cumprir as diretrizes de segurança da informação (prevenção de exfiltr
 1. **Content Security Policy (CSP) Estrita:**
    - Configurar tags meta de CSP proibindo conexões externas:
      ```html
-     <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; connect-src 'none'; img-src 'self' data:;">
+     <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; connect-src 'none'; img-src 'self' data:; object-src 'none'; base-uri 'none'; form-action 'none'">
      ```
+   - A tag é injetada no `index.html` pelo build de produção (`vite.config.ts`), e não fica no código-fonte, porque o servidor de desenvolvimento precisa de uma conexão que `connect-src 'none'` bloquearia (ADR-009). Ela não vai nos cabeçalhos do Cloudflare (`public/_headers`), porque lá valeria também para o service worker e o impediria de guardar os arquivos do app.
    - O parâmetro `connect-src 'none'` garante que mesmo em caso de erro no código, nenhuma requisição `fetch` ou `XMLHttpRequest` para servidores externos seja autorizada pelo navegador.
 
 2. **Sanitização de Entradas (Anti-XSS):**
@@ -72,14 +76,21 @@ Para cumprir as diretrizes de segurança da informação (prevenção de exfiltr
 
 ## 6. Instruções para o Assistente (Claude)
 Ao projetar e gerar código para este projeto:
-- **Adapte o `SPEC.md` original:** Onde houver menção ao Firebase/Firestore, substitua automaticamente por chamadas assíncronas ao **IndexedDB**.
 - **Garanta código limpo, performático e independente de infraestrutura de backend.**
-- **Priorize arquitetura PWA estática** que possa ser servida via GitHub Pages/Vercel ou aberta localmente como arquivo local / extensão descompactada.
+- **Mantenha a arquitetura PWA estática**, publicada como arquivos estáticos no Cloudflare Pages (`spec/principios.md`, "Plataforma e dados"). Nenhum dado passa pelo servidor.
+- O `src/security.test.ts` procura no código chamadas de rede e inserção de HTML. Ele roda no `npm test` e precisa continuar passando.
 
-- ### 7. Backup e Portabilidade via File System (Sem OAuth)
-- NÃO utilizar a Google Drive REST API nem autenticação OAuth (proibido por políticas de segurança).
-- Implementar integração com armazenamento em nuvem de forma indireta utilizando a **File System Access API** do navegador (`showSaveFilePicker` e `showOpenFilePicker`):
-  - Criar função `exportToDriveFile()`: permite que o usuário selecione diretamente um diretório local (incluindo pastas sincronizadas do Google Drive corporativo) para salvar o arquivo `backup.json`.
-  - Criar função `importFromDriveFile()`: carrega o arquivo de backup selecionado pelo usuário e atualiza as tabelas do `IndexedDB`.
-- Adicionar opção de "Auto-Save Prompt" ou botão de atalho rápido na barra superior para facilitar o backup antes de trocar de estação de trabalho.
+---
+
+## 7. Backup e Portabilidade via File System (Sem OAuth)
+
+1. **Sem Google Drive API:**
+   - NÃO utilizar a Google Drive REST API nem autenticação OAuth (proibido por políticas de segurança).
+2. **Nuvem só de forma indireta:**
+   - A integração com o Google Drive é indireta, pela **File System Access API** do navegador: a pessoa escolhe um arquivo numa pasta sincronizada do Drive, e o próprio Drive sincroniza o arquivo. O app nunca fala com o Drive.
+   - Como o app atende isso hoje (ADR-007 e ADR-008):
+     - **Backup automático:** a pessoa escolhe o arquivo uma vez com `showSaveFilePicker`, e o app regrava esse arquivo alguns segundos depois de cada mudança, sem gravar por cima de dados que o navegador não tem.
+     - **Baixar uma cópia:** um arquivo `.json` gerado no navegador (`Blob`), como pede a seção 3.
+     - **Importar:** um campo de arquivo comum, que valida o backup e substitui as tabelas do `IndexedDB`, com uma cópia para desfazer.
+   - O status do backup fica sempre visível na barra de cima, e um clique abre "Dados e backup" (`spec/navegacao.md`). Isso substitui o atalho de backup manual "antes de trocar de estação de trabalho", porque o arquivo já está sempre atualizado.
 

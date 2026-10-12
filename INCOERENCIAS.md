@@ -9,7 +9,7 @@ Regras que se contradizem ou ficaram ambíguas entre `SPEC.md`, `spec/checkout.m
 
 Quando um item for decidido, a regra vai para o `SPEC.md` e o item sai daqui.
 
-Já resolvidos e retirados desta lista: a fonte da verdade (o `SPEC.md`; o `prompt.md` foi apagado), o aviso de reflexão (contador e nota do dia), quando o dashboard aparece, o `HANDOFF.md` (dividido entre `CLAUDE.md` e `DECISOES.md`), a lista de documentos do `CLAUDE.md`, os nomes dos assistentes no `DEBITO-TECNICO.md` e a fase 1b da `ARQUITETURA.md` (o estado das fases foi para o `ROADMAP.md`).
+Já resolvidos e retirados desta lista: a fonte da verdade (o `SPEC.md`; o `prompt.md` foi apagado), o aviso de reflexão (contador e nota do dia), quando o dashboard aparece, o `HANDOFF.md` (dividido entre `CLAUDE.md` e `DECISOES.md`), a lista de documentos do `CLAUDE.md`, os nomes dos assistentes no `DEBITO-TECNICO.md` a fase 1b da `ARQUITETURA.md` (o estado das fases foi para o `ROADMAP.md`) e as seções 6 e 7 do `google-safe.md`, que citavam Firebase, Vercel e funções que o app não usa.
 
 ## 1. Em decisão
 
@@ -131,7 +131,6 @@ As fases do `SPEC.md` deveriam poder ser construídas em ordem, mas:
 
 ## 4. Documentos desatualizados
 
-- **`google-safe.md`:** a seção 6 ainda manda adaptar o Firebase e sugere GitHub Pages ou Vercel. O app usa Cloudflare Pages, e o `DECISOES.md` descartou a Vercel.
 - **`spec/`:**
   - O `nota-do-dia.md` ("Execução") fala em "um menu lateral simples" com três listas, mas o `navegacao.md` descreve a gaveta com grupos.
   - Os lembretes (`abertura-do-dia.md`) citam o Android, que está fora do escopo.
