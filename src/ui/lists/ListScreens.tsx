@@ -13,6 +13,7 @@ import { useLiveQuery } from '../useLiveQuery';
 
 function originLabel(section: Section | null): string {
   if (!section) return 'Origem desconhecida';
+  if (section.projectPage) return `Veio da página do projeto · ${formatShortDate(section.day)}`;
   const kind = section.kind === 'meeting' ? 'Reunião' : 'Geral';
   return `Veio de: ${kind} · ${formatTime(section.createdAt)} · ${section.title ?? 'sem título'} · ${formatShortDate(section.day)}`;
 }

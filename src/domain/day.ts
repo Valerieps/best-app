@@ -27,6 +27,11 @@ export function addDays(day: DayKey, amount: number): DayKey {
   return toDayKey(moment);
 }
 
+/** Whole days from `from` to `to`; negative when `to` comes first. Safe across daylight saving. */
+export function daysBetween(from: DayKey, to: DayKey): number {
+  return Math.round((fromDayKey(to).getTime() - fromDayKey(from).getTime()) / 86_400_000);
+}
+
 /** Negative if `a` comes before `b`, zero if equal. DayKeys sort as plain strings. */
 export function compareDays(a: DayKey, b: DayKey): number {
   return a < b ? -1 : a > b ? 1 : 0;

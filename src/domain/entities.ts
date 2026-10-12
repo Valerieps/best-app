@@ -68,6 +68,12 @@ export interface Section {
   /** Meeting sections only (1b). Absent in records saved before 1b. */
   participants?: string | null;
   docLink?: string | null;
+  /**
+   * Section 2: holds the tasks written on a project's page. It belongs to no day note, so its
+   * tasks only show up in a day when they get an intended date, and its `day` is just the day it
+   * was created. Absent in other sections.
+   */
+  projectPage?: boolean;
 }
 
 /** `merged` projects were joined into another one (`mergedInto`) by the duplicates assistant. */
@@ -85,6 +91,8 @@ export interface Project {
   keepSeparateFrom?: string[];
   /** Section 4: at most one objective. */
   objectiveId?: string | null;
+  /** Section 2: one of `PROJECT_ICONS`; absent or null shows the name's initial. */
+  icon?: string | null;
 }
 
 /** Per-day bookkeeping. Whether a checkout is pending is derived from the blocks. */
@@ -103,14 +111,15 @@ export interface DayRecord {
 export type WarmupResult = 'done' | 'skipped' | 'later';
 
 /**
- * Ordered priorities of a period. Ids look like `day:2026-10-11`; weeks and months come in
- * sections 2 and 4. Day and week priorities are tasks; month priorities are projects.
+ * Ordered priorities of a period. Ids look like `day:2026-10-11` (tasks) or
+ * `weekProjects:2026-W42` (section 2, the week's priority projects; ADR-035). Before version 6
+ * the priority projects were per month, with ids `month:AAAA-MM`.
  */
 export interface PriorityList {
   id: string;
-  /** `month` (section 4) lists projects; `day` lists tasks. */
-  scope: 'day' | 'month';
-  /** A day (AAAA-MM-DD) or a month (AAAA-MM). */
+  /** `weekProjects` lists projects; `day` lists tasks. */
+  scope: 'day' | 'weekProjects';
+  /** A day (AAAA-MM-DD) or an ISO week (AAAA-Www). */
   period: string;
   itemIds: string[];
   updatedAt: string;
@@ -140,8 +149,15 @@ export interface Settings {
   warmupItems?: WarmupItem[];
   /** Limits for the colors of the cleanup dashboard; absent assistants use the defaults. */
   cleanupLimits?: Partial<Record<AssistantId, StatusLimits>>;
+  /** Whether the side column of the project page stays docked, for every project. */
+  projectPanelPinned?: boolean;
+  /** Which groups of the project list are open; absent groups use their default. */
+  projectListGroups?: Partial<Record<ProjectListGroup, boolean>>;
   updatedAt: string;
 }
+
+/** Collapsible groups of the project list: "Outros ativos" (open by default) and "Finalizados" (closed). */
+export type ProjectListGroup = 'others' | 'finished';
 
 export interface WarmupItem {
   id: string;

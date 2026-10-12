@@ -66,6 +66,7 @@ export class MemoryStore implements Store, Reader {
       blocksInSection: async (sectionId) => this.blocks().filter((block) => block.sectionId === sectionId),
       blocksOfProject: async (projectId) => this.blocks().filter((block) => block.projectId === projectId),
       sectionsOfProject: async (projectId) => this.sections().filter((section) => section.projectId === projectId),
+      priorityListsBetween: (fromId, toId) => this.priorityListsBetween(fromId, toId),
       appendEvent: async (event) => {
         const events = this.tables.get('events')!;
         if (events.has(event.id)) throw new Error(`Event ${event.id} already exists`);
@@ -146,6 +147,11 @@ export class MemoryStore implements Store, Reader {
     return this.blocks().filter((block) => block.status === 'active' && block.awaitingReflection === true);
   }
 
+  async eventsOfEntities(ids: string[]) {
+    const wanted = new Set(ids);
+    return this.rows<DomainEvent>('events').filter((event) => wanted.has(event.entityId));
+  }
+
   async eventsBetween(startDay: DayKey, endDay: DayKey) {
     return this.rows<DomainEvent>('events').filter(
       (event) => event.day >= startDay && event.day <= endDay,
@@ -195,8 +201,6 @@ export class MemoryStore implements Store, Reader {
   }
 
   async priorityListsBetween(fromId: string, toId: string) {
-    return this.rows<PriorityList>('priorities').filter(
-      (list) => list.id >= fromId && list.id <= toId,
-    );
+    return structuredClone(this.rows<PriorityList>('priorities').filter((list) => list.id >= fromId && list.id <= toId));
   }
 }

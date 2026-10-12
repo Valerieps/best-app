@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { addDays, compareDays, isDayKey, laterDay, toDayKey } from './day';
+import { addDays, compareDays, daysBetween, isDayKey, laterDay, toDayKey } from './day';
 
 describe('day keys', () => {
   it('uses the local calendar day, turning over at midnight', () => {
@@ -11,6 +11,13 @@ describe('day keys', () => {
     expect(addDays('2026-10-31', 1)).toBe('2026-11-01');
     expect(addDays('2026-12-31', 1)).toBe('2027-01-01');
     expect(addDays('2026-03-01', -1)).toBe('2026-02-28');
+  });
+
+  it('counts whole days between two days, across month ends and daylight saving', () => {
+    expect(daysBetween('2026-10-01', '2026-10-15')).toBe(14);
+    expect(daysBetween('2026-10-15', '2026-10-01')).toBe(-14);
+    expect(daysBetween('2026-10-31', '2026-11-02')).toBe(2);
+    expect(daysBetween('2026-03-07', '2026-03-09')).toBe(2);
   });
 
   it('compares and picks the later day', () => {

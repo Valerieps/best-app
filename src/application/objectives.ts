@@ -5,7 +5,7 @@ import type { MonthRange } from '../domain/month';
 import { record } from './events';
 import type { AppContext, StoreTransaction } from './ports';
 
-/** Section 4: objectives, resources, month priorities and the monthly reflection. */
+/** Section 4: objectives, resources and the monthly reflection. */
 
 function today(ctx: AppContext): DayKey {
   return toDayKey(ctx.clock.now());
@@ -126,32 +126,24 @@ export function addLinkResource(
   return ctx.store.transaction((tx) => addResourceIn(ctx, tx, owner, { url, title: title || url }));
 }
 
+/** A link's title starts as its domain and can be changed later. Empty titles are ignored. */
+export async function renameResource(ctx: AppContext, resourceId: string, title: string): Promise<void> {
+  const trimmed = title.trim();
+  if (!trimmed) return;
+  await ctx.store.transaction(async (tx) => {
+    const resource = await tx.resources.get(resourceId);
+    if (!resource || resource.title === trimmed) return;
+    await tx.resources.put({ ...resource, title: trimmed });
+    await record(ctx, tx, 'resource.renamed', 'resource', resourceId, today(ctx), { from: resource.title, to: trimmed });
+  });
+}
+
 export async function removeResource(ctx: AppContext, resourceId: string): Promise<void> {
   await ctx.store.transaction(async (tx) => {
     const resource = await tx.resources.get(resourceId);
     if (!resource) return;
     await tx.resources.delete(resourceId);
     await record(ctx, tx, 'resource.removed', 'resource', resourceId, today(ctx), { ownerId: resource.ownerId });
-  });
-}
-
-export function monthPriorityListId(month: string): string {
-  return `month:${month}`;
-}
-
-/** Month priorities are always projects. */
-export async function setMonthPriority(ctx: AppContext, month: string, projectId: string, on: boolean): Promise<void> {
-  await ctx.store.transaction(async (tx) => {
-    const id = monthPriorityListId(month);
-    const list = (await tx.priorities.get(id)) ?? { id, scope: 'month' as const, period: month, itemIds: [], updatedAt: '' };
-    const itemIds = on
-      ? list.itemIds.includes(projectId)
-        ? list.itemIds
-        : [...list.itemIds, projectId]
-      : list.itemIds.filter((item) => item !== projectId);
-    if (itemIds.join() === list.itemIds.join()) return;
-    await tx.priorities.put({ ...list, itemIds, updatedAt: nowIso(ctx) });
-    await record(ctx, tx, on ? 'priority.added' : 'priority.removed', 'priorities', id, today(ctx), { projectId, itemIds });
   });
 }
 

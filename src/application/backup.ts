@@ -13,6 +13,7 @@ import type {
   Settings,
 } from '../domain/entities';
 import type { DomainEvent } from '../domain/events';
+import { migrateMonthPriorityLists } from '../domain/priorityProjects';
 
 /**
  * Backup file format. A backup holds every user table; importing one replaces all data.
@@ -21,7 +22,7 @@ import type { DomainEvent } from '../domain/events';
  */
 
 export const BACKUP_FORMAT = 'best-app-backup';
-export const BACKUP_SCHEMA_VERSION = 5;
+export const BACKUP_SCHEMA_VERSION = 6;
 
 export interface BackupTables {
   blocks: Block[];
@@ -117,6 +118,8 @@ function upgradeTables(tables: Record<string, unknown>, version: number): Record
     // Sections 4 and 6 added objectives, resources and habits.
     for (const name of ['objectives', 'resources', 'habits', 'habitLogs']) upgraded[name] = [];
   }
+  // Section 2 moved the priority projects from the month to the week (ADR-035).
+  if (version < 6 && Array.isArray(upgraded.priorities)) upgraded.priorities = migrateMonthPriorityLists(upgraded.priorities);
   return upgraded;
 }
 

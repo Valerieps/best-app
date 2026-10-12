@@ -23,7 +23,7 @@ Esta aba é para quem for continuar o trabalho, pessoa ou agente. A spec na aba 
 | Sem onboarding; os rituais entram aos poucos | A carga de ritual era o maior risco de abandono |
 | O app avisa em vez de bloquear; vínculos com projeto e objetivo são opcionais | Vínculos obrigatórios criavam atrito no começo. A falta de vínculo vira métrica de desconexão |
 | A nota do dia tem seções (geral e reunião); "nota de reunião" deixou de ser um tipo de bloco | A hierarquia nota, seção, bloco é mais simples de modelar, e o checkout tria as notas por seção |
-| Prioridades do mês são projetos; as da semana e do dia são tarefas | Cada horizonte fica com a granularidade certa, e o projeto continua prioritário enquanto as tarefas descem |
+| Os projetos prioritários (até 3) são da semana; as prioridades da semana e do dia são tarefas | Cada horizonte fica com a granularidade certa, e o projeto continua prioritário enquanto as tarefas descem. Em 12/10/2026 eles deixaram de ser do mês: a Valeria quer revisá-los na reflexão semanal, e fora dela só pode acrescentar até o limite, sem trocar |
 | "Planejamento do dia seguinte" é diferente de "prioridade" | Planejar é escolher as tarefas de amanhã; prioridade é o destaque de até 3 delas, que só entra no 1b |
 | Local-only (IndexedDB), no lugar do Firebase | O app vai ser usado no computador do trabalho, com dados confidenciais, e a empresa não permite apps com conexões externas (`google-safe.md`). Antes, o Firebase tinha sido escolhido no lugar do Supabase porque a Valeria já o conhecia. As métricas continuam calculadas no app |
 | Um único web app instalável (PWA), primeiro só no Chrome do computador | Um código só para manter. O Android volta quando houver uma forma de sincronizar que respeite o `google-safe.md` |

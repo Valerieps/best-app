@@ -67,6 +67,15 @@
   --color-status3-border: #f0a8a0;
   --color-status3-strong: #b42318;
 
+  /* Activity map of the projects: empty, then four tints of the project lilac */
+  --color-activity-0: #ebe8e1;
+  --color-activity-1: #d9d3f7;
+  --color-activity-2: #b0a5ec;
+  --color-activity-3: #7f71dc;
+  --color-activity-4: #4b3fb3;
+  --activity-cell: 10px;
+  --activity-gap: 2px;
+
   /* Fireworks */
   --color-firework-1: #e8a33d;
   --color-firework-2: #8b7fe0;
@@ -80,6 +89,7 @@
   --font-size-md: 1rem;
   --font-size-lg: 1.125rem;
   --font-size-xl: 1.375rem;
+  --font-size-2xl: 1.625rem;
   --line-height: 1.55;
 
   /* Spacing */
@@ -104,4 +114,5 @@
   --content-width-wide: 860px;
   --topbar-height: 56px;
   --menu-width: 280px;
+  --project-panel-width: 260px;
 }

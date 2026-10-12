@@ -1,14 +1,19 @@
 import { createBackup, type BackupFile } from '../application/backup';
 import type { IdGenerator } from '../application/ports';
 import { setWeeklyReflectionSchedule } from '../application/reflection';
+import type { Project } from '../domain/entities';
 import { Simulation } from './simulation';
 
 /**
  * Synthetic data for trying the app out: about five weeks of use with three projects (a
  * year-end party, a scheduling app and a kitchen remodel), written so that every checkout
- * rule and cleanup assistant has something to show. Dev only; see ADR-027.
+ * rule and cleanup assistant has something to show, plus an English course followed for
+ * about four months, so the 16-week activity maps have history. Dev only; see ADR-027.
  *
  * What it leaves behind, relative to today:
+ * - Project list: the scheduling app and the remodel are this week's priority projects,
+ *   carried over from last week, with one free slot. "Festa de fim-de-ano" has had no
+ *   activity for 22 days, so it shows as stalled.
  * - Pending days: the last 3 days have no checkout. Day -3 has a task postponed 3 times
  *   (attention, "decidir na reflexão semanal") and a whiteboard that cites a project (link
  *   suggestion); day -2 has a task whose deadline passed; day -1 has a whiteboard with notes.
@@ -25,13 +30,52 @@ import { Simulation } from './simulation';
  * - Today: a task planned for today as a priority, and a task whose deadline is today.
  */
 
+/** English classes before the main story, twice a week; the course goes on at a slower pace later. */
+const COURSE_DAYS = [-110, -107, -103, -100, -96, -93, -89, -86, -82, -79, -75, -72, -68, -65, -61, -58, -54, -51, -47, -44, -40, -37];
+
 /** Days the script plays. Days -20 and -19 have no checkout and are closed on day -17. */
-const WORK_DAYS = [-35, -34, -31, -28, -27, -24, -22, -20, -19, -17, -15, -14, -13, -12, -10, -8, -7, -5, -4, -3, -2, -1, 0];
+const WORK_DAYS = [
+  ...COURSE_DAYS,
+  ...[-35, -34, -31, -28, -27, -24, -22, -20, -19, -17, -15, -14, -13, -12, -10, -8, -7, -5, -4, -3, -2, -1, 0],
+];
+
+/** What each class left: the lesson notes and the homework, done the same day. */
+const LESSONS: [string, string][] = [
+  ['Present perfect vs. simple past: "I have lived" x "I lived".', 'Exercícios 1 a 10 do capítulo 3'],
+  ['Phrasal verbs de trabalho: follow up, set up, carry out.', 'Escrever 5 frases com os phrasal verbs'],
+  ['Listening: podcast sobre trabalho remoto.', 'Ouvir o episódio de novo e anotar 10 palavras novas'],
+  ['Conditionals: second e third conditional.', 'Exercícios de conditionals'],
+  ['Simulação de reunião: apresentar um projeto em 3 minutos.', 'Gravar a apresentação e ouvir'],
+  ['Vocabulário de reuniões: agenda, action items, wrap up.', 'Revisar o vocabulário no app de flashcards'],
+];
 
 export async function buildSyntheticData(now: Date, ids: IdGenerator): Promise<Simulation> {
   const sim = new Simulation(now, ids, WORK_DAYS);
   const team = 'Ana (PO), Rafael, Júlia';
   const devs = 'Rafael, Júlia';
+
+  // Days -110 to -37: an English course, the only thing in the app for a while.
+  let course: Project | null = null;
+  for (const [index, offset] of COURSE_DAYS.entries()) {
+    sim.on(offset);
+    if (!course) {
+      course = await sim.project('Curso de inglês');
+      await sim.icon(course, 'book');
+    }
+    const [note, homework] = LESSONS[index % LESSONS.length];
+    const lesson = await sim.section('general', `Inglês: aula ${index + 1}`);
+    await sim.link(lesson, course);
+    // Every third class has an extra note, so the map shows different intensities.
+    const lines = index % 3 === 0 ? [note, 'Professora sugeriu ler um artigo por semana.', `[] ${homework}`] : [note, `[] ${homework}`];
+    const written = await sim.write(lesson, ...lines);
+    await sim.done(written.at(-1)!);
+    await sim.checkout();
+  }
+  const englishClass = async (title: string, note: string) => {
+    const lesson = await sim.section('general', title);
+    await sim.link(lesson, course!);
+    await sim.write(lesson, note);
+  };
 
   // Day -35: the app kicks off, and the party is just an idea on a whiteboard.
   sim.on(-35);
@@ -48,6 +92,7 @@ export async function buildSyntheticData(now: Date, ids: IdGenerator): Promise<S
     '[] Pesquisar concorrentes e anotar o que eles fazem bem',
   );
   const app = await sim.convert(kickoff, 'App de agendamento');
+  await sim.icon(app, 'code');
   const partyIdea = await sim.section('general');
   const [, , partyDate] = await sim.write(
     partyIdea,
@@ -60,6 +105,7 @@ export async function buildSyntheticData(now: Date, ids: IdGenerator): Promise<S
     tasks: [[competitors, { kind: 'schedule', date: sim.day(-31) }]],
   });
   const party = await sim.projectNamed('Festa de fim de ano');
+  await sim.icon(party, 'balloon');
 
   // Day -34: MVP stories, the remodel wish list and the party date.
   sim.on(-34);
@@ -75,6 +121,7 @@ export async function buildSyntheticData(now: Date, ids: IdGenerator): Promise<S
     '[] Definir o modelo de dados (profissional, horário, agendamento)',
   );
   const remodel = await sim.project('Reforma da cozinha');
+  await sim.icon(remodel, 'home');
   const wishes = await sim.section('general', 'Reforma: o que eu quero');
   await sim.link(wishes, remodel);
   const [, , , , , carpenters, measure] = await sim.write(
@@ -112,6 +159,7 @@ export async function buildSyntheticData(now: Date, ids: IdGenerator): Promise<S
   );
   const groceries = await sim.section('general', 'Lista de mercado');
   await sim.write(groceries, 'café, pão, ovos, tomate', 'detergente e esponja');
+  await englishClass('Inglês: conversação', 'Conversação: contar o fim de semana sem travar.');
   await sim.checkout({
     tasks: [[firebase, { kind: 'archive' }]],
     notes: [[groceries, 'discarded']],
@@ -181,6 +229,7 @@ export async function buildSyntheticData(now: Date, ids: IdGenerator): Promise<S
     '[] Fechar com o churrasqueiro',
     '[] Calcular a quantidade de carne e bebida',
   );
+  await englishClass('Inglês: e-mails formais', 'E-mails formais: "I am writing to follow up on..."');
   await sim.checkout();
 
   // Day -22: a second party project, created by mistake.
@@ -230,6 +279,7 @@ export async function buildSyntheticData(now: Date, ids: IdGenerator): Promise<S
     'Correção: salvar tudo em UTC e converter só na exibição.',
   );
   await sim.done(slotsBug);
+  await englishClass('Inglês: pronúncia', 'Pronúncia: o "th" de "think" e de "this".');
   await sim.checkout();
 
   // Day -15: a whiteboard becomes a new project, with a typo in the name.
@@ -305,6 +355,7 @@ export async function buildSyntheticData(now: Date, ids: IdGenerator): Promise<S
     'Integração com o Google Agenda pode ser um diferencial.',
     '[] Prototipar a integração com o Google Agenda',
   );
+  await englishClass('Inglês: small talk', 'Small talk antes de reunião: clima, viagem, fim de semana.');
   await sim.checkout({ tasks: [[calendarSync, { kind: 'archive' }]] });
 
   // Day -8: the retrospective goes to the weekly reflection; a review is planned for today.
@@ -348,6 +399,9 @@ export async function buildSyntheticData(now: Date, ids: IdGenerator): Promise<S
     '[] Enviar os convites',
   );
   await sim.deadline(sendInvitations, 20);
+  // This week's priority projects; the list carries over to the current week, with a free slot.
+  await sim.prioritize(app);
+  await sim.prioritize(remodel);
   await sim.checkout({ tasks: [[sendInvitations, { kind: 'schedule', date: sim.day(6) }]] });
 
   // Day -5: the remodel schedule; a payment due today.
@@ -364,6 +418,7 @@ export async function buildSyntheticData(now: Date, ids: IdGenerator): Promise<S
   );
   await sim.intend(secondPayment, 1);
   await sim.deadline(secondPayment, 0);
+  await englishClass('Inglês: revisão', 'Revisão do mês: conditionals e phrasal verbs.');
   await sim.checkout({ tasks: [[statusPage, { kind: 'archive' }]] });
 
   // Day -4: the last day with a checkout. The API docs reach 3 postponements.

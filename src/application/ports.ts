@@ -47,6 +47,8 @@ export interface StoreTransaction {
   blocksInSection(sectionId: string): Promise<Block[]>;
   blocksOfProject(projectId: string): Promise<Block[]>;
   sectionsOfProject(projectId: string): Promise<Section[]>;
+  /** Priority lists whose ids are between `fromId` and `toId`, both included. */
+  priorityListsBetween(fromId: string, toId: string): Promise<PriorityList[]>;
   appendEvent(event: DomainEvent): Promise<void>;
 }
 
@@ -76,6 +78,8 @@ export interface Reader {
   sectionsWithNotesDestination(destination: Section['notesDestination']): Promise<Section[]>;
   tasksAwaitingReflection(): Promise<Block[]>;
   eventsBetween(startDay: DayKey, endDay: DayKey): Promise<DomainEvent[]>;
+  /** Every event about these entities, such as the finishes and reopenings of some tasks. */
+  eventsOfEntities(ids: string[]): Promise<DomainEvent[]>;
   reflection(id: string): Promise<Reflection | undefined>;
   settings(): Promise<Settings | undefined>;
   blocksOfProject(projectId: string): Promise<Block[]>;

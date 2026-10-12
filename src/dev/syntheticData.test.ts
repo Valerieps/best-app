@@ -7,10 +7,12 @@ import {
   loadDayPriorities,
   loadPendingDays,
   loadPendingTriages,
+  loadProjectList,
   loadReflection,
   loadWiki,
 } from '../application/queries';
 import { addDays, toDayKey } from '../domain/day';
+import { activityGrid, CARD_MAP_WEEKS } from '../domain/projectActivity';
 import type { TaskRow, WhiteboardRow } from '../domain/triage';
 import { weekOf } from '../domain/week';
 import { importBackup } from '../infrastructure/backupRepository';
@@ -124,6 +126,22 @@ describe('synthetic data', () => {
   it('fills the wiki with notes of the three projects', async () => {
     const wiki = await loadWiki(reader);
     const projects = new Set(wiki.flatMap((entry) => (entry.project ? [entry.project.name] : [])));
-    expect(projects).toEqual(new Set(['App de agendamento', 'Festa de fim de ano', 'Reforma da cozinha', 'Sprint 40', 'Sprint 41', 'Sprint 42', 'Festa de fim-de-ano', 'Reforma da cosinha']));
+    expect(projects).toEqual(
+      new Set(['App de agendamento', 'Festa de fim de ano', 'Reforma da cozinha', 'Sprint 40', 'Sprint 41', 'Sprint 42', 'Festa de fim-de-ano', 'Reforma da cosinha', 'Curso de inglês']),
+    );
+  });
+
+  it('gives the project list priority cards with a free slot, a stalled project and long activity maps', async () => {
+    const view = await loadProjectList(reader, TODAY);
+    expect(view.priority.map((item) => item.project.name)).toEqual(['App de agendamento', 'Reforma da cozinha']);
+    expect(view.others.filter((item) => item.stalledDays !== null).map((item) => [item.project.name, item.stalledDays])).toEqual([['Festa de fim-de-ano', 22]]);
+    expect(view.finished.map((item) => item.project.name)).toEqual(['Sprint 40']);
+
+    const course = view.others.find((item) => item.project.name === 'Curso de inglês')!;
+    const grid = activityGrid(course.activity, TODAY, CARD_MAP_WEEKS).flat();
+    const levels = new Set(grid.map((cell) => cell.level));
+    expect(levels.size).toBeGreaterThanOrEqual(3);
+    // Activity before the last 8 weeks, so the 16-week map shows more than the rows do.
+    expect(grid.some((cell) => cell.level > 0 && cell.day < day(-56))).toBe(true);
   });
 });

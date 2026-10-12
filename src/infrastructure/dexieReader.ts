@@ -1,6 +1,7 @@
 import type { Reader } from '../application/ports';
 import type { DayKey } from '../domain/day';
 import type { Block, Section, TaskStatus } from '../domain/entities';
+import type { DomainEvent } from '../domain/events';
 import type { AppDatabase } from './db';
 
 export class DexieReader implements Reader {
@@ -72,6 +73,11 @@ export class DexieReader implements Reader {
   async tasksAwaitingReflection() {
     const active = await this.db.blocks.where('status').equals('active').toArray();
     return active.filter((task) => task.awaitingReflection === true);
+  }
+
+  eventsOfEntities(ids: string[]): Promise<DomainEvent[]> {
+    if (ids.length === 0) return Promise.resolve([]);
+    return this.db.events.where('entityId').anyOf(ids).toArray();
   }
 
   eventsBetween(startDay: DayKey, endDay: DayKey) {

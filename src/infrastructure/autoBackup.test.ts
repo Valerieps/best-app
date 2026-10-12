@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import { createBackup, emptyTables } from '../application/backup';
 import { createProject } from '../application/projects';
 import { createTestContext } from '../test/fixtures';
@@ -87,10 +87,11 @@ describe('AutoBackup', () => {
     auto.schedule();
     await createProject(ctx, 'B');
     auto.schedule();
+    // Wait for the outcome instead of a fixed time: under a full parallel run the write is slower.
+    await vi.waitFor(() => expect(JSON.parse(remembered.file.contents || '{}').tables?.projects).toHaveLength(2), { timeout: 2000 });
     await new Promise((resolve) => setTimeout(resolve, 50));
 
     expect(remembered.file.writes).toBe(writesAfterInit + 1);
-    expect(JSON.parse(remembered.file.contents).tables.projects).toHaveLength(2);
   });
 
   it('pauses until the user allows writing again in a new session', async () => {

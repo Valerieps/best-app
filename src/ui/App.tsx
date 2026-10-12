@@ -18,7 +18,8 @@ import { WikiScreen } from './lists/WikiScreen';
 import { ObjectiveScreen, ObjectivesScreen } from './objectives/ObjectiveScreens';
 import { DashboardScreen, StartDayScreen, WarmupScreen } from './opening/OpeningScreens';
 import { useDueReminders, useReminderSignals } from './opening/Reminders';
-import { ProjectScreen, ProjectsScreen } from './projects/ProjectScreens';
+import { ProjectsScreen } from './projects/ProjectListScreen';
+import { ProjectScreen } from './projects/ProjectScreens';
 import { backupNoticeLevel, pickTopNotice, useSnoozedNotices } from './notices';
 import { MonthlyReflectionScreen } from './reflection/MonthlyReflectionScreen';
 import { ReflectionScreen } from './reflection/ReflectionScreen';
@@ -105,8 +106,8 @@ export function App() {
       {route.name === 'wiki' && <WikiScreen focus={route.section} />}
       {route.name === 'cleanup' && <CleanupScreen today={today} assistant={route.assistant} />}
       {route.name === 'reflection' && <ReflectionScreen weekKey={route.week} today={today} />}
-      {route.name === 'projects' && <ProjectsScreen />}
-      {route.name === 'project' && <ProjectScreen id={route.id} today={today} />}
+      {route.name === 'projects' && <ProjectsScreen today={today} />}
+      {route.name === 'project' && <ProjectScreen key={route.id} id={route.id} tab={route.tab ?? 'tasks'} today={today} />}
       {route.name === 'settings' && <SettingsScreen />}
       {route.name === 'objectives' && <ObjectivesScreen />}
       {route.name === 'objective' && <ObjectiveScreen id={route.id} />}

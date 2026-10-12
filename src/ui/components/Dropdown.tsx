@@ -10,12 +10,18 @@ interface Props {
   className?: string;
   /** Button level of the trigger, e.g. "tertiary" in bars. */
   triggerClassName?: string;
+  /** Called whenever the list closes, however it was closed. */
+  onClose?(): void;
 }
 
 /** A button that opens a small list below it. Closes on outside click and on Escape. */
-export function Dropdown({ trigger, label, children, align = 'right', className = '', triggerClassName = '' }: Props) {
-  const [open, setOpen] = useState(false);
+export function Dropdown({ trigger, label, children, align = 'right', className = '', triggerClassName = '', onClose }: Props) {
+  const [open, setOpenState] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
+  const setOpen = (next: boolean) => {
+    setOpenState(next);
+    if (!next) onClose?.();
+  };
 
   useEffect(() => {
     if (!open) return;

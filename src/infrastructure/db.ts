@@ -15,6 +15,7 @@ import type {
   Settings,
 } from '../domain/entities';
 import type { DomainEvent } from '../domain/events';
+import { migrateMonthPriorityLists } from '../domain/priorityProjects';
 
 /** App settings and bookkeeping that never go into a backup (e.g. file handles). */
 export interface MetaEntry {
@@ -82,5 +83,15 @@ export class AppDatabase extends Dexie {
       habits: 'id, status',
       habitLogs: 'id, habitId, day',
     });
+    // Section 2: the priority projects move from the month to the week (ADR-035).
+    this.version(6)
+      .stores({ priorities: 'id' })
+      .upgrade(async (tx) => {
+        const table = tx.table('priorities');
+        const rows = await table.toArray();
+        const migrated = migrateMonthPriorityLists(rows);
+        await table.clear();
+        await table.bulkPut(migrated);
+      });
   }
 }

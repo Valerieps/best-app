@@ -1,8 +1,11 @@
 import { useEffect, useRef, useState } from 'react';
 import { reactivateTask } from '../../application/notebook';
-import { loadReflection } from '../../application/queries';
+import { setPriorityProjectInReflection } from '../../application/priorityProjects';
+import { loadReflection, type ReflectionView } from '../../application/queries';
 import { closeWeek, reopenWeek, resolveDeferred, saveReflectionTexts, type DeferredDecisions } from '../../application/reflection';
 import { addDays, type DayKey } from '../../domain/day';
+import { PRIORITY_PROJECT_LIMIT } from '../../domain/priorityProjects';
+import { ProjectIconBadge } from '../projects/ProjectIcon';
 import type { NotesDecision, TaskDecision, TriageRow } from '../../domain/triage';
 import { defaultReflectionWeek, weekFromKey, weekOf, type WeekRange } from '../../domain/week';
 import { Linkified } from '../components/Linkified';
@@ -119,7 +122,10 @@ export function ReflectionScreen({ weekKey, today }: Props) {
       </Step>
 
       <Step number={6} title="Prioridades da próxima semana">
-        <p className="muted">Esta etapa espera uma decisão em aberto na spec: quantas prioridades a semana tem.</p>
+        <PriorityProjectsStep view={view} today={today} />
+        <p className="muted reflection__note">
+          As tarefas prioritárias da semana esperam uma decisão em aberto na spec: quantas prioridades a semana tem.
+        </p>
       </Step>
 
       <Step number={7} title="Fechar a semana">
@@ -136,6 +142,52 @@ export function ReflectionScreen({ weekKey, today }: Props) {
         </button>
       </Step>
     </main>
+  );
+}
+
+/**
+ * Step 6: the priority projects of the week after the evaluated one. Here, and only here, a
+ * project can be taken out or swapped; the list starts as the one carried over.
+ */
+function PriorityProjectsStep({ view, today }: { view: ReflectionView; today: DayKey }) {
+  const { nextWeek, nextWeekPriorityIds: chosen } = view;
+  const active = view.projects.filter((project) => project.status === 'active');
+  // A week already over keeps the list it had.
+  const past = nextWeek.end < today;
+  const full = chosen.length >= PRIORITY_PROJECT_LIMIT;
+  const ordered = [...chosen.map((id) => active.find((project) => project.id === id)!).filter(Boolean), ...active.filter((project) => !chosen.includes(project.id))];
+
+  return (
+    <div className="priority-step">
+      <p className="muted">
+        Projetos prioritários da semana de {formatShortDate(nextWeek.start)} a {formatShortDate(nextWeek.end)}: até {PRIORITY_PROJECT_LIMIT}.
+        {' '}
+        {past ? 'Essa semana já passou, então a lista fica como estava.' : `${chosen.length} de ${PRIORITY_PROJECT_LIMIT} escolhidos.`}
+      </p>
+      {active.length === 0 ? (
+        <p className="muted">Nenhum projeto ativo.</p>
+      ) : (
+        <ul className="card-list">
+          {ordered.map((project) => {
+            const on = chosen.includes(project.id);
+            return (
+              <li className="card-list__item" key={project.id}>
+                <label className="check-row">
+                  <input
+                    type="checkbox"
+                    checked={on}
+                    disabled={past || (!on && full)}
+                    onChange={(event) => void setPriorityProjectInReflection(appContext, nextWeek.key, project.id, event.target.checked)}
+                  />
+                  <ProjectIconBadge project={project} size="sm" />
+                  {project.name}
+                </label>
+              </li>
+            );
+          })}
+        </ul>
+      )}
+    </div>
   );
 }
 

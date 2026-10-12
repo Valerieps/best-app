@@ -9,7 +9,8 @@ import {
   setTaskDone,
 } from '../application/notebook';
 import type { AppContext, IdGenerator } from '../application/ports';
-import { createProject, setProjectFinished } from '../application/projects';
+import { addPriorityProject } from '../application/priorityProjects';
+import { createProject, setProjectFinished, setProjectIcon } from '../application/projects';
 import { loadDayTriage, loadPendingTriages } from '../application/queries';
 import { setDayPriority, setDeadline, setIntendedDate, setSectionDetails } from '../application/dayTools';
 import { addDays, fromDayKey, toDayKey, type DayKey } from '../domain/day';
@@ -121,6 +122,17 @@ export class Simulation {
   async finishProject(project: Project): Promise<void> {
     this.step();
     await setProjectFinished(this.ctx, project.id, true);
+  }
+
+  async icon(project: Project, icon: string): Promise<void> {
+    this.step();
+    await setProjectIcon(this.ctx, project.id, icon);
+  }
+
+  /** Takes a free slot among the week's priority projects. */
+  async prioritize(project: Project): Promise<void> {
+    this.step();
+    await addPriorityProject(this.ctx, project.id);
   }
 
   async done(...tasks: Block[]): Promise<void> {

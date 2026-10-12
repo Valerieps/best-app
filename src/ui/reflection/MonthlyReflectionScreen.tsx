@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { closeMonth, createObjectiveFromProject, linkProjectToObjective, setMonthPriority } from '../../application/objectives';
+import { closeMonth, createObjectiveFromProject, linkProjectToObjective } from '../../application/objectives';
 import { setProjectFinished } from '../../application/projects';
 import { loadDueMonthlyReflection, loadMonthlyReflection } from '../../application/queries';
 import type { DayKey } from '../../domain/day';
@@ -53,14 +53,6 @@ export function MonthlyReflectionScreen({ month, today }: { month?: string; toda
         {project.name}
       </a>
       <span className="warmup__actions">
-        <label className="check-row">
-          <input
-            type="checkbox"
-            checked={view.monthPriorityIds.includes(project.id)}
-            onChange={(event) => void setMonthPriority(appContext, monthKey(today), project.id, event.target.checked)}
-          />
-          prioridade do mês
-        </label>
         <select
           className="text-input"
           value={project.objectiveId ?? ''}
@@ -115,9 +107,9 @@ export function MonthlyReflectionScreen({ month, today }: { month?: string; toda
           </div>
           <div className="metric">
             <span className="metric__value">
-              {view.metrics.dayPrioritiesInMonthProjects} de {view.metrics.dayPriorities}
+              {view.metrics.dayPrioritiesInPriorityProjects} de {view.metrics.dayPriorities}
             </span>
-            <span className="metric__label">prioridades do dia em projetos prioritários do mês</span>
+            <span className="metric__label">prioridades do dia em projetos prioritários da semana</span>
           </div>
         </div>
         <p className="muted metrics__note">

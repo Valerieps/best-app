@@ -5,7 +5,7 @@ import { createTestContext } from '../test/fixtures';
 import { applyTriage } from './checkout';
 import { createBlock, setTaskDone } from './notebook';
 import { createProject, setProjectFinished } from './projects';
-import { loadDayTriage, loadDueReflection, loadProjects, loadReflection } from './queries';
+import { loadDayTriage, loadDueReflection, loadProjectList, loadReflection } from './queries';
 import { closeWeek, resolveDeferred, saveReflectionTexts, setWeeklyReflectionSchedule } from './reflection';
 
 const SUNDAY = '2026-10-11';
@@ -81,9 +81,9 @@ describe('section 2: weekly reflection and projects', () => {
     const { ctx, reader } = createTestContext();
     const project = await createProject(ctx, 'Mudança');
     await setProjectFinished(ctx, project.id, true);
-    expect((await loadProjects(reader))[0].project).toMatchObject({ status: 'finished', finishedAt: expect.any(String) });
+    expect((await loadProjectList(reader, SUNDAY)).finished[0].project).toMatchObject({ status: 'finished', finishedAt: expect.any(String) });
     await setProjectFinished(ctx, project.id, false);
-    expect((await loadProjects(reader))[0].project).toMatchObject({ status: 'active', finishedAt: null });
+    expect((await loadProjectList(reader, SUNDAY)).others[0].project).toMatchObject({ status: 'active', finishedAt: null });
   });
 
   it('the checkout can link a task to a project', async () => {

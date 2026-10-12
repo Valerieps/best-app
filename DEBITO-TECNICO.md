@@ -65,7 +65,7 @@ Estas partes da spec não foram construídas porque dependem de uma pergunta em 
 
 ## 4. Testes e qualidade
 
-- **Não há testes de interface.** O domínio, os casos de uso, as consultas e o backup têm testes (224 no total). As telas foram conferidas à mão no navegador embutido, e um erro de interface só aparece usando.
+- **Não há testes de interface.** O domínio, os casos de uso, as consultas e o backup têm testes (257 no total). As telas foram conferidas à mão no navegador embutido, e um erro de interface só aparece usando.
 - **Não há teste ponta a ponta** (Playwright ou similar) para os fluxos inteiros, como escolher um arquivo, importar e desfazer.
 - **Os testes não rodam no deploy.** O build do Cloudflare roda `tsc` e `vite build`, mas não o `vitest`. Dá para incluir os testes no `npm run build` ou configurar GitHub Actions.
 - **Não há lint.** O ESLint ficou de fora para ter menos dependências.
@@ -96,6 +96,12 @@ Estas partes da spec não foram construídas porque dependem de uma pergunta em 
 - **A estrela parece não responder quando um prazo ocupa a terceira prioridade.** A tarefa promovida entra na lista, mas a do prazo toma o lugar dela na tela, pela regra do 1b. Vale um aviso curto ou mostrar a quarta como "na fila".
 - **O menu "/" do editor (P3 em `AVALIACAO-UX.md`) não existe.** Só a dica na linha vazia foi feita.
 - **"Lembrar depois" vale só neste navegador.** O dia adiado fica no `localStorage`, como a escolha de fixar as prioridades.
+- **Página do projeto: tarefas criadas nela não podem ser apagadas.** Como na nota do dia, uma tarefa só sai de circulação pelo checkout ou pela reflexão; não há "apagar" para um erro de digitação logo depois de criar.
+- **Página do projeto: juntar projetos repetidos pode deixar duas seções escondidas no mesmo projeto** (ADR-031). Funciona, porque a nova tarefa vai para a primeira, mas o assistente poderia juntar as duas.
+- **Página do projeto: abaixo de 900 px, a coluna fixada só abre pelo botão da linha das abas**, em vez de aparecer sozinha por cima do conteúdo. O brief pedia que ela "se comportasse como espiando".
+- **Página do projeto: o ritmo lê todos os eventos das tarefas do projeto a cada mudança.** Com anos de uso e projetos grandes, vale guardar só os eventos de finalizar e reabrir num índice próprio (ADR-033).
+- **Página do projeto: o ritmo não aparece na lista de projetos.** Um projeto parado só se revela quando eu abro a página dele; um ponto de aviso na lista ajudaria.
+- **O rascunho e a página do projeto divergem no hover das tarefas.** O rascunho escondia data e "adiada" no hover; a página segue o padrão da nota do dia (etiquetas sempre visíveis), como diz o `SPEC.md` (ADR-032).
 - **O resto do roadmap de `AVALIACAO-UX.md`.** Os sete itens de "Fazer já" foram feitos em 12/10/2026; "Planejar", "Ajustes finos" e "Depois" continuam abertos.
 
 ## Adiado de propósito

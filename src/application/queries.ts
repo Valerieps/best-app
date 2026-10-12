@@ -13,6 +13,7 @@ import type {
   Habit,
   Objective,
   Project,
+  ProjectListGroup,
   Reflection,
   Reminder,
   Resource,
@@ -25,9 +26,12 @@ import { monthlyMetrics, type MonthlyMetrics } from '../domain/monthMetrics';
 import { dayStage, dueReminders, type DayStage } from '../domain/dayFlow';
 import { weeklyMetrics, type WeeklyMetrics } from '../domain/metrics';
 import { dueReflectionWeek } from '../domain/reflectionSchedule';
-import { weekOf, type WeekRange } from '../domain/week';
+import { weekKey, weekOf, type WeekKey, type WeekRange } from '../domain/week';
 import { comparePositions } from '../domain/position';
 import { buildDayPriorities, dayPriorityListId, type DayPriority } from '../domain/priorities';
+import { hasFreeSlot, listInEffect, nextWeek, priorityProjectIds, priorityProjectsRange } from '../domain/priorityProjects';
+import { activityByDay, lastActivityDay, recentlyFinished, stalledDays, type ActivityByDay } from '../domain/projectActivity';
+import { isDaySection, isStuckTask } from '../domain/projectPage';
 import { buildDayTriage, findPendingDays, isTriagePending, type DayTriage, type TriageRow } from '../domain/triage';
 import type { Reader } from './ports';
 
@@ -44,8 +48,13 @@ export interface DayNoteView {
   projects: Project[];
 }
 
+/** Sections of a day's note: the section behind a project page belongs to no day. */
+async function daySections(reader: Reader, day: DayKey): Promise<Section[]> {
+  return (await reader.sectionsOfDay(day)).filter(isDaySection);
+}
+
 export async function loadDayNote(reader: Reader, day: DayKey): Promise<DayNoteView> {
-  const sections = await reader.sectionsOfDay(day);
+  const sections = await daySections(reader, day);
   const blocks = await reader.blocksInSections(sections.map((section) => section.id));
   const intended = await reader.tasksIntendedFor(day);
   const originIds = intended.map((task) => task.sectionId).filter((id) => !sections.some((s) => s.id === id));
@@ -60,7 +69,7 @@ export async function loadDayNote(reader: Reader, day: DayKey): Promise<DayNoteV
 }
 
 export async function loadDayTriage(reader: Reader, day: DayKey, today: DayKey): Promise<DayTriage> {
-  const sections = await reader.sectionsOfDay(day);
+  const sections = await daySections(reader, day);
   const sectionIds = new Set(sections.map((section) => section.id));
   const blocks = await reader.blocksInSections([...sectionIds]);
   const intended = await reader.tasksIntendedFor(day);
@@ -72,7 +81,7 @@ export async function loadDayTriage(reader: Reader, day: DayKey, today: DayKey):
 
 /** Past days with something left to triage, oldest first. */
 export async function loadPendingDays(reader: Reader, today: DayKey): Promise<DayKey[]> {
-  const sections = await reader.sectionsNeedingTriage();
+  const sections = (await reader.sectionsNeedingTriage()).filter(isDaySection);
   const blocks = await reader.blocksInSections(sections.map((section) => section.id));
   const activeTasks = await reader.tasksWithStatus('active');
   const origins = await reader.sectionsByIds([...new Set(activeTasks.map((task) => task.sectionId))]);
@@ -81,7 +90,8 @@ export async function loadPendingDays(reader: Reader, today: DayKey): Promise<Da
     sections,
     blocks,
     activeTasks,
-    originDays: new Map(origins.map((section) => [section.id, section.day])),
+    // A task written on a project page has no origin day: only its intended date counts.
+    originDays: new Map(origins.filter(isDaySection).map((section) => [section.id, section.day])),
   });
 }
 
@@ -241,6 +251,10 @@ export interface ReflectionView {
   /** Step 4, section 6: longest streak and completion of each active habit. */
   habits: { habit: Habit; week: HabitStats; month: HabitStats }[];
   projects: Project[];
+  /** Step 6: the week after the evaluated one, whose priority projects the reflection defines. */
+  nextWeek: WeekRange;
+  /** Its priority projects in effect, carried over from the evaluated week if not changed yet. */
+  nextWeekPriorityIds: string[];
 }
 
 /** Everything the weekly reflection of `week` shows (SPEC.md, section 2). */
@@ -273,6 +287,8 @@ export async function loadReflection(reader: Reader, week: WeekRange, today: Day
     ),
   ];
   const events = await reader.eventsBetween(week.start, week.end);
+  const projects = await reader.projects();
+  const following = nextWeek(week);
   return {
     week,
     reflection,
@@ -280,7 +296,9 @@ export async function loadReflection(reader: Reader, week: WeekRange, today: Day
     archived: await loadArchivedTasks(reader),
     metrics: weeklyMetrics(events, week),
     habits: await habitsOfPeriod(reader, week.start, week.end),
-    projects: await reader.projects(),
+    projects,
+    nextWeek: following,
+    nextWeekPriorityIds: await loadPriorityProjectIds(reader, following.key, projects),
   };
 }
 
@@ -305,48 +323,146 @@ export async function loadDueReflection(reader: Reader, now: Date): Promise<Week
   return reflection?.closedAt ? null : candidate;
 }
 
-export interface ProjectSummary {
+/** The week's priority projects in effect (they carry over from earlier weeks), active ones only. */
+async function loadPriorityProjectIds(reader: Reader, week: WeekKey, projects: readonly Project[]): Promise<string[]> {
+  const lists = await reader.priorityListsBetween(...priorityProjectsRange(week));
+  return priorityProjectIds(listInEffect(lists, week), projects);
+}
+
+/** What the "⋯" of a project offers, in the list and on its page. */
+export interface ProjectActions {
+  isPriority: boolean;
+  /** Active, not a priority yet, and the week has a free slot. */
+  canAddToPriorities: boolean;
+}
+
+function projectActions(project: Project, priorityIds: readonly string[]): ProjectActions {
+  const isPriority = priorityIds.includes(project.id);
+  return { isPriority, canAddToPriorities: project.status === 'active' && !isPriority && hasFreeSlot(priorityIds) };
+}
+
+export interface ProjectListItem extends ProjectActions {
   project: Project;
+  objective: Objective | null;
   activeTasks: number;
-  doneTasks: number;
+  stuckTasks: number;
+  finishedLastTwoWeeks: number;
+  lastActivityDay: DayKey | null;
+  /** Days without activity when the project is stalled; null otherwise. */
+  stalledDays: number | null;
+  activity: ActivityByDay;
+}
+
+export interface ProjectListView {
+  /** The week's priority projects, in the order chosen; at most 3. */
+  priority: ProjectListItem[];
+  /** Other active projects, most recent activity first. */
+  others: ProjectListItem[];
+  finished: ProjectListItem[];
+  /** "4 ativos · 1 parado · 3 travadas" */
+  summary: { active: number; stalled: number; stuck: number };
+  /** Whether "Outros ativos" and "Finalizados" are open, from the settings. */
+  open: Record<ProjectListGroup, boolean>;
+  objectives: Objective[];
+}
+
+/** Defaults of the collapsible groups of the project list. */
+export const PROJECT_LIST_GROUPS_OPEN: Record<ProjectListGroup, boolean> = { others: true, finished: false };
+
+/** Activity of each project, from the events of its tasks, notes and day sections (ADR-034). */
+async function loadActivities(reader: Reader, projects: readonly Project[], today: DayKey) {
+  const scopes = [];
+  for (const project of projects) {
+    const tasks = (await reader.blocksOfProject(project.id)).filter((block) => block.kind === 'task');
+    const sections = (await reader.sectionsOfProject(project.id)).filter(isDaySection);
+    // Notes are not linked to the project themselves: they belong to its sections.
+    const notes = (await reader.blocksInSections(sections.map((section) => section.id))).filter(
+      (block) => block.kind === 'note' && block.text.trim() !== '',
+    );
+    scopes.push({ project, tasks, sections, notes });
+  }
+  const events = await reader.eventsOfEntities(scopes.flatMap((scope) => [...scope.tasks, ...scope.notes, ...scope.sections].map((entity) => entity.id)));
+  return scopes.map((scope) => {
+    const activity = activityByDay({
+      taskIds: new Set(scope.tasks.map((task) => task.id)),
+      noteIds: new Set(scope.notes.map((note) => note.id)),
+      sectionIds: new Set(scope.sections.map((section) => section.id)),
+      events,
+    });
+    return { ...scope, activity, stalledDays: stalledDays(scope.project, activity, today) };
+  });
+}
+
+/** The project list (section 2): where projects are followed, with their activity maps. */
+export async function loadProjectList(reader: Reader, today: DayKey): Promise<ProjectListView> {
+  const projects = (await reader.projects()).filter((project) => project.status !== 'merged');
+  const objectives = await reader.objectives();
+  const priorityIds = await loadPriorityProjectIds(reader, weekOf(today).key, projects);
+  const settings = await reader.settings();
+  const items = (await loadActivities(reader, projects, today)).map(({ project, tasks, activity, stalledDays }): ProjectListItem => {
+    const active = tasks.filter((task) => task.status === 'active');
+    return {
+      project,
+      objective: objectives.find((objective) => objective.id === project.objectiveId) ?? null,
+      activeTasks: active.length,
+      stuckTasks: active.filter((task) => isStuckTask(task, today)).length,
+      finishedLastTwoWeeks: recentlyFinished(activity, today),
+      lastActivityDay: lastActivityDay(activity, today),
+      stalledDays,
+      activity,
+      ...projectActions(project, priorityIds),
+    };
+  });
+  const byName = (a: ProjectListItem, b: ProjectListItem) => a.project.name.localeCompare(b.project.name, 'pt-BR');
+  const active = items.filter((item) => item.project.status === 'active');
+  const finished = items.filter((item) => item.project.status === 'finished');
+  return {
+    priority: priorityIds.map((id) => active.find((item) => item.project.id === id)!).filter(Boolean),
+    others: active
+      .filter((item) => !item.isPriority)
+      .sort((a, b) => {
+        const dayA = a.lastActivityDay ?? '';
+        const dayB = b.lastActivityDay ?? '';
+        return dayA !== dayB ? (dayA < dayB ? 1 : -1) : byName(a, b);
+      }),
+    finished: finished.sort((a, b) => ((a.project.finishedAt ?? '') < (b.project.finishedAt ?? '') ? 1 : -1)),
+    summary: {
+      active: active.length,
+      stalled: active.filter((item) => item.stalledDays !== null).length,
+      stuck: active.reduce((sum, item) => sum + item.stuckTasks, 0),
+    },
+    open: { ...PROJECT_LIST_GROUPS_OPEN, ...settings?.projectListGroups },
+    objectives,
+  };
+}
+
+export interface ProjectView extends ProjectActions {
+  project: Project;
+  activeTasks: TaskListItem[];
+  /** Most recently finished first. */
+  doneTasks: TaskListItem[];
+  /** Wiki entries linked to the project, newest first. */
+  notes: WikiEntry[];
+  /** Day-note sections linked to the project. */
   sections: number;
 }
 
-export async function loadProjects(reader: Reader): Promise<ProjectSummary[]> {
-  const projects = (await reader.projects()).filter((project) => project.status !== 'merged');
-  const summaries: ProjectSummary[] = [];
-  for (const project of projects) {
-    const blocks = await reader.blocksOfProject(project.id);
-    const sections = await reader.sectionsOfProject(project.id);
-    summaries.push({
-      project,
-      activeTasks: blocks.filter((block) => block.kind === 'task' && block.status === 'active').length,
-      doneTasks: blocks.filter((block) => block.kind === 'task' && block.status === 'done').length,
-      sections: sections.length,
-    });
-  }
-  return summaries.sort((a, b) => a.project.name.localeCompare(b.project.name, 'pt-BR'));
-}
-
-export interface ProjectView {
-  project: Project;
-  activeTasks: TaskListItem[];
-  doneTasks: number;
-  /** Wiki entries linked to the project. */
-  notes: WikiEntry[];
-}
-
-export async function loadProject(reader: Reader, projectId: string): Promise<ProjectView | null> {
-  const project = (await reader.projects()).find((candidate) => candidate.id === projectId);
+export async function loadProject(reader: Reader, projectId: string, today: DayKey): Promise<ProjectView | null> {
+  const projects = await reader.projects();
+  const project = projects.find((candidate) => candidate.id === projectId);
   if (!project) return null;
-  const blocks = await reader.blocksOfProject(projectId);
-  const tasks = blocks.filter((block) => block.kind === 'task');
+  const tasks = (await reader.blocksOfProject(projectId)).filter((block) => block.kind === 'task');
+  const sections = (await reader.sectionsOfProject(projectId)).filter(isDaySection);
   const wiki = await loadWiki(reader);
+  const done = tasks.filter((task) => task.status === 'done').sort((a, b) => ((a.closedAt ?? '') < (b.closedAt ?? '') ? 1 : -1));
+  const priorityIds = await loadPriorityProjectIds(reader, weekOf(today).key, projects);
   return {
     project,
     activeTasks: await withOrigins(reader, tasks.filter((task) => task.status === 'active').sort(byIntendedDateThenCreation)),
-    doneTasks: tasks.filter((task) => task.status === 'done').length,
+    doneTasks: await withOrigins(reader, done),
     notes: wiki.filter((entry) => entry.section.projectId === projectId),
+    sections: sections.length,
+    ...projectActions(project, priorityIds),
   };
 }
 
@@ -479,7 +595,6 @@ export interface MonthlyReflectionView {
   objectives: ObjectiveSummary[];
   projects: Project[];
   habits: Habit[];
-  monthPriorityIds: string[];
   metrics: MonthlyMetrics;
 }
 
@@ -488,23 +603,16 @@ export async function loadMonthlyReflection(reader: Reader, key: MonthKey): Prom
   const month = monthRange(key);
   const projects = (await reader.projects()).filter((project) => project.status !== 'merged');
   const habits = await reader.habits();
-  const monthList = await reader.priorityList(`month:${key}`);
   const dayLists = await reader.priorityListsBetween(`day:${month.start}`, `day:${month.end}`);
   const priorityTasks = await reader.blocksByIds([...new Set(dayLists.flatMap((list) => list.itemIds))]);
+  const weekProjectLists = await reader.priorityListsBetween(...priorityProjectsRange(weekKey(month.end)));
   return {
     month,
     reflection: (await reader.reflection(`month:${key}`)) ?? null,
     objectives: await loadObjectives(reader),
     projects,
     habits,
-    monthPriorityIds: monthList?.itemIds ?? [],
-    metrics: monthlyMetrics({
-      projects,
-      habits,
-      dayPriorityLists: dayLists,
-      priorityTasks,
-      monthProjectIds: monthList?.itemIds ?? [],
-    }),
+    metrics: monthlyMetrics({ projects, habits, dayPriorityLists: dayLists, priorityTasks, weekProjectLists }),
   };
 }
 

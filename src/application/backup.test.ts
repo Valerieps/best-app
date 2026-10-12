@@ -64,7 +64,25 @@ describe('parseBackup', () => {
     const v1 = { format: 'best-app-backup', schemaVersion: 1, exportedAt: '2026-10-11', tables: tables() } as Record<string, unknown>;
     for (const name of ['priorities', 'reflections', 'settings', 'reminders', 'objectives', 'resources', 'habits', 'habitLogs']) delete (v1.tables as Record<string, unknown>)[name];
     const result = parseBackup(v1);
-    expect(result).toMatchObject({ ok: true, backup: { schemaVersion: 5, tables: { priorities: [], reflections: [], settings: [], reminders: [], habits: [], habitLogs: [] } } });
+    expect(result).toMatchObject({ ok: true, backup: { schemaVersion: 6, tables: { priorities: [], reflections: [], settings: [], reminders: [], habits: [], habitLogs: [] } } });
+  });
+
+  it('upgrades a version 5 backup, turning month priority projects into week ones', () => {
+    const month = { id: 'month:2026-10', scope: 'month', period: '2026-10', itemIds: ['p1'], updatedAt: '2026-10-02T10:00:00.000Z' };
+    const day = { id: 'day:2026-10-11', scope: 'day' as const, period: '2026-10-11', itemIds: ['t1'], updatedAt: '' };
+    const v5 = { format: 'best-app-backup', schemaVersion: 5, exportedAt: '2026-10-11', tables: { ...tables(), priorities: [month, day] } };
+    const result = parseBackup(v5);
+    expect(result).toMatchObject({ ok: true, backup: { schemaVersion: 6 } });
+    expect(result.ok && result.backup.tables.priorities).toEqual([
+      day,
+      { id: 'weekProjects:2026-W40', scope: 'weekProjects', period: '2026-W40', itemIds: ['p1'], updatedAt: '2026-10-02T10:00:00.000Z' },
+    ]);
+  });
+
+  it('leaves the priorities of a version 6 backup alone', () => {
+    const odd = { id: 'month:2026-10', scope: 'day' as const, period: '2026-10', itemIds: [], updatedAt: '' };
+    const result = parseBackup({ format: 'best-app-backup', schemaVersion: 6, exportedAt: '2026-10-11', tables: tables({ priorities: [odd] }) });
+    expect(result.ok && result.backup.tables.priorities).toEqual([odd]);
   });
 
   it('rejects a backup from a newer version of the app', () => {

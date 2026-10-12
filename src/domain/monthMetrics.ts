@@ -1,4 +1,6 @@
 import type { Block, Habit, PriorityList, Project } from './entities';
+import { listInEffect, recordedPriorityProjects } from './priorityProjects';
+import { weekKey } from './week';
 
 /**
  * Section 4: the "raio-x da desconexão" between the day to day and the objectives. Metrics with
@@ -9,9 +11,10 @@ export interface MonthlyMetrics {
   activeProjects: number;
   projectsWithoutObjective: number;
   habitsWithoutObjective: number;
-  /** Day priorities of the month that were tasks of a project chosen as month priority. */
+  /** Day priorities of the month. */
   dayPriorities: number;
-  dayPrioritiesInMonthProjects: number;
+  /** Those that were tasks of a priority project of their day's week. */
+  dayPrioritiesInPriorityProjects: number;
 }
 
 export function monthlyMetrics(input: {
@@ -19,20 +22,27 @@ export function monthlyMetrics(input: {
   habits: readonly Habit[];
   dayPriorityLists: readonly PriorityList[];
   priorityTasks: readonly Block[];
-  monthProjectIds: readonly string[];
+  /** Every week list of priority projects up to the month's last week (they carry over). */
+  weekProjectLists: readonly PriorityList[];
 }): MonthlyMetrics {
   const active = input.projects.filter((project) => project.status === 'active');
   const taskById = new Map(input.priorityTasks.map((task) => [task.id, task]));
-  const monthProjects = new Set(input.monthProjectIds);
-  const prioritized = input.dayPriorityLists.flatMap((list) => list.itemIds);
+  let dayPriorities = 0;
+  let inPriorityProjects = 0;
+  for (const list of input.dayPriorityLists) {
+    // What was chosen that week, even if the project was finished later.
+    const projectIds = new Set(recordedPriorityProjects(listInEffect(input.weekProjectLists, weekKey(list.period))));
+    for (const id of list.itemIds) {
+      dayPriorities++;
+      const projectId = taskById.get(id)?.projectId;
+      if (projectId != null && projectIds.has(projectId)) inPriorityProjects++;
+    }
+  }
   return {
     activeProjects: active.length,
     projectsWithoutObjective: active.filter((project) => !project.objectiveId).length,
     habitsWithoutObjective: input.habits.filter((habit) => habit.status === 'active' && !habit.objectiveId).length,
-    dayPriorities: prioritized.length,
-    dayPrioritiesInMonthProjects: prioritized.filter((id) => {
-      const projectId = taskById.get(id)?.projectId;
-      return projectId != null && monthProjects.has(projectId);
-    }).length,
+    dayPriorities,
+    dayPrioritiesInPriorityProjects: inPriorityProjects,
   };
 }

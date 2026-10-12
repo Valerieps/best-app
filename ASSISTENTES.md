@@ -25,8 +25,8 @@ Os assistentes de limpeza colocam ordem na casa: cada um encontra o que está fo
 | Tarefas esquecidas | Tarefas ativas sem data há semanas ou adiadas muitas vezes | Agendar, arquivar ou abandonar | 1b |
 | Projetos repetidos | Projetos com nomes parecidos, como "Data Studios" e "DataStudios" | Juntar em um projeto só | 1b |
 | Arquivo antigo | Tarefas arquivadas há meses | Reativar ou abandonar de vez | 2 |
-| Projetos parados | Projetos sem tarefa feita há semanas | Finalizar ou manter | 2 |
-| Prioridades travadas | Prioridades da semana ou do mês que nunca desceram para o dia | Manter, trocar ou retirar | 2 e 4 |
+| Projetos parados | Projetos sem nenhuma atividade há 14 dias ou mais (SPEC, "Projetos") | Finalizar ou manter | 2 |
+| Prioridades travadas | Tarefas prioritárias da semana que nunca desceram para o dia. Os projetos prioritários ficam de fora: só se trocam na reflexão semanal | Manter, trocar ou retirar | 2 |
 | Warm up | Itens do checklist que eu quase sempre pulo | Tirar do checklist | 3 |
 | Objetivos soltos | Objetivos sem projeto ativo, ou com a meta talvez atingida | Finalizar ou vincular projetos | 4 |
 | Compromissos passados | Compromissos passados que não foram migrados nem marcados | Marcar como feito ou descartar | 5 |

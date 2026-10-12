@@ -1,6 +1,6 @@
 import { normalizeLimits, type AssistantId } from '../domain/cleanupStatus';
 import { toDayKey } from '../domain/day';
-import type { Settings, WarmupItem } from '../domain/entities';
+import type { ProjectListGroup, Settings, WarmupItem } from '../domain/entities';
 import { record } from './events';
 import type { AppContext } from './ports';
 
@@ -37,6 +37,16 @@ export function setCleanupLimits(ctx: AppContext, id: AssistantId, limits: reado
     const { [id]: _previous, ...others } = current.cleanupLimits ?? {};
     return { cleanupLimits: limits ? { ...others, [id]: normalizeLimits(limits) } : others };
   });
+}
+
+/** Whether the project page's side column stays docked. One choice for every project. */
+export function setProjectPanelPinned(ctx: AppContext, pinned: boolean): Promise<void> {
+  return updateSettings(ctx, { projectPanelPinned: pinned });
+}
+
+/** Whether a group of the project list is open. Kept with the settings, not in this browser only. */
+export function setProjectListGroupOpen(ctx: AppContext, group: ProjectListGroup, open: boolean): Promise<void> {
+  return updateSettings(ctx, (current) => ({ projectListGroups: { ...current.projectListGroups, [group]: open } }));
 }
 
 /** Section 3: the warm-up checklist, defined by hand. Empty turns the warm up off. */

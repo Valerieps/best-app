@@ -88,6 +88,23 @@ Três estados:
 - **Aba ativa e estado da coluna.** A aba pode ir na rota (`#/projeto/<id>/notas`), para o link voltar ao
   mesmo lugar.
 
+## Andamento
+
+Implementado em 12/10/2026. Os pontos técnicos em aberto foram decididos assim:
+
+- **Tarefa criada no projeto:** a Valeria decidiu que ela fica só no projeto, sem entrar na nota de hoje nem no checkout (`SPEC.md`). Ela mora numa seção escondida do projeto (ADR-031).
+- **Ícone do projeto:** campo `icon` no `Project` e evento `project.iconChanged`; o backup aceita sem mudar de versão (ADR-032). A coleção tem 12 ícones, numa grade 4 × 3.
+- **Travadas e "próxima":** funções puras em `src/domain/projectPage.ts`, com testes.
+- **Aba e coluna:** a aba Notas vai na rota (`#/projeto/<id>/notas`); "fixada" fica nas configurações.
+- **Uma diferença do rascunho:** no hover, as tarefas seguem o padrão da nota do dia (data e prazo continuam visíveis como etiquetas), em vez de esconder os metadados.
+
+Ajustes de 12/10/2026, pedidos pela Valeria (regras no `SPEC.md`, "Projetos"):
+
+- **"Ritmo" no lugar de "Progresso":** o card não mostra mais "4 de 10", porque o total de tarefas de um projeto nunca é conhecido. Ele mostra as tarefas finalizadas nas últimas 2 semanas, 4 barras (uma por semana, a última em azul) e a data da última finalização. Um projeto ativo sem finalização nem nota nova há 14 dias mostra "Parado há N dias" em cor de aviso. Tudo vem do histórico de eventos; uma tarefa reaberta deixa de contar (ADR-033).
+- **Um único botão para a coluna lateral:** o trilho da direita, com "Detalhes" e "Recursos", saiu. O botão na linha das abas é a única entrada e mostra o número de recursos como selo. Com a coluna recolhida, o conteúdo ocupa a largura toda. "Espiando" e "fixada" continuam iguais.
+
+O rascunho HTML não foi atualizado com esses ajustes; este brief e o `SPEC.md` valem mais que ele.
+
 ## Fora do escopo desta proposta
 
 A navegação global (barra lateral fixa, item N1 do `AVALIACAO-UX.md`) e o layout de celular (P8) afetam

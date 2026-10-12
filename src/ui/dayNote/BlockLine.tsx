@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, type KeyboardEvent } from 'react';
+import { useEffect, useRef, useState, type KeyboardEvent, type ReactNode } from 'react';
 import { detectKind } from '../../domain/blockKind';
 import type { DayKey } from '../../domain/day';
 import type { Block } from '../../domain/entities';
@@ -24,20 +24,27 @@ interface Props {
   block: Block;
   /** Whether the line can be deleted or change kind (written today, not triaged). */
   free: boolean;
-  /** The day this note shows; dates equal to it are not repeated on the line. */
-  day: DayKey;
+  /**
+   * The day this note shows; dates equal to it are not repeated on the line. Null outside a
+   * day note (the project page), where every date shows.
+   */
+  day: DayKey | null;
   today: DayKey;
   isPriority: boolean;
   /** False when looking at a past day: Enter does not create lines there. */
   allowNewLines: boolean;
   handlers: LineHandlers;
+  /** More metadata before the dates, like "adiada 3×" on the project page. */
+  extraMeta?: ReactNode;
+  /** The intended date is shown elsewhere, like the project agenda's date block: no chip, only the hover shortcut. */
+  hideDate?: boolean;
 }
 
 /** Hint on an empty line, shown only while the line is being written (P3 in AVALIACAO-UX.md). */
 export const NOTE_HINT = 'Escreva, ou comece com [] e espaço para criar uma tarefa';
 
 /** A hidden date field opened by a button: a shortcut, or the chip of a date already set. */
-function DatePicker({
+export function DatePicker({
   label,
   value,
   min,
@@ -83,7 +90,7 @@ function DatePicker({
   );
 }
 
-export function BlockLine({ block, free, day, today, isPriority, allowNewLines, handlers }: Props) {
+export function BlockLine({ block, free, day, today, isPriority, allowNewLines, handlers, extraMeta, hideDate = false }: Props) {
   const ref = useRef<HTMLTextAreaElement>(null);
   const [text, setText] = useState(block.text);
   const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -157,7 +164,7 @@ export function BlockLine({ block, free, day, today, isPriority, allowNewLines, 
   const done = isTask && block.status === 'done';
   const active = isTask && block.status === 'active';
   const deadline = block.deadline ?? null;
-  const showDate = isTask && block.intendedDate !== null && block.intendedDate !== day;
+  const showDate = isTask && !hideDate && block.intendedDate !== null && block.intendedDate !== day;
   const dateLabel = showDate ? relativeDay(block.intendedDate!, today) : '';
   const deadlineLabel = deadline ? `prazo ${relativeDay(deadline, today)}` : '';
   const pickDate = (label: string, className: string, children: string) => (
@@ -197,6 +204,7 @@ export function BlockLine({ block, free, day, today, isPriority, allowNewLines, 
       />
       {/* Dates already set are chips; an active task's chip changes the date. */}
       <span className="line__meta">
+        {extraMeta}
         {showDate &&
           (active ? pickDate('Mudar a data de intenção', 'line__chip', dateLabel) : <span className="muted">{dateLabel}</span>)}
         {deadline &&
@@ -204,7 +212,7 @@ export function BlockLine({ block, free, day, today, isPriority, allowNewLines, 
       </span>
       {/* Shortcuts on hover and focus. The checkbox finalizes, so there is no separate button for it. */}
       <span className="line__actions">
-        {active && !showDate && pickDate('Data de intenção', 'line__action', 'Data')}
+        {active && !showDate && pickDate(hideDate ? 'Mudar a data de intenção' : 'Data de intenção', 'line__action', 'Data')}
         {active && !deadline && pickDeadline('Prazo máximo', 'line__action', 'Prazo')}
         {block.kind === 'note' && free && (
           <button type="button" className="line__action" onClick={() => handlers.onMakeTask(block, text)}>

@@ -19,6 +19,7 @@ describe('routes', () => {
     { name: 'reflection', week: '2026-W41' },
     { name: 'projects' },
     { name: 'project', id: 'p-1' },
+    { name: 'project', id: 'p-1', tab: 'notes' },
     { name: 'settings' },
     { name: 'objectives' },
     { name: 'objective', id: 'o-1' },

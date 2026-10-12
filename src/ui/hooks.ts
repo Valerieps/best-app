@@ -33,7 +33,8 @@ export type Route =
   /** Section 2. week is an ISO week like 2026-W41; omitted means the default week. */
   | { name: 'reflection'; week?: string }
   | { name: 'projects' }
-  | { name: 'project'; id: string }
+  /** `tab` opens the notes tab; omitted shows the tasks. */
+  | { name: 'project'; id: string; tab?: 'notes' }
   | { name: 'settings' }
   /** Sections 4 and 6. `month` is AAAA-MM; omitted means the month that just ended. */
   | { name: 'objectives' }
@@ -72,7 +73,10 @@ export function parseRoute(hash: string): Route {
     case 'projetos':
       return { name: 'projects' };
     case 'projeto':
-      return parts[1] ? { name: 'project', id: decodeURIComponent(parts[1]) } : { name: 'projects' };
+      if (!parts[1]) return { name: 'projects' };
+      return parts[2] === 'notas'
+        ? { name: 'project', id: decodeURIComponent(parts[1]), tab: 'notes' }
+        : { name: 'project', id: decodeURIComponent(parts[1]) };
     case 'config':
       return { name: 'settings' };
     case 'objetivos':
@@ -109,7 +113,7 @@ export function routeHash(route: Route): string {
     case 'projects':
       return '#/projetos';
     case 'project':
-      return `#/projeto/${encodeURIComponent(route.id)}`;
+      return `#/projeto/${encodeURIComponent(route.id)}${route.tab === 'notes' ? '/notas' : ''}`;
     case 'settings':
       return '#/config';
     case 'objectives':

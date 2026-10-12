@@ -43,13 +43,14 @@ export class DexieStore implements Store {
       const blocks = trans.table('blocks') as Table<Block, string>;
       const events = trans.table('events') as Table<DomainEvent, string>;
       const sections = trans.table('sections') as Table<Section, string>;
+      const priorities = trans.table('priorities') as Table<PriorityList, string>;
       return Dexie.waitFor(
         work({
           blocks: repository(blocks),
           sections: repository(sections),
           projects: repository(trans.table('projects') as Table<Project, string>),
           days: repository(trans.table('days') as Table<DayRecord, string>),
-          priorities: repository(trans.table('priorities') as Table<PriorityList, string>),
+          priorities: repository(priorities),
           reflections: repository(trans.table('reflections') as Table<Reflection, string>),
           settings: repository(trans.table('settings') as Table<Settings, string>),
           reminders: repository(trans.table('reminders') as Table<Reminder, string>),
@@ -60,6 +61,7 @@ export class DexieStore implements Store {
           blocksInSection: (sectionId) => blocks.where('sectionId').equals(sectionId).toArray(),
           blocksOfProject: (projectId) => blocks.where('projectId').equals(projectId).toArray(),
           sectionsOfProject: (projectId) => sections.where('projectId').equals(projectId).toArray(),
+          priorityListsBetween: (fromId, toId) => priorities.where('id').between(fromId, toId, true, true).toArray(),
           appendEvent: async (event) => {
             // `add` (not `put`) so an existing event can never be overwritten.
             await events.add(event);

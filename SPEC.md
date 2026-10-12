@@ -42,7 +42,7 @@ Toda opção do app mora num de três níveis, e cada nível tem um lugar fixo, 
 
 ### 1. Global: a barra de cima, igual em toda tela
 
-- ☰ abre uma gaveta por cima da tela, só com lugares, em grupos: Hoje (nota do dia); Listas (tarefas ativas, tarefas arquivadas, wiki); Planejamento (projetos, objetivos, hábitos); e, no rodapé, Dados e backup e Configurações.
+- ☰ abre uma gaveta por cima da tela, só com lugares, em grupos: Hoje (próximos dias); Listas (tarefas ativas, tarefas arquivadas, wiki); Planejamento (projetos, objetivos, hábitos); e, no rodapé, Dados e backup e Configurações.
 - "Hoje" volta para a nota do dia de qualquer tela.
 - "Rituais" abre a lista dos rituais: checkout de hoje e checkouts pendentes, reflexão semanal, reflexão mensal e "Colocar ordem na casa". Um contador soma os checkouts pendentes e as reflexões disponíveis. Os avisos de reflexão disponível vivem nesse contador, e não em faixas.
 - O status do backup fica sempre visível, como um ponto colorido com um rótulo curto ("Backup 14:32", "Sem backup", "Backup pausado"). Clicar nele abre "Dados e backup". A faixa de backup aparece em todas as telas só enquanto não houver nenhum backup, ou quando o backup estiver bloqueado ou com erro.
@@ -149,6 +149,13 @@ Estes itens já estão decididos e entram depois de uma semana de uso do núcleo
 - A wiki pessoal pode ser ordenada por linha temporal ou por ordem alfabética e tem um campo de busca textual. As notas também podem ser vistas por tipo ou por projeto vinculado.
 - O app pode ser instalado no computador como PWA. A instalação no Android fica para a fase do Android.
 
+### Próximos dias
+
+- Uma tela mostra as tarefas agendadas para hoje e para os 2 próximos dias ativos, uma lista por dia, na ordem dos dias. Entram as tarefas ativas cuja data de intenção é um desses dias.
+- Os dias inativos das configurações são pulados na contagem, como no "dia seguinte" do checkout: numa sexta, a tela mostra sexta, segunda e terça. Uma tarefa agendada para um dia inativo dentro desse intervalo aparece mesmo assim, no dia dela.
+- Nas tarefas, eu tenho as mesmas ações da nota do dia: finalizar pelo checkbox e, no hover, mudar a data de intenção e o prazo e promover a prioridade do dia. Uma tarefa cuja data muda vai para o dia novo, ou sai da tela se o dia novo ficar fora dela.
+- A tela abre pelo menu da esquerda, no grupo Hoje, no lugar da nota do dia. A nota do dia continua no botão "Hoje" da barra de cima.
+
 ## 2. Semana e projetos
 
 Esta parte acrescenta os projetos, que agrupam tarefas, e a reflexão semanal, que fecha a semana e define as prioridades da seguinte.
@@ -164,9 +171,20 @@ Esta parte acrescenta os projetos, que agrupam tarefas, e a reflexão semanal, q
 - Um projeto é uma coleção de tarefas que fazem sentido juntas. Os projetos já existem por baixo dos panos desde o 1a, criados a partir de seções em quadro branco convertidas; esta parte dá a eles funcionalidades próprias.
 - Uma tarefa pode existir sem projeto e se vincula a no máximo um projeto.
 - Projetos só são finalizados manualmente: eu abro o projeto e finalizo.
-- Posso criar uma tarefa direto na página do projeto; ela já nasce vinculada a ele.
-- Cada projeto tem um ícone, que eu escolho numa coleção de ícones estilizados do app.
-- Uma tarefa de projeto está travada quando foi adiada 3 vezes ou mais, ou quando a data de intenção já passou e ela continua ativa. A página do projeto mostra quantas estão travadas.
+- Posso criar uma tarefa direto na página do projeto; ela já nasce vinculada a ele. Ela nasce ativa e sem data, e fica só no projeto: não entra na nota do dia de hoje nem no checkout. Ela só aparece numa nota do dia quando eu der a ela uma data de intenção, como qualquer tarefa. Assim eu monto o backlog do projeto sem precisar triar cada item no fim do dia.
+- Cada projeto tem um ícone, que eu escolho numa coleção de ícones estilizados do app. Enquanto eu não escolho, o projeto mostra a inicial do nome.
+- A lista de projetos é onde eu acompanho os projetos; a página do projeto é onde eu executo. Métricas e visualizações de acompanhamento ficam na lista, e a página do projeto fica focada nas tarefas.
+- A lista de projetos mostra os projetos prioritários em cards, lado a lado, e os outros projetos ativos numa lista com contador, que eu posso recolher. Os projetos finalizados ficam num grupo recolhido. O app lembra se deixei cada grupo aberto ou fechado.
+- Cada projeto ativo mostra na lista um mapa de atividade por dia, no estilo do GitHub: 16 semanas nos cards dos prioritários e 8 semanas nas linhas dos outros. A intensidade da cor indica quanto aconteceu no dia. Não há contagem de dias seguidos.
+- Atividade num projeto é qualquer uma destas coisas: tarefa criada, tarefa finalizada, nota escrita ou seção aberta vinculada a ele.
+- Junto do mapa, a lista mostra quantas tarefas estão ativas e travadas, quantas eu finalizei nas últimas 2 semanas, o objetivo e quando foi a última atividade.
+- A lista não mostra progresso em fração do total ("4 de 10"), porque eu nem sempre sei todas as tarefas que vão compor o projeto. O mapa de atividade mostra o ritmo no lugar.
+- Um projeto ativo está parado quando passa 14 dias sem nenhuma atividade. A lista mostra "Parado há N dias", e o grupo dos outros ativos mostra quantos estão parados mesmo quando está recolhido.
+- Uma tarefa de projeto está travada quando foi adiada 3 vezes ou mais, ou quando a data de intenção já passou e ela continua ativa.
+- Na página do projeto, as tarefas aparecem em quatro grupos, do mais para o menos destacado: travadas, com o motivo e a ação de dar uma nova data à vista; próximos dias, como uma pequena agenda; sem data, mais discretas e num grupo que eu posso recolher; e feitas, recolhidas.
+- Na página do projeto, o objetivo, o status, o número de seções e os recursos ficam numa coluna lateral, que eu posso deixar recolhida ou fixada. A escolha vale para todos os projetos.
+- Posso vincular o objetivo, adicionar o projeto aos prioritários da semana (enquanto houver vaga) e finalizar o projeto tanto pela lista quanto pela página do projeto.
+- Para dar uma data de intenção a uma tarefa do projeto, uso o calendário, como em qualquer tarefa. Não há arrastar e soltar.
 
 ### O que muda no checkout
 
@@ -186,13 +204,22 @@ A reflexão semanal é disparada por um agendamento pré-definido por mim ou man
    - precisão da data de intenção de execução: realizar a tarefa no dia da intenção, independente de quantos adiamentos. O objetivo é estimular adiamentos e abandonos intencionais. Entram na conta só as tarefas finalizadas que tinham data de intenção
    - tarefas executadas
 5. Melhores momentos e o que pode melhorar: textos livres vinculados à semana avaliada
-6. Definição de prioridades da próxima semana
+6. Definição dos projetos prioritários e das tarefas prioritárias da próxima semana
 7. Clicar em "Fechar Semana"
 
 ### Prioridades da semana
 
 - As prioridades da semana são sempre tarefas e formam uma lista separada das prioridades do dia.
 - Na reflexão semanal ou no checkout, eu posso puxar uma prioridade da semana para o dia seguinte.
+
+### Projetos prioritários da semana
+
+- Os projetos prioritários da semana são até 3 projetos e formam uma lista separada das tarefas prioritárias da semana e do dia.
+- Eu os defino na reflexão semanal. Fora dela, posso adicionar um projeto à lista a qualquer momento, enquanto houver vaga, pela lista de projetos ou pela página do projeto. Trocar ou tirar um projeto da lista só é possível na reflexão semanal.
+- Finalizar um projeto prioritário tira o projeto da lista e libera a vaga.
+- Ao fechar a semana, os projetos prioritários continuam na semana seguinte, a menos que eu os troque na reflexão.
+- Na reflexão semanal, eu posso puxar uma tarefa de um projeto prioritário como prioridade da semana seguinte.
+- Exemplo: tenho 3 projetos prioritários. Na reflexão semanal, puxo uma tarefa de um deles como prioridade da semana seguinte, mas só a puxo como prioridade do dia no checkout da quarta-feira.
 
 ## 3. Abertura do dia e ausências
 
@@ -244,7 +271,7 @@ Pular um ritual não bloqueia o app, e qualquer ritual pode ser acionado depois,
 
 ## 4. Mês e objetivos
 
-Esta parte acrescenta os objetivos, as prioridades do mês e a reflexão mensal, onde aparece o raio-x da desconexão entre o dia a dia e os objetivos.
+Esta parte acrescenta os objetivos e a reflexão mensal, onde aparece o raio-x da desconexão entre o dia a dia e os objetivos.
 
 ### Em aberto
 
@@ -264,13 +291,6 @@ Esta parte acrescenta os objetivos, as prioridades do mês e a reflexão mensal,
 - No checkout, as notas de uma seção ganham o destino "vincular a um objetivo ou projeto como recurso". As notas vinculadas como recurso também vão para a wiki, porque as notas não moram num lugar só.
 - Links entram como recurso direto na página do objetivo ou do projeto.
 
-### Prioridades do mês
-
-- As prioridades do mês são sempre projetos e formam uma terceira lista, separada das prioridades da semana e do dia.
-- Elas são definidas na reflexão mensal ou sempre que necessário.
-- Na reflexão semanal, eu posso puxar uma tarefa de um projeto prioritário do mês como prioridade da semana seguinte.
-- Exemplo: tenho 3 projetos como prioridades do mês. Na reflexão semanal, puxo uma tarefa de um deles como prioridade da semana seguinte, mas só a puxo como prioridade do dia no checkout da quarta-feira.
-
 ### Flow de Reflexão Mensal
 
 Quando um mês termina, aparece a opção de reflexão mensal: um dashboard de objetivos e projetos. O aviso aparece na nota do dia a partir do primeiro dia do mês seguinte, se houve atividade no mês, até a reflexão ser fechada.
@@ -279,9 +299,8 @@ Quando um mês termina, aparece a opção de reflexão mensal: um dashboard de o
 - Projetos ativos e o objetivo associado, em duas visões: objetivo como root, expandindo os projetos; ou projeto como root, expandindo o objetivo associado.
 - Posso abrir o projeto para atualizar o andamento dele (milestones talvez).
 - Posso finalizar aqui os projetos ativos, se desejar.
-- Defino os projetos que serão as prioridades do mês.
 - Posso atualizar a lista de projetos e objetivos associados. Projetos podem ficar sem objetivo.
-- Métricas possíveis: quantos blocos não estão relacionados a nenhum projeto e quantos projetos não têm objetivo, revelando uma desconexão entre o dia a dia e o futuro desejado; objetivos com pouco engajamento; e quantas prioridades da semana e do dia pertenciam a um projeto prioritário do mês.
+- Métricas possíveis: quantos blocos não estão relacionados a nenhum projeto e quantos projetos não têm objetivo, revelando uma desconexão entre o dia a dia e o futuro desejado; objetivos com pouco engajamento; e quantas prioridades da semana e do dia pertenciam a um projeto prioritário da semana.
 
 ## 5. Mais tipos de bloco
 

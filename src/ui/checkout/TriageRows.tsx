@@ -145,7 +145,7 @@ export function NotesRowView({
           >
             <option value="">sem vínculo como recurso</option>
             {owners.map((owner) => (
-              <option key={`:`} value={`:`}>
+              <option key={`${owner.ownerType}:${owner.ownerId}`} value={`${owner.ownerType}:${owner.ownerId}`}>
                 Recurso de {owner.label}
               </option>
             ))}
