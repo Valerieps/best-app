@@ -88,9 +88,6 @@ Portuguese; ADRs, code and this file in English.
 - `npm test` - unit tests, including `src/security.test.ts` (no network APIs, no HTML injection)
 - `npm run build` - typecheck and production build into `dist/` (CSP injected)
 - `npm run preview` - serve the production build locally
-- `git` is not on the PATH; use the one bundled with GitHub Desktop:
-  `& "$env:LOCALAPPDATA\GitHubDesktop\app-3.6.7\resources\app\git\cmd\git.exe"` (the version
-  folder changes when GitHub Desktop updates)
 
 ## Deployment
 Cloudflare Pages, from the private repository. Build command `npm run build`, output directory `dist`.
