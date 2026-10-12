@@ -4,8 +4,9 @@ import { createTestContext } from '../test/fixtures';
 import { keepProjectsSeparate, mergeProjects, resolveWhiteboardGroup } from './assistants';
 import { createBlock, createSection, linkSectionToProject, setSectionTitle } from './notebook';
 import { createProject } from './projects';
-import { loadCleanup } from './queries';
+import { loadCleanup, loadCleanupDashboard } from './queries';
 import { applyTriage } from './checkout';
+import { setCleanupLimits } from './settings';
 
 async function unlinkedSection(ctx: Parameters<typeof createSection>[0], title: string) {
   const section = await createSection(ctx, 'general');
@@ -69,5 +70,43 @@ describe('cleanup assistants', () => {
     const b = await createProject(ctx, 'Data Studio');
     await keepProjectsSeparate(ctx, [a.id, b.id]);
     expect((await loadCleanup(reader)).duplicates).toEqual([]);
+  });
+});
+
+describe('cleanup dashboard', () => {
+  it('colors each assistant by its count, most urgent first', async () => {
+    const { ctx, reader } = createTestContext();
+    await createProject(ctx, 'Data Studios');
+    await createProject(ctx, 'DataStudios');
+    await unlinkedSection(ctx, 'Leituras');
+
+    const dashboard = await loadCleanupDashboard(reader, '2026-10-11');
+    expect(dashboard.cards.map((card) => [card.id, card.count, card.status])).toEqual([
+      ['whiteboards', 1, 1],
+      ['duplicates', 1, 1],
+      ['pendingDays', 0, 0],
+    ]);
+  });
+
+  it('uses the limits saved in the settings, and can go back to the defaults', async () => {
+    const { ctx, reader } = createTestContext();
+    await createProject(ctx, 'Data Studios');
+    await createProject(ctx, 'DataStudios');
+    const statusOf = async () => (await loadCleanupDashboard(reader, '2026-10-11')).cards.find((c) => c.id === 'duplicates')!.status;
+
+    await setCleanupLimits(ctx, 'duplicates', [1, 1, 1]);
+    expect(await statusOf()).toBe(3);
+    await setCleanupLimits(ctx, 'whiteboards', [2, 3, 4]);
+    expect((await reader.settings())?.cleanupLimits).toEqual({ duplicates: [1, 1, 1], whiteboards: [2, 3, 4] });
+
+    await setCleanupLimits(ctx, 'duplicates', null);
+    expect(await statusOf()).toBe(1);
+    expect((await reader.settings())?.cleanupLimits).toEqual({ whiteboards: [2, 3, 4] });
+  });
+
+  it('saves limits normalized', async () => {
+    const { ctx, reader } = createTestContext();
+    await setCleanupLimits(ctx, 'pendingDays', [3, 1, 0]);
+    expect((await reader.settings())?.cleanupLimits?.pendingDays).toEqual([3, 3, 3]);
   });
 });

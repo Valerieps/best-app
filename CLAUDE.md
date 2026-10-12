@@ -27,6 +27,8 @@ day-to-day to projects and objectives.
 - `src/domain` - entities, day math, event types. Pure TypeScript, no framework imports.
 - `src/application` - use cases and ports (`Store`, `Clock`, `IdGenerator`), backup format.
 - `src/infrastructure` - Dexie database, store implementation, backup files, browser APIs.
+- `src/dev` - dev-only tools, such as the synthetic data behind "Carregar dados sintéticos" in
+  "Dados e backup" (only in `npm run dev`).
 - `src/ui` - React components. All colors, fonts and spacing live in `src/ui/theme/tokens.css`.
 - `public/` - static files: service worker, manifest, Cloudflare `_headers`.
 

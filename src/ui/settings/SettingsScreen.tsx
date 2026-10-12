@@ -1,8 +1,10 @@
 import { useEffect, useState } from 'react';
 import { setWeeklyReflectionSchedule } from '../../application/reflection';
-import { setActiveDays, setWarmupItems } from '../../application/settings';
+import { setActiveDays, setCleanupLimits, setWarmupItems } from '../../application/settings';
+import { ASSISTANT_IDS, limitsFor, withLimit, type AssistantId, type StatusLimits } from '../../domain/cleanupStatus';
 import { ALL_DAYS } from '../../domain/dayFlow';
-import type { WarmupItem } from '../../domain/entities';
+import type { Settings, WarmupItem } from '../../domain/entities';
+import { ASSISTANT_INFO } from '../cleanup/assistantInfo';
 import { appContext, reader } from '../services';
 import { useLiveQuery } from '../useLiveQuery';
 
@@ -98,7 +100,93 @@ export function SettingsScreen() {
           </div>
         )}
       </section>
+
+      <section className="panel settings__panel">
+        <h2>Colocar ordem na casa</h2>
+        <p className="muted">
+          A cor de cada assistente depende de quantos itens ele encontrou. Sem nenhum item, o cartão fica verde. Escolha a
+          partir de quantos itens ele fica amarelo, laranja e vermelho.
+        </p>
+        <CleanupLimitsEditor saved={settings?.cleanupLimits} />
+      </section>
     </main>
+  );
+}
+
+const LIMIT_COLORS = [
+  { label: 'Amarelo', status: 1 },
+  { label: 'Laranja', status: 2 },
+  { label: 'Vermelho', status: 3 },
+];
+
+/** Limits of the cleanup dashboard colors, one row per assistant. Saved when leaving a field. */
+function CleanupLimitsEditor({ saved }: { saved: Settings['cleanupLimits'] }) {
+  return (
+    <div className="limits__wrap">
+      <table className="limits">
+        <thead>
+          <tr>
+            <th>Assistente</th>
+            {LIMIT_COLORS.map(({ label, status }) => (
+              <th key={label}>
+                <span className={`limits__swatch limits__swatch--${status}`} aria-hidden="true" />
+                {label} a partir de
+              </th>
+            ))}
+            <th />
+          </tr>
+        </thead>
+        <tbody>
+          {ASSISTANT_IDS.map((id) => (
+            <CleanupLimitsRow key={id} id={id} limits={limitsFor(id, saved)} custom={saved?.[id] !== undefined} />
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
+}
+
+function CleanupLimitsRow({ id, limits, custom }: { id: AssistantId; limits: StatusLimits; custom: boolean }) {
+  const { name, unit } = ASSISTANT_INFO[id];
+  const [draft, setDraft] = useState(limits.map(String));
+  // Follow saved changes, including the normalization done when saving.
+  const savedKey = limits.join();
+  useEffect(() => setDraft(savedKey.split(',')), [savedKey]);
+
+  // The edited field wins; the other two move out of its way. An empty field goes back.
+  const save = (index: 0 | 1 | 2) => {
+    const typed = draft[index].trim();
+    const next = typed === '' ? limits : withLimit(limits, index, Number(typed));
+    if (next.join() !== savedKey) void setCleanupLimits(appContext, id, next);
+    else setDraft(savedKey.split(','));
+  };
+
+  return (
+    <tr>
+      <td>{name}</td>
+      {LIMIT_COLORS.map(({ label }, index) => (
+        <td key={label}>
+          <input
+            type="number"
+            min={1}
+            step={1}
+            className="text-input limits__input"
+            value={draft[index]}
+            onChange={(event) => setDraft(draft.map((value, i) => (i === index ? event.target.value : value)))}
+            onBlur={() => save(index as 0 | 1 | 2)}
+            aria-label={`${name}: ${label.toLowerCase()} a partir de quantos ${unit[1]}`}
+          />{' '}
+          <span className="muted">{Number(draft[index]) === 1 ? unit[0] : unit[1]}</span>
+        </td>
+      ))}
+      <td>
+        {custom && (
+          <button type="button" className="link" onClick={() => void setCleanupLimits(appContext, id, null)}>
+            Voltar ao padrão
+          </button>
+        )}
+      </td>
+    </tr>
   );
 }
 

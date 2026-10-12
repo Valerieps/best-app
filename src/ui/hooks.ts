@@ -1,4 +1,5 @@
 import { useEffect, useState, useSyncExternalStore } from 'react';
+import { ASSISTANT_IDS, type AssistantId } from '../domain/cleanupStatus';
 import { isDayKey, toDayKey, type DayKey } from '../domain/day';
 
 /** Today's day key, updated at midnight and when the tab becomes visible again. */
@@ -26,7 +27,8 @@ export type Route =
   | { name: 'archived' }
   /** `section` highlights one wiki entry, e.g. when coming from a task's origin. */
   | { name: 'wiki'; section?: string }
-  | { name: 'cleanup' }
+  /** `assistant` opens one assistant's details; omitted shows the dashboard. */
+  | { name: 'cleanup'; assistant?: AssistantId }
   | { name: 'data' }
   /** Section 2. week is an ISO week like 2026-W41; omitted means the default week. */
   | { name: 'reflection'; week?: string }
@@ -38,6 +40,13 @@ export type Route =
   | { name: 'objective'; id: string }
   | { name: 'habits' }
   | { name: 'monthReflection'; month?: string };
+
+/** Portuguese paths for the cleanup assistants, as the user reads them in the address bar. */
+const ASSISTANT_SLUGS: Record<AssistantId, string> = {
+  pendingDays: 'dias-em-aberto',
+  whiteboards: 'secoes-soltas',
+  duplicates: 'projetos-repetidos',
+};
 
 export function parseRoute(hash: string): Route {
   const parts = hash.replace(/^#\/?/, '').split('/');
@@ -52,8 +61,10 @@ export function parseRoute(hash: string): Route {
       return { name: 'archived' };
     case 'wiki':
       return parts[1] ? { name: 'wiki', section: decodeURIComponent(parts[1]) } : { name: 'wiki' };
-    case 'ordem':
-      return { name: 'cleanup' };
+    case 'ordem': {
+      const assistant = ASSISTANT_IDS.find((id) => ASSISTANT_SLUGS[id] === parts[1]);
+      return assistant ? { name: 'cleanup', assistant } : { name: 'cleanup' };
+    }
     case 'dados':
       return { name: 'data' };
     case 'reflexao':
@@ -90,7 +101,7 @@ export function routeHash(route: Route): string {
     case 'wiki':
       return route.section ? `#/wiki/${encodeURIComponent(route.section)}` : '#/wiki';
     case 'cleanup':
-      return '#/ordem';
+      return route.assistant ? `#/ordem/${ASSISTANT_SLUGS[route.assistant]}` : '#/ordem';
     case 'data':
       return '#/dados';
     case 'reflection':

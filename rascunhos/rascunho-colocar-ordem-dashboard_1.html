@@ -1,0 +1,245 @@
+<!doctype html>
+<html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Colocar ordem na casa - dashboard</title><style>
+/* Palette from src/ui/theme/tokens.css, plus a green-to-red severity scale proposed here. */
+:root {
+  --bg: #f4f2ed; --surface: #ffffff; --surface-soft: #faf8f4;
+  --text: #1f1f1f; --muted: #85817a; --border: #e4e0d8; --border-strong: #cfcac0;
+  --accent: #1c1c1c;
+  --whiteboard-bg: #fbebd3; --whiteboard-text: #8a5a12;
+  --project-bg: #ece9fb; --project-text: #4b3fb3;
+  --meeting-bg: #e7efff; --meeting-text: #2459c9;
+
+  /* Severity: 0 em dia, 1 atenção, 2 acumulando, 3 urgente */
+  --sev0-bg: #eef6ec; --sev0-border: #cfe5ca; --sev0-strong: #3d7a35;
+  --sev1-bg: #fbf5dc; --sev1-border: #eedf9f; --sev1-strong: #7d6200;
+  --sev2-bg: #fcecdc; --sev2-border: #f1c9a0; --sev2-strong: #a2520f;
+  --sev3-bg: #fdecea; --sev3-border: #f0a8a0; --sev3-strong: #b42318;
+  --radius: 10px;
+}
+* { box-sizing: border-box; }
+body { margin: 0; padding: 32px 16px; background: var(--bg); color: var(--text);
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; font-size: 14px; }
+.caption { max-width: 880px; margin: 0 auto 10px; font-size: 12px; color: var(--muted); line-height: 1.5; }
+.frame { max-width: 880px; margin: 0 auto 40px; background: var(--bg); border: 1px solid var(--border-strong);
+  border-radius: 12px; overflow: hidden; }
+button { font: inherit; font-size: 13px; background: var(--surface); border: 1px solid var(--border-strong);
+  border-radius: 8px; padding: 6px 12px; color: var(--text); cursor: pointer; }
+button.primary { background: var(--accent); color: #fff; border-color: var(--accent); }
+.topbar { display: flex; align-items: center; gap: 12px; padding: 10px 16px; background: var(--surface);
+  border-bottom: 1px solid var(--border); }
+.topbar .brand { flex: 1; font-weight: 600; }
+.page { padding: 24px 28px 28px; }
+.page h1 { font-size: 22px; font-weight: 600; margin: 0 0 4px; }
+.lead { color: var(--muted); margin: 0 0 20px; }
+.muted { color: var(--muted); }
+.small { font-size: 12px; }
+
+/* Summary strip: how many assistants per level */
+.summary { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 20px; }
+.pill { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; padding: 3px 10px;
+  border-radius: 999px; border: 1px solid; }
+.dot { width: 8px; height: 8px; border-radius: 50%; background: currentColor; }
+
+/* Tiles */
+.grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 12px; }
+.tile { position: relative; display: flex; flex-direction: column; gap: 6px; padding: 14px 16px 14px;
+  border-radius: var(--radius); border: 1px solid; text-align: left; min-height: 150px; cursor: pointer;
+  font: inherit; color: var(--text); }
+.tile:hover { filter: brightness(0.98); }
+.tile:focus-visible { outline: 2px solid #3b6fd8; outline-offset: 2px; }
+.tile .name { font-size: 13px; font-weight: 600; }
+.tile .big { font-size: 44px; line-height: 1; font-weight: 700; letter-spacing: -1px; }
+.tile .unit { font-size: 13px; font-weight: 500; margin-left: 4px; letter-spacing: 0; }
+.tile .why { font-size: 12px; color: #5f5b55; line-height: 1.45; flex: 1; }
+.tile .level { display: inline-flex; align-items: center; gap: 6px; font-size: 11px; font-weight: 600;
+  text-transform: uppercase; letter-spacing: 0.4px; }
+.tile .go { position: absolute; top: 12px; right: 14px; font-size: 16px; opacity: 0.5; }
+.sev0 { background: var(--sev0-bg); border-color: var(--sev0-border); } .sev0 .big, .sev0 .level { color: var(--sev0-strong); }
+.sev1 { background: var(--sev1-bg); border-color: var(--sev1-border); } .sev1 .big, .sev1 .level { color: var(--sev1-strong); }
+.sev2 { background: var(--sev2-bg); border-color: var(--sev2-border); } .sev2 .big, .sev2 .level { color: var(--sev2-strong); }
+.sev3 { background: var(--sev3-bg); border-color: var(--sev3-border); } .sev3 .big, .sev3 .level { color: var(--sev3-strong); }
+.pill.sev0 { color: var(--sev0-strong); } .pill.sev1 { color: var(--sev1-strong); }
+.pill.sev2 { color: var(--sev2-strong); } .pill.sev3 { color: var(--sev3-strong); }
+
+/* Assistants with nothing to clean: smaller, quieter tiles */
+.ok-title { margin: 22px 0 8px; font-size: 12px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: 0.4px; }
+.grid.ok { grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 8px; }
+.grid.ok .tile { min-height: 0; flex-direction: row; align-items: center; gap: 10px; padding: 10px 12px; cursor: default; }
+.grid.ok .big { font-size: 22px; }
+.grid.ok .name { font-weight: 500; }
+
+/* Detail screen */
+.back { display: inline-flex; gap: 6px; align-items: center; font-size: 13px; color: var(--muted); margin-bottom: 12px; }
+.detail-head { display: flex; align-items: center; gap: 16px; padding: 16px 18px; border-radius: var(--radius);
+  border: 1px solid; margin-bottom: 16px; flex-wrap: wrap; }
+.detail-head .big { font-size: 36px; font-weight: 700; line-height: 1; }
+.detail-head .grow { flex: 1; min-width: 220px; }
+.detail-head h1 { font-size: 20px; margin: 0 0 2px; }
+.card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; }
+.row { display: flex; gap: 12px; padding: 12px 16px; border-bottom: 1px solid var(--border); align-items: flex-start; flex-wrap: wrap; }
+.row:last-child { border-bottom: none; }
+.row .grow { flex: 1; min-width: 240px; }
+.row .title { font-weight: 600; }
+.tag { font-size: 11px; padding: 1px 8px; border-radius: 6px; white-space: nowrap; }
+.tag.wb { background: var(--whiteboard-bg); color: var(--whiteboard-text); }
+.tag.meet { background: var(--meeting-bg); color: var(--meeting-text); }
+.tag.proj { background: var(--project-bg); color: var(--project-text); }
+.dates { font-size: 12px; color: var(--muted); margin-top: 4px; }
+.seg { display: inline-flex; border: 1px solid var(--border-strong); border-radius: 8px; overflow: hidden; font-size: 12px; background: var(--surface); }
+.seg span { padding: 4px 10px; border-right: 1px solid var(--border); color: #5f5b55; white-space: nowrap; }
+.seg span:last-child { border-right: none; }
+.seg span.on { background: var(--accent); color: #fff; }
+.footer { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 12px 16px;
+  background: var(--surface-soft); border-top: 1px solid var(--border); flex-wrap: wrap; }
+
+.legend { max-width: 880px; margin: 0 auto 40px; background: var(--surface); border: 1px solid var(--border);
+  border-radius: 12px; padding: 16px 20px; }
+.legend h2 { font-size: 14px; margin: 0 0 10px; }
+.legend table { border-collapse: collapse; width: 100%; font-size: 12px; }
+.legend th, .legend td { text-align: left; padding: 6px 8px; border-bottom: 1px solid var(--border); vertical-align: top; }
+.legend th { color: var(--muted); font-weight: 600; }
+.legend td.c0 { color: var(--sev0-strong); } .legend td.c1 { color: var(--sev1-strong); }
+.legend td.c2 { color: var(--sev2-strong); } .legend td.c3 { color: var(--sev3-strong); }
+.legend .wrap { overflow-x: auto; }
+@media (max-width: 560px) { .page { padding: 18px 16px; } .tile .big { font-size: 36px; } }
+</style></head>
+<body>
+
+<div class="caption">
+  Colocar ordem na casa · dashboard. Cada assistente vira um cartão com um número grande e uma cor de verde a vermelho,
+  conforme a gravidade. Os cartões vão do mais grave para o mais leve. A cor sempre vem com uma palavra (Urgente,
+  Acumulando, Atenção, Em dia), para não depender só da cor. Os assistentes sem nada para limpar ficam numa faixa
+  menor, embaixo. Números tirados dos dados sintéticos.
+</div>
+<div class="frame">
+  <div class="topbar"><span>☰</span><span class="brand">Best App</span><button>Hoje</button><button>Rituais</button></div>
+  <div class="page">
+    <h1>Colocar ordem na casa</h1>
+    <p class="lead">Escolha um assistente para ver os detalhes e as ações sugeridas.</p>
+
+    <div class="summary">
+      <span class="pill sev3" style="background:var(--sev3-bg);border-color:var(--sev3-border)"><span class="dot"></span>1 urgente</span>
+      <span class="pill sev2" style="background:var(--sev2-bg);border-color:var(--sev2-border)"><span class="dot"></span>2 acumulando</span>
+      <span class="pill sev1" style="background:var(--sev1-bg);border-color:var(--sev1-border)"><span class="dot"></span>3 com atenção</span>
+      <span class="pill sev0" style="background:var(--sev0-bg);border-color:var(--sev0-border)"><span class="dot"></span>5 em dia</span>
+    </div>
+
+    <div class="grid">
+      <button class="tile sev3"><span class="go">›</span>
+        <span class="level"><span class="dot"></span>Urgente</span>
+        <span class="name">Dias pendentes</span>
+        <span class="big">3<span class="unit">dias</span></span>
+        <span class="why">Sexta, sábado e ontem sem checkout. Uma tarefa tem prazo vencido.</span>
+      </button>
+      <button class="tile sev2"><span class="go">›</span>
+        <span class="level"><span class="dot"></span>Acumulando</span>
+        <span class="name">Tarefas paradas</span>
+        <span class="big">7<span class="unit">tarefas</span></span>
+        <span class="why">5 sem data há mais de 2 semanas, 2 adiadas 3 vezes ou mais.</span>
+      </button>
+      <button class="tile sev2"><span class="go">›</span>
+        <span class="level"><span class="dot"></span>Acumulando</span>
+        <span class="name">Projetos duplicados</span>
+        <span class="big">3<span class="unit">pares</span></span>
+        <span class="why">“Reforma da cozinha” e “Reforma da cosinha”, e mais 2.</span>
+      </button>
+      <button class="tile sev1"><span class="go">›</span>
+        <span class="level"><span class="dot"></span>Atenção</span>
+        <span class="name">Quadros brancos</span>
+        <span class="big">4<span class="unit">grupos</span></span>
+        <span class="why">8 seções sem projeto. “Daily do App de agendamento” se repetiu 3 vezes.</span>
+      </button>
+      <button class="tile sev1"><span class="go">›</span>
+        <span class="level"><span class="dot"></span>Atenção</span>
+        <span class="name">Projetos parados</span>
+        <span class="big">1<span class="unit">projeto</span></span>
+        <span class="why">“Festa de fim-de-ano” está sem tarefa feita há 3 semanas.</span>
+      </button>
+      <button class="tile sev1"><span class="go">›</span>
+        <span class="level"><span class="dot"></span>Atenção</span>
+        <span class="name">Arquivo</span>
+        <span class="big">1<span class="unit">tarefa</span></span>
+        <span class="why">“Avaliar Firebase no lugar do Postgres” está arquivada há 1 mês.</span>
+      </button>
+    </div>
+
+    <div class="ok-title">Em dia</div>
+    <div class="grid ok">
+      <div class="tile sev0"><span class="big">0</span><span class="name">Prioridades encalhadas</span></div>
+      <div class="tile sev0"><span class="big">0</span><span class="name">Warm up</span></div>
+      <div class="tile sev0"><span class="big">0</span><span class="name">Objetivos</span></div>
+      <div class="tile sev0"><span class="big">0</span><span class="name">Compromissos</span></div>
+      <div class="tile sev0"><span class="big">0</span><span class="name">Hábitos</span></div>
+    </div>
+  </div>
+</div>
+
+<div class="caption">
+  Depois de clicar em um cartão: a tela do assistente. O cabeçalho repete o número e a cor do cartão; abaixo, os itens
+  com a ação sugerida já selecionada, como no checkout em lote. “Aceitar sugestões” confirma tudo e volta ao dashboard,
+  com o cartão atualizado.
+</div>
+<div class="frame">
+  <div class="topbar"><span>☰</span><span class="brand">Best App</span><button>Hoje</button><button>Rituais</button></div>
+  <div class="page">
+    <div class="back">‹ Colocar ordem na casa</div>
+    <div class="detail-head sev1">
+      <span class="big" style="color:var(--sev1-strong)">4</span>
+      <div class="grow">
+        <h1>Quadros brancos</h1>
+        <div class="small muted">Seções que ficaram sem projeto, agrupadas pelos títulos repetidos.</div>
+      </div>
+      <span class="level small" style="color:var(--sev1-strong);font-weight:600;text-transform:uppercase;letter-spacing:.4px">● Atenção</span>
+    </div>
+
+    <div class="card">
+      <div class="row">
+        <div class="grow">
+          <div class="title">“Daily do App de agendamento” <span class="tag meet">Reunião</span></div>
+          <div class="dates">3 seções · 22/09, 23/09 e 29/09 · cita o projeto <span class="tag proj">App de agendamento</span></div>
+        </div>
+        <div class="seg"><span>Converter em projeto</span><span class="on">Vincular a App de agendamento</span><span>Deixar como está</span></div>
+      </div>
+      <div class="row">
+        <div class="grow">
+          <div class="title">“Ideias de decoração” <span class="tag wb">quadro branco</span></div>
+          <div class="dates">2 seções · 15/09 e 30/09</div>
+        </div>
+        <div class="seg"><span class="on">Converter em projeto</span><span>Vincular a…</span><span>Deixar como está</span></div>
+      </div>
+      <div class="row">
+        <div class="grow">
+          <div class="title">“Orçamentos Marcenaria” <span class="tag wb">quadro branco</span></div>
+          <div class="dates">2 seções · 18/09 e 25/09</div>
+        </div>
+        <div class="seg"><span class="on">Converter em projeto</span><span>Vincular a…</span><span>Deixar como está</span></div>
+      </div>
+      <div class="row">
+        <div class="grow">
+          <div class="title">“Leituras sobre acessibilidade” <span class="tag wb">quadro branco</span></div>
+          <div class="dates">1 seção · 02/10</div>
+        </div>
+        <div class="seg"><span>Converter em projeto</span><span>Vincular a…</span><span class="on">Deixar como está</span></div>
+      </div>
+      <div class="footer">
+        <span class="small muted">4 grupos · 3 com sugestão de mudança · nada é apagado</span>
+        <span style="display:flex;gap:8px"><button>Voltar</button><button class="primary">Aceitar sugestões</button></span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="legend">
+  <h2>Proposta de limites para as cores (para você decidir)</h2>
+  <div class="wrap"><table>
+    <tr><th>Assistente</th><th>Conta</th><th class="c0">Em dia</th><th class="c1">Atenção</th><th class="c2">Acumulando</th><th class="c3">Urgente</th></tr>
+    <tr><td>Dias pendentes</td><td>dias sem checkout</td><td class="c0">0</td><td class="c1">1</td><td class="c2">2</td><td class="c3">3 ou mais</td></tr>
+    <tr><td>Tarefas paradas</td><td>tarefas</td><td class="c0">0</td><td class="c1">1 a 3</td><td class="c2">4 a 9</td><td class="c3">10 ou mais</td></tr>
+    <tr><td>Quadros brancos</td><td>grupos</td><td class="c0">0</td><td class="c1">1 a 4</td><td class="c2">5 a 9</td><td class="c3">10 ou mais</td></tr>
+    <tr><td>Projetos duplicados</td><td>pares</td><td class="c0">0</td><td class="c1">1</td><td class="c2">2 a 3</td><td class="c3">4 ou mais</td></tr>
+    <tr><td>Arquivo, projetos parados e os demais</td><td>itens</td><td class="c0">0</td><td class="c1">1 a 2</td><td class="c2">3 a 5</td><td class="c3">6 ou mais</td></tr>
+  </table></div>
+</div>
+
+</body></html>

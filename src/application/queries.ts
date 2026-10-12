@@ -4,6 +4,7 @@ import {
   type DuplicateGroup,
   type WhiteboardGroup,
 } from '../domain/assistants';
+import { assistantCards, type AssistantCard } from '../domain/cleanupStatus';
 import { addDays, fromDayKey, type DayKey } from '../domain/day';
 import { buildDayNote, type DayNoteSection } from '../domain/dayNote';
 import type {
@@ -192,6 +193,25 @@ export async function loadCleanup(reader: Reader): Promise<CleanupView> {
     whiteboards: findWhiteboardGroups(sections, projects),
     duplicates: findDuplicateProjects(projects),
   };
+}
+
+export interface CleanupDashboard extends CleanupView {
+  pendingDays: DayKey[];
+  /** One card per assistant, most urgent first. */
+  cards: AssistantCard[];
+}
+
+/** The "Colocar ordem na casa" dashboard: each assistant's findings and color. */
+export async function loadCleanupDashboard(reader: Reader, today: DayKey): Promise<CleanupDashboard> {
+  const cleanup = await loadCleanup(reader);
+  const pendingDays = await loadPendingDays(reader, today);
+  const settings = await reader.settings();
+  const counts = {
+    pendingDays: pendingDays.length,
+    whiteboards: cleanup.whiteboards.length,
+    duplicates: cleanup.duplicates.length,
+  };
+  return { ...cleanup, pendingDays, cards: assistantCards(counts, settings?.cleanupLimits) };
 }
 
 export interface MenuCounts {

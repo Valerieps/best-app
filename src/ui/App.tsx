@@ -84,7 +84,7 @@ export function App() {
       {route.name === 'active' && <ActiveTasksScreen today={today} />}
       {route.name === 'archived' && <ArchivedTasksScreen today={today} />}
       {route.name === 'wiki' && <WikiScreen focus={route.section} />}
-      {route.name === 'cleanup' && <CleanupScreen today={today} />}
+      {route.name === 'cleanup' && <CleanupScreen today={today} assistant={route.assistant} />}
       {route.name === 'reflection' && <ReflectionScreen weekKey={route.week} today={today} />}
       {route.name === 'projects' && <ProjectsScreen />}
       {route.name === 'project' && <ProjectScreen id={route.id} today={today} />}

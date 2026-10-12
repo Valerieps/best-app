@@ -41,6 +41,20 @@
   --color-danger-bg: #fdecea;
   --color-danger-border: #f0a8a0;
 
+  /* Cleanup dashboard status, from em dia (0) to urgente (3) */
+  --color-status0-bg: #eef6ec;
+  --color-status0-border: #cfe5ca;
+  --color-status0-strong: #3d7a35;
+  --color-status1-bg: #fbf5dc;
+  --color-status1-border: #eedf9f;
+  --color-status1-strong: #b38900;
+  --color-status2-bg: #fcecdc;
+  --color-status2-border: #f1c9a0;
+  --color-status2-strong: #c4570e;
+  --color-status3-bg: #fdecea;
+  --color-status3-border: #f0a8a0;
+  --color-status3-strong: #b42318;
+
   /* Fireworks */
   --color-firework-1: #e8a33d;
   --color-firework-2: #8b7fe0;

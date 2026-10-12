@@ -157,3 +157,15 @@ Technical decisions that fill gaps in `SPEC.md`. Product and business decisions 
 **Date:** 2026-10-11
 **Decision:** The monthly "raio-x" shows active projects without objective, habits without objective, and how many day priorities of the month were tasks of month-priority projects. "Blocos sem projeto" (blocks vs. tasks is undecided) and "objetivos com pouco engajamento" (no definition yet) are not computed; the screen says so. The week-priority half of the last metric waits for week priorities.
 **Why:** Computing a metric with a guessed definition would show numbers the user might trust.
+
+## ADR-027: Synthetic data is played through the real use cases, dev only
+
+**Date:** 2026-10-12
+**Decision:** `src/dev/syntheticData.ts` builds about five weeks of use (a party, a software project and a kitchen remodel) by running the real use cases against an in-memory `MemoryStore`, with a clock that walks through the past relative to today. The result is a regular backup file, loaded by a "Carregar dados sintéticos" button in "Dados e backup" that only exists under `import.meta.env.DEV` and goes through the normal import dialog (loss warning, undo). The generator is imported dynamically, so it stays out of the production build. A test imports the result and checks each scenario the checkout and the assistants should show.
+**Why:** Writing records by hand would drift from the use cases (events, postponement counts, triage state); running them keeps the data consistent with what the app would write. Dates relative to today keep the pending days and "há semanas" scenarios true whenever the data is loaded. Reusing the import flow means no new way to replace data, and it can be undone.
+
+## ADR-028: Cleanup dashboard status is computed, with limits in the settings
+
+**Date:** 2026-10-12
+**Decision:** The color of each cleanup assistant is computed on read (`domain/cleanupStatus.ts`) from the number of items it finds, compared with three limits (yellow, orange, red). The limits live in the optional `Settings.cleanupLimits` field, one entry per assistant; a missing entry means the default. Since the field is optional and `settings` has no index on it, the database and backup stay at version 5. Editing a limit in the settings makes the edited value win and moves the other two out of its way. Each assistant opens on its own route (`#/ordem/dias-em-aberto` and so on), so the back button returns to the dashboard.
+**Why:** A stored status would go stale whenever data changes; counting is cheap. Keeping the limits as settings means they travel with the backup.

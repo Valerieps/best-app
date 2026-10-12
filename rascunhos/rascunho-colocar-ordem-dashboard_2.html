@@ -1,0 +1,155 @@
+<!doctype html>
+<html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Colocar ordem na casa - dashboard v2</title><style>
+/* Palette from src/ui/theme/tokens.css, plus a green-to-red severity scale proposed here. */
+:root {
+  --bg: #f4f2ed; --surface: #ffffff; --surface-soft: #faf8f4;
+  --text: #1f1f1f; --muted: #85817a; --border: #e4e0d8; --border-strong: #cfcac0;
+  --accent: #1c1c1c;
+  --whiteboard-bg: #fbebd3; --whiteboard-text: #8a5a12;
+  --project-bg: #ece9fb; --project-text: #4b3fb3;
+  --meeting-bg: #e7efff; --meeting-text: #2459c9;
+
+  /* Severity: 0 em dia, 1 atenção, 2 acumulando, 3 urgente */
+  --sev0-bg: #eef6ec; --sev0-border: #cfe5ca; --sev0-strong: #3d7a35;
+  --sev1-bg: #fbf5dc; --sev1-border: #eedf9f; --sev1-strong: #b38900;
+  --sev2-bg: #fcecdc; --sev2-border: #f1c9a0; --sev2-strong: #c4570e;
+  --sev3-bg: #fdecea; --sev3-border: #f0a8a0; --sev3-strong: #b42318;
+  --radius: 12px;
+}
+* { box-sizing: border-box; }
+body { margin: 0; padding: 32px 16px; background: var(--bg); color: var(--text);
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; font-size: 14px; }
+.caption { max-width: 880px; margin: 0 auto 10px; font-size: 12px; color: var(--muted); line-height: 1.5; }
+.frame { max-width: 880px; margin: 0 auto 40px; background: var(--bg); border: 1px solid var(--border-strong);
+  border-radius: 12px; overflow: hidden; }
+button { font: inherit; font-size: 13px; background: var(--surface); border: 1px solid var(--border-strong);
+  border-radius: 8px; padding: 6px 12px; color: var(--text); cursor: pointer; }
+button.primary { background: var(--accent); color: #fff; border-color: var(--accent); }
+.topbar { display: flex; align-items: center; gap: 12px; padding: 10px 16px; background: var(--surface);
+  border-bottom: 1px solid var(--border); }
+.topbar .brand { flex: 1; font-weight: 600; }
+.page { padding: 24px 28px 32px; }
+.page h1 { font-size: 22px; font-weight: 600; margin: 0 0 20px; }
+.muted { color: var(--muted); }
+.small { font-size: 12px; }
+svg { width: 26px; height: 26px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+
+/* Tiles: icon, name and color only */
+.grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 12px; }
+.tile { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px;
+  aspect-ratio: 1 / 0.8; padding: 16px 12px; border-radius: var(--radius); border: 1px solid;
+  font: inherit; font-size: 14px; font-weight: 600; color: var(--text); text-align: center; cursor: pointer; }
+.tile:hover { filter: brightness(0.97); }
+.tile:focus-visible { outline: 2px solid #3b6fd8; outline-offset: 2px; }
+.icon { display: grid; place-items: center; width: 52px; height: 52px; border-radius: 50%; color: #fff; }
+.sev0 { background: var(--sev0-bg); border-color: var(--sev0-border); } .sev0 .icon { background: var(--sev0-strong); }
+.sev1 { background: var(--sev1-bg); border-color: var(--sev1-border); } .sev1 .icon { background: var(--sev1-strong); }
+.sev2 { background: var(--sev2-bg); border-color: var(--sev2-border); } .sev2 .icon { background: var(--sev2-strong); }
+.sev3 { background: var(--sev3-bg); border-color: var(--sev3-border); } .sev3 .icon { background: var(--sev3-strong); }
+
+/* Color scale shown in the caption */
+.scale { display: inline-flex; gap: 4px; vertical-align: middle; margin: 0 4px; }
+.scale i { width: 14px; height: 10px; border-radius: 3px; display: inline-block; }
+
+/* Detail screen */
+.back { display: inline-flex; gap: 6px; align-items: center; font-size: 13px; color: var(--muted); margin-bottom: 12px; }
+.detail-head { display: flex; align-items: center; gap: 14px; padding: 14px 16px; border-radius: var(--radius);
+  border: 1px solid; margin-bottom: 16px; }
+.detail-head .icon { width: 44px; height: 44px; }
+.detail-head h1 { font-size: 20px; margin: 0; }
+.card { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; overflow: hidden; }
+.row { display: flex; gap: 12px; padding: 12px 16px; border-bottom: 1px solid var(--border); align-items: center; flex-wrap: wrap; }
+.row:last-child { border-bottom: none; }
+.row .grow { flex: 1; min-width: 220px; }
+.row .title { font-weight: 600; }
+.dates { font-size: 12px; color: var(--muted); margin-top: 2px; }
+.seg { display: inline-flex; border: 1px solid var(--border-strong); border-radius: 8px; overflow: hidden; font-size: 12px; background: var(--surface); }
+.seg span { padding: 4px 10px; border-right: 1px solid var(--border); color: #5f5b55; white-space: nowrap; }
+.seg span:last-child { border-right: none; }
+.seg span.on { background: var(--accent); color: #fff; }
+.footer { display: flex; justify-content: flex-end; gap: 8px; padding: 12px 16px;
+  background: var(--surface-soft); border-top: 1px solid var(--border); flex-wrap: wrap; }
+@media (max-width: 560px) { .page { padding: 18px 16px; } .grid { grid-template-columns: repeat(2, 1fr); } }
+</style></head>
+<body>
+
+<!-- Inline icons, drawn here so the draft works offline. -->
+<svg style="display:none" xmlns="http://www.w3.org/2000/svg">
+  <symbol id="i-calendar" viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></symbol>
+  <symbol id="i-note" viewBox="0 0 24 24"><path d="M5 3h10l4 4v14H5z"/><path d="M15 3v4h4M8 12h8M8 16h5"/></symbol>
+  <symbol id="i-hourglass" viewBox="0 0 24 24"><path d="M6 3h12M6 21h12M7 3c0 5 10 6 10 9s-10 4-10 9M17 3c0 5-10 6-10 9s10 4 10 9"/></symbol>
+  <symbol id="i-copy" viewBox="0 0 24 24"><rect x="8" y="8" width="13" height="13" rx="2"/><path d="M16 8V5a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h3"/></symbol>
+  <symbol id="i-archive" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="5" rx="1"/><path d="M5 9v11h14V9M10 13h4"/></symbol>
+  <symbol id="i-pause" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M10 9v6M14 9v6"/></symbol>
+  <symbol id="i-flag" viewBox="0 0 24 24"><path d="M5 21V4M5 4h12l-2 4 2 4H5"/></symbol>
+  <symbol id="i-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M2 12h2M20 12h2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></symbol>
+  <symbol id="i-target" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1"/></symbol>
+  <symbol id="i-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></symbol>
+  <symbol id="i-repeat" viewBox="0 0 24 24"><path d="M17 2l3 3-3 3"/><path d="M4 11V9a4 4 0 0 1 4-4h12M7 22l-3-3 3-3"/><path d="M20 13v2a4 4 0 0 1-4 4H4"/></symbol>
+</svg>
+
+<div class="caption">
+  Colocar ordem na casa · dashboard, versão 2. Cada cartão tem só o ícone, o nome do assistente e a cor do estado
+  <span class="scale"><i style="background:var(--sev0-strong)"></i><i style="background:var(--sev1-strong)"></i><i style="background:var(--sev2-strong)"></i><i style="background:var(--sev3-strong)"></i></span>
+  (de em dia a urgente). Os cartões vão do mais grave para o mais leve. O estado continua no leitor de tela e no
+  texto que aparece ao parar o mouse sobre o cartão. Cores tiradas dos dados sintéticos.
+</div>
+<div class="frame">
+  <div class="topbar"><span>☰</span><span class="brand">Best App</span><button>Hoje</button><button>Rituais</button></div>
+  <div class="page">
+    <h1>Colocar ordem na casa</h1>
+    <div class="grid">
+      <button class="tile sev3" title="Urgente" aria-label="Dias em aberto, urgente"><span class="icon"><svg><use href="#i-calendar"/></svg></span>Dias em aberto</button>
+      <button class="tile sev2" title="Acumulando" aria-label="Tarefas esquecidas, acumulando"><span class="icon"><svg><use href="#i-hourglass"/></svg></span>Tarefas esquecidas</button>
+      <button class="tile sev2" title="Acumulando" aria-label="Projetos repetidos, acumulando"><span class="icon"><svg><use href="#i-copy"/></svg></span>Projetos repetidos</button>
+      <button class="tile sev1" title="Atenção" aria-label="Seções soltas, atenção"><span class="icon"><svg><use href="#i-note"/></svg></span>Seções soltas</button>
+      <button class="tile sev1" title="Atenção" aria-label="Projetos parados, atenção"><span class="icon"><svg><use href="#i-pause"/></svg></span>Projetos parados</button>
+      <button class="tile sev1" title="Atenção" aria-label="Arquivo antigo, atenção"><span class="icon"><svg><use href="#i-archive"/></svg></span>Arquivo antigo</button>
+      <button class="tile sev0" title="Em dia" aria-label="Prioridades travadas, em dia"><span class="icon"><svg><use href="#i-flag"/></svg></span>Prioridades travadas</button>
+      <button class="tile sev0" title="Em dia" aria-label="Warm up, em dia"><span class="icon"><svg><use href="#i-sun"/></svg></span>Warm up</button>
+      <button class="tile sev0" title="Em dia" aria-label="Objetivos soltos, em dia"><span class="icon"><svg><use href="#i-target"/></svg></span>Objetivos soltos</button>
+      <button class="tile sev0" title="Em dia" aria-label="Compromissos passados, em dia"><span class="icon"><svg><use href="#i-clock"/></svg></span>Compromissos passados</button>
+      <button class="tile sev0" title="Em dia" aria-label="Hábitos sumidos, em dia"><span class="icon"><svg><use href="#i-repeat"/></svg></span>Hábitos sumidos</button>
+    </div>
+  </div>
+</div>
+
+<div class="caption">
+  Depois de clicar em “Seções soltas”: a tela do assistente, com a mesma cor e o mesmo ícone do cartão. Os detalhes e
+  as ações sugeridas aparecem só aqui.
+</div>
+<div class="frame">
+  <div class="topbar"><span>☰</span><span class="brand">Best App</span><button>Hoje</button><button>Rituais</button></div>
+  <div class="page">
+    <div class="back">‹ Colocar ordem na casa</div>
+    <div class="detail-head sev1">
+      <span class="icon"><svg><use href="#i-note"/></svg></span>
+      <div>
+        <h1>Seções soltas</h1>
+        <div class="small muted">Seções que ficaram sem projeto, agrupadas pelos títulos repetidos.</div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="row">
+        <div class="grow"><div class="title">“Daily do App de agendamento”</div><div class="dates">3 seções · 22/09, 23/09 e 29/09</div></div>
+        <div class="seg"><span>Converter em projeto</span><span class="on">Vincular a App de agendamento</span><span>Deixar como está</span></div>
+      </div>
+      <div class="row">
+        <div class="grow"><div class="title">“Ideias de decoração”</div><div class="dates">2 seções · 15/09 e 30/09</div></div>
+        <div class="seg"><span class="on">Converter em projeto</span><span>Vincular a…</span><span>Deixar como está</span></div>
+      </div>
+      <div class="row">
+        <div class="grow"><div class="title">“Orçamentos Marcenaria”</div><div class="dates">2 seções · 18/09 e 25/09</div></div>
+        <div class="seg"><span class="on">Converter em projeto</span><span>Vincular a…</span><span>Deixar como está</span></div>
+      </div>
+      <div class="row">
+        <div class="grow"><div class="title">“Leituras sobre acessibilidade”</div><div class="dates">1 seção · 02/10</div></div>
+        <div class="seg"><span>Converter em projeto</span><span>Vincular a…</span><span class="on">Deixar como está</span></div>
+      </div>
+      <div class="footer"><button>Voltar</button><button class="primary">Aceitar sugestões</button></div>
+    </div>
+  </div>
+</div>
+
+</body></html>

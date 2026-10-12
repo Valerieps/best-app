@@ -11,6 +11,9 @@ describe('routes', () => {
     { name: 'wiki' },
     { name: 'wiki', section: 'abc-123' },
     { name: 'cleanup' },
+    { name: 'cleanup', assistant: 'pendingDays' },
+    { name: 'cleanup', assistant: 'whiteboards' },
+    { name: 'cleanup', assistant: 'duplicates' },
     { name: 'data' },
     { name: 'reflection' },
     { name: 'reflection', week: '2026-W41' },
@@ -30,5 +33,6 @@ describe('routes', () => {
     expect(parseRoute('')).toEqual({ name: 'day' });
     expect(parseRoute('#/nada')).toEqual({ name: 'day' });
     expect(parseRoute('#/checkout/ontem')).toEqual({ name: 'day' });
+    expect(parseRoute('#/ordem/nada')).toEqual({ name: 'cleanup' });
   });
 });

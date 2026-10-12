@@ -1,6 +1,7 @@
 import { useRef, type ChangeEvent } from 'react';
 import type { AutoBackupState } from '../../infrastructure/autoBackup';
 import { getImportSnapshotDate, getLastBackupAt } from '../../infrastructure/backupRepository';
+import { randomIds } from '../../infrastructure/browser';
 import { db } from '../services';
 import { useLiveQuery } from '../useLiveQuery';
 import type { BackupActions } from './useBackup';
@@ -67,6 +68,22 @@ export function BackupPanel({ state, actions, storagePersisted }: Props) {
         aria-hidden="true"
         onChange={onFileChosen}
       />
+
+      {import.meta.env.DEV && (
+        <div className="panel__actions">
+          <button
+            type="button"
+            onClick={async () => {
+              // Dynamic import, so the generator stays out of the production build.
+              const { buildSyntheticBackup } = await import('../../dev/syntheticData');
+              await actions.reviewImport(await buildSyntheticBackup(new Date(), randomIds));
+            }}
+          >
+            Carregar dados sintéticos
+          </button>
+          <span className="muted">Só no modo de desenvolvimento. Substitui tudo, como uma importação.</span>
+        </div>
+      )}
 
       <p className="muted">
         {currentFile ? `Backup automático em "${currentFile}". ` : ''}

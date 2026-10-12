@@ -1,3 +1,4 @@
+import type { AssistantId, StatusLimits } from './cleanupStatus';
 import type { DayKey } from './day';
 
 /**
@@ -137,6 +138,8 @@ export interface Settings {
   activeDays?: number[];
   /** Section 3: the warm-up checklist, in order. Empty or absent means no warm up. */
   warmupItems?: WarmupItem[];
+  /** Limits for the colors of the cleanup dashboard; absent assistants use the defaults. */
+  cleanupLimits?: Partial<Record<AssistantId, StatusLimits>>;
   updatedAt: string;
 }
 

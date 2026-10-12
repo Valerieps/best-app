@@ -1,59 +1,141 @@
 import { useState } from 'react';
 import { keepProjectsSeparate, mergeProjects, resolveWhiteboardGroup } from '../../application/assistants';
-import { loadCleanup, loadPendingDays } from '../../application/queries';
+import { loadCleanupDashboard, type CleanupDashboard } from '../../application/queries';
 import type { DuplicateGroup, WhiteboardGroup, WhiteboardGroupAction } from '../../domain/assistants';
+import type { AssistantId } from '../../domain/cleanupStatus';
 import type { DayKey } from '../../domain/day';
 import type { Project } from '../../domain/entities';
+import { ScreenHeader } from '../components/ScreenHeader';
 import { Segmented } from '../components/Segmented';
 import { ClosePendingDaysDialog } from '../dayNote/ClosePendingDaysDialog';
 import { listDays, plural } from '../format';
+import { navigate } from '../hooks';
 import { appContext, reader } from '../services';
 import { useLiveQuery } from '../useLiveQuery';
+import { ASSISTANT_INFO, AssistantIcon, STATUS_LABELS } from './assistantInfo';
+
+interface Props {
+  today: DayKey;
+  /** The assistant whose details are open; omitted shows the dashboard. */
+  assistant?: AssistantId;
+}
 
 /**
- * "Colocar ordem na casa": lists only the assistants that have something to clean, each with
- * suggested actions accepted in one go (ASSISTENTES.md).
+ * "Colocar ordem na casa" (ASSISTENTES.md): a dashboard with one card per assistant, colored
+ * by how much it found. The details and suggested actions only show after opening a card.
  */
-export function CleanupScreen({ today }: { today: DayKey }) {
-  const cleanup = useLiveQuery(() => loadCleanup(reader));
-  const pendingDays = useLiveQuery(() => loadPendingDays(reader, today), [today]) ?? [];
+export function CleanupScreen({ today, assistant }: Props) {
+  const dashboard = useLiveQuery(() => loadCleanupDashboard(reader, today), [today]);
   const projects = useLiveQuery(() => reader.projects()) ?? [];
-  const [closing, setClosing] = useState(false);
+  if (!dashboard) return null;
+  return assistant ? (
+    <AssistantScreen id={assistant} dashboard={dashboard} projects={projects} today={today} />
+  ) : (
+    <Dashboard dashboard={dashboard} />
+  );
+}
 
-  if (!cleanup) return null;
-  const nothing = pendingDays.length === 0 && cleanup.whiteboards.length === 0 && cleanup.duplicates.length === 0;
+function Dashboard({ dashboard }: { dashboard: CleanupDashboard }) {
+  return (
+    <main className="page">
+      <ScreenHeader title="Colocar ordem na casa" />
+      <ul className="cleanup-grid">
+        {dashboard.cards.map(({ id, status }) => {
+          const { name } = ASSISTANT_INFO[id];
+          return (
+            <li key={id}>
+              <button
+                type="button"
+                className={`cleanup-card status--${status}`}
+                title={STATUS_LABELS[status]}
+                aria-label={`${name}, ${STATUS_LABELS[status]}`}
+                onClick={() => navigate({ name: 'cleanup', assistant: id })}
+              >
+                <span className="status-icon">
+                  <AssistantIcon id={id} />
+                </span>
+                {name}
+              </button>
+            </li>
+          );
+        })}
+      </ul>
+    </main>
+  );
+}
+
+function AssistantScreen({
+  id,
+  dashboard,
+  projects,
+  today,
+}: {
+  id: AssistantId;
+  dashboard: CleanupDashboard;
+  projects: Project[];
+  today: DayKey;
+}) {
+  const { name, description } = ASSISTANT_INFO[id];
+  const card = dashboard.cards.find((candidate) => candidate.id === id)!;
+  const backToDashboard = () => navigate({ name: 'cleanup' });
 
   return (
     <main className="page">
-      <h1 className="page__title">Colocar ordem na casa</h1>
-      {nothing && <p className="muted">Tudo em ordem. Nenhum assistente tem algo para limpar agora.</p>}
+      <button type="button" className="link screen-header__back" onClick={backToDashboard}>
+        ← Colocar ordem na casa
+      </button>
+      <header className={`assistant-header status--${card.status}`}>
+        <span className="status-icon">
+          <AssistantIcon id={id} />
+        </span>
+        <div>
+          <h1 className="assistant-header__title">{name}</h1>
+          <p className="assistant-header__description">{description}</p>
+        </div>
+        <span className="visually-hidden">Estado: {STATUS_LABELS[card.status]}</span>
+      </header>
 
-      {pendingDays.length > 0 && (
-        <section className="assistant">
-          <h2 className="assistant__title">
-            Dias pendentes <span className="muted">{pendingDays.length}</span>
-          </h2>
-          <p className="muted">{listDays(pendingDays, today)} ainda sem checkout.</p>
-          <button type="button" className="primary" onClick={() => setClosing(true)}>
-            Fechar dias pendentes
-          </button>
-          {closing && <ClosePendingDaysDialog today={today} onClose={() => setClosing(false)} />}
-        </section>
+      {card.count === 0 ? (
+        <p className="muted">Nada para limpar aqui.</p>
+      ) : (
+        <>
+          {id === 'pendingDays' && <PendingDaysAssistant days={dashboard.pendingDays} today={today} />}
+          {id === 'whiteboards' && (
+            <WhiteboardsAssistant groups={dashboard.whiteboards} projects={projects} onDone={backToDashboard} />
+          )}
+          {id === 'duplicates' && <DuplicatesAssistant groups={dashboard.duplicates} onDone={backToDashboard} />}
+        </>
       )}
-
-      {cleanup.whiteboards.length > 0 && <WhiteboardsAssistant groups={cleanup.whiteboards} projects={projects} />}
-      {cleanup.duplicates.length > 0 && <DuplicatesAssistant groups={cleanup.duplicates} />}
-
-      <p className="muted assistant__note">
-        O assistente de tarefas paradas entra quando os prazos de “parado” e “antigo” forem definidos (ASSISTENTES.md).
-      </p>
     </main>
+  );
+}
+
+function PendingDaysAssistant({ days, today }: { days: DayKey[]; today: DayKey }) {
+  const [closing, setClosing] = useState(false);
+  return (
+    <section className="assistant">
+      <p>{listDays(days, today)} ainda sem checkout.</p>
+      <div className="assistant__actions">
+        <button type="button" className="primary" onClick={() => setClosing(true)}>
+          Fechar dias pendentes
+        </button>
+      </div>
+      {closing && <ClosePendingDaysDialog today={today} onClose={() => setClosing(false)} />}
+    </section>
   );
 }
 
 type WhiteboardChoice = 'convert' | 'link' | 'keep';
 
-function WhiteboardsAssistant({ groups, projects }: { groups: WhiteboardGroup[]; projects: Project[] }) {
+function WhiteboardsAssistant({
+  groups,
+  projects,
+  onDone,
+}: {
+  groups: WhiteboardGroup[];
+  projects: Project[];
+  onDone(): void;
+}) {
   const [choices, setChoices] = useState<Map<string, WhiteboardGroupAction>>(new Map());
   const [busy, setBusy] = useState(false);
   const active = projects.filter((project) => project.status === 'active');
@@ -69,7 +151,7 @@ function WhiteboardsAssistant({ groups, projects }: { groups: WhiteboardGroup[];
         const safe = action.kind === 'convert' && !action.name.trim() ? { kind: 'keep' as const } : action;
         await resolveWhiteboardGroup(appContext, group.sections.map((section) => section.id), safe);
       }
-      setChoices(new Map());
+      onDone();
     } finally {
       setBusy(false);
     }
@@ -77,10 +159,6 @@ function WhiteboardsAssistant({ groups, projects }: { groups: WhiteboardGroup[];
 
   return (
     <section className="assistant">
-      <h2 className="assistant__title">
-        Quadros brancos <span className="muted">{groups.length}</span>
-      </h2>
-      <p className="muted">Seções que ficaram sem projeto, agrupadas pelos títulos repetidos.</p>
       <ul className="card-list">
         {groups.map((group) => {
           const action = actionOf(group);
@@ -126,7 +204,7 @@ function WhiteboardsAssistant({ groups, projects }: { groups: WhiteboardGroup[];
       </ul>
       <div className="assistant__actions">
         <button type="button" className="primary" onClick={accept} disabled={busy}>
-          Confirmar decisões
+          Aceitar sugestões
         </button>
       </div>
     </section>
@@ -135,7 +213,7 @@ function WhiteboardsAssistant({ groups, projects }: { groups: WhiteboardGroup[];
 
 type DuplicateChoice = 'merge' | 'separate';
 
-function DuplicatesAssistant({ groups }: { groups: DuplicateGroup[] }) {
+function DuplicatesAssistant({ groups, onDone }: { groups: DuplicateGroup[]; onDone(): void }) {
   const [choices, setChoices] = useState<Map<string, DuplicateChoice>>(new Map());
   const [busy, setBusy] = useState(false);
 
@@ -147,7 +225,7 @@ function DuplicatesAssistant({ groups }: { groups: DuplicateGroup[] }) {
         if ((choices.get(group.key) ?? 'merge') === 'merge') await mergeProjects(appContext, group.keep.id, ids);
         else await keepProjectsSeparate(appContext, ids);
       }
-      setChoices(new Map());
+      onDone();
     } finally {
       setBusy(false);
     }
@@ -155,10 +233,6 @@ function DuplicatesAssistant({ groups }: { groups: DuplicateGroup[] }) {
 
   return (
     <section className="assistant">
-      <h2 className="assistant__title">
-        Projetos duplicados <span className="muted">{groups.length}</span>
-      </h2>
-      <p className="muted">Projetos com nomes parecidos. Juntar move as seções e tarefas para o projeto mais antigo.</p>
       <ul className="card-list">
         {groups.map((group) => (
           <li className="card-list__item" key={group.key}>
@@ -177,7 +251,7 @@ function DuplicatesAssistant({ groups }: { groups: DuplicateGroup[] }) {
       </ul>
       <div className="assistant__actions">
         <button type="button" className="primary" onClick={accept} disabled={busy}>
-          Confirmar decisões
+          Aceitar sugestões
         </button>
       </div>
     </section>
