@@ -2,6 +2,9 @@ node_modules/
 dist/
 *.local
 
+# Compiled output from a stray `tsc`; Vite would resolve it before the .ts sources.
+src/**/*.js
+
 # Never commit personal data exported from the app.
 backup*.json
 best-app-backup*.json
