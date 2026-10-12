@@ -1,6 +1,6 @@
 # Débito técnico
 
-Atualizado em Oct 11, 2026
+Atualizado em Oct 12, 2026
 
 O que ficou para trás, de propósito ou por falta de como verificar, da fase 0 até as seções 2 a 6. Cada item diz o risco e o que fazer. Quando um item for resolvido, ele sai daqui.
 
@@ -30,7 +30,7 @@ Estes pontos não puderam ser testados no navegador embutido do Claude Code.
 
 Estas partes da spec não foram construídas porque dependem de uma pergunta em aberto:
 
-- **Prioridades da semana (seção 2):** quantas são. Sem isso, faltam a etapa 6 da reflexão semanal, as prioridades da semana no dashboard, puxar uma prioridade da semana no planejamento e no checkout, metade da métrica mensal de prioridades e o assistente de prioridades encalhadas.
+- **Tarefas prioritárias da semana (seção 2):** quantas são. Sem isso, faltam a metade de tarefas da etapa 6 da reflexão semanal (os projetos prioritários já estão lá), puxar uma tarefa de projeto prioritário como prioridade da semana, as prioridades da semana no dashboard, puxar uma prioridade da semana no planejamento e no checkout, metade da métrica mensal de prioridades e o assistente de prioridades encalhadas.
 - **Sugestão de agregar tarefas em projetos (seção 2):** se o app propõe os grupos ou se a Valeria agrupa. A etapa 3 da reflexão semanal mostra só um aviso.
 - **Mural (seção 3):** onde os lembretes do mural são criados e editados.
 - **Checkout pendente no dashboard (seção 3):** a pergunta continua aberta; hoje o dashboard só avisa, sem bloquear, pelo princípio "avisa em vez de bloquear".
@@ -65,7 +65,7 @@ Estas partes da spec não foram construídas porque dependem de uma pergunta em 
 
 ## 4. Testes e qualidade
 
-- **Não há testes de interface.** O domínio, os casos de uso, as consultas e o backup têm testes (257 no total). As telas foram conferidas à mão no navegador embutido, e um erro de interface só aparece usando.
+- **Não há testes de interface.** O domínio, os casos de uso, as consultas e o backup têm testes (296 no total). As telas foram conferidas à mão no navegador embutido, e um erro de interface só aparece usando.
 - **Não há teste ponta a ponta** (Playwright ou similar) para os fluxos inteiros, como escolher um arquivo, importar e desfazer.
 - **Os testes não rodam no deploy.** O build do Cloudflare roda `tsc` e `vite build`, mas não o `vitest`. Dá para incluir os testes no `npm run build` ou configurar GitHub Actions.
 - **Não há lint.** O ESLint ficou de fora para ter menos dependências.
@@ -99,10 +99,35 @@ Estas partes da spec não foram construídas porque dependem de uma pergunta em 
 - **Página do projeto: tarefas criadas nela não podem ser apagadas.** Como na nota do dia, uma tarefa só sai de circulação pelo checkout ou pela reflexão; não há "apagar" para um erro de digitação logo depois de criar.
 - **Página do projeto: juntar projetos repetidos pode deixar duas seções escondidas no mesmo projeto** (ADR-031). Funciona, porque a nova tarefa vai para a primeira, mas o assistente poderia juntar as duas.
 - **Página do projeto: abaixo de 900 px, a coluna fixada só abre pelo botão da linha das abas**, em vez de aparecer sozinha por cima do conteúdo. O brief pedia que ela "se comportasse como espiando".
-- **Página do projeto: o ritmo lê todos os eventos das tarefas do projeto a cada mudança.** Com anos de uso e projetos grandes, vale guardar só os eventos de finalizar e reabrir num índice próprio (ADR-033).
-- **Página do projeto: o ritmo não aparece na lista de projetos.** Um projeto parado só se revela quando eu abro a página dele; um ponto de aviso na lista ajudaria.
 - **O rascunho e a página do projeto divergem no hover das tarefas.** O rascunho escondia data e "adiada" no hover; a página segue o padrão da nota do dia (etiquetas sempre visíveis), como diz o `SPEC.md` (ADR-032).
 - **O resto do roadmap de `AVALIACAO-UX.md`.** Os sete itens de "Fazer já" foram feitos em 12/10/2026; "Planejar", "Ajustes finos" e "Depois" continuam abertos.
+
+## Lista de projetos, página do projeto e prioritários da semana (12/10/2026)
+
+### Não verificado
+
+- [ ] **`npm run build` não foi rodado** depois desta mudança. O `npm test` (296 testes) e o `tsc --noEmit` passaram.
+- [ ] **Migração da versão 6 num banco de verdade.** Os testes cobrem o `upgrade` do Dexie (com um banco de teste) e o backup da versão 5, mas não um navegador com dados reais do mês. Vale abrir o app no Chrome com os dados atuais e conferir que os prioritários de outubro viraram os da semana.
+- [ ] **Troca na reflexão semanal, pela interface.** No navegador, desmarcar um prioritário e marcar outro em seguida deixou a lista com só 2 projetos. Provavelmente o segundo clique caiu antes de a caixa ser liberada (a tela leva cerca de 700 ms para atualizar), mas pode ser bug. Os testes do caso de uso passam.
+- [ ] **Finalizar um prioritário pela interface** (deve liberar a vaga e mostrar o card tracejado). Só os testes do caso de uso cobrem.
+- [ ] **"Nova data" das tarefas travadas.** Abre o calendário nativo com `showPicker`, que o navegador embutido não mostra; não foi conferido que a data escolhida é gravada.
+- [ ] **Layout em telas estreitas** (cards empilhados abaixo de 900 px, mapa das linhas escondido abaixo de 640 px) e com nomes longos.
+- [ ] **Tooltip do mapa nas bordas.** Os das 2 primeiras e das 3 últimas colunas abrem para dentro; não foi conferido em todos os tamanhos de card.
+- [ ] **Acessibilidade do mapa.** Cada mapa tem só um resumo para leitor de tela ("N dias com atividade"); o detalhe de cada dia só aparece com o mouse e não é alcançável pelo teclado.
+
+### Possíveis bugs e limitações
+
+- **A lista de projetos demora a atualizar.** Ela relê os eventos de todos os projetos a cada mudança (cerca de 700 ms no modo de desenvolvimento, com os dados sintéticos). Os grupos já abrem na hora, mas adicionar um prioritário ou finalizar um projeto só aparece depois. Com anos de uso vale um índice ou cache da atividade por dia.
+- **Finalizar no meio da semana muda a semana inteira.** O projeto sai da lista da semana atual a partir de segunda, então o raio-x mensal deixa de contar as prioridades do dia daquele projeto nos dias anteriores da mesma semana.
+- **Reabrir um projeto numa semana passada.** As listas de semanas passadas guardam o projeto; como a lista mostrada filtra só os ativos, reabrir faz ele reaparecer ao olhar uma semana passada (não a atual).
+- **Juntar projetos repetidos** com um prioritário: o projeto juntado sai da lista (fica `merged`), mas o projeto de destino não herda a vaga.
+- **Migração corta em 3.** Um mês com mais de 3 projetos prioritários vira uma semana com só os 3 primeiros, sem aviso. A semana do dia 1º pode começar no mês anterior (por exemplo, 28/09 para outubro), então os últimos dias de setembro passam a usar a lista de outubro no raio-x.
+- **A atividade segue o vínculo atual.** Uma tarefa vinculada ao projeto no checkout conta como atividade no dia em que foi escrita, mesmo que naquele dia ela não fosse do projeto. Notas apagadas ou esvaziadas deixam de contar.
+- **Reflexão de uma semana antiga:** o passo 6 fica só leitura quando a semana seguinte já passou, mas uma reflexão da semana passada ainda pode mudar a lista da semana atual.
+- **Prioritários num projeto sem atividade:** o card mostra "Nenhuma atividade ainda" ou "Parado há N dias" contados desde a criação, não desde que virou prioritário.
+- **"desde" nas tarefas travadas** usa a primeira data de intenção (ou o dia em que a tarefa foi escrita), não o dia do primeiro adiamento.
+- **Os dados sintéticos ganharam um "Curso de inglês"** de cerca de 4 meses antes da história principal, para os mapas de 16 semanas terem histórico. Isso muda a narrativa de "primeiros dias sem projetos".
+- **O `.claude/launch.json` ganhou uma configuração temporária `dev-verify`** (porta 65021), criada para testar sem apagar os dados da porta 5173. Pode ser removida.
 
 ## Adiado de propósito
 

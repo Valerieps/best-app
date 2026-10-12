@@ -103,6 +103,13 @@ Ajustes de 12/10/2026, pedidos pela Valeria (regras no `SPEC.md`, "Projetos"):
 - **"Ritmo" no lugar de "Progresso":** o card não mostra mais "4 de 10", porque o total de tarefas de um projeto nunca é conhecido. Ele mostra as tarefas finalizadas nas últimas 2 semanas, 4 barras (uma por semana, a última em azul) e a data da última finalização. Um projeto ativo sem finalização nem nota nova há 14 dias mostra "Parado há N dias" em cor de aviso. Tudo vem do histórico de eventos; uma tarefa reaberta deixa de contar (ADR-033).
 - **Um único botão para a coluna lateral:** o trilho da direita, com "Detalhes" e "Recursos", saiu. O botão na linha das abas é a única entrada e mostra o número de recursos como selo. Com a coluna recolhida, o conteúdo ocupa a largura toda. "Espiando" e "fixada" continuam iguais.
 
+Redesenho de 12/10/2026, pedido pela Valeria (regras no `SPEC.md`, "Projetos" e "Projetos prioritários da semana"). Princípio: a lista de projetos é onde se acompanha; a página do projeto é onde se executa.
+
+- **Projetos prioritários da semana, e não mais do mês:** até 3, definidos no passo 6 da reflexão semanal; fora dela só se adiciona enquanto houver vaga; finalizar libera a vaga; a lista passa para as semanas seguintes. Os dados antigos do mês foram migrados (ADR-035). A definição saiu da reflexão mensal.
+- **Lista de projetos:** cabeçalho com resumo ("8 ativos · 1 parado · 4 travadas") e "Novo projeto"; cards dos prioritários com mapa de atividade de 16 semanas, ativas, travadas, finalizadas nas últimas 2 semanas, objetivo e última atividade; vagas livres tracejadas ("Definir prioridade"); "Outros ativos" recolhível, com mapa de 8 semanas, "Parado há N dias" e contagem de parados no título; "Finalizados" recolhido. O estado dos grupos fica nas configurações (ADR-036). Cada card e linha tem o "⋯" com vincular objetivo, adicionar aos prioritários (com vaga) e finalizar.
+- **Mapa de atividade:** estilo GitHub, calculado do histórico de eventos (ADR-034), com legenda única "menos … mais" e detalhe do dia no hover.
+- **Página do projeto:** os cards de indicadores ("Ritmo", "Travadas", "Próxima") saíram, e a lógica do ritmo foi reaproveitada no mapa. O cabeçalho tem ícone, nome, estrela discreta de prioritário e o "⋯". "Nova tarefa" fica acima das abas. Tarefas em quatro níveis: travadas (container de aviso, motivo por extenso e "Nova data"), próximos dias (mini agenda com a data em bloco), sem data (menor e recolhível) e feitas (recolhidas). A linha do tempo das notas e a coluna lateral continuam como estavam.
+
 O rascunho HTML não foi atualizado com esses ajustes; este brief e o `SPEC.md` valem mais que ele.
 
 ## Fora do escopo desta proposta

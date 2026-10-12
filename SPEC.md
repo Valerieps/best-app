@@ -216,7 +216,8 @@ A reflexão semanal é disparada por um agendamento pré-definido por mim ou man
 
 - Os projetos prioritários da semana são até 3 projetos e formam uma lista separada das tarefas prioritárias da semana e do dia.
 - Eu os defino na reflexão semanal. Fora dela, posso adicionar um projeto à lista a qualquer momento, enquanto houver vaga, pela lista de projetos ou pela página do projeto. Trocar ou tirar um projeto da lista só é possível na reflexão semanal.
-- Finalizar um projeto prioritário tira o projeto da lista e libera a vaga.
+- Se a reflexão já definiu os prioritários da semana seguinte e eu adiciono um projeto numa vaga da semana atual, ele também entra na lista da semana seguinte, se lá houver vaga.
+- Finalizar um projeto prioritário tira o projeto da lista e libera a vaga. Reabrir o projeto não o devolve à lista; se eu quiser, adiciono de novo enquanto houver vaga.
 - Ao fechar a semana, os projetos prioritários continuam na semana seguinte, a menos que eu os troque na reflexão.
 - Na reflexão semanal, eu posso puxar uma tarefa de um projeto prioritário como prioridade da semana seguinte.
 - Exemplo: tenho 3 projetos prioritários. Na reflexão semanal, puxo uma tarefa de um deles como prioridade da semana seguinte, mas só a puxo como prioridade do dia no checkout da quarta-feira.

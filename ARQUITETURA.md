@@ -84,7 +84,9 @@ Cada entidade é um registro separado. Um bloco existe uma vez só: notas, proje
 | Fase | Mudança |
 | --- | --- |
 | 1b (feito) | `blocks.deadline` (prazo máximo). `sections.participants` e `sections.docLink`. `projects.mergedInto` e `keepSeparateFrom` (assistente de duplicados) |
-| 1b (feito) | Tabela `priorities`: id `escopo:período` (por exemplo `day:2026-10-11`), lista ordenada de ids escolhidos à mão. As tarefas com prazo no dia entram na leitura (ADR-017). No dia e na semana guarda tarefas; no mês, projetos |
+| 1b (feito) | Tabela `priorities`: id `escopo:período` (por exemplo `day:2026-10-11`), lista ordenada de ids escolhidos à mão. As tarefas com prazo no dia entram na leitura (ADR-017). No dia guarda tarefas |
+| 2 (feito) | Projetos prioritários da semana na mesma tabela `priorities`, id `weekProjects:2026-W42` (até 3 projetos). Uma semana sem lista própria usa a última lista anterior. Versão 6 do banco e do backup: as listas antigas `month:AAAA-MM` viram listas da semana do dia 1º daquele mês (ADR-035). O id `week:` fica livre para as tarefas prioritárias da semana |
+| 2 (feito) | `settings.projectListGroups`: grupos abertos ou fechados da lista de projetos (ADR-036) |
 | 2 (feito) | `blocks.awaitingReflection` e `sections.notesDestination = 'weeklyReflection'`, para o "decidir na reflexão semanal" |
 | 2 (feito) | Tabela `reflections`: id `week:2026-W41` (`month:2026-10` na seção 4), textos livres (melhores momentos, o que pode melhorar) e `closedAt` |
 | 2 (feito), 3 | Tabela `settings`: agendamento da reflexão semanal; os dias ativos entram na seção 3 |
@@ -155,7 +157,7 @@ Um adiamento gera `task.postponed` e soma 1 em `postponeCount`. Ele acontece em 
 | Fase | Métricas |
 | --- | --- |
 | 2 | Tarefas adiadas, precisão da data de intenção (feita no dia da intenção, com ou sem adiamentos), tarefas executadas |
-| 4 | Blocos sem projeto, projetos sem objetivo, objetivos com pouco engajamento, prioridades da semana e do dia ligadas a projetos prioritários do mês |
+| 4 | Blocos sem projeto, projetos sem objetivo, objetivos com pouco engajamento, prioridades da semana e do dia ligadas a projetos prioritários da semana em que caíram |
 | 6 | Maior sequência de um hábito, percentual de completude, hábitos sem objetivo |
 
 ## 10. Backup e segurança (implementado)
@@ -172,9 +174,9 @@ Um adiamento gera `task.postponed` e soma 1 em `postponeCount`. Ele acontece em 
 | 0. Fundação | Feita | Projeto, banco, histórico de eventos, backup automático, importação, CSP, offline, tokens de tema |
 | 1a. Núcleo | Feita | Editor de blocos, nota do dia, checkout com auto-triagem, listas, "Fechar dias pendentes" |
 | 1b. Acabamento | Feita, menos a instalação no Android e o assistente de tarefas paradas | Prazo máximo, prioridades do dia, atalhos no hover, reunião com participantes e link, paginação entre dias, busca e filtros na wiki, assistentes de seções soltas e projetos repetidos, no dashboard "Colocar ordem na casa" com cores configuráveis (ADR-028) |
-| 2. Semana e projetos | Feita em parte | Feito: projetos (página com ícone, ritmo a partir dos eventos (ADR-033), indicadores, abas de tarefas e notas, coluna lateral, tarefa criada no projeto (ADR-031, ADR-032), finalizar, vincular no checkout), "decidir na reflexão semanal", reflexão semanal com triagem, arquivadas, métricas, textos e "Fechar semana", agendamento. Falta o que tem pergunta em aberto: sugestão de projetos e prioridades da semana |
+| 2. Semana e projetos | Feita em parte | Feito: lista de projetos para acompanhar (cards dos prioritários com mapa de atividade de 16 semanas, outros ativos com mapa de 8 semanas e "Parado há N dias", finalizados, grupos lembrados nas configurações; ADR-034, ADR-036), página do projeto para executar (ícone, estrela de prioritário, "⋯" com as mesmas ações da lista, "Nova tarefa" acima das abas, tarefas em travadas, próximos dias, sem data e feitas, coluna lateral; ADR-031, ADR-032), projetos prioritários da semana (até 3, carregados de uma semana para a outra, passo 6 da reflexão semanal; ADR-035), "decidir na reflexão semanal", reflexão semanal com triagem, arquivadas, métricas, textos e "Fechar semana", agendamento. Falta o que tem pergunta em aberto: sugestão de projetos e tarefas prioritárias da semana (inclusive puxar uma tarefa de projeto prioritário) |
 | 3. Abertura do dia | Feita em parte | Feito: "Iniciar Dia", warm up com "pular hoje" e "perguntar de novo", dashboard com "Iniciar o Flow de Execução", "registrar pensamentos" e checkout pendente, lembretes (faixa, contador na aba, ponto no ícone, pergunta no checkout), dias ativos. Falta o que tem pergunta em aberto: mural e prioridades da semana no dashboard |
-| 4. Mês e objetivos | Feita em parte | Feito: objetivos (meta, motivação, projetos, recursos, finalizar dizendo se atingiu), recursos pelo checkout e por link, prioridades do mês, reflexão mensal com sugestão de objetivos, duas visões, finalizar projetos e raio-x parcial. Falta o que tem pergunta em aberto: métricas de blocos sem projeto e de engajamento, puxar tarefa para prioridade da semana |
+| 4. Mês e objetivos | Feita em parte | Feito: objetivos (meta, motivação, projetos, recursos, finalizar dizendo se atingiu), recursos pelo checkout e por link, reflexão mensal com sugestão de objetivos, duas visões, finalizar projetos e raio-x parcial (prioridades do dia em projetos prioritários da semana). A definição de prioritários saiu da reflexão mensal e foi para o passo 6 da semanal. Falta o que tem pergunta em aberto: métricas de blocos sem projeto e de engajamento, a metade "prioridades da semana" do raio-x |
 | 5. Tipos de bloco | Bloqueada | Espera a definição dos formatos que identificam cada tipo e de como corrigir um tipo detectado errado |
 | 6. Hábitos | Feita em parte | Feito: hábitos com dias da semana, critério e objetivo, registro sim ou não no dashboard e na tela de hábitos, converter tarefa em hábito no checkout, sequência e completude na reflexão semanal, hábitos na reflexão mensal. Falta o que tem pergunta em aberto: "agendar lembrete" |
 | Depois | Futura | Android e sincronização (juntando aparelhos pelo histórico de eventos) |
