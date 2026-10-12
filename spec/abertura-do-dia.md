@@ -11,18 +11,18 @@
 ## Warm up
 
 - O app abre em uma tela branca com o botão "Iniciar Dia", que triga a rotina de warm up. Enquanto o checklist de warm up estiver vazio, o app pula essa tela e o warm up.
-- O checklist de warm up é definido manualmente por mim. Isso pode ser feito a qualquer momento ou sugerido na primeira reflexão semanal.
+- O checklist de warm up é definido manualmente por mim. Isso pode ser feito a qualquer momento ou sugerido na primeira Revisão de Foco.
 - O que eu não quero realizar agora, eu posso "pular hoje" ou "perguntar de novo às XXh".
 - Ao terminar o warm up, o app segue para o dashboard, se ele tiver o que mostrar (veja "Dashboard"); senão, segue para a nota do dia.
 - Se eu reabrir o app depois de já ter iniciado o dia, caio na nota do dia.
 
 ## Dashboard
 
-O dashboard aparece na abertura do dia quando há pelo menos um destes: checklist de warm up, frases no mural ou prioridades da semana. Sem nenhum deles, o app abre direto na nota do dia, como nas primeiras semanas de uso: o dashboard não aparece só para oferecer "registrar pensamentos", "registrar hábitos" ou o checkout pendente.
+O dashboard aparece na abertura do dia quando há pelo menos um destes: checklist de warm up, frases no mural ou projetos em foco. Sem nenhum deles, o app abre direto na nota do dia, como nas primeiras semanas de uso: o dashboard não aparece só para oferecer "registrar pensamentos", "registrar hábitos" ou o checkout pendente.
 
 A tela de boas-vindas mostra:
 
-- a lista das 3 prioridades da semana
+- os projetos em foco (`prioridades.md`)
 - um mural com lembretes de mim para mim mesma (tipo frases mesmo). Ele mostra uma frase por vez, em rodízio. Aparecem no máximo 2 frases diferentes por dia: uma ao abrir o app, que é trocada às 13h. Cada frase tem uma frequência, baixa, média ou alta, em proporção: para cada vez que uma frase de frequência baixa aparece, uma média aparece 2 vezes e uma alta, 4. O rodízio segue uma ordem que respeita essas proporções, em vez de sorteio, para evitar que a mesma frase se repita seguidamente
 - o botão "Iniciar o Flow de Execução", o mais proeminente
 - botão de ação opcional: registrar pensamentos (entram em uma seção geral nova da nota do dia, com o título "Pensamentos", uma nota por linha)
