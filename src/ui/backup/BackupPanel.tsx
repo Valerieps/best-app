@@ -41,8 +41,17 @@ export function BackupPanel({ state, actions, storagePersisted }: Props) {
       </p>
 
       <div className="panel__actions">
+        {state.status === 'needsPermission' && (
+          <button type="button" className="primary" onClick={actions.resume}>
+            Retomar backup
+          </button>
+        )}
         {state.status !== 'unsupported' && (
-          <button type="button" className="primary" onClick={actions.chooseFile}>
+          <button
+            type="button"
+            className={state.status === 'needsPermission' ? undefined : 'primary'}
+            onClick={actions.chooseFile}
+          >
             {currentFile ? 'Trocar arquivo do backup' : 'Ativar backup automático'}
           </button>
         )}

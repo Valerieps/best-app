@@ -153,6 +153,8 @@ export interface Settings {
   projectPanelPinned?: boolean;
   /** Which groups of the project list are open; absent groups use their default. */
   projectListGroups?: Partial<Record<ProjectListGroup, boolean>>;
+  /** Whether the sidebar is collapsed to a narrow strip. Absent means open. */
+  sidebarCollapsed?: boolean;
   updatedAt: string;
 }
 

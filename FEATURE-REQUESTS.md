@@ -18,7 +18,7 @@ Já decididos e retirados: "Próximos dias" no menu (foi para o `spec/tarefas.md
 | 1 | [Arquivar tarefas de qualquer tela](pedidos/01-arquivar-de-qualquer-tela.md) | Arquivar onde a tarefa aparece, não só no checkout |
 | 2 | [Reordenar blocos dentro de uma seção](pedidos/02-reordenar-blocos.md) | Mudar a ordem das linhas de uma seção |
 | 3 | [Data de intenção em destaque e ícone de ciclo](pedidos/03-data-em-destaque-e-icone-de-ciclo.md) | Destacar a data e trocar "adiada" por "↻" |
-| 4 | [Título do app leva para a nota do dia](pedidos/04-titulo-leva-para-a-nota-do-dia.md) | "Best App" vira um link para a nota do dia |
+| 4 | [Título do app leva para a nota do dia](pedidos/04-titulo-leva-para-a-nota-do-dia.md) | O título já leva para a nota do dia; falta decidir se "Hoje" sai da barra |
 | 5 | [Tarefas agendadas organizadas em grupos](pedidos/05-tarefas-agendadas-em-grupos.md) | Prazo hoje, prioridades e adiadas, na nota do dia e em "Próximos dias" |
 | 6 | [Revisar o fluxo de checkout](pedidos/06-revisar-fluxo-de-checkout.md) | Menos decisões por tela, resolvendo as incoerências da spec sobre o checkout |
 | 7 | [Ressignificar "Colocar ordem na casa"](pedidos/07-ressignificar-colocar-ordem-na-casa.md) | Novo nome e um tom mais leve |
@@ -26,7 +26,7 @@ Já decididos e retirados: "Próximos dias" no menu (foi para o `spec/tarefas.md
 | 9 | ["Momentum" nos projetos](pedidos/09-momentum-nos-projetos.md) | Selo de ritmo e resgate amigável de projetos parados |
 | 10 | [Vitórias na reflexão semanal](pedidos/10-vitorias-na-reflexao-semanal.md) | Conquistas da semana no topo da reflexão |
 | 11 | [Vínculo granular de projetos em reuniões](pedidos/11-vinculo-granular-em-reunioes.md) | Projeto por bloco, não por seção |
-| 12 | [Reorganizar o menu lateral](pedidos/12-reorganizar-menu-lateral.md) | Projetos no topo, uma tela única de tarefas |
+| 12 | [Reorganizar o menu lateral](pedidos/12-reorganizar-menu-lateral.md) | Uma tela única de tarefas (a nova ordem do menu já foi decidida) |
 | 13 | [Modo foco e cursor no editor](pedidos/13-modo-foco-e-cursor.md) | Focar numa seção; clique no vazio cria uma linha nova |
 | 14 | [Avaliação de UX: o que falta](pedidos/14-avaliacao-de-ux-pendencias.md) | Os 16 itens ainda abertos da `AVALIACAO-UX.md` |
 

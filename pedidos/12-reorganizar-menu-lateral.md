@@ -41,9 +41,18 @@ O menu ganha uma estrutura lógica baseada na prioridade de uso:
 
 ## Incoerências com o modelo atual
 
-* **Barra lateral fixa.** Desde 12/10/2026, a gaveta virou uma barra lateral fixa, e "Hoje", os próximos dias e "Rituais" já ficam juntos no topo dela (`spec/navegacao.md`, "Navegação"). Deste pedido, falta decidir a tela única de tarefas e a nova ordem dos outros grupos. O pedido 4 ainda pergunta se o item "Hoje" sai da barra.
+* **Já decidido.** Em 12/10/2026, a barra de cima saiu, a barra lateral passou a ser recolhível, e os grupos ficaram na ordem Hoje, Planejamento, Listas e rodapé (`spec/navegacao.md`, "Navegação"). Deste pedido, falta a tela única de tarefas, que ficou para depois, e decidir se as listas descem para o rodapé. O pedido 4 ainda pergunta se o item "Hoje" sai da barra.
 * **Tarefas finalizadas.** Não existe uma lista de tarefas finalizadas na spec. Falta dizer se as abandonadas entram (pelo `spec/checkout.md`, elas "somem de todas as listas").
 * **Duplicidade.** "Tarefas unificadas" e "Todas as Tarefas" aparecem como itens separados no rodapé.
 * **Valor da lista de ativas.** O pedido trata as listas como "arquivo morto", mas o planejamento do dia seguinte escolhe as tarefas na lista de tarefas ativas (`spec/tarefas.md`, "Tarefas").
 * **Wiki "sem filtro de projeto".** A wiki já pode ser vista por projeto (`spec/nota-do-dia.md`, "Wiki pessoal").
-* **Formato.** O pedido não tem "O que muda" nem "Em aberto".
+* **Formato.** O pedido não tem "O que muda".
+
+## Em aberto
+
+- [ ] Que estados a tela única mostra? Ativas, finalizadas e arquivadas; as abandonadas entram ou continuam sumindo de todas as listas?
+- [ ] Como fica a lista de finalizadas: em que ordem, agrupada por dia ou semana, com tudo desde sempre ou com limite? Dá para reabrir uma finalizada?
+- [ ] Como eu alterno entre os estados (abas, seletor ou filtros)? Qual abre primeiro, o app lembra a última escolha, e cada um mostra contador?
+- [ ] Que ações cada estado tem? Nas arquivadas, reativar e abandonar? Nas finalizadas, nenhuma ou só reabrir?
+- [ ] Onde entra o projeto: a tela agrupa por projeto, filtra por projeto ou só mostra o projeto na linha?
+- [ ] Qual o nome do item ("Tarefas"?) e as listas (tarefas e wiki) continuam num grupo próprio ou descem para o rodapé, junto de "Dados e backup" e "Configurações"?

@@ -45,3 +45,4 @@ Read only the ADRs your task touches: find them in this table or by grepping `ad
 | [ADR-034](adr/034-project-activity-map-computed-from-events.md) | Project activity map, computed from events | 2026-10-12 | Accepted |
 | [ADR-035](adr/035-priority-projects-belong-to-the-week-database-and.md) | Priority projects belong to the week; database and backup version 6 | 2026-10-12 | Accepted |
 | [ADR-036](adr/036-the-project-list-remembers-its-open-groups-in-the.md) | The project list remembers its open groups in the settings | 2026-10-12 | Accepted |
+| [ADR-037](adr/037-the-sidebar-remembers-whether-it-is-collapsed-in-the.md) | The sidebar remembers whether it is collapsed in the settings | 2026-10-12 | Accepted |
