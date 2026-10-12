@@ -114,7 +114,7 @@ As fases do `SPEC.md` deveriam poder ser construídas em ordem, mas:
 
 ### 2.15 Troca da frase do mural às 13h
 
-- O dashboard só aparece na abertura do dia, e a gaveta não tem um caminho para voltar a ele. A frase trocada às 13h nunca é vista, a menos que o dashboard possa ser reaberto.
+- O dashboard só aparece na abertura do dia, e a barra lateral não tem um caminho para voltar a ele. A frase trocada às 13h nunca é vista, a menos que o dashboard possa ser reaberto.
 
 ### 2.16 Detalhes
 
@@ -132,5 +132,4 @@ As fases do `SPEC.md` deveriam poder ser construídas em ordem, mas:
 ## 4. Documentos desatualizados
 
 - **`spec/`:**
-  - O `nota-do-dia.md` ("Execução") fala em "um menu lateral simples" com três listas, mas o `navegacao.md` descreve a gaveta com grupos.
   - Os lembretes (`abertura-do-dia.md`) citam o Android, que está fora do escopo.

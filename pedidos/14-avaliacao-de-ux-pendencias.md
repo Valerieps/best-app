@@ -4,7 +4,6 @@ Os itens da `AVALIACAO-UX.md` (12/10/2026) que ainda não foram decididos nem co
 
 | Código | Pedido | Grupo no relatório | Incoerências com o modelo atual |
 | --- | --- | --- | --- |
-| N1 | Barra lateral fixa a partir de 1024 px | Planejar | O `spec/navegacao.md` ("Navegação") usa uma gaveta e "Rituais" na barra de cima; o pedido 12 (reorganização do menu) propõe uma terceira forma |
 | P4 | Checkout com 3 opções visíveis e "Mais" | Planejar | Faz parte do pedido 6 (revisar o fluxo de checkout) |
 | P5 | "Desfazer" em todas as ações | Planejar | — |
 | N6 | Busca e comandos (Ctrl+K) | Planejar | — |

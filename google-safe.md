@@ -92,5 +92,5 @@ Ao projetar e gerar código para este projeto:
      - **Backup automático:** a pessoa escolhe o arquivo uma vez com `showSaveFilePicker`, e o app regrava esse arquivo alguns segundos depois de cada mudança, sem gravar por cima de dados que o navegador não tem.
      - **Baixar uma cópia:** um arquivo `.json` gerado no navegador (`Blob`), como pede a seção 3.
      - **Importar:** um campo de arquivo comum, que valida o backup e substitui as tabelas do `IndexedDB`, com uma cópia para desfazer.
-   - O status do backup fica sempre visível na barra de cima, e um clique abre "Dados e backup" (`spec/navegacao.md`). Isso substitui o atalho de backup manual "antes de trocar de estação de trabalho", porque o arquivo já está sempre atualizado.
+   - O status do backup fica sempre visível no rodapé da barra lateral, e um clique abre "Dados e backup" (`spec/navegacao.md`). Isso substitui o atalho de backup manual "antes de trocar de estação de trabalho", porque o arquivo já está sempre atualizado.
 

@@ -28,7 +28,7 @@ Já decididos e retirados: "Próximos dias" no menu (foi para o `spec/tarefas.md
 | 11 | [Vínculo granular de projetos em reuniões](pedidos/11-vinculo-granular-em-reunioes.md) | Projeto por bloco, não por seção |
 | 12 | [Reorganizar o menu lateral](pedidos/12-reorganizar-menu-lateral.md) | Projetos no topo, uma tela única de tarefas |
 | 13 | [Modo foco e cursor no editor](pedidos/13-modo-foco-e-cursor.md) | Focar numa seção; clique no vazio cria uma linha nova |
-| 14 | [Avaliação de UX: o que falta](pedidos/14-avaliacao-de-ux-pendencias.md) | Os 17 itens ainda abertos da `AVALIACAO-UX.md` |
+| 14 | [Avaliação de UX: o que falta](pedidos/14-avaliacao-de-ux-pendencias.md) | Os 16 itens ainda abertos da `AVALIACAO-UX.md` |
 
 **Reforços positivos (pedidos 7 a 10):** melhorias para incentivar a manutenção de tarefas e projetos com foco em reforço positivo, celebrando o progresso e evitando uma abordagem punitiva (removendo a sensação de "culpa" por atrasos).
 

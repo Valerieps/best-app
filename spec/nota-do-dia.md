@@ -22,7 +22,7 @@
 - Cada tarefa tem um checkbox para finalizar.
 - Enquanto escrevo, posso apagar uma linha ou tirar o `[]` do começo para mudar o tipo, como num editor de texto, mas só em blocos criados no dia e ainda não triados. Uma tarefa que veio de outro dia não some quando eu apago o texto: para tirá-la de circulação, eu arquivo ou abandono.
 - Se eu abrir o app sem ter feito o checkout do dia anterior, a nota de hoje abre normalmente, com um aviso no topo e um botão para fazer o checkout pendente.
-- Um menu lateral simples dá acesso a três listas: tarefas ativas, tarefas arquivadas e wiki pessoal.
+- A barra lateral dá acesso às listas: tarefas ativas, tarefas arquivadas e wiki pessoal (`navegacao.md`, "Navegação").
 - No final do dia, eu clico em "fazer checkout".
 
 ## Seções e atalhos *(1b)*

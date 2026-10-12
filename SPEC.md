@@ -11,7 +11,7 @@ A spec é a fonte da verdade do produto. Este arquivo é o índice: as regras fi
 | Arquivo | O que tem |
 | --- | --- |
 | [`spec/principios.md`](spec/principios.md) | Princípios, primeiro uso, plataforma, dados e backup |
-| [`spec/navegacao.md`](spec/navegacao.md) | Barra de cima, gaveta, "Rituais", cabeçalho das telas, ações no hover e fila de avisos |
+| [`spec/navegacao.md`](spec/navegacao.md) | Barra lateral, "Rituais", cabeçalho das telas, ações no hover e fila de avisos |
 | [`spec/nota-do-dia.md`](spec/nota-do-dia.md) | Nota do dia, seções, blocos, editor, paginação entre dias e wiki pessoal |
 | [`spec/tarefas.md`](spec/tarefas.md) | Tarefas ativas, data de intenção, adiamento, prazo máximo e "Próximos dias" |
 | [`spec/prioridades.md`](spec/prioridades.md) | Prioridades do dia e da semana, e projetos prioritários da semana |
