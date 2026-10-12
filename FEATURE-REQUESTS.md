@@ -153,3 +153,28 @@ Reorganizar os grupos da gaveta de navegação (`☰`) para refletir a frequênc
 ## Resultado Esperado na Interface
 O menu ganha uma estrutura lógica baseada na prioridade de uso:
 * **Executar o Dia** $\rightarrow$ **Gerenciar Projetos & Objetivos** $\rightarrow$ **Consultar Arquivo Global & Configurações**.
+
+
+# Feature Request: Modo de Foco em Seção e Comportamento do Cursor no Editor
+
+## Contexto e Motivação
+Durante o uso contínuo da nota do dia, a tela pode acumular muitas seções e blocos de conteúdo. Para evitar distrações visuais e melhorar a experiência de escrita e captura sequencial, são necessárias duas melhorias de usabilidade no editor: a capacidade de focar em uma única seção por vez e um ajuste no comportamento intuitivo do clique do cursor.
+
+---
+
+## Especificações Técnicas e de Comportamento
+
+### 1. Modo de Foco / Expansão de Seção (Focus Mode)
+* **Ação do Usuário:** Adicionar um botão/atalho discreto no cabeçalho de cada seção (ex: ícone de expandir `⤢` ou opção "Focar na seção") para isolar o conteúdo.
+* **Comportamento da Interface:**
+  * Ao expandir a seção, o app esconde temporariamente as outras seções da nota do dia, exibindo apenas a seção selecionada em tela cheia (ou em destaque centralizado).
+  * O cabeçalho da tela exibe um botão visível de **"Sair do modo foco"** (ou seta de voltar `←`) para retornar à visão completa da nota do dia com todas as seções.
+  * O estado de criação e edição de blocos dentro da seção focada permanece exatamente o mesmo do editor principal.
+
+### 2. Comportamento Intuitivo do Clique e Posição do Cursor
+* **Problema Atual:** Ao clicar em um espaço vazio dentro da área de uma seção, o cursor do teclado está sendo posicionado incorretamente no final da última linha do bloco anterior.
+* **Novo Comportamento Esperado:**
+  * Ao clicar em qualquer área vazia abaixo do conteúdo existente dentro de uma seção, o editor deve interpretar o clique como intenção de criar um novo bloco.
+  * O cursor deve ser automaticamente posicionado em uma **nova linha** (criando um novo bloco em branco no final da seção), permitindo que a escrita/captura comece imediatamente, sem a necessidade de o usuário pressionar `Enter` manualmente no fim da linha anterior.
+ 
+  * 
