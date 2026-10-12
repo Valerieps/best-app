@@ -21,7 +21,7 @@ interface Props {
   today: DayKey;
 }
 
-/** "Flow de Reflexão Semanal" (SPEC.md, section 2). */
+/** "Flow de Reflexão Semanal" (spec/rituais.md). */
 export function ReflectionScreen({ weekKey, today }: Props) {
   const week = weekKey ? weekFromKey(weekKey) : defaultReflectionWeek(today);
   const view = useLiveQuery(() => loadReflection(reader, week, today), [week.key, today]);

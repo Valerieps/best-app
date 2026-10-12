@@ -23,7 +23,7 @@ function Badge({ count }: { count: number }) {
 }
 
 /**
- * Level 1 of the navigation (SPEC.md, "Navegação"): the same bar on every screen.
+ * Level 1 of the navigation (spec/navegacao.md, "Navegação"): the same bar on every screen.
  * ☰ for places, "Hoje", "Rituais" with what is due, and the backup status.
  */
 export function GlobalBar({ today, pendingDays, onToday, onOpenMenu, backupState, backup }: Props) {

@@ -5,7 +5,7 @@ import { linkSection } from './notebook';
 import type { AppContext } from './ports';
 import { addProject } from './projects';
 
-/** Use cases of the cleanup assistants (ASSISTENTES.md). Nothing here deletes data. */
+/** Use cases of the cleanup assistants (spec/assistentes.md). Nothing here deletes data. */
 
 function today(ctx: AppContext): DayKey {
   return toDayKey(ctx.clock.now());

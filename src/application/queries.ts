@@ -257,7 +257,7 @@ export interface ReflectionView {
   nextWeekPriorityIds: string[];
 }
 
-/** Everything the weekly reflection of `week` shows (SPEC.md, section 2). */
+/** Everything the weekly reflection of `week` shows (spec/rituais.md). */
 export async function loadReflection(reader: Reader, week: WeekRange, today: DayKey): Promise<ReflectionView> {
   const reflection = (await reader.reflection(`week:${week.key}`)) ?? null;
   const tomorrow = addDays(today, 1);

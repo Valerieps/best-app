@@ -2,7 +2,7 @@ import type { DomainEvent } from './events';
 import { isInWeek, type WeekRange } from './week';
 
 /**
- * Weekly metrics, computed from the event history only (SPEC.md, section 2). Future metrics
+ * Weekly metrics, computed from the event history only (spec/rituais.md). Future metrics
  * are new functions over the same events.
  */
 export interface WeeklyMetrics {

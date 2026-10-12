@@ -2,6 +2,8 @@
 
 12/10/2026 · Valeria
 
+> **Relatório congelado.** Este documento registra a avaliação como ela foi feita e não é mais atualizado. O que foi construído virou regra no `SPEC.md`; o que falta está em `FEATURE-REQUESTS.md` ("Avaliação de UX: o que falta"), e o andamento, no `ROADMAP.md`.
+
 ## Resumo executivo
 
 O Best App tem uma base visual calma e coerente, mas a navegação esconde o que é central (capturar e triar) e expõe o que é secundário (backup, avisos). A paleta em tokens, a fonte do sistema e a nota do dia em formato de documento estão no caminho certo. O que mais pesa hoje é estrutura, não estética.
@@ -77,7 +79,7 @@ Matriz impacto × esforço dos 23 achados:
 | **Alto impacto** | **Fazer já**<br>P1 · Contraste do texto secundário<br>N2 · Botões de nova seção visíveis<br>P3 · Dica para criar tarefa<br>P2 · Ações da linha sem duplicatas<br>N4 · Esqueleto ao carregar<br>N5 · Um aviso por vez no topo<br>V1 · Três níveis de botão | **Planejar**<br>N1 · Barra lateral fixa<br>P4 · Checkout com 3 opções + Mais<br>P5 · Desfazer em todas as ações<br>N6 · Busca e comandos (Ctrl+K)<br>V3 · Nota sem cartões aninhados |
 | **Baixo impacto** | **Ajustes finos**<br>N3 · Um só padrão de voltar<br>N7 · Dropdown Rituais sem cortes<br>N8 · Seta e calendário de dias<br>V6 · Checkbox alinhado ao texto<br>V5 · Escala tipográfica<br>P7 · Reorganizar Dados e backup<br>V4 · Paleta calma na limpeza | **Depois**<br>V2 · Modelo único de página<br>P6 · Padrão para telas de coleção<br>V7 · Modo escuro e transições<br>P8 · Layout de celular |
 
-A posição dentro de cada quadrante não indica ordem; os códigos remetem às tabelas acima. Antes de construir N1, P4 e P8, vale testar com uma semana de uso real, como o HANDOFF já recomenda para o escopo.
+A posição dentro de cada quadrante não indica ordem; os códigos remetem às tabelas acima. Antes de construir N1, P4 e P8, vale testar com uma semana de uso real, como os riscos do `DECISOES.md` já recomendam para o escopo.
 
 ### Andamento
 
@@ -88,7 +90,7 @@ Em 12/10/2026, os sete itens de "Fazer já" foram construídos, com estas escolh
 - **P3:** só a dica na linha vazia; o menu "/" ficou para depois.
 - **N4:** o esqueleto vale para todas as telas com consulta, não só wiki e projeto.
 
-As regras de produto foram para o `SPEC.md`, e o que ficou de fora está no `DEBITO-TECNICO.md`.
+As regras de produto foram para o `SPEC.md`, e o que ficou de fora virou pedido em `FEATURE-REQUESTS.md`.
 
 ## Propostas detalhadas
 

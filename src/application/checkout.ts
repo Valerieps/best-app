@@ -211,7 +211,7 @@ export function summarizeClosePendingDays(triages: readonly DayTriage[]): CloseP
 }
 
 /**
- * "Fechar dias pendentes" (AUTO-TRIAGEM.md): notes go to the wiki, whiteboards stay unlinked,
+ * "Fechar dias pendentes" (spec/checkout.md): notes go to the wiki, whiteboards stay unlinked,
  * and tasks not done go back to the active list without a date, counting as postponed.
  * Nothing is deleted, archived or abandoned.
  */

@@ -1435,7 +1435,7 @@ input[type='checkbox'] {
   }
 }
 
-/* Navigation in three levels (SPEC.md, "Navegação") */
+/* Navigation in three levels (spec/navegacao.md, "Navegação") */
 .global-bar {
   position: sticky;
   top: 0;
@@ -2343,7 +2343,7 @@ button.resource-card__toggle {
   }
 }
 
-/* Project list (SPEC.md, "Projetos"): where projects are followed */
+/* Project list (spec/projetos.md, "Projetos"): where projects are followed */
 .projects__title {
   margin: 0;
   font-size: var(--font-size-xl);

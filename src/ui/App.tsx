@@ -69,7 +69,7 @@ export function App() {
   });
 
   if (onToday && stage === null) return null;
-  // "Iniciar Dia" is the only screen without the global bar (SPEC.md, "Navegação").
+  // "Iniciar Dia" is the only screen without the global bar (spec/navegacao.md, "Navegação").
   if (onToday && stage === 'start') return <StartDayScreen />;
 
   return (

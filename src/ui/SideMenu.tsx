@@ -17,7 +17,7 @@ interface Place {
 }
 
 /**
- * The ☰ drawer (SPEC.md, "Navegação"): only places, in groups. Rituals live in the global
+ * The ☰ drawer (spec/navegacao.md, "Navegação"): only places, in groups. Rituals live in the global
  * bar, and the screen's own actions in its header.
  */
 export function SideMenu({ open, current, onClose }: Props) {

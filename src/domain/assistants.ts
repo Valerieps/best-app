@@ -2,7 +2,7 @@ import type { Project, Section } from './entities';
 import { findCitedName, normalizeForMatch } from './text';
 
 /**
- * Cleanup assistants (ASSISTENTES.md): each finds what is out of place and suggests an action;
+ * Cleanup assistants (spec/assistentes.md): each finds what is out of place and suggests an action;
  * the user accepts the suggestions in one go, as in the checkout. Nothing is deleted.
  */
 

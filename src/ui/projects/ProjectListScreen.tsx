@@ -27,7 +27,7 @@ function write(work: () => Promise<unknown>) {
 }
 
 /**
- * The project list (SPEC.md, "Projetos"): where projects are followed. The week's priority
+ * The project list (spec/projetos.md, "Projetos"): where projects are followed. The week's priority
  * projects are cards with a 16-week activity map; the other active ones are rows with 8 weeks.
  */
 export function ProjectsScreen({ today }: { today: DayKey }) {

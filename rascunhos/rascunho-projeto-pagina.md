@@ -5,8 +5,7 @@ empilha formulário, lista, recursos e notas sem hierarquia. O rascunho navegáv
 `rascunho-projeto-pagina_1.html`, nesta pasta. A avaliação geral de UX que motivou a proposta está em
 `AVALIACAO-UX.md`, na raiz do repositório.
 
-Este documento é um brief para implementação. As regras de negócio decididas já estão no `SPEC.md`, seção
-"2. Semana e projetos" > "Projetos".
+Este documento é um brief para implementação. As regras de negócio decididas já estão em `spec/projetos.md`.
 
 ## Decisões de negócio (já no SPEC.md)
 
@@ -98,12 +97,12 @@ Implementado em 12/10/2026. Os pontos técnicos em aberto foram decididos assim:
 - **Aba e coluna:** a aba Notas vai na rota (`#/projeto/<id>/notas`); "fixada" fica nas configurações.
 - **Uma diferença do rascunho:** no hover, as tarefas seguem o padrão da nota do dia (data e prazo continuam visíveis como etiquetas), em vez de esconder os metadados.
 
-Ajustes de 12/10/2026, pedidos pela Valeria (regras no `SPEC.md`, "Projetos"):
+Ajustes de 12/10/2026, pedidos pela Valeria (regras no `spec/projetos.md`, "Projetos"):
 
 - **"Ritmo" no lugar de "Progresso":** o card não mostra mais "4 de 10", porque o total de tarefas de um projeto nunca é conhecido. Ele mostra as tarefas finalizadas nas últimas 2 semanas, 4 barras (uma por semana, a última em azul) e a data da última finalização. Um projeto ativo sem finalização nem nota nova há 14 dias mostra "Parado há N dias" em cor de aviso. Tudo vem do histórico de eventos; uma tarefa reaberta deixa de contar (ADR-033).
 - **Um único botão para a coluna lateral:** o trilho da direita, com "Detalhes" e "Recursos", saiu. O botão na linha das abas é a única entrada e mostra o número de recursos como selo. Com a coluna recolhida, o conteúdo ocupa a largura toda. "Espiando" e "fixada" continuam iguais.
 
-Redesenho de 12/10/2026, pedido pela Valeria (regras no `SPEC.md`, "Projetos" e "Projetos prioritários da semana"). Princípio: a lista de projetos é onde se acompanha; a página do projeto é onde se executa.
+Redesenho de 12/10/2026, pedido pela Valeria (regras no `spec/projetos.md`, "Projetos" e "Projetos prioritários da semana"). Princípio: a lista de projetos é onde se acompanha; a página do projeto é onde se executa.
 
 - **Projetos prioritários da semana, e não mais do mês:** até 3, definidos no passo 6 da reflexão semanal; fora dela só se adiciona enquanto houver vaga; finalizar libera a vaga; a lista passa para as semanas seguintes. Os dados antigos do mês foram migrados (ADR-035). A definição saiu da reflexão mensal.
 - **Lista de projetos:** cabeçalho com resumo ("8 ativos · 1 parado · 4 travadas") e "Novo projeto"; cards dos prioritários com mapa de atividade de 16 semanas, ativas, travadas, finalizadas nas últimas 2 semanas, objetivo e última atividade; vagas livres tracejadas ("Definir prioridade"); "Outros ativos" recolhível, com mapa de 8 semanas, "Parado há N dias" e contagem de parados no título; "Finalizados" recolhido. O estado dos grupos fica nas configurações (ADR-036). Cada card e linha tem o "⋯" com vincular objetivo, adicionar aos prioritários (com vaga) e finalizar.

@@ -1,6 +1,6 @@
 /**
  * How urgent each cleanup assistant is, shown as a color on the "Colocar ordem na casa"
- * dashboard (ASSISTENTES.md). The color comes from how many items the assistant found,
+ * dashboard (spec/assistentes.md). The color comes from how many items the assistant found,
  * compared with limits the user sets in the settings.
  */
 

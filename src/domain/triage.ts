@@ -5,7 +5,7 @@ import { isTaskPendingOn, isTaskShownOn, nextPlanningDay, POSTPONE_ATTENTION_THR
 import { findCitedName } from './text';
 
 /**
- * Batch checkout (AUTO-TRIAGEM.md). For one day, decides what is automatic, what is
+ * Batch checkout (spec/checkout.md). For one day, decides what is automatic, what is
  * suggested and what needs attention. The app only decides what is obvious and reversible,
  * and never takes things out of circulation on its own.
  */

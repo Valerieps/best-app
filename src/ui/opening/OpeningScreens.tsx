@@ -24,7 +24,7 @@ function Sun() {
   );
 }
 
-/** "Uma tela branca" with a sun and the "Iniciar Dia" button, and nothing else (SPEC.md, "Navegação"). */
+/** "Uma tela branca" with a sun and the "Iniciar Dia" button, and nothing else (spec/navegacao.md, "Navegação"). */
 export function StartDayScreen() {
   return (
     <main className="opening">

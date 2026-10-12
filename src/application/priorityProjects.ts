@@ -49,7 +49,7 @@ async function laterLists(tx: StoreTransaction, week: WeekKey): Promise<Priority
 /**
  * Outside the reflection a project only takes a free slot of the current week. If a reflection
  * already defined the next week, the project goes there too while it has a free slot, because
- * the list carries over (SPEC.md, "Projetos prioritários da semana"). Returns whether it was added.
+ * the list carries over (spec/prioridades.md, "Projetos prioritários da semana"). Returns whether it was added.
  */
 export async function addPriorityProject(ctx: AppContext, projectId: string): Promise<boolean> {
   return ctx.store.transaction(async (tx) => {

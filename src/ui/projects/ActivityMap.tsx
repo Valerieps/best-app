@@ -3,7 +3,7 @@ import { activityGrid, activityTotal, type ActivityByDay } from '../../domain/pr
 import { activityDetail, plural } from '../format';
 
 /**
- * Activity map, GitHub style (SPEC.md, "Projetos"): one column per week, one row per day, and
+ * Activity map, GitHub style (spec/projetos.md, "Projetos"): one column per week, one row per day, and
  * up to four tints of one hue. Plain elements with classes, so the UI keeps no `style` attribute;
  * the hover detail is a CSS tooltip read from `data-tip`.
  */

@@ -22,7 +22,7 @@ interface Props {
 }
 
 /**
- * "Colocar ordem na casa" (ASSISTENTES.md): a dashboard with one card per assistant, colored
+ * "Colocar ordem na casa" (spec/assistentes.md): a dashboard with one card per assistant, colored
  * by how much it found. The details and suggested actions only show after opening a card.
  */
 export function CleanupScreen({ today, assistant }: Props) {

@@ -8,7 +8,7 @@ import { record } from './events';
 import type { AppContext, StoreTransaction } from './ports';
 import { updateSettings } from './settings';
 
-/** Weekly reflection use cases (SPEC.md, section 2). */
+/** Weekly reflection use cases (spec/rituais.md). */
 
 export function reflectionId(week: WeekRange): string {
   return `week:${week.key}`;

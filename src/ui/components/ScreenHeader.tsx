@@ -19,7 +19,7 @@ interface Props {
 }
 
 /**
- * Level 2 of the navigation (SPEC.md, "Navegação"): the screen's own title and actions,
+ * Level 2 of the navigation (spec/navegacao.md, "Navegação"): the screen's own title and actions,
  * always in the same place right below the global bar.
  */
 export function ScreenHeader({ title, primary, more = [], back, children }: Props) {

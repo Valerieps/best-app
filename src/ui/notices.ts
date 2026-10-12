@@ -3,8 +3,8 @@ import type { DayKey } from '../domain/day';
 import type { AutoBackupState } from '../infrastructure/autoBackup';
 
 /**
- * The warnings at the top of the screen, of which only one shows at a time (SPEC.md,
- * "Navegação"). Reminders that came back are not in this queue: they always show.
+ * The warnings at the top of the screen, of which only one shows at a time
+ * (spec/navegacao.md). Reminders that came back are not in this queue: they always show.
  */
 export type TopNotice = 'backupProblem' | 'pendingCheckout' | 'backupSetup';
 

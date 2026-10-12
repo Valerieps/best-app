@@ -23,7 +23,7 @@ interface Props {
 }
 
 /**
- * The "⋯" of a project, the same in the list and on its page (SPEC.md, "Projetos"): link an
+ * The "⋯" of a project, the same in the list and on its page (spec/projetos.md, "Projetos"): link an
  * objective, add to the week's priorities while there is a free slot, finish or reopen.
  */
 export function ProjectActionsMenu({ project, objectives, canAddToPriorities }: Props) {

@@ -4,7 +4,7 @@ Atualizado em Oct 12, 2026
 
 O desenho técnico do app para a spec inteira, seções 1a a 6. A spec (`SPEC.md`) diz o que o app faz; este documento diz como ele é construído. As decisões pontuais e o porquê de cada uma estão em `architecture-decision-records.md`, e o que ficou para trás está em `DEBITO-TECNICO.md`.
 
-Cada parte indica o estado: **implementado** (existe no código) ou **planejado** (desenho para a fase indicada).
+Este documento descreve o desenho, não o andamento: o que está feito e o que falta por fase fica no `ROADMAP.md`. Aqui, **planejado** marca só o desenho do que ainda não existe no código.
 
 ## 1. Restrições que moldam tudo
 
@@ -187,10 +187,10 @@ Reativar uma tarefa arquivada limpa a data sem contar adiamento (ADR-015).
 
 ## 8. Checkout e auto-triagem (implementado)
 
-- A auto-triagem é uma função pura no domínio (`domain/triage.ts`). Ela recebe um dia (seções, blocos e projetos) e devolve três listas: decisões automáticas, sugestões pré-selecionadas e itens manuais, seguindo `AUTO-TRIAGEM.md`.
+- A auto-triagem é uma função pura no domínio (`domain/triage.ts`). Ela recebe um dia (seções, blocos e projetos) e devolve três listas: decisões automáticas, sugestões pré-selecionadas e itens manuais, seguindo `spec/checkout.md`.
 - A tela de checkout carrega a triagem uma vez, como uma foto, para que nada mude enquanto a pessoa escolhe. Ela mostra as decisões automáticas e as sugestões, permite trocar qualquer uma e desfazer o que foi automático. "Aceitar sugestões" grava tudo, inclusive as decisões automáticas, numa transação só (ADR-012).
 - "Fechar dias pendentes" usa a mesma função para vários dias. A diferença é que as tarefas não feitas voltam sem data.
-- O mesmo mecanismo de lote serve aos assistentes de limpeza (`ASSISTENTES.md`): cada assistente só fornece a busca (`domain/assistants.ts`) e as ações (`application/assistants.ts`).
+- O mesmo mecanismo de lote serve aos assistentes de limpeza (`spec/assistentes.md`): cada assistente só fornece a busca (`domain/assistants.ts`) e as ações (`application/assistants.ts`).
 - "Dia seguinte" num checkout atrasado é o próximo dia ativo depois do dia triado, mas nunca antes de hoje.
 
 ## 9. Métricas (implementado em parte)
@@ -199,13 +199,13 @@ Reativar uma tarefa arquivada limpa a data sem contar adiamento (ADR-015).
 - As métricas semanais vêm só dos eventos (ADR-021). As mensais que dependem de pergunta em aberto ficaram de fora (ADR-026).
 - O volume de dados de uma pessoa é pequeno o bastante para calcular tudo no navegador. A lista de projetos é o primeiro ponto onde isso já pesa (seção "Lista de projetos" de `DEBITO-TECNICO.md`).
 
-| Fase | Métricas | Estado |
+| Fase | Métricas | Função |
 | --- | --- | --- |
-| 2 | Tarefas adiadas, precisão da data de intenção (feita no dia da intenção, com ou sem adiamentos), tarefas executadas | Feito |
-| 2 | Ritmo e atividade por dia de cada projeto (ADR-033, ADR-034) | Feito |
-| 4 | Prioridades do dia ligadas a projetos prioritários da semana em que caíram, projetos sem objetivo | Feito |
-| 4 | Blocos sem projeto, objetivos com pouco engajamento, prioridades da semana no raio-x | Espera pergunta em aberto |
-| 6 | Maior sequência de um hábito, percentual de completude, hábitos sem objetivo | Feito |
+| 2 | Tarefas adiadas, precisão da data de intenção (feita no dia da intenção, com ou sem adiamentos), tarefas executadas | `metrics.ts` |
+| 2 | Atividade por dia de cada projeto (ADR-033, ADR-034) | `projectActivity.ts` |
+| 4 | Prioridades do dia ligadas a projetos prioritários da semana em que caíram, projetos sem objetivo | `monthMetrics.ts` |
+| 4 | Blocos sem projeto, objetivos com pouco engajamento, prioridades da semana no raio-x | Planejado |
+| 6 | Maior sequência de um hábito, percentual de completude, hábitos sem objetivo | `habits.ts` |
 
 ## 10. Backup e segurança (implementado)
 
@@ -215,16 +215,3 @@ Reativar uma tarefa arquivada limpa a data sem contar adiamento (ADR-015).
 - **Offline** pelo service worker, que só guarda os arquivos do próprio app (ADR-010).
 - **Armazenamento persistente** é pedido ao Chrome ao abrir o app; se ele negar, o app só avisa.
 
-## 11. Fases
-
-| Fase | Estado | Conteúdo técnico |
-| --- | --- | --- |
-| 0. Fundação | Feita | Projeto, banco, histórico de eventos, backup automático, importação, CSP, offline, tokens de tema |
-| 1a. Núcleo | Feita | Editor de blocos, nota do dia, checkout com auto-triagem, listas, "Fechar dias pendentes" |
-| 1b. Acabamento | Feita, menos a instalação no Android e o assistente de tarefas paradas | Prazo máximo, prioridades do dia, atalhos no hover, reunião com participantes e link, paginação entre dias, busca e filtros na wiki, assistentes de seções soltas e projetos repetidos, no dashboard "Colocar ordem na casa" com cores configuráveis (ADR-028) |
-| 2. Semana e projetos | Feita em parte | Feito: lista de projetos para acompanhar (cards dos prioritários com mapa de atividade de 16 semanas, outros ativos com mapa de 8 semanas e "Parado há N dias", finalizados, grupos lembrados nas configurações; ADR-034, ADR-036), página do projeto para executar (ícone, estrela de prioritário, "⋯" com as mesmas ações da lista, "Nova tarefa" acima das abas, tarefas em travadas, próximos dias, sem data e feitas, coluna lateral; ADR-031, ADR-032), projetos prioritários da semana (até 3, carregados de uma semana para a outra, passo 6 da reflexão semanal; ADR-035), "decidir na reflexão semanal", reflexão semanal com triagem, arquivadas, métricas, textos e "Fechar semana", agendamento. Falta o que tem pergunta em aberto: sugestão de projetos e tarefas prioritárias da semana (inclusive puxar uma tarefa de projeto prioritário) |
-| 3. Abertura do dia | Feita em parte | Feito: "Iniciar Dia", warm up com "pular hoje" e "perguntar de novo", dashboard com "Iniciar o Flow de Execução", "registrar pensamentos" e checkout pendente, lembretes (faixa, contador na aba, ponto no ícone, pergunta no checkout), dias ativos. Falta o que tem pergunta em aberto: mural e prioridades da semana no dashboard |
-| 4. Mês e objetivos | Feita em parte | Feito: objetivos (meta, motivação, projetos, recursos, finalizar dizendo se atingiu), recursos pelo checkout e por link, reflexão mensal com sugestão de objetivos, duas visões, finalizar projetos e raio-x parcial (prioridades do dia em projetos prioritários da semana). A definição de prioritários saiu da reflexão mensal e foi para o passo 6 da semanal. Falta o que tem pergunta em aberto: métricas de blocos sem projeto e de engajamento, a metade "prioridades da semana" do raio-x |
-| 5. Tipos de bloco | Bloqueada | Espera a definição dos formatos que identificam cada tipo e de como corrigir um tipo detectado errado |
-| 6. Hábitos | Feita em parte | Feito: hábitos com dias da semana, critério e objetivo, registro sim ou não no dashboard e na tela de hábitos, converter tarefa em hábito no checkout, sequência e completude na reflexão semanal, hábitos na reflexão mensal. Falta o que tem pergunta em aberto: "agendar lembrete" |
-| Depois | Futura | Android e sincronização (juntando aparelhos pelo histórico de eventos) |

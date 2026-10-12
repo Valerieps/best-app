@@ -1,5 +1,8 @@
 # Assistentes de limpeza
 
+- **Entra aqui:** a tela "Colocar ordem na casa" e cada assistente: o que encontra e o que oferece. Antes, este arquivo ficava na raiz (`ASSISTENTES.md`).
+- **Não entra aqui:** quais assistentes já foram construídos (`ROADMAP.md`) e as regras da auto-triagem (`checkout.md`).
+
 Os assistentes de limpeza colocam ordem na casa: cada um encontra o que está fora do lugar, sugere uma ação e eu aceito as sugestões de uma vez, como no checkout em lote. Nenhum assistente apaga nada sozinho.
 
 ## Em aberto
@@ -25,7 +28,7 @@ Os assistentes de limpeza colocam ordem na casa: cada um encontra o que está fo
 | Tarefas esquecidas | Tarefas ativas sem data há semanas ou adiadas muitas vezes | Agendar, arquivar ou abandonar | 1b |
 | Projetos repetidos | Projetos com nomes parecidos, como "Data Studios" e "DataStudios" | Juntar em um projeto só | 1b |
 | Arquivo antigo | Tarefas arquivadas há meses | Reativar ou abandonar de vez | 2 |
-| Projetos parados | Projetos sem nenhuma atividade há 14 dias ou mais (SPEC, "Projetos") | Finalizar ou manter | 2 |
+| Projetos parados | Projetos sem nenhuma atividade há 14 dias ou mais (`projetos.md`, "Lista de projetos") | Finalizar ou manter | 2 |
 | Prioridades travadas | Tarefas prioritárias da semana que nunca desceram para o dia. Os projetos prioritários ficam de fora: só se trocam na reflexão semanal | Manter, trocar ou retirar | 2 |
 | Warm up | Itens do checklist que eu quase sempre pulo | Tirar do checklist | 3 |
 | Objetivos soltos | Objetivos sem projeto ativo, ou com a meta talvez atingida | Finalizar ou vincular projetos | 4 |
