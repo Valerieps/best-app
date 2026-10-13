@@ -30,13 +30,14 @@ Eu posso fazer qualquer revisão na mão, a qualquer hora, pelo menu "Rituais". 
 | | Revisão de Foco | Revisão de Rumo |
 | --- | --- | --- |
 | Cadência (configurável) | A cada 5 checkouts | A cada 4 Revisões de Foco |
-| Sinais | 10 itens ou mais esperando a Revisão de Foco; um projeto em foco ficou parado (`projetos.md`, "Lista de projetos"); o último projeto em foco foi finalizado e a lista ficou vazia | Depois da primeira Revisão de Rumo: mais da metade das tarefas finalizadas no período não pertence a projeto com objetivo; um objetivo ativo ficou 30 dias sem atividade em nenhum dos seus projetos |
+| Sinais | 10 itens ou mais esperando a Revisão de Foco; um projeto em foco ficou parado (`projetos.md`, "Lista de projetos"); o último projeto em foco foi finalizado e a lista ficou vazia | Depois da primeira Revisão de Rumo: com 10 tarefas finalizadas ou mais no período, mais da metade delas não pertence a projeto com objetivo; um objetivo ativo com projetos ficou 30 dias sem atividade em nenhum deles. Um objetivo sem projeto não conta: quem cuida dele é o assistente "Objetivos soltos" (`assistentes.md`) |
 
 - A cadência conta checkouts e revisões, não dias, para não amarrar as revisões ao calendário. Eu mudo os números nas configurações.
 - Conta como checkout todo dia fechado, inclusive pelo "Fechar dias pendentes". Depois de uma ausência, a Revisão de Foco costuma ficar disponível, e é a hora certa para ela.
 - O aviso diz por que a revisão ficou disponível, como "5 checkouts desde a última Revisão de Foco" ou "o projeto X está parado".
 - Uma revisão disponível aparece no contador de "Rituais" e num aviso na nota do dia (`navegacao.md`, "Navegação"). O aviso tem "Lembrar depois", que o esconde até o próximo checkout; o contador continua mostrando a revisão.
 - Fazer a revisão, disponível ou não, zera a contagem dela.
+- A tela de cada revisão mostra só a revisão em andamento. Uma revisão fechada não se reabre; as passadas ficam no histórico (métricas e textos guardados), sem tela por enquanto.
 
 ## Flow da Revisão de Foco *(2)*
 
