@@ -18,13 +18,13 @@ function write(work: () => Promise<unknown>) {
 interface Props {
   project: Project;
   objectives: readonly Objective[];
-  /** Shown only while the week has a free slot; taking a project out happens in the reflection. */
+  /** Shown only while there is a free slot; taking a project out happens in the Revisão de Foco. */
   canAddToPriorities: boolean;
 }
 
 /**
  * The "⋯" of a project, the same in the list and on its page (spec/projetos.md, "Projetos"): link an
- * objective, add to the week's priorities while there is a free slot, finish or reopen.
+ * objective, put in focus while there is a free slot, finish or reopen.
  */
 export function ProjectActionsMenu({ project, objectives, canAddToPriorities }: Props) {
   const [choosing, setChoosing] = useState(false);
@@ -73,7 +73,7 @@ export function ProjectActionsMenu({ project, objectives, canAddToPriorities }: 
           <>
             <DropdownItem onSelect={() => setChoosing(true)}>{current ? 'Trocar o objetivo' : 'Vincular a um objetivo'}</DropdownItem>
             {canAddToPriorities && (
-              <DropdownItem onSelect={() => run(() => addFocusProject(appContext, project.id))}>Adicionar aos prioritários da semana</DropdownItem>
+              <DropdownItem onSelect={() => run(() => addFocusProject(appContext, project.id))}>Colocar em foco</DropdownItem>
             )}
             <DropdownItem onSelect={() => run(() => setProjectFinished(appContext, project.id, !finished))}>
               {finished ? 'Reabrir projeto' : 'Finalizar projeto'}

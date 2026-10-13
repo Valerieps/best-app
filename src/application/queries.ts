@@ -14,25 +14,21 @@ import type {
   Objective,
   Project,
   ProjectListGroup,
-  Reflection,
   Reminder,
   Resource,
   Section,
   WarmupItem,
 } from '../domain/entities';
 import { habitStats, isExpectedOn, type HabitStats } from '../domain/habits';
-import { monthKey, monthRange, shiftMonth, type MonthKey, type MonthRange } from '../domain/month';
-import { monthlyMetrics, type MonthlyMetrics } from '../domain/monthMetrics';
+import { monthKey, monthRange } from '../domain/month';
 import { dayStage, dueReminders, type DayStage } from '../domain/dayFlow';
-import { weeklyMetrics, type WeeklyMetrics } from '../domain/metrics';
-import { dueReflectionWeek } from '../domain/reflectionSchedule';
-import { weekOf, type WeekRange } from '../domain/week';
+import { weekOf } from '../domain/week';
 import { comparePositions } from '../domain/position';
 import { buildDayPriorities, dayPriorityListId, type DayPriority } from '../domain/priorities';
-import { FOCUS_LIST_ID, focusProjectIds, hasFreeSlot, LEGACY_WEEK_LISTS_RANGE } from '../domain/focusProjects';
+import { FOCUS_LIST_ID, focusProjectIds, hasFreeSlot } from '../domain/focusProjects';
 import { activityByDay, lastActivityDay, recentlyFinished, stalledDays, type ActivityByDay } from '../domain/projectActivity';
 import { isDaySection, isStuckTask } from '../domain/projectPage';
-import { buildDayTriage, findPendingDays, isTriagePending, type DayTriage, type TriageRow } from '../domain/triage';
+import { buildDayTriage, findPendingDays, isTriagePending, type DayTriage } from '../domain/triage';
 import type { Reader } from './ports';
 
 /**
@@ -239,88 +235,8 @@ export async function loadMenuCounts(reader: Reader): Promise<MenuCounts> {
   return { projects, active, archived, wiki };
 }
 
-export interface ReflectionView {
-  week: WeekRange;
-  reflection: Reflection | null;
-  /** Step 1: tasks and notes left for the reflection, as triage rows. */
-  deferred: TriageRow[];
-  /** Step 2: archived tasks, which can be reactivated. */
-  archived: TaskListItem[];
-  /** Step 4. */
-  metrics: WeeklyMetrics;
-  /** Step 4, section 6: longest streak and completion of each active habit. */
-  habits: { habit: Habit; week: HabitStats; month: HabitStats }[];
-  projects: Project[];
-  /** The projects in focus, which the review can change freely. */
-  focusIds: string[];
-}
-
-/** Everything the weekly reflection of `week` shows (spec/rituais.md). */
-export async function loadReflection(reader: Reader, week: WeekRange, today: DayKey): Promise<ReflectionView> {
-  const reflection = (await reader.reflection(`week:${week.key}`)) ?? null;
-  const tomorrow = addDays(today, 1);
-  const tasks = await reader.tasksAwaitingReflection();
-  const taskSections = await reader.sectionsByIds([...new Set(tasks.map((task) => task.sectionId))]);
-  const sectionById = new Map(taskSections.map((section) => [section.id, section]));
-  const noteSections = await reader.sectionsWithNotesDestination('weeklyReflection');
-  const noteBlocks = await reader.blocksInSections(noteSections.map((section) => section.id));
-  const deferred: TriageRow[] = [
-    ...tasks.map(
-      (task): TriageRow => ({
-        type: 'task',
-        task,
-        section: sectionById.get(task.sectionId) ?? null,
-        suggestion: { kind: 'schedule', date: tomorrow },
-        attention: false,
-      }),
-    ),
-    ...noteSections.map(
-      (section): TriageRow => ({
-        type: 'notes',
-        section,
-        noteCount: noteBlocks.filter((block) => block.sectionId === section.id && block.kind === 'note').length,
-        suggestion: 'wiki',
-        attention: false,
-      }),
-    ),
-  ];
-  const events = await reader.eventsBetween(week.start, week.end);
-  const projects = await reader.projects();
-  return {
-    week,
-    reflection,
-    deferred,
-    archived: await loadArchivedTasks(reader),
-    metrics: weeklyMetrics(events, week),
-    habits: await habitsOfPeriod(reader, week.start, week.end),
-    projects,
-    focusIds: await loadFocusProjectIds(reader, projects),
-  };
-}
-
-/** Habit statistics for a week, and for the month that week ends in. */
-async function habitsOfPeriod(reader: Reader, start: DayKey, end: DayKey) {
-  const month = monthRange(monthKey(end));
-  const from = start < month.start ? start : month.start;
-  const logs = await reader.habitLogsBetween(from, end);
-  return (await reader.habits())
-    .filter((habit) => habit.status === 'active')
-    .map((habit) => ({ habit, week: habitStats(habit, logs, start, end), month: habitStats(habit, logs, month.start, end) }));
-}
-
-/** The week whose reflection is due by the user's schedule, if any. */
-export async function loadDueReflection(reader: Reader, now: Date): Promise<WeekRange | null> {
-  const settings = await reader.settings();
-  const schedule = settings?.weeklyReflection ?? null;
-  if (!schedule) return null;
-  const candidate = dueReflectionWeek(now, schedule, () => false);
-  if (!candidate) return null;
-  const reflection = await reader.reflection(`week:${candidate.key}`);
-  return reflection?.closedAt ? null : candidate;
-}
-
 /** The projects in focus, active ones only, in the order chosen. */
-async function loadFocusProjectIds(reader: Reader, projects: readonly Project[]): Promise<string[]> {
+export async function loadFocusProjectIds(reader: Reader, projects: readonly Project[]): Promise<string[]> {
   const [list] = await reader.priorityListsBetween(FOCUS_LIST_ID, FOCUS_LIST_ID);
   return focusProjectIds(list, projects);
 }
@@ -328,7 +244,7 @@ async function loadFocusProjectIds(reader: Reader, projects: readonly Project[])
 /** What the "⋯" of a project offers, in the list and on its page. */
 export interface ProjectActions {
   isPriority: boolean;
-  /** Active, not a priority yet, and the week has a free slot. */
+  /** Active, not in focus yet, and the list has a free slot. */
   canAddToPriorities: boolean;
 }
 
@@ -350,7 +266,7 @@ export interface ProjectListItem extends ProjectActions {
 }
 
 export interface ProjectListView {
-  /** The week's priority projects, in the order chosen; at most 3. */
+  /** The projects in focus, in the order chosen; at most 3. */
   priority: ProjectListItem[];
   /** Other active projects, most recent activity first. */
   others: ProjectListItem[];
@@ -366,7 +282,7 @@ export interface ProjectListView {
 export const PROJECT_LIST_GROUPS_OPEN: Record<ProjectListGroup, boolean> = { others: true, finished: false };
 
 /** Activity of each project, from the events of its tasks, notes and day sections (ADR-034). */
-async function loadActivities(reader: Reader, projects: readonly Project[], today: DayKey) {
+export async function loadActivities(reader: Reader, projects: readonly Project[], today: DayKey) {
   const scopes = [];
   for (const project of projects) {
     const tasks = (await reader.blocksOfProject(project.id)).filter((block) => block.kind === 'task');
@@ -583,43 +499,4 @@ export async function loadHabits(reader: Reader, today: DayKey): Promise<HabitVi
         month: habitStats(habit, logs, month.start, today < month.end ? today : month.end),
       };
     });
-}
-
-export interface MonthlyReflectionView {
-  month: MonthRange;
-  reflection: Reflection | null;
-  objectives: ObjectiveSummary[];
-  projects: Project[];
-  habits: Habit[];
-  metrics: MonthlyMetrics;
-}
-
-/** Section 4: the monthly reflection, a dashboard of objectives, projects and habits. */
-export async function loadMonthlyReflection(reader: Reader, key: MonthKey): Promise<MonthlyReflectionView> {
-  const month = monthRange(key);
-  const projects = (await reader.projects()).filter((project) => project.status !== 'merged');
-  const habits = await reader.habits();
-  const dayLists = await reader.priorityListsBetween(`day:${month.start}`, `day:${month.end}`);
-  const priorityTasks = await reader.blocksByIds([...new Set(dayLists.flatMap((list) => list.itemIds))]);
-  const focusEvents = await reader.eventsOfEntities([FOCUS_LIST_ID]);
-  const legacyWeekLists = await reader.priorityListsBetween(...LEGACY_WEEK_LISTS_RANGE);
-  return {
-    month,
-    reflection: (await reader.reflection(`month:${key}`)) ?? null,
-    objectives: await loadObjectives(reader),
-    projects,
-    habits,
-    metrics: monthlyMetrics({ projects, habits, dayPriorityLists: dayLists, priorityTasks, focusEvents, legacyWeekLists }),
-  };
-}
-
-/**
- * "Quando um mês termina, aparece a opção de reflexão mensal": the previous month, while its
- * reflection is not closed and something happened in it.
- */
-export async function loadDueMonthlyReflection(reader: Reader, today: DayKey): Promise<MonthRange | null> {
-  const previous = monthRange(shiftMonth(monthKey(today), -1));
-  if ((await reader.reflection(`month:${previous.key}`))?.closedAt) return null;
-  const events = await reader.eventsBetween(previous.start, previous.end);
-  return events.length > 0 ? previous : null;
 }

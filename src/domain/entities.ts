@@ -1,5 +1,6 @@
 import type { AssistantId, StatusLimits } from './cleanupStatus';
 import type { DayKey } from './day';
+import type { ReviewCadence } from './reviews';
 
 /**
  * Entities stored by the app. Each block, section and project is its own record:
@@ -146,8 +147,12 @@ export interface Reflection {
 /** User settings, a single record with id `main`. Goes into backups. */
 export interface Settings {
   id: 'main';
-  /** When the weekly reflection becomes available: weekday (0 = Sunday) and hour. */
-  weeklyReflection: { weekday: number; hour: number } | null;
+  /**
+   * How many checkouts and Revisões de Foco make each review available; absent numbers use the
+   * defaults. Records saved before the reviews may still carry `weeklyReflection` (weekday and
+   * hour of the weekly reflection), which nothing reads anymore.
+   */
+  reviewCadence?: Partial<ReviewCadence>;
   /** Section 3: weekdays the user works (0 = Sunday). Absent means every day. */
   activeDays?: number[];
   /** Section 3: the warm-up checklist, in order. Empty or absent means no warm up. */

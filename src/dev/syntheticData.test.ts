@@ -8,13 +8,12 @@ import {
   loadPendingDays,
   loadPendingTriages,
   loadProjectList,
-  loadReflection,
   loadWiki,
 } from '../application/queries';
+import { loadFocusReview, loadReviewAvailability } from '../application/reviewQueries';
 import { addDays, toDayKey } from '../domain/day';
 import { activityGrid, CARD_MAP_WEEKS } from '../domain/projectActivity';
 import type { TaskRow, WhiteboardRow } from '../domain/triage';
-import { weekOf } from '../domain/week';
 import { importBackup } from '../infrastructure/backupRepository';
 import { createTestContext, sequentialIds } from '../test/fixtures';
 import { buildSyntheticBackup } from './syntheticData';
@@ -93,12 +92,16 @@ describe('synthetic data', () => {
     ]);
   });
 
-  it('leaves a task and notes for the weekly reflection, and archived tasks to revisit', async () => {
-    const view = await loadReflection(reader, weekOf(TODAY), TODAY);
+  it('leaves a task and notes for the Revisão de Foco, and archived tasks to revisit', async () => {
+    const view = await loadFocusReview(reader, TODAY);
     const deferred = view.deferred.map((row) => (row.type === 'task' ? row.task.text : row.section.title));
     expect(deferred).toEqual(['Pedir orçamento de bancada de granito', 'Retrospectiva da sprint 40']);
     const archived = await loadArchivedTasks(reader);
     expect(archived.map((item) => toDayKey(new Date(item.task.closedAt!)))).toEqual([day(-5), day(-10), day(-31)]);
+  });
+
+  it('has the Revisão de Foco available by the cadence', async () => {
+    expect((await loadReviewAvailability(reader, TODAY)).focus).toContainEqual({ kind: 'cadence', count: expect.any(Number) });
   });
 
   it('keeps active tasks without a date for weeks', async () => {

@@ -162,6 +162,10 @@ export class MemoryStore implements Store, Reader {
     return this.repository<Reflection>('reflections').get(id);
   }
 
+  async reflections() {
+    return this.rows<Reflection>('reflections');
+  }
+
   async settings() {
     return this.repository<Settings>('settings').get('main');
   }

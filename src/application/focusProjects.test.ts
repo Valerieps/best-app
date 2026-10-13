@@ -2,8 +2,8 @@ import { describe, expect, it } from 'vitest';
 import { createTestContext } from '../test/fixtures';
 import { addFocusProject, setFocusProjectInReview } from './focusProjects';
 import { createProject, setProjectFinished } from './projects';
-import { loadProject, loadProjectList, loadReflection } from './queries';
-import { weekOf } from '../domain/week';
+import { loadProject, loadProjectList } from './queries';
+import { loadFocusReview } from './reviewQueries';
 
 // The test clock starts on Sunday 2026-10-11.
 const SUNDAY = '2026-10-11';
@@ -66,7 +66,7 @@ describe('projects in focus in the Revisão de Foco', () => {
   it('can swap and remove, and the change shows right away', async () => {
     const { ctx, reader, projects } = await setup(['A', 'B', 'C', 'D']);
     for (const project of projects.slice(0, 3)) await addFocusProject(ctx, project.id);
-    expect((await loadReflection(reader, weekOf(SUNDAY), SUNDAY)).focusIds).toEqual(projects.slice(0, 3).map((project) => project.id));
+    expect((await loadFocusReview(reader, SUNDAY)).focusIds).toEqual(projects.slice(0, 3).map((project) => project.id));
 
     await setFocusProjectInReview(ctx, projects[3].id, true); // full: ignored
     await setFocusProjectInReview(ctx, projects[1].id, false);

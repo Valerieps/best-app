@@ -35,6 +35,8 @@ import { SkeletonLines } from '../components/Skeleton';
 import { formatLongDate } from '../format';
 import { navigate } from '../hooks';
 import { RemindersBanner } from '../opening/Reminders';
+import { ReviewBanner } from '../reviews/ReviewBanner';
+import type { ReviewNotice } from '../reviews/reviewNotice';
 import { SectionHeader } from './SectionHeader';
 
 interface Props {
@@ -49,6 +51,10 @@ interface Props {
   showPendingNotice?: boolean;
   /** "Lembrar depois" on the pending checkout band. */
   onSnoozePending?(): void;
+  /** The available review, when its band is the one warning shown now. */
+  reviewNotice?: ReviewNotice | null;
+  /** "Lembrar depois" on the review band. */
+  onSnoozeReview?(): void;
 }
 
 /** A section of the screen, with its stable key and the lines shown in it. */
@@ -109,6 +115,8 @@ export function DayNoteScreen({
   reminders = [],
   showPendingNotice = false,
   onSnoozePending = () => {},
+  reviewNotice = null,
+  onSnoozeReview,
 }: Props) {
   const isToday = day === today;
   const view = useLiveQuery(() => loadDayNote(reader, day), [day]);
@@ -300,9 +308,10 @@ export function DayNoteScreen({
     <>
       <main className="page">
         {header}
-        {isToday && (showPendingNotice || reminders.length > 0) && (
+        {isToday && (showPendingNotice || reviewNotice || reminders.length > 0) && (
           <div className="screen-notices">
             {showPendingNotice && <PendingDaysBanner days={pendingDays} today={today} onSnooze={onSnoozePending} />}
+            {reviewNotice && <ReviewBanner notice={reviewNotice} onSnooze={() => onSnoozeReview?.()} />}
             <RemindersBanner reminders={reminders} />
           </div>
         )}

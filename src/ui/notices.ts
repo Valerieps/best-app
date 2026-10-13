@@ -6,10 +6,13 @@ import type { AutoBackupState } from '../infrastructure/autoBackup';
  * The warnings at the top of the screen, of which only one shows at a time
  * (spec/navegacao.md). Reminders that came back are not in this queue: they always show.
  */
-export type TopNotice = 'backupProblem' | 'pendingCheckout' | 'backupSetup';
+export type TopNotice = 'backupProblem' | 'pendingCheckout' | 'backupSetup' | 'reviewAvailable';
 
-/** Warnings that "Lembrar depois" hides until the next day. A backup problem is never snoozed. */
-export type SnoozableNotice = Exclude<TopNotice, 'backupProblem'>;
+/**
+ * Warnings that "Lembrar depois" hides until the next day. A backup problem is never snoozed; an
+ * available review is snoozed until the next checkout (`useReviewSnooze`).
+ */
+export type SnoozableNotice = 'pendingCheckout' | 'backupSetup';
 
 /**
  * Whether the automatic backup needs a warning: a problem (blocked, error) always does; the
@@ -41,13 +44,16 @@ interface NoticeInput {
   /** "Dados e backup" already shows how to set the backup up. */
   onDataScreen: boolean;
   snoozed: ReadonlySet<SnoozableNotice>;
+  /** Today's day note is open and a review is available, not snoozed. Absent means no. */
+  reviewAvailable?: boolean;
 }
 
-/** The one warning to show, in order: backup problem, pending checkout, backup setup. */
-export function pickTopNotice({ backup, pendingCheckout, onDataScreen, snoozed }: NoticeInput): TopNotice | null {
+/** The one warning to show, in order: backup problem, pending checkout, backup setup, available review. */
+export function pickTopNotice({ backup, pendingCheckout, onDataScreen, snoozed, reviewAvailable = false }: NoticeInput): TopNotice | null {
   if (backup === 'problem') return 'backupProblem';
   if (pendingCheckout && !snoozed.has('pendingCheckout')) return 'pendingCheckout';
   if (backup === 'setup' && !onDataScreen && !snoozed.has('backupSetup')) return 'backupSetup';
+  if (reviewAvailable) return 'reviewAvailable';
   return null;
 }
 
@@ -83,4 +89,30 @@ export function useSnoozedNotices(today: DayKey): [Set<SnoozableNotice>, (notice
     setDays(next);
   };
   return [snoozedOn(days, today), snooze];
+}
+
+const REVIEW_SNOOZE_KEY = 'best-app:reviewSnoozedAt';
+
+/**
+ * When the available review was snoozed, and the "Lembrar depois" action. Like the other
+ * snoozes, a convenience of this browser only; the notice comes back after the next checkout.
+ */
+export function useReviewSnooze(): [string | null, () => void] {
+  const [snoozedAt, setSnoozedAt] = useState<string | null>(() => {
+    try {
+      return localStorage.getItem(REVIEW_SNOOZE_KEY);
+    } catch {
+      return null;
+    }
+  });
+  const snooze = () => {
+    const now = new Date().toISOString();
+    try {
+      localStorage.setItem(REVIEW_SNOOZE_KEY, now);
+    } catch {
+      // Nothing to do: the notice just comes back when the app is opened again.
+    }
+    setSnoozedAt(now);
+  };
+  return [snoozedAt, snooze];
 }

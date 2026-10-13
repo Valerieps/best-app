@@ -15,8 +15,7 @@ describe('routes', () => {
     { name: 'cleanup', assistant: 'whiteboards' },
     { name: 'cleanup', assistant: 'duplicates' },
     { name: 'data' },
-    { name: 'reflection' },
-    { name: 'reflection', week: '2026-W41' },
+    { name: 'focusReview' },
     { name: 'projects' },
     { name: 'project', id: 'p-1' },
     { name: 'project', id: 'p-1', tab: 'notes' },
@@ -24,8 +23,7 @@ describe('routes', () => {
     { name: 'objectives' },
     { name: 'objective', id: 'o-1' },
     { name: 'habits' },
-    { name: 'monthReflection' },
-    { name: 'monthReflection', month: '2026-09' },
+    { name: 'directionReview' },
   ])('round-trips %o', (route) => {
     expect(parseRoute(routeHash(route))).toEqual(route);
   });
@@ -35,5 +33,10 @@ describe('routes', () => {
     expect(parseRoute('#/nada')).toEqual({ name: 'day' });
     expect(parseRoute('#/checkout/ontem')).toEqual({ name: 'day' });
     expect(parseRoute('#/ordem/nada')).toEqual({ name: 'cleanup' });
+  });
+
+  it('takes the old reflection links to the reviews', () => {
+    expect(parseRoute('#/reflexao/2026-W41')).toEqual({ name: 'focusReview' });
+    expect(parseRoute('#/mes/2026-09')).toEqual({ name: 'directionReview' });
   });
 });

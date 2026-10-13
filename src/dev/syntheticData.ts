@@ -1,6 +1,5 @@
 import { createBackup, type BackupFile } from '../application/backup';
 import type { IdGenerator } from '../application/ports';
-import { setWeeklyReflectionSchedule } from '../application/reflection';
 import type { Project } from '../domain/entities';
 import { Simulation } from './simulation';
 
@@ -11,11 +10,11 @@ import { Simulation } from './simulation';
  * about four months, so the 16-week activity maps have history. Dev only; see ADR-027.
  *
  * What it leaves behind, relative to today:
- * - Project list: the scheduling app and the remodel are this week's priority projects,
- *   carried over from last week, with one free slot. "Festa de fim-de-ano" has had no
+ * - Project list: the scheduling app and the remodel are the projects in focus, with one
+ *   free slot. "Festa de fim-de-ano" has had no
  *   activity for 22 days, so it shows as stalled.
  * - Pending days: the last 3 days have no checkout. Day -3 has a task postponed 3 times
- *   (attention, "decidir na reflexão semanal") and a whiteboard that cites a project (link
+ *   (attention, "decidir na Revisão de Foco") and a whiteboard that cites a project (link
  *   suggestion); day -2 has a task whose deadline passed; day -1 has a whiteboard with notes.
  * - Whiteboards assistant: "Daily do App de agendamento" left unlinked 3 times (link),
  *   "Ideias de decoração" twice (convert), "Orçamentos marcenaria" twice with different
@@ -24,8 +23,8 @@ import { Simulation } from './simulation';
  * - Duplicates assistant: "Reforma da cozinha" / "Reforma da cosinha" (typo), "Festa de fim de
  *   ano" / "Festa de fim-de-ano" (punctuation), and "Sprint 41" / "Sprint 42", a false
  *   positive for "Manter separados". The finished "Sprint 40" stays out.
- * - Weekly reflection: a task left for it and the notes of a retrospective; archived tasks
- *   from 31, 10 and 5 days ago.
+ * - Revisão de Foco: available, since there was none and dozens of checkouts were done; a task
+ *   left for it and the notes of a retrospective; archived tasks from 31, 10 and 5 days ago.
  * - Active tasks without a date for weeks, for the future stale tasks assistant.
  * - Today: a task planned for today as a priority, and a task whose deadline is today.
  */
@@ -79,7 +78,6 @@ export async function buildSyntheticData(now: Date, ids: IdGenerator): Promise<S
 
   // Day -35: the app kicks off, and the party is just an idea on a whiteboard.
   sim.on(-35);
-  await setWeeklyReflectionSchedule(sim.ctx, { weekday: 5, hour: 17 });
   const kickoff = await sim.section('meeting', 'Kickoff do app de agendamento', team);
   const [, , , , repo, stories, competitors] = await sim.write(
     kickoff,
@@ -209,7 +207,7 @@ export async function buildSyntheticData(now: Date, ids: IdGenerator): Promise<S
   );
   await sim.checkout();
 
-  // Day -24: the countertop quote was postponed 3 times and goes to the weekly reflection.
+  // Day -24: the countertop quote was postponed 3 times and goes to the Revisão de Foco.
   sim.on(-24);
   await sim.keepWhiteboard(groceries);
   await sim.done(availabilityApi, barbecue);
@@ -358,7 +356,7 @@ export async function buildSyntheticData(now: Date, ids: IdGenerator): Promise<S
   await englishClass('Inglês: small talk', 'Small talk antes de reunião: clima, viagem, fim de semana.');
   await sim.checkout({ tasks: [[calendarSync, { kind: 'archive' }]] });
 
-  // Day -8: the retrospective goes to the weekly reflection; a review is planned for today.
+  // Day -8: the retrospective goes to the Revisão de Foco; a review is planned for today.
   sim.on(-8);
   await sim.done(reminderEmail);
   const retro = await sim.section('meeting', 'Retrospectiva da sprint 40', team);
@@ -399,7 +397,7 @@ export async function buildSyntheticData(now: Date, ids: IdGenerator): Promise<S
     '[] Enviar os convites',
   );
   await sim.deadline(sendInvitations, 20);
-  // This week's priority projects; the list carries over to the current week, with a free slot.
+  // The projects in focus, with a free slot.
   await sim.prioritize(app);
   await sim.prioritize(remodel);
   await sim.checkout({ tasks: [[sendInvitations, { kind: 'schedule', date: sim.day(6) }]] });

@@ -19,9 +19,11 @@ import { DashboardScreen, StartDayScreen, WarmupScreen } from './opening/Opening
 import { useDueReminders, useReminderSignals } from './opening/Reminders';
 import { ProjectsScreen } from './projects/ProjectListScreen';
 import { ProjectScreen } from './projects/ProjectScreens';
-import { backupNoticeLevel, pickTopNotice, useSnoozedNotices } from './notices';
-import { MonthlyReflectionScreen } from './reflection/MonthlyReflectionScreen';
-import { ReflectionScreen } from './reflection/ReflectionScreen';
+import { loadReviewAvailability } from '../application/reviewQueries';
+import { backupNoticeLevel, pickTopNotice, useReviewSnooze, useSnoozedNotices } from './notices';
+import { DirectionReviewScreen } from './reviews/DirectionReviewScreen';
+import { FocusReviewScreen } from './reviews/FocusReviewScreen';
+import { isReviewSnoozed, pickReviewNotice } from './reviews/reviewNotice';
 import { autoBackup, db, reader } from './services';
 import { SettingsScreen } from './settings/SettingsScreen';
 import { Sidebar } from './Sidebar';
@@ -58,11 +60,15 @@ export function App() {
   useReminderSignals(dueReminders.length);
   // One warning at a time at the top; reminders that came back are not in this queue.
   const [snoozed, snooze] = useSnoozedNotices(today);
+  const reviews = useLiveQuery(() => loadReviewAvailability(reader, today), [today]);
+  const [reviewSnoozedAt, snoozeReview] = useReviewSnooze();
+  const reviewNotice = isReviewSnoozed(reviewSnoozedAt, reviews?.lastCheckoutAt ?? null) ? null : pickReviewNotice(reviews);
   const notice = pickTopNotice({
     backup: backupNoticeLevel(backupState, hasData, everBackedUp),
     pendingCheckout: onToday && stage === 'execution' && pendingDays.length > 0,
     onDataScreen: route.name === 'data',
     snoozed,
+    reviewAvailable: onToday && stage === 'execution' && reviewNotice !== null,
   });
 
   if (onToday && stage === null) return null;
@@ -71,7 +77,7 @@ export function App() {
 
   return (
     <div className="shell">
-      <Sidebar route={route} today={today} pendingDays={pendingDays} backupState={backupState} />
+      <Sidebar route={route} today={today} pendingDays={pendingDays} reviews={reviews} backupState={backupState} />
       <div className="shell__main">
         {(notice === 'backupProblem' || notice === 'backupSetup') && (
           <BackupBanner state={backupState} actions={backup} onSnooze={() => snooze('backupSetup')} />
@@ -88,6 +94,8 @@ export function App() {
             reminders={dueReminders}
             showPendingNotice={notice === 'pendingCheckout'}
             onSnoozePending={() => snooze('pendingCheckout')}
+            reviewNotice={notice === 'reviewAvailable' ? reviewNotice : null}
+            onSnoozeReview={snoozeReview}
           />
         )}
         {route.name === 'checkout' && <CheckoutScreen key={route.day} day={route.day} today={today} />}
@@ -95,14 +103,14 @@ export function App() {
         {route.name === 'archived' && <ArchivedTasksScreen today={today} />}
         {route.name === 'wiki' && <WikiScreen focus={route.section} />}
         {route.name === 'cleanup' && <CleanupScreen today={today} assistant={route.assistant} />}
-        {route.name === 'reflection' && <ReflectionScreen weekKey={route.week} today={today} />}
+        {route.name === 'focusReview' && <FocusReviewScreen today={today} />}
         {route.name === 'projects' && <ProjectsScreen today={today} />}
         {route.name === 'project' && <ProjectScreen key={route.id} id={route.id} tab={route.tab ?? 'tasks'} today={today} />}
         {route.name === 'settings' && <SettingsScreen />}
         {route.name === 'objectives' && <ObjectivesScreen />}
         {route.name === 'objective' && <ObjectiveScreen id={route.id} />}
         {route.name === 'habits' && <HabitsScreen today={today} />}
-        {route.name === 'monthReflection' && <MonthlyReflectionScreen month={route.month} today={today} />}
+        {route.name === 'directionReview' && <DirectionReviewScreen today={today} />}
         {route.name === 'data' && (
           <main className="page">
             <ScreenHeader title="Dados e backup" />

@@ -3,21 +3,21 @@ import type { DomainEvent } from './events';
 import { focusProjectsOnDay } from './focusProjects';
 
 /**
- * Section 4: the "raio-x da desconexão" between the day to day and the objectives. Metrics with
- * open questions in the spec (blocks vs. tasks without project, low-engagement objectives) are
- * left out until decided.
+ * Section 4: the "raio-x da desconexão" between the day to day and the objectives, shown in the
+ * Revisão de Rumo. Metrics with open questions in the spec (blocks vs. tasks without project,
+ * low-engagement objectives) are left out until decided.
  */
-export interface MonthlyMetrics {
+export interface DirectionMetrics {
   activeProjects: number;
   projectsWithoutObjective: number;
   habitsWithoutObjective: number;
-  /** Day priorities of the month. */
+  /** Day priorities of the period. */
   dayPriorities: number;
   /** Those that were tasks of a project in focus on their day. */
   dayPrioritiesInFocusProjects: number;
 }
 
-export function monthlyMetrics(input: {
+export function directionMetrics(input: {
   projects: readonly Project[];
   habits: readonly Habit[];
   dayPriorityLists: readonly PriorityList[];
@@ -26,7 +26,7 @@ export function monthlyMetrics(input: {
   focusEvents: readonly DomainEvent[];
   /** The week lists of priority projects from before the reviews, for the days before any change. */
   legacyWeekLists: readonly PriorityList[];
-}): MonthlyMetrics {
+}): DirectionMetrics {
   const active = input.projects.filter((project) => project.status === 'active');
   const taskById = new Map(input.priorityTasks.map((task) => [task.id, task]));
   let dayPriorities = 0;

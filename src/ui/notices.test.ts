@@ -61,6 +61,12 @@ describe('pickTopNotice', () => {
   it('hides a snoozed backup setup', () => {
     expect(pickTopNotice({ ...base, backup: 'setup', snoozed: new Set(['backupSetup']) })).toBeNull();
   });
+
+  it('puts an available review last', () => {
+    expect(pickTopNotice({ ...base, reviewAvailable: true })).toBe('reviewAvailable');
+    expect(pickTopNotice({ ...base, reviewAvailable: true, pendingCheckout: true })).toBe('pendingCheckout');
+    expect(pickTopNotice({ ...base, reviewAvailable: true, backup: 'setup' })).toBe('backupSetup');
+  });
 });
 
 describe('snoozedOn', () => {

@@ -16,7 +16,7 @@ export async function updateSettings(
 ): Promise<void> {
   await ctx.store.transaction(async (tx) => {
     const at = ctx.clock.now().toISOString();
-    const current = (await tx.settings.get('main')) ?? { id: 'main' as const, weeklyReflection: null, updatedAt: at };
+    const current = (await tx.settings.get('main')) ?? { id: 'main' as const, updatedAt: at };
     const patch = typeof patchOrUpdate === 'function' ? patchOrUpdate(current) : patchOrUpdate;
     await tx.settings.put({ ...current, ...patch, updatedAt: at });
     await record(ctx, tx, 'settings.changed', 'settings', 'main', toDayKey(ctx.clock.now()), patch);

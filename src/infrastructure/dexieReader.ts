@@ -88,6 +88,10 @@ export class DexieReader implements Reader {
     return this.db.reflections.get(id);
   }
 
+  reflections() {
+    return this.db.reflections.toArray();
+  }
+
   settings() {
     return this.db.settings.get('main');
   }

@@ -1,46 +1,28 @@
 import { useState } from 'react';
-import { closeMonth, createObjectiveFromProject, linkProjectToObjective } from '../../application/objectives';
+import { createObjectiveFromProject, finishObjective, linkProjectToObjective, updateObjective } from '../../application/objectives';
 import { setProjectFinished } from '../../application/projects';
-import { loadDueMonthlyReflection, loadMonthlyReflection } from '../../application/queries';
+import { loadDirectionReview } from '../../application/reviewQueries';
+import { closeReview } from '../../application/reviews';
 import type { DayKey } from '../../domain/day';
-import type { Project } from '../../domain/entities';
-import { monthKey, shiftMonth } from '../../domain/month';
+import type { Objective, Project } from '../../domain/entities';
+import { LoadingPage } from '../components/Skeleton';
 import { formatShortDate } from '../format';
 import { navigate, routeHash } from '../hooks';
 import { appContext, reader } from '../services';
-import { LoadingPage } from '../components/Skeleton';
 import { useLiveQuery } from '../useLiveQuery';
-
-const MONTH_NAMES = [
-  'janeiro',
-  'fevereiro',
-  'março',
-  'abril',
-  'maio',
-  'junho',
-  'julho',
-  'agosto',
-  'setembro',
-  'outubro',
-  'novembro',
-  'dezembro',
-];
-
-function monthLabel(key: string): string {
-  const [year, month] = key.split('-').map(Number);
-  return `${MONTH_NAMES[month - 1]} de ${year}`;
-}
+import { Metric, Step } from './ReviewParts';
 
 type View = 'objective' | 'project';
 
-/** "Flow de Reflexão Mensal" (section 4): a dashboard of objectives, projects and habits. */
-export function MonthlyReflectionScreen({ month, today }: { month?: string; today: DayKey }) {
-  const key = month ?? shiftMonth(monthKey(today), -1);
-  const view = useLiveQuery(() => loadMonthlyReflection(reader, key), [key]);
+/**
+ * "Flow da Revisão de Rumo" (section 4): a dashboard of objectives, projects and habits, with the
+ * raio-x since the previous Revisão de Rumo.
+ */
+export function DirectionReviewScreen({ today }: { today: DayKey }) {
+  const view = useLiveQuery(() => loadDirectionReview(reader, today), [today]);
   const [mode, setMode] = useState<View>('objective');
-  if (!view) return <LoadingPage title="Reflexão mensal" />;
+  if (!view) return <LoadingPage title="Revisão de Rumo" />;
 
-  const closed = Boolean(view.reflection?.closedAt);
   const activeProjects = view.projects.filter((project) => project.status === 'active');
   const withoutObjective = activeProjects.filter((project) => !project.objectiveId);
   const activeObjectives = view.objectives.filter((summary) => summary.objective.status === 'active');
@@ -76,51 +58,31 @@ export function MonthlyReflectionScreen({ month, today }: { month?: string; toda
   return (
     <main className="page page--wide">
       <header className="reflection__header">
-        <button type="button" className="icon-button" onClick={() => navigate({ name: 'monthReflection', month: shiftMonth(key, -1) })} aria-label="Mês anterior">
-          ‹
-        </button>
-        <h1 className="page__title reflection__title">Reflexão mensal · {monthLabel(key)}</h1>
-        <button
-          type="button"
-          className="icon-button"
-          disabled={key >= monthKey(today)}
-          onClick={() => navigate({ name: 'monthReflection', month: shiftMonth(key, 1) })}
-          aria-label="Próximo mês"
-        >
-          ›
-        </button>
+        <h1 className="page__title reflection__title">Revisão de Rumo</h1>
       </header>
-      {closed && <p className="muted">Este mês já foi fechado. Ainda dá para mudar o que quiser.</p>}
+      <p className="muted">
+        {view.since
+          ? `Desde a última Revisão de Rumo, em ${formatShortDate(view.since.slice(0, 10))}.`
+          : 'Esta é a primeira Revisão de Rumo: ela cobre tudo desde o começo.'}
+      </p>
 
-      <section className="reflection__step">
-        <h2 className="reflection__step-title">Raio-x do mês</h2>
+      <Step title="Raio-x do período">
         <div className="metrics">
-          <div className="metric">
-            <span className="metric__value">
-              {view.metrics.projectsWithoutObjective} de {view.metrics.activeProjects}
-            </span>
-            <span className="metric__label">projetos ativos sem objetivo</span>
-          </div>
-          <div className="metric">
-            <span className="metric__value">{view.metrics.habitsWithoutObjective}</span>
-            <span className="metric__label">hábitos sem objetivo</span>
-          </div>
-          <div className="metric">
-            <span className="metric__value">
-              {view.metrics.dayPrioritiesInFocusProjects} de {view.metrics.dayPriorities}
-            </span>
-            <span className="metric__label">prioridades do dia em projetos prioritários da semana</span>
-          </div>
+          <Metric value={`${view.metrics.projectsWithoutObjective} de ${view.metrics.activeProjects}`} label="projetos ativos sem objetivo" />
+          <Metric value={view.metrics.habitsWithoutObjective} label="hábitos sem objetivo" />
+          <Metric
+            value={`${view.metrics.dayPrioritiesInFocusProjects} de ${view.metrics.dayPriorities}`}
+            label="prioridades do dia em projetos em foco"
+          />
         </div>
         <p className="muted metrics__note">
           Blocos sem projeto e objetivos com pouco engajamento entram quando as perguntas em aberto da spec forem
           respondidas.
         </p>
-      </section>
+      </Step>
 
       {withoutObjective.length > 0 && (
-        <section className="reflection__step">
-          <h2 className="reflection__step-title">Sugestão de objetivos</h2>
+        <Step title="Sugestão de objetivos">
           <p className="muted">Projetos sem objetivo. Crie um objetivo a partir de um deles, ou ligue-o a um objetivo abaixo.</p>
           <ul className="card-list">
             {withoutObjective.map((project) => (
@@ -139,7 +101,16 @@ export function MonthlyReflectionScreen({ month, today }: { month?: string; toda
               </li>
             ))}
           </ul>
-        </section>
+        </Step>
+      )}
+
+      {activeObjectives.length > 0 && (
+        <Step title="Meta e motivação">
+          <p className="muted">Para cada objetivo, releia a meta e a motivação, e decida se ele continua.</p>
+          {activeObjectives.map(({ objective }) => (
+            <ObjectiveRevisit key={objective.id} objective={objective} />
+          ))}
+        </Step>
       )}
 
       <section className="reflection__step">
@@ -194,37 +165,58 @@ export function MonthlyReflectionScreen({ month, today }: { month?: string; toda
         {activeProjects.length === 0 && <p className="muted">Nenhum projeto ativo.</p>}
       </section>
 
-      <section className="reflection__step">
-        <h2 className="reflection__step-title">Fechar o mês</h2>
+      <Step title="Fechar a revisão">
         <button
           type="button"
           className="primary"
-          disabled={closed}
           onClick={async () => {
-            await closeMonth(appContext, view.month, view.metrics);
+            await closeReview(appContext, 'direction', view.since, view.metrics);
             navigate({ name: 'day' });
           }}
         >
-          Fechar mês
+          Fechar revisão
         </button>
-      </section>
+      </Step>
     </main>
   );
 }
 
-/** Shows up in the day note when a month ended and its reflection was not closed. */
-export function MonthlyReflectionBanner({ today }: { today: DayKey }) {
-  const due = useLiveQuery(() => loadDueMonthlyReflection(reader, today), [today]);
-  if (!due) return null;
+/** One objective's goal and motivation, edited in place and saved when leaving the field. */
+function ObjectiveRevisit({ objective }: { objective: Objective }) {
+  const [fields, setFields] = useState({ goal: objective.goal, motivation: objective.motivation });
+  const save = () => {
+    const goal = fields.goal.trim();
+    if (!goal) return setFields({ ...fields, goal: objective.goal });
+    if (goal !== objective.goal || fields.motivation !== objective.motivation) {
+      void updateObjective(appContext, objective.id, { goal, motivation: fields.motivation });
+    }
+  };
+
   return (
-    <div className="banner" role="status">
-      <span>
-        {monthLabel(due.key).replace(/^./, (letter) => letter.toUpperCase())} terminou ({formatShortDate(due.start)} a{' '}
-        {formatShortDate(due.end)}). A reflexão mensal está disponível.
+    <div className="month__objective reflection__texts">
+      <label className="field">
+        <span className="field__label">Meta</span>
+        <input className="text-input" value={fields.goal} onChange={(event) => setFields({ ...fields, goal: event.target.value })} onBlur={save} />
+      </label>
+      <label className="field">
+        <span className="field__label">Motivação</span>
+        <textarea
+          className="text-area"
+          rows={2}
+          value={fields.motivation}
+          onChange={(event) => setFields({ ...fields, motivation: event.target.value })}
+          onBlur={save}
+        />
+      </label>
+      <span className="warmup__actions">
+        <span className="muted">Não continua?</span>
+        <button type="button" className="small" onClick={() => void finishObjective(appContext, objective.id, true)}>
+          Finalizar: atingi
+        </button>
+        <button type="button" className="small" onClick={() => void finishObjective(appContext, objective.id, false)}>
+          Finalizar: não atingi
+        </button>
       </span>
-      <button type="button" className="link" onClick={() => navigate({ name: 'monthReflection', month: due.key })}>
-        Fazer agora
-      </button>
     </div>
   );
 }
