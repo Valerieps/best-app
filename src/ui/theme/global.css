@@ -916,6 +916,10 @@ input[type='checkbox'] {
   margin-top: var(--space-4);
 }
 
+.dashboard__focus {
+  margin-bottom: var(--space-4);
+}
+
 .reminders {
   align-items: flex-start;
 }

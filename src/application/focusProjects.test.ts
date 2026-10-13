@@ -2,7 +2,9 @@ import { describe, expect, it } from 'vitest';
 import { createTestContext } from '../test/fixtures';
 import { addFocusProject, setFocusProjectInReview } from './focusProjects';
 import { createProject, setProjectFinished } from './projects';
-import { loadProject, loadProjectList } from './queries';
+import { createBlock, linkSectionToProject } from './notebook';
+import { loadDayOpening, loadPlanning, loadProject, loadProjectList } from './queries';
+import { positionBetween } from '../domain/position';
 import { loadFocusReview } from './reviewQueries';
 
 // The test clock starts on Sunday 2026-10-11.
@@ -81,5 +83,30 @@ describe('projects in focus in the Revisão de Foco', () => {
     await setFocusProjectInReview(ctx, projects[0].id, false);
     const removed = await db.events.where('type').equals('priority.removed').toArray();
     expect(removed.map((event) => event.data.reason)).toEqual(['review']);
+  });
+});
+
+describe('projects in focus in the day to day', () => {
+  it('puts their tasks first in the planning of the next day', async () => {
+    const { ctx, reader, projects } = await setup(['Fora', 'Foco']);
+    const loose = await createBlock(ctx, { sectionId: null, position: positionBetween(null, null) }, '[] Solta');
+    const outside = await createBlock(ctx, { sectionId: null, position: positionBetween(null, null) }, '[] Do outro projeto');
+    await linkSectionToProject(ctx, outside.sectionId, projects[0].id);
+    const inFocus = await createBlock(ctx, { sectionId: null, position: positionBetween(null, null) }, '[] Do projeto em foco');
+    await linkSectionToProject(ctx, inFocus.sectionId, projects[1].id);
+    await addFocusProject(ctx, projects[1].id);
+
+    const view = await loadPlanning(reader, '2026-10-12');
+    expect(view.others.map((item) => item.task.text)[0]).toBe('Do projeto em foco');
+    expect(view.others.map((item) => item.task.id)).toEqual(expect.arrayContaining([loose.id, outside.id]));
+  });
+
+  it('shows them on the dashboard, which they make show up even without a warm up', async () => {
+    const { ctx, reader, projects } = await setup(['Foco']);
+    expect((await loadDayOpening(reader, SUNDAY)).stage).toBe('execution');
+    await addFocusProject(ctx, projects[0].id);
+    const opening = await loadDayOpening(reader, SUNDAY);
+    expect(opening.stage).toBe('dashboard');
+    expect(opening.focusProjects.map((project) => project.name)).toEqual(['Foco']);
   });
 });

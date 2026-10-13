@@ -168,13 +168,24 @@ export interface PlanningView {
   others: TaskListItem[];
 }
 
-/** Step 2 of the checkout: active tasks, split by whether they are in the target day's note. */
+/**
+ * Step 2 of the checkout: active tasks, split by whether they are in the target day's note. The
+ * tasks of the projects in focus come first in each group, in the order of the projects
+ * (spec/prioridades.md, "Projetos em foco").
+ */
 export async function loadPlanning(reader: Reader, target: DayKey): Promise<PlanningView> {
   const items = await loadActiveTasks(reader);
+  const focusIds = await loadFocusProjectIds(reader, await reader.projects());
+  const rank = (item: TaskListItem) => {
+    const index = item.task.projectId ? focusIds.indexOf(item.task.projectId) : -1;
+    return index === -1 ? focusIds.length : index;
+  };
+  // A stable sort keeps the usual order inside each project.
+  const focusFirst = (list: TaskListItem[]) => list.map((item, index) => ({ item, index })).sort((a, b) => rank(a.item) - rank(b.item) || a.index - b.index).map(({ item }) => item);
   return {
     target,
-    planned: items.filter((item) => item.task.intendedDate === target),
-    others: items.filter((item) => item.task.intendedDate !== target),
+    planned: focusFirst(items.filter((item) => item.task.intendedDate === target)),
+    others: focusFirst(items.filter((item) => item.task.intendedDate !== target)),
   };
 }
 
@@ -384,6 +395,8 @@ export interface DayOpeningView {
   record: DayRecord | null;
   /** Section 3: the dashboard shows the checkout button when the previous days are pending. */
   pendingDays: DayKey[];
+  /** Section 2: the projects in focus, shown on the dashboard; they also make it show up. */
+  focusProjects: Project[];
 }
 
 /** Where the day stands: "Iniciar Dia", warm up, dashboard or execution (section 3). */
@@ -391,11 +404,14 @@ export async function loadDayOpening(reader: Reader, today: DayKey): Promise<Day
   const settings = await reader.settings();
   const warmupItems = settings?.warmupItems ?? [];
   const record = (await reader.dayRecord(today)) ?? null;
+  const projects = await reader.projects();
+  const focusProjects = (await loadFocusProjectIds(reader, projects)).map((id) => projects.find((project) => project.id === id)!);
   return {
-    stage: dayStage(record ?? undefined, warmupItems),
+    stage: dayStage(record ?? undefined, warmupItems, focusProjects.length > 0),
     warmupItems,
     record,
     pendingDays: await loadPendingDays(reader, today),
+    focusProjects,
   };
 }
 
