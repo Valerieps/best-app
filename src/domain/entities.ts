@@ -125,10 +125,14 @@ export interface PriorityList {
   updatedAt: string;
 }
 
-/** A weekly reflection (section 2). Id like `week:2026-W41`; monthly ones come in section 4. */
+/**
+ * A review (spec/rituais.md): `focus` (Revisão de Foco, section 2) or `direction` (Revisão de
+ * Rumo, section 4). `week` (id `week:2026-W41`) and `month` (id `month:2026-10`) are the weekly
+ * and monthly reflections from before the reviews, kept as history.
+ */
 export interface Reflection {
   id: string;
-  kind: 'week' | 'month';
+  kind: 'focus' | 'direction' | 'week' | 'month';
   period: string;
   start: DayKey;
   end: DayKey;

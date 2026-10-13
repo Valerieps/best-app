@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import type { DomainEvent, EventType } from './events';
-import { weeklyMetrics } from './metrics';
+import { periodMetrics, weeklyMetrics } from './metrics';
 import { weekOf } from './week';
 
 let id = 0;
@@ -35,5 +35,18 @@ describe('weeklyMetrics', () => {
 
   it('has no accuracy when no finished task had a date', () => {
     expect(weeklyMetrics([], week).intentionAccuracy).toBeNull();
+  });
+});
+
+describe('periodMetrics', () => {
+  it('counts only the events after the last review, by the moment they happened', () => {
+    const events = [
+      event('task.postponed', 'a', '2026-10-01'),
+      event('task.postponed', 'b', '2026-10-09'),
+      event('task.finished', 'b', '2026-10-10', { intendedDate: '2026-10-10' }),
+    ];
+    expect(periodMetrics(events, '2026-10-05T00:00:00Z')).toMatchObject({ postponedTasks: 1, finishedTasks: 1, intentionAccuracy: 1 });
+    expect(periodMetrics(events, null).postponedTasks).toBe(2);
+    expect(periodMetrics(events, null, '2026-10-09T23:00:00Z').finishedTasks).toBe(0);
   });
 });
