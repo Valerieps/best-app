@@ -17,9 +17,9 @@ Estes pontos não puderam ser testados no navegador embutido do Claude Code.
 - [ ] **Backup automático no Google Drive.** Escolha um arquivo numa pasta sincronizada do Drive, faça uma mudança e confira que o arquivo foi atualizado. Feche e reabra o Chrome para ver o pedido de autorização e o "Retomar".
 - [ ] **"Permitir em todas as visitas".** Confira se o Chrome da máquina corporativa oferece essa opção ao app instalado. Sem ela, o backup automático pede um clique por sessão. Uma política da empresa pode bloqueá-la.
 - [ ] **Instalação como app.** Confira se o Chrome oferece "Instalar". O ícone atual é só um SVG provisório, e o Chrome pode exigir ícones PNG de 192 e 512 px (veja a seção 5).
-- [ ] **Migração da versão 6 num banco de verdade.** Os testes cobrem o `upgrade` do Dexie (com um banco de teste) e o backup da versão 5, mas não um navegador com dados reais do mês. Vale abrir o app no Chrome com os dados atuais e conferir que os prioritários de outubro viraram os da semana.
-- [ ] **Troca na reflexão semanal, pela interface.** No navegador, desmarcar um prioritário e marcar outro em seguida deixou a lista com só 2 projetos. Provavelmente o segundo clique caiu antes de a caixa ser liberada (a tela leva cerca de 700 ms para atualizar), mas pode ser bug. Os testes do caso de uso passam.
-- [ ] **Finalizar um prioritário pela interface** (deve liberar a vaga e mostrar o card tracejado). Só os testes do caso de uso cobrem.
+- [ ] **Migrações das versões 6 e 7 num banco de verdade.** Os testes cobrem o `upgrade` do Dexie (com um banco de teste) e os backups das versões 5 e 6, mas não um navegador com dados reais. Vale abrir o app no Chrome com os dados atuais e conferir que os projetos em foco são os prioritários da semana atual, e que a Revisão de Foco e a de Rumo aparecem com o período certo (desde a última reflexão semanal e mensal).
+- [ ] **Troca na Revisão de Foco, pela interface.** No navegador, desmarcar um projeto em foco e marcar outro em seguida deixou a lista com só 2 projetos. Provavelmente o segundo clique caiu antes de a caixa ser liberada (a tela leva cerca de 700 ms para atualizar), mas pode ser bug. Os testes do caso de uso passam.
+- [ ] **Finalizar um projeto em foco pela interface** (deve liberar a vaga e mostrar o card tracejado). Só os testes do caso de uso cobrem.
 - [ ] **"Nova data" das tarefas travadas.** Abre o calendário nativo com `showPicker`, que o navegador embutido não mostra; não foi conferido que a data escolhida é gravada.
 - [ ] **Layout em telas estreitas** (cards empilhados abaixo de 900 px, mapa das linhas escondido abaixo de 640 px) e com nomes longos.
 - [ ] **Tooltip do mapa nas bordas.** Os das 2 primeiras e das 3 últimas colunas abrem para dentro; não foi conferido em todos os tamanhos de card.
@@ -102,7 +102,7 @@ Revisada em 12/10/2026. Ordenado por prioridade.
 ### Baixa
 
 8. **O checkout carrega sem cancelar.** `CheckoutScreen` lê triagem, projetos e objetivos com `.then` num `useEffect` sem cancelamento. Trocar de dia rápido pode mostrar a resposta do dia anterior, e sair da tela antes da resposta gera um `setState` perdido. A foto fixa é proposital (a triagem não muda sob a mão), mas precisa ignorar respostas velhas.
-9. **A interface usa `new Date()` em vez do `Clock`.** `useToday`, lembretes, reflexão, a linha nova do editor (`draftBlock`) e o backup leem o relógio direto. Os casos de uso recebem o `Clock`, mas a interface decide "agora" sozinha, então não dá para testar a virada do dia nem um lembrete vencendo.
+9. **A interface usa `new Date()` em vez do `Clock`.** `useToday`, lembretes, o "Lembrar depois" do aviso de revisão, a linha nova do editor (`draftBlock`) e o backup leem o relógio direto. Os casos de uso recebem o `Clock`, mas a interface decide "agora" sozinha, então não dá para testar a virada do dia nem um lembrete vencendo.
 10. **Toda gravação trava as 13 tabelas e espera com `Dexie.waitFor`.** Simples e seguro hoje (ADR-003), mas serializa tudo e o `waitFor` desiste depois de 60 segundos. Só importa se um caso de uso ficar longo, como juntar muitos projetos.
 11. **O dia segue o fuso do computador.** Quem viaja entre fusos pode ver uma tarefa mudar de dia. Num app pessoal, é aceitável.
 12. **Algumas consultas varrem a tabela inteira.** As seções pendentes, a wiki e os quadros brancos filtram todas as seções na memória (`infrastructure/dexieReader.ts`). Com anos de uso, vale criar índices para esses estados. `projectId === null` não pode ser indexado no IndexedDB, então "quadro branco pendente" precisa de um campo próprio.
@@ -120,19 +120,17 @@ Revisada em 12/10/2026. Ordenado por prioridade.
 - **A estrela parece não responder quando um prazo ocupa a terceira prioridade.** A tarefa promovida entra na lista, mas a do prazo toma o lugar dela na tela, pela regra do 1b. Vale um aviso curto ou mostrar a quarta como "na fila".
 - **"Lembrar depois" vale só neste navegador.** O dia adiado fica no `localStorage`, como a escolha de fixar as prioridades.
 
-## 8. Projetos e prioritários da semana
+## 8. Projetos e projetos em foco
 
-- **Página do projeto: tarefas criadas nela não podem ser apagadas.** Como na nota do dia, uma tarefa só sai de circulação pelo checkout ou pela reflexão; não há "apagar" para um erro de digitação logo depois de criar.
+- **Página do projeto: tarefas criadas nela não podem ser apagadas.** Como na nota do dia, uma tarefa só sai de circulação pelo checkout ou pela Revisão de Foco; não há "apagar" para um erro de digitação logo depois de criar.
 - **Página do projeto: juntar projetos repetidos pode deixar duas seções escondidas no mesmo projeto** (ADR-031). Funciona, porque a nova tarefa vai para a primeira, mas o assistente poderia juntar as duas.
 - **Página do projeto: abaixo de 900 px, a coluna fixada só abre pelo botão da linha das abas**, em vez de aparecer sozinha por cima do conteúdo. O brief pedia que ela "se comportasse como espiando".
 - **O rascunho e a página do projeto divergem no hover das tarefas.** O rascunho escondia data e "adiada" no hover; a página segue o padrão da nota do dia (etiquetas sempre visíveis), como diz o `spec/navegacao.md` (ADR-032).
 - **Acessibilidade do mapa.** Cada mapa tem só um resumo para leitor de tela ("N dias com atividade"); o detalhe de cada dia só aparece com o mouse e não é alcançável pelo teclado.
-- **A lista de projetos demora a atualizar.** Ela relê os eventos de todos os projetos a cada mudança (cerca de 700 ms no modo de desenvolvimento, com os dados sintéticos). Os grupos já abrem na hora, mas adicionar um prioritário ou finalizar um projeto só aparece depois. Com anos de uso vale um índice ou cache da atividade por dia.
-- **Finalizar no meio da semana muda a semana inteira.** O projeto sai da lista da semana atual a partir de segunda, então o raio-x mensal deixa de contar as prioridades do dia daquele projeto nos dias anteriores da mesma semana.
-- **Reabrir um projeto numa semana passada.** As listas de semanas passadas guardam o projeto; como a lista mostrada filtra só os ativos, reabrir faz ele reaparecer ao olhar uma semana passada (não a atual).
-- **Juntar projetos repetidos** com um prioritário: o projeto juntado sai da lista (fica `merged`), mas o projeto de destino não herda a vaga.
+- **A lista de projetos demora a atualizar.** Ela relê os eventos de todos os projetos a cada mudança (cerca de 700 ms no modo de desenvolvimento, com os dados sintéticos). Os grupos já abrem na hora, mas colocar um projeto em foco ou finalizar um projeto só aparece depois. Com anos de uso vale um índice ou cache da atividade por dia.
+- **A disponibilidade das revisões relê o histórico inteiro.** `loadReviewAvailability` (`application/reviewQueries.ts`) lê todos os eventos e a atividade dos projetos em foco e dos objetivos a cada mudança, porque roda numa consulta ao vivo do app. Com anos de uso, vale guardar a contagem ou ler só os eventos depois da última revisão.
+- **Juntar projetos repetidos** com um projeto em foco: o projeto juntado sai da lista (fica `merged`), mas o projeto de destino não herda a vaga.
 - **Migração corta em 3.** Um mês com mais de 3 projetos prioritários vira uma semana com só os 3 primeiros, sem aviso. A semana do dia 1º pode começar no mês anterior (por exemplo, 28/09 para outubro), então os últimos dias de setembro passam a usar a lista de outubro no raio-x.
 - **A atividade segue o vínculo atual.** Uma tarefa vinculada ao projeto no checkout conta como atividade no dia em que foi escrita, mesmo que naquele dia ela não fosse do projeto. Notas apagadas ou esvaziadas deixam de contar.
-- **Reflexão de uma semana antiga:** o passo 6 fica só leitura quando a semana seguinte já passou, mas uma reflexão da semana passada ainda pode mudar a lista da semana atual.
-- **Prioritários num projeto sem atividade:** o card mostra "Nenhuma atividade ainda" ou "Parado há N dias" contados desde a criação, não desde que virou prioritário.
+- **Projeto em foco sem atividade:** o card mostra "Nenhuma atividade ainda" ou "Parado há N dias" contados desde a criação, não desde que entrou em foco.
 - **"desde" nas tarefas travadas** usa a primeira data de intenção (ou o dia em que a tarefa foi escrita), não o dia do primeiro adiamento.

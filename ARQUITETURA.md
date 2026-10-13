@@ -63,7 +63,7 @@ Alguns pontos ainda não seguem essas regras: o fluxo de backup é chamado pela 
 
 Cada entidade é um registro separado. Um bloco existe uma vez só: notas, projetos, a wiki e a nota do dia apontam para ele, sem cópias. Datas de calendário são `AAAA-MM-DD` no fuso local, e o dia vira à meia-noite (ADR-005). Semanas são semanas ISO, como `2026-W42` (ADR-020). Os ids são UUIDs, e todo registro tem `createdAt` e `updatedAt`. Os tipos estão em `src/domain/entities.ts`.
 
-### Tabelas implementadas (versão 6 do banco)
+### Tabelas implementadas (versão 7 do banco)
 
 **`blocks`**: tarefas e notas.
 
@@ -80,7 +80,7 @@ Cada entidade é um registro separado. Um bloco existe uma vez só: notas, proje
 | `postponeCount` | Atalho de leitura; dá para recalcular a partir dos eventos |
 | `lastTriagedDay` | Último dia cujo checkout decidiu a tarefa; é o que diz se ela está pendente (ADR-011) |
 | `deadline` | Prazo máximo (1b) |
-| `awaitingReflection` | Deixada para "decidir na reflexão semanal" (2) |
+| `awaitingReflection` | Deixada para "decidir na Revisão de Foco" (2; o nome gravado é antigo, ADR-039) |
 | `closedAt`, `createdAt`, `updatedAt` | Datas e horários |
 
 **`sections`**: as seções da nota do dia.
@@ -99,11 +99,11 @@ Cada entidade é um registro separado. Um bloco existe uma vez só: notas, proje
 
 **`days`**: `day` (chave), `lastCheckoutAt` e, a partir da seção 3, `startedAt`, `warmup` (resultado de cada item do dia) e `executionStartedAt`. Se o checkout está pendente é sempre calculado a partir dos blocos; esta tabela só guarda o que não dá para calcular. A etapa do dia também é calculada (ADR-023).
 
-**`priorities`**: listas ordenadas, com id `escopo:período`. `day:2026-10-11` guarda as tarefas escolhidas à mão para o dia; as tarefas com prazo no dia entram na leitura (ADR-017). `weekProjects:2026-W42` guarda até 3 projetos prioritários da semana; uma semana sem lista própria usa a última lista anterior (ADR-035). O id `week:` fica livre para as tarefas prioritárias da semana.
+**`priorities`**: listas ordenadas, com id `escopo:período`. `day:2026-10-11` guarda as tarefas escolhidas à mão para o dia; as tarefas com prazo no dia entram na leitura (ADR-017). `focusProjects` guarda a lista única de até 3 projetos em foco; cada mudança grava um evento com a lista inteira, que é o histórico lido pelo raio-x (ADR-038). As listas `weekProjects:2026-W42`, de antes das revisões, ficam como histórico dos dias anteriores à primeira mudança.
 
-**`reflections`**: id `week:2026-W41` ou `month:2026-10`, textos livres (melhores momentos, o que pode melhorar) e `closedAt`.
+**`reflections`**: as revisões, `kind` `focus` ou `direction`. A revisão em andamento tem id fixo (`focus:open`, `direction:open`); ao fechar, vira `kind:id` com `start`, `end` e `closedAt`, e não reabre (ADR-039). Textos livres (melhores momentos, o que pode melhorar). Os registros `week:2026-W41` e `month:2026-10`, das reflexões antigas, contam como a última revisão de cada tipo.
 
-**`settings`**: um registro só, id `main`: agendamento da reflexão semanal, dias ativos, checklist do warm up, limites das cores de "Colocar ordem na casa" (ADR-028), coluna fixada da página do projeto e grupos abertos da lista de projetos (ADR-036). Entra no backup.
+**`settings`**: um registro só, id `main`: cadência das revisões (`reviewCadence`, ADR-039), dias ativos, checklist do warm up, limites das cores de "Colocar ordem na casa" (ADR-028), coluna fixada da página do projeto e grupos abertos da lista de projetos (ADR-036). Entra no backup.
 
 **`reminders`**: lembretes que voltam dentro do app (3): origem, texto, `dueAt` e `status` (`pending`, `done` ou `dropped`). O app nunca manda notificação (ADR-024).
 
@@ -124,7 +124,7 @@ Cada entidade é um registro separado. Um bloco existe uma vez só: notas, proje
 
 ### Mudanças de esquema
 
-Cada mudança no esquema sobe a versão do banco no Dexie (`infrastructure/db.ts`) e a `BACKUP_SCHEMA_VERSION`, que andam juntas, e o `parseBackup` aprende a converter backups antigos (`upgradeTables`). Uma migração que transforma dados, como a da versão 6, usa uma função pura do domínio, testada sem banco. Cada versão tem a sua ADR (016, 019, 022, 025 e 035).
+Cada mudança no esquema sobe a versão do banco no Dexie (`infrastructure/db.ts`) e a `BACKUP_SCHEMA_VERSION`, que andam juntas, e o `parseBackup` aprende a converter backups antigos (`upgradeTables`). Uma migração que transforma dados, como a da versão 6, usa uma função pura do domínio, testada sem banco. Cada versão tem a sua ADR (016, 019, 022, 025, 035 e 038).
 
 ## 5. Consultas derivadas (implementado)
 
@@ -137,10 +137,10 @@ Nada disso é guardado: é calculado a partir das tabelas, por funções de `app
 | Tarefas ativas e arquivadas | Blocos `task` por `status` |
 | Wiki | Seções com `notesDestination = 'wiki'`, cada entrada com as notas da seção, em ordem cronológica |
 | Projeto | Seções, tarefas e notas com o `projectId` dele, agrupadas em travadas, próximos dias, sem data e feitas |
-| Lista de projetos | Projetos por status, prioritários da semana e mapa de atividade calculado dos eventos (ADR-034) |
+| Lista de projetos | Projetos por status, projetos em foco e mapa de atividade calculado dos eventos (ADR-034) |
 | "Colocar ordem na casa" | Contagens de cada assistente e a cor pelos limites das configurações (ADR-028) |
 | Abertura do dia | Etapa do dia (iniciar, warm up, dashboard, execução) e lembretes vencidos (ADR-023) |
-| Reflexões e métricas | Eventos do período passados às funções de métricas (seção 9) |
+| Revisões e métricas | Eventos desde a última revisão de cada tipo passados às funções de métricas (seção 9); disponibilidade de cada revisão por cadência e sinais (`application/reviewQueries.ts`, ADR-039) |
 
 ## 6. Histórico de eventos (implementado)
 
@@ -154,10 +154,10 @@ Nada disso é guardado: é calculado a partir das tabelas, por funções de `app
 
 | Área | Eventos |
 | --- | --- |
-| Blocos e tarefas | criado, apagado, tipo trocado, vinculado a projeto; data de intenção e prazo trocados, adiada, feita, reaberta, arquivada, reativada, abandonada, deixada para a reflexão, convertida em hábito |
-| Seções | criada, título e detalhes trocados, vinculada a projeto, deixada ou mantida sem vínculo, notas para a wiki, descartadas, reabertas ou deixadas para a reflexão |
+| Blocos e tarefas | criado, apagado, tipo trocado, vinculado a projeto; data de intenção e prazo trocados, adiada, feita, reaberta, arquivada, reativada, abandonada, deixada para a Revisão de Foco, convertida em hábito |
+| Seções | criada, título e detalhes trocados, vinculada a projeto, deixada ou mantida sem vínculo, notas para a wiki, descartadas, reabertas ou deixadas para a Revisão de Foco |
 | Projetos | criado, renomeado, ícone trocado, finalizado, reaberto, juntado, vinculado a objetivo |
-| Dia e rituais | dia iniciado, execução iniciada, item do warm up respondido, checkout concluído, prioridade adicionada e retirada, reflexão fechada, configuração trocada |
+| Dia e rituais | dia iniciado, execução iniciada, item do warm up respondido, checkout concluído, prioridade adicionada e retirada (com o motivo, nos projetos em foco), revisão fechada, configuração trocada |
 | Lembretes | criado, respondido, adiado |
 | Objetivos e recursos | objetivo criado, atualizado, finalizado e reaberto; recurso adicionado, renomeado e removido |
 | Hábitos | criado, atualizado, arquivado, registrado |
@@ -195,16 +195,17 @@ Reativar uma tarefa arquivada limpa a data sem contar adiamento (ADR-015).
 
 ## 9. Métricas (implementado em parte)
 
-- São funções puras no domínio que recebem os eventos de um período (`domain/metrics.ts`, `monthMetrics.ts`, `projectActivity.ts`, `habits.ts`). Ficam testáveis sem banco, e uma métrica nova não exige migração.
-- As métricas semanais vêm só dos eventos (ADR-021). As mensais que dependem de pergunta em aberto ficaram de fora (ADR-026).
-- O volume de dados de uma pessoa é pequeno o bastante para calcular tudo no navegador. A lista de projetos é o primeiro ponto onde isso já pesa (seção 8 de `DEBITO-TECNICO.md`, "Projetos e prioritários da semana").
+- São funções puras no domínio que recebem os eventos de um período (`domain/metrics.ts`, `directionMetrics.ts`, `projectActivity.ts`, `habits.ts`, `reviews.ts`). Ficam testáveis sem banco, e uma métrica nova não exige migração.
+- As métricas da Revisão de Foco vêm só dos eventos, desde a última revisão, pelo momento do evento (ADR-021, ADR-039). As do raio-x que dependem de pergunta em aberto ficaram de fora (ADR-026).
+- O volume de dados de uma pessoa é pequeno o bastante para calcular tudo no navegador. A lista de projetos é o primeiro ponto onde isso já pesa (seção 8 de `DEBITO-TECNICO.md`, "Projetos e projetos em foco").
 
 | Fase | Métricas | Função |
 | --- | --- | --- |
 | 2 | Tarefas adiadas, precisão da data de intenção (feita no dia da intenção, com ou sem adiamentos), tarefas executadas | `metrics.ts` |
 | 2 | Atividade por dia de cada projeto (ADR-033, ADR-034) | `projectActivity.ts` |
-| 4 | Prioridades do dia ligadas a projetos prioritários da semana em que caíram, projetos sem objetivo | `monthMetrics.ts` |
-| 4 | Blocos sem projeto, objetivos com pouco engajamento, prioridades da semana no raio-x | Planejado |
+| 2 e 4 | Checkouts e revisões desde a última, sinais de cada revisão (ADR-039) | `reviews.ts` |
+| 4 | Prioridades do dia ligadas aos projetos em foco no dia em que caíram, projetos sem objetivo | `directionMetrics.ts` |
+| 4 | Blocos sem projeto, objetivos com pouco engajamento | Planejado |
 | 6 | Maior sequência de um hábito, percentual de completude, hábitos sem objetivo | `habits.ts` |
 
 ## 10. Backup e segurança (implementado)
