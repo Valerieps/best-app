@@ -171,7 +171,9 @@ export async function applyPlanning(
 
 async function markCheckoutDone(ctx: AppContext, tx: StoreTransaction, day: DayKey, mode: string): Promise<void> {
   const at = nowIso(ctx);
-  await tx.days.put({ day, lastCheckoutAt: at, updatedAt: at });
+  // The note can still be written in after a checkout of today; it keeps its order.
+  const sectionOrder = (await tx.days.get(day))?.sectionOrder;
+  await tx.days.put({ day, lastCheckoutAt: at, updatedAt: at, ...(sectionOrder ? { sectionOrder } : {}) });
   await record(ctx, tx, 'day.checkoutCompleted', 'day', day, day, { mode });
 }
 

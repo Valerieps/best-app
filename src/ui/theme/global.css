@@ -459,6 +459,56 @@ input[type='checkbox'] {
   pointer-events: none;
 }
 
+/* Reordering (request 2): a handle in the section's left padding, shown like the shortcuts */
+.line__handle {
+  position: absolute;
+  left: calc(-1 * var(--space-4));
+  top: 2px;
+  width: var(--space-4);
+  text-align: center;
+  color: var(--color-text-muted);
+  font-size: var(--font-size-sm);
+  line-height: 1.6;
+  cursor: grab;
+  touch-action: none;
+  user-select: none;
+  visibility: hidden;
+}
+
+.line:hover .line__handle,
+.line:focus-within .line__handle,
+.line--dragging .line__handle {
+  visibility: visible;
+}
+
+.line--dragging {
+  opacity: 0.5;
+}
+
+.line--dragging .line__handle {
+  cursor: grabbing;
+}
+
+.line--drop-before::before,
+.line--drop-after::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 2px;
+  border-radius: var(--radius-pill);
+  background: var(--color-focus);
+  pointer-events: none;
+}
+
+.line--drop-before::before {
+  top: -1px;
+}
+
+.line--drop-after::after {
+  bottom: -1px;
+}
+
 /* Day priorities (1b) */
 .priorities {
   background: var(--color-surface);
@@ -2720,4 +2770,80 @@ button.project-actions {
   .project-row .activity-map {
     display: none;
   }
+}
+/* Parts of the day note (sections, carried tasks, priorities) can be moved as a whole */
+.day-part {
+  position: relative;
+}
+
+.day-part__handle {
+  position: absolute;
+  left: calc(-1 * var(--space-5));
+  top: var(--space-3);
+  width: var(--space-5);
+  padding: 0;
+  border: none;
+  background: none;
+  text-align: center;
+  color: var(--color-text-muted);
+  font-size: var(--font-size-sm);
+  line-height: 1.6;
+  cursor: grab;
+  touch-action: none;
+  user-select: none;
+  opacity: 0;
+}
+
+.day-part:hover > .day-part__handle,
+.day-part:focus-within > .day-part__handle,
+.day-part--dragging > .day-part__handle {
+  opacity: 1;
+}
+
+.day-part__handle:hover {
+  color: var(--color-text);
+}
+
+.day-part--dragging {
+  opacity: 0.5;
+}
+
+.day-part--dragging > .day-part__handle {
+  cursor: grabbing;
+}
+
+.day-part--drop-before::before,
+.day-part--drop-after::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 2px;
+  border-radius: var(--radius-pill);
+  background: var(--color-focus);
+  pointer-events: none;
+}
+
+.day-part--drop-before::before {
+  top: 0;
+}
+
+.day-part--drop-after::after {
+  bottom: 0;
+}
+
+/* Unpinned, the priorities sit among the sections and look like one */
+.day-part--priorities .priorities {
+  margin: var(--space-3) 0 var(--space-5);
+  padding: var(--space-1) 0 var(--space-2) var(--space-4);
+  border: none;
+  border-left: var(--section-bar-width) solid var(--color-firework-1);
+  border-radius: 0;
+  background: none;
+}
+
+.section__carried-title {
+  font-size: var(--font-size-sm);
+  font-weight: 500;
+  color: var(--color-text-muted);
 }

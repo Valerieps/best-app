@@ -2,7 +2,7 @@
 
 Na nota do dia e na tela "Próximos dias", organizar as tarefas já agendadas em três grupos: prazo máximo hoje, prioridades do dia e adiadas para hoje.
 
-- **O que muda:** o `spec/nota-do-dia.md` ("Execução") diz que as tarefas com data de intenção entram no topo da primeira seção geral "sem distinção visual das tarefas criadas no dia". Este pedido muda essa regra. A tela "Próximos dias" hoje mostra uma lista simples por dia.
+- **O que muda:** o `spec/nota-do-dia.md` ("Execução") diz que, a partir do 1b, as tarefas com data de intenção que vêm de outros dias ficam numa seção própria, "De outros dias", que eu posso mudar de lugar. Este pedido divide essas tarefas em grupos. A tela "Próximos dias" hoje mostra uma lista simples por dia.
 - **Em aberto:**
   - [ ] Os grupos substituem o bloco "Prioridades do dia" ou convivem com ele?
   - [ ] Uma tarefa que está em mais de um grupo (prioridade com prazo hoje, por exemplo) aparece onde?

@@ -233,7 +233,7 @@ export function GroupHeader({ row }: { row: TriageRow }) {
   if (!section) {
     return (
       <div className="triage-group__header">
-        <span>Tarefas planejadas para o dia</span>
+        <span>De outros dias</span>
       </div>
     );
   }

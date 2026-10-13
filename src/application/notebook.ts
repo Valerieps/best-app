@@ -1,6 +1,7 @@
 import { detectKind } from '../domain/blockKind';
 import { toDayKey, type DayKey } from '../domain/day';
 import type { Block, BlockKind, Section, SectionKind } from '../domain/entities';
+import { adoptFirstPart, carriedPosition, placeInOrder, type Ordered } from '../domain/order';
 import { canEditFreely, lastTriagedDayAfterReopen } from '../domain/tasks';
 import { record } from './events';
 import type { AppContext, StoreTransaction } from './ports';
@@ -155,9 +156,14 @@ export interface NewBlockTarget {
 }
 
 async function targetSection(ctx: AppContext, tx: StoreTransaction, target: NewBlockTarget): Promise<Section> {
-  return target.sectionId
-    ? getOrThrow(tx.sections.get(target.sectionId), 'Section')
-    : addSection(ctx, tx, 'general', target.newSectionId);
+  if (target.sectionId) return getOrThrow(tx.sections.get(target.sectionId), 'Section');
+  const section = await addSection(ctx, tx, 'general', target.newSectionId);
+  // The day's first section may have been moved before it was saved: it keeps its place.
+  const record = await tx.days.get(section.day);
+  if (record?.sectionOrder) {
+    await tx.days.put({ ...record, sectionOrder: adoptFirstPart(record.sectionOrder, section.id), updatedAt: nowIso(ctx) });
+  }
+  return section;
 }
 
 /** Creates a block from typed text; "[] " at the start makes it a task. */
@@ -297,5 +303,57 @@ export async function reactivateTask(ctx: AppContext, taskId: string): Promise<v
     if (task.status !== 'archived') return;
     await tx.blocks.put({ ...task, status: 'active', closedAt: null, intendedDate: null, updatedAt: nowIso(ctx) });
     await record(ctx, tx, 'task.reactivated', 'block', task.id, today(ctx), { previousIntendedDate: task.intendedDate });
+  });
+}
+
+/**
+ * Request 2: puts the lines of a section in the order given, the order shown after `movedId`
+ * moved. Usually only the moved line is written. No event: the order is not history (ADR-040).
+ */
+export async function reorderSectionLines(ctx: AppContext, orderedIds: readonly string[], movedId: string): Promise<void> {
+  await ctx.store.transaction(async (tx) => {
+    const blocks = await loadInOrder(tx, orderedIds);
+    const moved = blocks.find((block) => block.id === movedId);
+    // Only lines of one section are reordered together.
+    if (!moved || blocks.some((block) => block.sectionId !== moved.sectionId)) return;
+    const changes = placeInOrder(blocks, movedId);
+    const at = nowIso(ctx);
+    const byId = new Map(blocks.map((block) => [block.id, block]));
+    for (const change of changes) await tx.blocks.put({ ...byId.get(change.id)!, position: change.position, updatedAt: at });
+  });
+}
+
+/**
+ * Request 2: puts the tasks carried into `day` in the order given. The order belongs to that
+ * day: once a task moves to another day, it no longer counts. No event (ADR-040).
+ */
+export async function reorderCarriedTasks(ctx: AppContext, day: DayKey, orderedIds: readonly string[], movedId: string): Promise<void> {
+  await ctx.store.transaction(async (tx) => {
+    const tasks = (await loadInOrder(tx, orderedIds)).filter((task) => task.intendedDate === day);
+    const items: Ordered[] = tasks.map((task) => ({ id: task.id, position: carriedPosition(task, day) }));
+    const changes = placeInOrder(items, movedId);
+    const at = nowIso(ctx);
+    const byId = new Map(tasks.map((task) => [task.id, task]));
+    for (const change of changes) {
+      await tx.blocks.put({ ...byId.get(change.id)!, carriedOrder: { day, position: change.position }, updatedAt: at });
+    }
+  });
+}
+
+async function loadInOrder(tx: StoreTransaction, ids: readonly string[]): Promise<Block[]> {
+  const blocks = await Promise.all(ids.map((id) => tx.blocks.get(id)));
+  return blocks.filter((block): block is Block => block !== undefined);
+}
+
+/**
+ * Puts the parts of a day note (sections, priorities, carried tasks) in the order given. Each
+ * day keeps its own order, any day can be reordered, and the checkout follows it. No event:
+ * the order is not history (ADR-040).
+ */
+export async function reorderDayParts(ctx: AppContext, day: DayKey, orderedKeys: readonly string[]): Promise<void> {
+  await ctx.store.transaction(async (tx) => {
+    const at = nowIso(ctx);
+    const record = (await tx.days.get(day)) ?? { day, lastCheckoutAt: null, updatedAt: at };
+    await tx.days.put({ ...record, sectionOrder: [...orderedKeys], updatedAt: at });
   });
 }

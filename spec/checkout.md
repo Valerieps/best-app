@@ -14,6 +14,7 @@
 - Em qualquer seção, geral ou de reunião, todas as notas são triadas como um bloco só, e as tarefas são triadas separadamente, como qualquer outra tarefa. O destino das notas de reunião é o mesmo das notas gerais. Numa seção vinculada a um projeto, as notas continuam ligadas a ele, e as tarefas chegam à triagem vinculadas ao projeto e com "dia seguinte" pré-selecionado; eu confirmo o destino de cada uma.
 - Para cada seção ainda em quadro branco, o checkout oferece uma última chance: converter em projeto, vincular a um projeto existente ou deixar sem vínculo. É um aviso, não um bloqueio: se o dia terminar com a seção em quadro branco, todo o conteúdo dela fica sem vínculo com projeto.
 - Um checkout é considerado finalizado quando o dia termina sem nenhum item pendente para triagem.
+- A triagem mostra as seções e as tarefas na mesma ordem da nota do dia, inclusive a que eu escolhi ao reordenar (`nota-do-dia.md`, "Ordem das linhas e das seções"). *(1b)*
 
 ## Destinos
 

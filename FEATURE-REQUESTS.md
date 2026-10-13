@@ -9,14 +9,13 @@ Pedidos ainda não decididos. Este arquivo é o índice: cada pedido mora num ar
 
 Quando um pedido for decidido, a regra vai para o arquivo certo de `spec/`, o andamento para o `ROADMAP.md`, o arquivo do pedido é apagado e a linha sai desta tabela. Os números não são reaproveitados.
 
-Já decididos e retirados: "Próximos dias" no menu (foi para o `spec/tarefas.md`) e o bloco de prioridades sempre fixado (fixar continua opcional).
+Já decididos e retirados: "Próximos dias" no menu (foi para o `spec/tarefas.md`), o bloco de prioridades sempre fixado (fixar continua opcional) e o pedido 2, reordenar blocos, que cresceu para reordenar também as seções (foi para o `spec/nota-do-dia.md`, "Ordem das linhas e das seções").
 
 ## Pedidos
 
 | # | Pedido | Resumo |
 | --- | --- | --- |
 | 1 | [Arquivar tarefas de qualquer tela](pedidos/01-arquivar-de-qualquer-tela.md) | Arquivar onde a tarefa aparece, não só no checkout |
-| 2 | [Reordenar blocos dentro de uma seção](pedidos/02-reordenar-blocos.md) | Mudar a ordem das linhas de uma seção |
 | 3 | [Data de intenção em destaque e ícone de ciclo](pedidos/03-data-em-destaque-e-icone-de-ciclo.md) | Destacar a data e trocar "adiada" por "↻" |
 | 4 | [Título do app leva para a nota do dia](pedidos/04-titulo-leva-para-a-nota-do-dia.md) | O título já leva para a nota do dia; falta decidir se "Hoje" sai da barra |
 | 5 | [Tarefas agendadas organizadas em grupos](pedidos/05-tarefas-agendadas-em-grupos.md) | Prazo hoje, prioridades e adiadas, na nota do dia e em "Próximos dias" |

@@ -42,6 +42,11 @@ export interface Block {
   deadline?: DayKey | null;
   /** Section 2: left for the weekly reflection to decide ("decidir na reflexão semanal"). */
   awaitingReflection?: boolean;
+  /**
+   * Order among the tasks carried into a day from other days (request 2). Counts only while
+   * `day` is the intended date; absent until the task is reordered.
+   */
+  carriedOrder?: { day: DayKey; position: string } | null;
 }
 
 export type SectionKind = 'general' | 'meeting';
@@ -107,6 +112,11 @@ export interface DayRecord {
   warmup?: Record<string, WarmupResult>;
   /** Section 3: when "Iniciar o Flow de Execução" was pressed. */
   executionStartedAt?: string | null;
+  /**
+   * Order of the day note's parts, when it was changed (see `orderDayParts`): section ids and
+   * the keys of the priorities and the carried tasks. Absent until the first reordering.
+   */
+  sectionOrder?: string[];
 }
 
 export type WarmupResult = 'done' | 'skipped' | 'later';

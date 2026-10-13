@@ -116,7 +116,9 @@ Revisada em 12/10/2026. Ordenado por prioridade.
 - **Mover uma linha para outra seção** (arrastar ou atalho) não existe.
 - **Converter um quadro branco em projeto direto no cabeçalho** só funciona pelo título; não há botão separado.
 - **O seletor de datas dos atalhos** usa o calendário nativo do Chrome; limpar a data depende do botão "Limpar" dele.
-- **Não há botão de nova seção entre seções.** As seções seguem a ordem de criação e não têm posição própria; inserir no meio exigiria mudar o modelo (decisão de 12/10/2026, N2 em `AVALIACAO-UX.md`).
+- **Não há botão de nova seção entre seções.** Uma seção nova entra no fim e depois pode ser movida (ADR-040); inserir direto no meio continua sem botão (decisão de 12/10/2026, N2 em `AVALIACAO-UX.md`).
+- **Alças de reordenar no toque.** As alças das linhas e das seções só aparecem com o mouse em cima ou com o foco dentro; num celular, é preciso tocar na linha antes. Não foi testado em tela de toque de verdade (ADR-040).
+- **Digitação muito rápida logo depois de Enter perde a detecção de tarefa.** Se o `[] ` chega antes de a linha nova (ou a troca de tarefa para nota) ser gravada, o texto fica como nota com `[] ` no começo. Só apareceu com digitação automatizada, ao verificar a reordenação; também acontece sem ela.
 - **A estrela parece não responder quando um prazo ocupa a terceira prioridade.** A tarefa promovida entra na lista, mas a do prazo toma o lugar dela na tela, pela regra do 1b. Vale um aviso curto ou mostrar a quarta como "na fila".
 - **"Lembrar depois" vale só neste navegador.** O dia adiado fica no `localStorage`, como a escolha de fixar as prioridades.
 
