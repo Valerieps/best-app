@@ -27,7 +27,7 @@ interface TaskRowExtras {
   projects?: Project[];
   projectId?: string | null;
   onProjectChange?(projectId: string | null): void;
-  /** False inside the weekly reflection, where "decidir na reflexão" makes no sense. */
+  /** False inside the Revisão de Foco, where "decidir na Revisão de Foco" makes no sense. */
   allowReflection?: boolean;
 }
 
@@ -85,7 +85,7 @@ export function TaskRowView({
             { value: 'other', label: 'Outra data' },
             { value: 'archive', label: 'Arquivar' },
             { value: 'abandon', label: 'Abandonar' },
-            ...(allowReflection ? [{ value: 'reflection' as const, label: 'Reflexão semanal' }] : []),
+            ...(allowReflection ? [{ value: 'reflection' as const, label: 'Revisão de Foco' }] : []),
             { value: 'habit', label: 'Virar hábito' },
           ]}
           onChange={(value) => {
@@ -158,7 +158,7 @@ export function NotesRowView({
         options={[
           { value: 'wiki', label: 'Wiki' },
           { value: 'discarded', label: 'Descartar' },
-          ...(allowReflection ? [{ value: 'weeklyReflection' as const, label: 'Reflexão semanal' }] : []),
+          ...(allowReflection ? [{ value: 'weeklyReflection' as const, label: 'Revisão de Foco' }] : []),
         ]}
         onChange={onChange}
       />

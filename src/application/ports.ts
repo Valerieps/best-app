@@ -81,6 +81,8 @@ export interface Reader {
   /** Every event about these entities, such as the finishes and reopenings of some tasks. */
   eventsOfEntities(ids: string[]): Promise<DomainEvent[]>;
   reflection(id: string): Promise<Reflection | undefined>;
+  /** Every review, open or closed, including the weekly and monthly reflections from before. */
+  reflections(): Promise<Reflection[]>;
   settings(): Promise<Settings | undefined>;
   blocksOfProject(projectId: string): Promise<Block[]>;
   sectionsOfProject(projectId: string): Promise<Section[]>;

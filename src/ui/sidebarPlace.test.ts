@@ -12,8 +12,8 @@ describe('sidebar place', () => {
 
   it('knows which places are rituals', () => {
     expect(isRitual('checkout')).toBe(true);
-    expect(isRitual('reflection')).toBe(true);
-    expect(isRitual('monthReflection')).toBe(true);
+    expect(isRitual('focusReview')).toBe(true);
+    expect(isRitual('directionReview')).toBe(true);
     expect(isRitual('cleanup')).toBe(true);
     expect(isRitual('day')).toBe(false);
     expect(isRitual('projects')).toBe(false);

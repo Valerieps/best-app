@@ -7,16 +7,16 @@ import { createHabit, logHabit } from './habits';
 import { createBlock, linkSectionToProject } from './notebook';
 import {
   addLinkResource,
-  closeMonth,
   createObjective,
   createObjectiveFromProject,
   finishObjective,
   linkProjectToObjective,
 } from './objectives';
-import { addPriorityProject, setPriorityProjectInReflection } from './priorityProjects';
+import { addFocusProject, setFocusProjectInReview } from './focusProjects';
 import { createProject } from './projects';
-import { loadDueMonthlyReflection, loadHabits, loadMonthlyReflection, loadObjective, loadReflection } from './queries';
-import { weekOf } from '../domain/week';
+import { loadHabits, loadObjective } from './queries';
+import { loadDirectionReview, loadFocusReview } from './reviewQueries';
+import { closeReview } from './reviews';
 
 const SUNDAY = '2026-10-11';
 
@@ -58,39 +58,35 @@ describe('section 4: objectives', () => {
     expect(view?.resources[0].notes.map((n) => n.text)).toEqual(['Médico indicou natação']);
   });
 
-  it('monthly reflection measures the disconnection and closes the month', async () => {
+  it('the Revisão de Rumo measures the disconnection and closes', async () => {
     const { ctx, reader, db, clock } = createTestContext();
     const studio = await createProject(ctx, 'Data Studios');
     const other = await createProject(ctx, 'Sem objetivo');
-    await addPriorityProject(ctx, studio.id);
+    await addFocusProject(ctx, studio.id);
     const task = await createBlock(ctx, { sectionId: null, position: positionBetween(null, null) }, '[] Painel');
     await linkSectionToProject(ctx, task.sectionId, studio.id);
     await setDayPriority(ctx, task.id, true);
-    // The next week's priority is another project: the studio task no longer counts there.
+    // Two days later another project is in focus: the studio task no longer counts then.
     clock.set('2026-10-13T09:00:00');
-    await setPriorityProjectInReflection(ctx, '2026-W42', studio.id, false);
-    await setPriorityProjectInReflection(ctx, '2026-W42', other.id, true);
+    await setFocusProjectInReview(ctx, studio.id, false);
+    await setFocusProjectInReview(ctx, other.id, true);
     const later = await createBlock(ctx, { sectionId: null, position: positionBetween(null, null) }, '[] Relatório');
     await linkSectionToProject(ctx, later.sectionId, studio.id);
     await setDayPriority(ctx, later.id, true);
 
-    const view = await loadMonthlyReflection(reader, '2026-10');
+    const view = await loadDirectionReview(reader, '2026-10-13');
     expect(view.metrics).toMatchObject({
       activeProjects: 2,
       projectsWithoutObjective: 2,
       dayPriorities: 2,
-      dayPrioritiesInPriorityProjects: 1,
+      dayPrioritiesInFocusProjects: 1,
     });
 
-    await closeMonth(ctx, view.month, view.metrics);
-    expect((await db.reflections.get('month:2026-10'))?.closedAt).toEqual(expect.any(String));
-  });
-
-  it('offers the reflection of the month that just ended', async () => {
-    const { ctx, reader } = createTestContext(undefined, '2026-09-20T10:00:00');
-    await createProject(ctx, 'Algo em setembro');
-    expect((await loadDueMonthlyReflection(reader, '2026-10-02'))?.key).toBe('2026-09');
-    expect(await loadDueMonthlyReflection(reader, '2026-09-25')).toBeNull();
+    await closeReview(ctx, 'direction', view.since, view.metrics);
+    const [closed] = await db.reflections.toArray();
+    expect(closed).toMatchObject({ kind: 'direction', closedAt: expect.any(String) });
+    // The next Revisão de Rumo starts on the day this one closed: only that day's priority is left.
+    expect((await loadDirectionReview(reader, '2026-10-13')).metrics.dayPriorities).toBe(1);
   });
 });
 
@@ -106,9 +102,9 @@ describe('section 6: habits', () => {
     expect(view).toMatchObject({ expectedToday: true, doneToday: true });
     expect(view.week.longestStreak).toBe(3);
 
-    const reflection = await loadReflection(reader, weekOf(SUNDAY), SUNDAY);
-    // Created on Sunday: earlier days only count because they were logged.
-    expect(reflection.habits[0].week).toMatchObject({ expected: 3, done: 3, longestStreak: 3 });
+    const review = await loadFocusReview(reader, SUNDAY);
+    // Before the first review, the period starts at the first thing recorded: the earliest log.
+    expect(review.habits[0].stats).toMatchObject({ done: 3, longestStreak: 3 });
   });
 
   it('the checkout turns a task into a habit and takes it out of circulation', async () => {

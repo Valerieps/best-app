@@ -30,17 +30,18 @@ export type Route =
   /** `assistant` opens one assistant's details; omitted shows the dashboard. */
   | { name: 'cleanup'; assistant?: AssistantId }
   | { name: 'data' }
-  /** Section 2. week is an ISO week like 2026-W41; omitted means the default week. */
-  | { name: 'reflection'; week?: string }
+  /** Section 2: the Revisão de Foco, always the one in progress. */
+  | { name: 'focusReview' }
   | { name: 'projects' }
   /** `tab` opens the notes tab; omitted shows the tasks. */
   | { name: 'project'; id: string; tab?: 'notes' }
   | { name: 'settings' }
-  /** Sections 4 and 6. `month` is AAAA-MM; omitted means the month that just ended. */
+  /** Sections 4 and 6. */
   | { name: 'objectives' }
   | { name: 'objective'; id: string }
   | { name: 'habits' }
-  | { name: 'monthReflection'; month?: string };
+  /** Section 4: the Revisão de Rumo, always the one in progress. */
+  | { name: 'directionReview' };
 
 /** Portuguese paths for the cleanup assistants, as the user reads them in the address bar. */
 const ASSISTANT_SLUGS: Record<AssistantId, string> = {
@@ -68,8 +69,9 @@ export function parseRoute(hash: string): Route {
     }
     case 'dados':
       return { name: 'data' };
-    case 'reflexao':
-      return /^\d{4}-W\d{2}$/.test(parts[1] ?? '') ? { name: 'reflection', week: parts[1] } : { name: 'reflection' };
+    case 'foco':
+    case 'reflexao': // the weekly reflection, before the reviews
+      return { name: 'focusReview' };
     case 'projetos':
       return { name: 'projects' };
     case 'projeto':
@@ -85,8 +87,9 @@ export function parseRoute(hash: string): Route {
       return parts[1] ? { name: 'objective', id: decodeURIComponent(parts[1]) } : { name: 'objectives' };
     case 'habitos':
       return { name: 'habits' };
-    case 'mes':
-      return /^\d{4}-\d{2}$/.test(parts[1] ?? '') ? { name: 'monthReflection', month: parts[1] } : { name: 'monthReflection' };
+    case 'rumo':
+    case 'mes': // the monthly reflection, before the reviews
+      return { name: 'directionReview' };
     default:
       return { name: 'day' };
   }
@@ -108,8 +111,8 @@ export function routeHash(route: Route): string {
       return route.assistant ? `#/ordem/${ASSISTANT_SLUGS[route.assistant]}` : '#/ordem';
     case 'data':
       return '#/dados';
-    case 'reflection':
-      return route.week ? `#/reflexao/${route.week}` : '#/reflexao';
+    case 'focusReview':
+      return '#/foco';
     case 'projects':
       return '#/projetos';
     case 'project':
@@ -122,8 +125,8 @@ export function routeHash(route: Route): string {
       return `#/objetivo/${encodeURIComponent(route.id)}`;
     case 'habits':
       return '#/habitos';
-    case 'monthReflection':
-      return route.month ? `#/mes/${route.month}` : '#/mes';
+    case 'directionReview':
+      return '#/rumo';
   }
 }
 

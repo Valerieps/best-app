@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import { loadCleanup, loadDueMonthlyReflection, loadDueReflection, loadMenuCounts } from '../application/queries';
+import { loadCleanup, loadMenuCounts } from '../application/queries';
+import type { ReviewAvailability } from '../application/reviewQueries';
 import { setSidebarCollapsed } from '../application/settings';
 import type { DayKey } from '../domain/day';
 import type { AutoBackupState } from '../infrastructure/autoBackup';
@@ -16,6 +17,8 @@ interface Props {
   route: Route;
   today: DayKey;
   pendingDays: DayKey[];
+  /** Which reviews are available; loaded by the app, which also shows their notice. */
+  reviews: ReviewAvailability | undefined;
   backupState: AutoBackupState;
 }
 
@@ -36,7 +39,7 @@ function Badge({ count }: { count: number }) {
  * Level 1 of the navigation (spec/navegacao.md, "Navegação"): the only global bar, fixed on the
  * left of every screen but "Iniciar Dia". Only places, in groups; it can be collapsed to a strip.
  */
-export function Sidebar({ route, today, pendingDays, backupState }: Props) {
+export function Sidebar({ route, today, pendingDays, reviews, backupState }: Props) {
   const current = sidebarPlace(route);
   const storedCollapsed = useLiveQuery(async () => (await reader.settings())?.sidebarCollapsed ?? false);
   // The toggle shows at once; the settings write follows (as in ADR-036).
@@ -45,11 +48,11 @@ export function Sidebar({ route, today, pendingDays, backupState }: Props) {
   const [ritualsOpen, setRitualsOpen] = useState(() => isRitual(current));
 
   const counts = useLiveQuery(() => loadMenuCounts(reader));
-  const dueWeek = useLiveQuery(() => loadDueReflection(reader, new Date()), [today]) ?? null;
-  const dueMonth = useLiveQuery(() => loadDueMonthlyReflection(reader, today), [today]) ?? null;
+  const focusDue = (reviews?.focus.length ?? 0) > 0;
+  const directionDue = (reviews?.direction.length ?? 0) > 0;
   const cleanup = useLiveQuery(() => loadCleanup(reader));
   const cleanupCount = cleanup ? cleanup.whiteboards.length + cleanup.duplicates.length : 0;
-  const dueCount = pendingDays.length + (dueWeek ? 1 : 0) + (dueMonth ? 1 : 0);
+  const dueCount = pendingDays.length + (focusDue ? 1 : 0) + (directionDue ? 1 : 0);
 
   const toggle = () => {
     const next = !collapsed;
@@ -96,18 +99,18 @@ export function Sidebar({ route, today, pendingDays, backupState }: Props) {
       badge: 'pendente',
     })),
     {
-      key: 'reflection',
-      place: 'reflection',
-      route: { name: 'reflection', week: dueWeek?.key },
-      label: 'Reflexão semanal',
-      badge: dueWeek ? 'disponível' : undefined,
+      key: 'focusReview',
+      place: 'focusReview',
+      route: { name: 'focusReview' },
+      label: 'Revisão de Foco',
+      badge: focusDue ? 'disponível' : undefined,
     },
     {
-      key: 'monthReflection',
-      place: 'monthReflection',
-      route: { name: 'monthReflection', month: dueMonth?.key },
-      label: 'Reflexão mensal',
-      badge: dueMonth ? 'disponível' : undefined,
+      key: 'directionReview',
+      place: 'directionReview',
+      route: { name: 'directionReview' },
+      label: 'Revisão de Rumo',
+      badge: directionDue ? 'disponível' : undefined,
     },
     {
       key: 'cleanup',

@@ -1,4 +1,5 @@
 import type { DomainEvent } from './events';
+import { isInPeriod } from './reviews';
 import { isInWeek, type WeekRange } from './week';
 
 /**
@@ -19,9 +20,17 @@ export interface WeeklyMetrics {
 }
 
 export function weeklyMetrics(events: readonly DomainEvent[], week: WeekRange): WeeklyMetrics {
-  const inWeek = events.filter((event) => isInWeek(event.day, week));
-  const postponed = new Set(inWeek.filter((event) => event.type === 'task.postponed').map((event) => event.entityId));
-  const finished = inWeek.filter((event) => event.type === 'task.finished');
+  return countMetrics(events.filter((event) => isInWeek(event.day, week)));
+}
+
+/** The same metrics over a review's period: events after `since` (all, when null), up to `until`. */
+export function periodMetrics(events: readonly DomainEvent[], since: string | null, until?: string): WeeklyMetrics {
+  return countMetrics(events.filter((event) => isInPeriod(event, since, until)));
+}
+
+function countMetrics(inPeriod: readonly DomainEvent[]): WeeklyMetrics {
+  const postponed = new Set(inPeriod.filter((event) => event.type === 'task.postponed').map((event) => event.entityId));
+  const finished = inPeriod.filter((event) => event.type === 'task.finished');
   const withIntention = finished.filter((event) => typeof event.data.intendedDate === 'string');
   const onTime = withIntention.filter((event) => event.data.intendedDate === event.day);
   return {

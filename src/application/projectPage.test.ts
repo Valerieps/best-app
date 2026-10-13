@@ -17,7 +17,7 @@ describe('tasks created on a project page', () => {
     const task = await createProjectTask(ctx, project.id, '  Pedir orçamento da bancada ');
 
     expect(task).toMatchObject({ kind: 'task', status: 'active', intendedDate: null, projectId: project.id, text: 'Pedir orçamento da bancada' });
-    const view = await loadProject(reader, project.id, TODAY);
+    const view = await loadProject(reader, project.id);
     expect(view?.activeTasks.map((item) => item.task.text)).toEqual(['Pedir orçamento da bancada']);
   });
 
@@ -56,7 +56,7 @@ describe('tasks created on a project page', () => {
     const sections = await db.sections.where('projectId').equals(project.id).toArray();
     expect(sections).toHaveLength(1);
     expect(sections[0].projectPage).toBe(true);
-    expect((await loadProject(reader, project.id, TODAY))?.sections).toBe(0);
+    expect((await loadProject(reader, project.id))?.sections).toBe(0);
     expect((await loadProjectList(reader, TODAY)).others[0].activity.get(TODAY)?.sections).toBe(0);
     const blocks = await db.blocks.where('sectionId').equals(sections[0].id).sortBy('position');
     expect(blocks.map((block) => block.text)).toEqual(['Um', 'Dois']);

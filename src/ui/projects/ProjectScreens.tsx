@@ -91,7 +91,7 @@ function FoldedGroup({ label, count, initiallyOpen, className, children }: { lab
 }
 
 export function ProjectScreen({ id, tab, today }: { id: string; tab: 'tasks' | 'notes'; today: DayKey }) {
-  const view = useLiveQuery(() => loadProject(reader, id, today), [id, today]);
+  const view = useLiveQuery(() => loadProject(reader, id), [id]);
   const objectives = useLiveQuery(() => reader.objectives()) ?? [];
   const resources = useLiveQuery(() => loadProjectResources(reader, id), [id]) ?? [];
   const dayPriorities = useLiveQuery(() => loadDayPriorities(reader, today), [today]) ?? [];
@@ -204,7 +204,7 @@ export function ProjectScreen({ id, tab, today }: { id: string; tab: 'tasks' | '
               aria-label="Nome do projeto"
             />
             {view.isPriority && (
-              <span className="project-head__star" title="Prioritário da semana" aria-label="Prioritário da semana" role="img">
+              <span className="project-head__star" title="Em foco" aria-label="Em foco" role="img">
                 <Icon name="star" size="sm" filled />
               </span>
             )}

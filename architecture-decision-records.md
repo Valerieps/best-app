@@ -27,9 +27,9 @@ Read only the ADRs your task touches: find them in this table or by grepping `ad
 | [ADR-016](adr/016-database-and-backup-version-2-1b.md) | Database and backup version 2 (1b) | 2026-10-11 | Accepted |
 | [ADR-017](adr/017-day-priorities-are-partly-computed.md) | Day priorities are partly computed | 2026-10-11 | Accepted |
 | [ADR-018](adr/018-paging-between-days-uses-the-route.md) | Paging between days uses the route | 2026-10-11 | Accepted |
-| [ADR-019](adr/019-database-and-backup-version-3-section-2.md) | Database and backup version 3 (section 2) | 2026-10-11 | Accepted |
+| [ADR-019](adr/019-database-and-backup-version-3-section-2.md) | Database and backup version 3 (section 2) | 2026-10-11 | Accepted, updated by ADR-039 |
 | [ADR-020](adr/020-weeks-are-iso-weeks-and-the-reflection-evaluates.md) | Weeks are ISO weeks, and the reflection evaluates a default week | 2026-10-11 | Accepted |
-| [ADR-021](adr/021-weekly-metrics-come-from-events-only.md) | Weekly metrics come from events only | 2026-10-11 | Accepted |
+| [ADR-021](adr/021-weekly-metrics-come-from-events-only.md) | Weekly metrics come from events only | 2026-10-11 | Accepted, updated by ADR-039 |
 | [ADR-022](adr/022-database-and-backup-version-4-section-3.md) | Database and backup version 4 (section 3) | 2026-10-11 | Accepted |
 | [ADR-023](adr/023-the-day-s-stage-is-computed.md) | The day's stage is computed | 2026-10-11 | Accepted |
 | [ADR-024](adr/024-reminder-signals-without-notifications.md) | Reminder signals without notifications | 2026-10-11 | Accepted |
@@ -43,6 +43,8 @@ Read only the ADRs your task touches: find them in this table or by grepping `ad
 | [ADR-032](adr/032-project-page-details-icon-pinned-column-tab-in.md) | Project page details: icon, pinned column, tab in the route | 2026-10-12 | Accepted, updated 2026-10-12 |
 | [ADR-033](adr/033-project-pace-comes-from-the-finish-events-a.md) | Project pace comes from the finish events; a reopening cancels the latest finish | 2026-10-12 | Superseded by ADR-034 |
 | [ADR-034](adr/034-project-activity-map-computed-from-events.md) | Project activity map, computed from events | 2026-10-12 | Accepted |
-| [ADR-035](adr/035-priority-projects-belong-to-the-week-database-and.md) | Priority projects belong to the week; database and backup version 6 | 2026-10-12 | Accepted |
+| [ADR-035](adr/035-priority-projects-belong-to-the-week-database-and.md) | Priority projects belong to the week; database and backup version 6 | 2026-10-12 | Superseded by ADR-038 |
 | [ADR-036](adr/036-the-project-list-remembers-its-open-groups-in-the.md) | The project list remembers its open groups in the settings | 2026-10-12 | Accepted |
 | [ADR-037](adr/037-the-sidebar-remembers-whether-it-is-collapsed-in-the.md) | The sidebar remembers whether it is collapsed in the settings | 2026-10-12 | Accepted |
+| [ADR-038](adr/038-a-single-list-of-projects-in-focus-database-and.md) | A single list of projects in focus; database and backup version 7 | 2026-10-12 | Accepted |
+| [ADR-039](adr/039-reviews-without-a-calendar-open-record-cadence-and.md) | Reviews without a calendar: open record, cadence and signals | 2026-10-12 | Accepted |

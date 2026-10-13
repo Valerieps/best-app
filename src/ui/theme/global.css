@@ -863,6 +863,10 @@ input[type='checkbox'] {
   margin-top: var(--space-3);
 }
 
+.settings__number {
+  width: 5em;
+}
+
 /* Section 3: opening the day, reminders, settings */
 .opening {
   min-height: 100vh;
@@ -910,6 +914,10 @@ input[type='checkbox'] {
 
 .dashboard__thoughts {
   margin-top: var(--space-4);
+}
+
+.dashboard__focus {
+  margin-bottom: var(--space-4);
 }
 
 .reminders {

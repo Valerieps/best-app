@@ -14,5 +14,6 @@ Rascunhos de tela feitos antes do código. Valem como referência visual, não c
 | "Colocar ordem na casa", versão 2 | `rascunho-colocar-ordem-dashboard_2.html` | Base do que foi construído no 1b (ADR-028). A V4 da avaliação de UX pede uma paleta mais calma (pedido 14) |
 | Barra lateral | `rascunho-barra-lateral_1.png` (feito no Stitch) | Vale só a barra lateral, fixa à esquerda (`spec/navegacao.md`). O centro da tela não muda, e os itens do menu são os do spec, não os do desenho (o desenho lista os projetos um a um e mostra "Sincronizado" no lugar do status do backup) |
 | Página do projeto | `rascunho-projeto-pagina.md` (brief) e `rascunho-projeto-pagina_1.html` | Construído na seção 2 (ADR-031, ADR-032). O brief diz o que mudou depois do HTML, que não foi atualizado |
+| Revisões de Foco e de Rumo | `plano-revisoes-foco-e-rumo.md` (brief, sem tela) | Construído (ADR-038, ADR-039). O plano fica como histórico |
 
 O rascunho original da nota do dia (`nota-do-dia-rascunho.png` e `.html`, de antes do 1a) não está no repositório; veja `DECISOES.md`, "Origem".

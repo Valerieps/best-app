@@ -11,8 +11,13 @@ export const ALL_DAYS: readonly number[] = [0, 1, 2, 3, 4, 5, 6];
 
 export type DayStage = 'start' | 'warmup' | 'dashboard' | 'execution';
 
-export function dayStage(record: DayRecord | undefined, warmupItems: readonly WarmupItem[]): DayStage {
-  if (warmupItems.length === 0) return 'execution';
+/**
+ * Where the day stands. "Iniciar Dia" and the warm up only exist with a checklist. The dashboard
+ * shows after the warm up, or, without a checklist, when it has something else to show
+ * (`dashboardContent`, such as the projects in focus), until "Iniciar o Flow de Execução".
+ */
+export function dayStage(record: DayRecord | undefined, warmupItems: readonly WarmupItem[], dashboardContent = false): DayStage {
+  if (warmupItems.length === 0) return dashboardContent && !record?.executionStartedAt ? 'dashboard' : 'execution';
   if (!record?.startedAt) return 'start';
   if (record.executionStartedAt) return 'execution';
   const answered = record.warmup ?? {};

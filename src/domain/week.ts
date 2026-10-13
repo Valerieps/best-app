@@ -27,22 +27,6 @@ export function weekOf(day: DayKey): WeekRange {
   return { key: weekKey(day), start, end: addDays(start, 6) };
 }
 
-/**
- * The week a reflection evaluates by default: early in the week (Monday to Wednesday) it is
- * the week that just ended; from Thursday on, the current one.
- */
-export function defaultReflectionWeek(today: DayKey): WeekRange {
-  const weekday = (fromDayKey(today).getDay() + 6) % 7;
-  return weekOf(weekday <= 2 ? addDays(today, -7) : today);
-}
-
-/** The week of an ISO week key like "2026-W41". January 4th is always in week 1. */
-export function weekFromKey(key: WeekKey): WeekRange {
-  const [year, week] = key.split('-W').map(Number);
-  const firstMonday = weekStart(toDayKey(new Date(year, 0, 4, 12)));
-  return weekOf(addDays(firstMonday, (week - 1) * 7));
-}
-
 export function isInWeek(day: DayKey, week: WeekRange): boolean {
   return day >= week.start && day <= week.end;
 }

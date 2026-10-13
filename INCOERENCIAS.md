@@ -26,7 +26,7 @@ Remover a frase tira a contradição do texto, mas não resolve os casos concret
 - **Onde a frase é contrariada hoje:**
   - Arquivar e abandonar só aparecem como destinos do checkout e da Revisão de Foco.
   - Trocar ou tirar um projeto em foco só é possível na Revisão de Foco (`spec/prioridades.md`, "Projetos em foco").
-  - Tarefas criadas na página do projeto não entram no checkout e, por isso, não têm como sair de circulação (`DEBITO-TECNICO.md`, "Projetos e prioritários da semana").
+  - Tarefas criadas na página do projeto não entram no checkout e, por isso, não têm como sair de circulação (`DEBITO-TECNICO.md`, "Projetos e projetos em foco").
 - **Onde a frase sustenta regras:** finalizar uma tarefa a qualquer momento, promover uma prioridade a qualquer momento, converter um quadro branco a qualquer momento, criar tarefas na página do projeto.
 - **Ambiguidade que continua sem ela:** o `spec/nota-do-dia.md` ("Execução") diz que, para tirar de circulação uma tarefa que veio de outro dia, "eu arquivo ou abandono", sem dizer se isso é possível durante o dia.
 - **Alternativa a remover:** trocar a frase por uma regra precisa. Por exemplo: "Criar, editar, agendar e finalizar é livre a qualquer hora. Tirar coisas de circulação (arquivar, abandonar, descartar) e trocar prioritários são decisões dos rituais." Ou o contrário, se o pedido 1 do `FEATURE-REQUESTS.md` (arquivar de qualquer tela) for aceito.
@@ -86,11 +86,9 @@ As fases do `SPEC.md` deveriam poder ser construídas em ordem, mas:
 
 - A pergunta em aberto do `spec/assistentes.md` ("os prazos que definem 'parado' ou 'antigo'") parece valer para todos os assistentes, mas os 14 dias de "Projetos parados" já estão definidos. Ela vale só para "Tarefas esquecidas", "Arquivo antigo" e "Hábitos sumidos" (`ROADMAP.md`, "Assistentes").
 
-### 2.11 Projetos em foco: regra e implementação
+### 2.11 Projetos em foco ao juntar projetos
 
-- A ADR-035 diz que um projeto finalizado continua contando nas semanas em que foi escolhido. Com a Revisão de Foco, os projetos em foco deixam de pertencer à semana, então essa parte da ADR também precisa mudar (`ROADMAP.md`, "O SPEC mudou e o código ainda não"). O `DEBITO-TECNICO.md` ("Projetos e prioritários da semana") mostra que ele sai da semana inteira, inclusive dos dias anteriores ao fim.
-- O `spec/prioridades.md` diz que reabrir não devolve o projeto à lista. O `DEBITO-TECNICO.md` mostra que, ao olhar uma semana passada, ele reaparece.
-- Juntar projetos repetidos com um projeto em foco: o destino não herda a vaga, e não há regra para isso.
+- Juntar projetos repetidos com um projeto em foco: o destino não herda a vaga, e não há regra para isso (`DEBITO-TECNICO.md`, "Projetos e projetos em foco").
 
 ### 2.12 Sugestão de projetos na Revisão de Foco
 

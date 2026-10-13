@@ -1,5 +1,6 @@
 import type { AssistantId, StatusLimits } from './cleanupStatus';
 import type { DayKey } from './day';
+import type { ReviewCadence } from './reviews';
 
 /**
  * Entities stored by the app. Each block, section and project is its own record:
@@ -111,24 +112,29 @@ export interface DayRecord {
 export type WarmupResult = 'done' | 'skipped' | 'later';
 
 /**
- * Ordered priorities of a period. Ids look like `day:2026-10-11` (tasks) or
- * `weekProjects:2026-W42` (section 2, the week's priority projects; ADR-035). Before version 6
- * the priority projects were per month, with ids `month:AAAA-MM`.
+ * Ordered priorities. Ids look like `day:2026-10-11` (the day's tasks) or `focusProjects` (section
+ * 2, the single list of projects in focus). `weekProjects:2026-W42` lists are the week's priority
+ * projects from before the reviews (ADR-035), kept as history for the raio-x; before version 6
+ * they were per month, with ids `month:AAAA-MM`.
  */
 export interface PriorityList {
   id: string;
-  /** `weekProjects` lists projects; `day` lists tasks. */
-  scope: 'day' | 'weekProjects';
-  /** A day (AAAA-MM-DD) or an ISO week (AAAA-Www). */
+  /** `focusProjects` and `weekProjects` list projects; `day` lists tasks. */
+  scope: 'day' | 'focusProjects' | 'weekProjects';
+  /** A day (AAAA-MM-DD), an ISO week (AAAA-Www) for the old week lists, or empty. */
   period: string;
   itemIds: string[];
   updatedAt: string;
 }
 
-/** A weekly reflection (section 2). Id like `week:2026-W41`; monthly ones come in section 4. */
+/**
+ * A review (spec/rituais.md): `focus` (Revisão de Foco, section 2) or `direction` (Revisão de
+ * Rumo, section 4). `week` (id `week:2026-W41`) and `month` (id `month:2026-10`) are the weekly
+ * and monthly reflections from before the reviews, kept as history.
+ */
 export interface Reflection {
   id: string;
-  kind: 'week' | 'month';
+  kind: 'focus' | 'direction' | 'week' | 'month';
   period: string;
   start: DayKey;
   end: DayKey;
@@ -141,8 +147,12 @@ export interface Reflection {
 /** User settings, a single record with id `main`. Goes into backups. */
 export interface Settings {
   id: 'main';
-  /** When the weekly reflection becomes available: weekday (0 = Sunday) and hour. */
-  weeklyReflection: { weekday: number; hour: number } | null;
+  /**
+   * How many checkouts and Revisões de Foco make each review available; absent numbers use the
+   * defaults. Records saved before the reviews may still carry `weeklyReflection` (weekday and
+   * hour of the weekly reflection), which nothing reads anymore.
+   */
+  reviewCadence?: Partial<ReviewCadence>;
   /** Section 3: weekdays the user works (0 = Sunday). Absent means every day. */
   activeDays?: number[];
   /** Section 3: the warm-up checklist, in order. Empty or absent means no warm up. */

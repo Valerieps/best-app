@@ -1,11 +1,9 @@
 import { toDayKey, type DayKey } from '../domain/day';
 import type { Objective, Resource } from '../domain/entities';
-import type { MonthlyMetrics } from '../domain/monthMetrics';
-import type { MonthRange } from '../domain/month';
 import { record } from './events';
 import type { AppContext, StoreTransaction } from './ports';
 
-/** Section 4: objectives, resources and the monthly reflection. */
+/** Section 4: objectives and resources. */
 
 function today(ctx: AppContext): DayKey {
   return toDayKey(ctx.clock.now());
@@ -144,26 +142,5 @@ export async function removeResource(ctx: AppContext, resourceId: string): Promi
     if (!resource) return;
     await tx.resources.delete(resourceId);
     await record(ctx, tx, 'resource.removed', 'resource', resourceId, today(ctx), { ownerId: resource.ownerId });
-  });
-}
-
-/** Closes the monthly reflection, keeping the metrics shown as a snapshot. */
-export async function closeMonth(ctx: AppContext, month: MonthRange, metrics: MonthlyMetrics): Promise<void> {
-  await ctx.store.transaction(async (tx) => {
-    const id = `month:${month.key}`;
-    const at = nowIso(ctx);
-    const current = (await tx.reflections.get(id)) ?? {
-      id,
-      kind: 'month' as const,
-      period: month.key,
-      start: month.start,
-      end: month.end,
-      bestMoments: '',
-      improvements: '',
-      closedAt: null,
-      updatedAt: at,
-    };
-    await tx.reflections.put({ ...current, closedAt: at, updatedAt: at });
-    await record(ctx, tx, 'reflection.closed', 'reflection', id, today(ctx), { month: month.key, metrics });
   });
 }

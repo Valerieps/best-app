@@ -8,7 +8,8 @@ import { askAgainAt } from '../../domain/dayFlow';
 import type { DayKey } from '../../domain/day';
 import type { WarmupItem } from '../../domain/entities';
 import { formatLongDate, pendingDaysSentence } from '../format';
-import { navigate } from '../hooks';
+import { navigate, routeHash } from '../hooks';
+import { ProjectIconBadge } from '../projects/ProjectIcon';
 import { appContext } from '../services';
 
 /** A simple line drawing of a sun, in the theme's colors. */
@@ -101,7 +102,7 @@ function greeting(hour: number): string {
   return 'Boa noite';
 }
 
-/** The welcome screen after the warm up (section 3). */
+/** The welcome screen after the warm up, or on opening the day when there are projects in focus (section 3). */
 export function DashboardScreen({ view, today }: { view: DayOpeningView; today: DayKey }) {
   const [thoughts, setThoughts] = useState('');
   const [writing, setWriting] = useState(false);
@@ -119,6 +120,24 @@ export function DashboardScreen({ view, today }: { view: DayOpeningView; today: 
       <button type="button" className="primary dashboard__start" onClick={() => void startExecution(appContext)}>
         Iniciar o Flow de Execução
       </button>
+
+      {view.focusProjects.length > 0 && (
+        <section className="dashboard__focus" aria-labelledby="dashboard-focus">
+          <h2 className="card__subtitle" id="dashboard-focus">
+            Em foco
+          </h2>
+          <ul className="card-list">
+            {view.focusProjects.map((project) => (
+              <li className="card-list__item" key={project.id}>
+                <a className="list-link project-link" href={routeHash({ name: 'project', id: project.id })}>
+                  <ProjectIconBadge project={project} size="sm" />
+                  {project.name}
+                </a>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
 
       <div className="dashboard__actions">
         {!writing && (

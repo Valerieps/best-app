@@ -13,7 +13,8 @@ import type {
   Settings,
 } from '../domain/entities';
 import type { DomainEvent, EntityType, EventType } from '../domain/events';
-import { migrateMonthPriorityLists } from '../domain/priorityProjects';
+import { toDayKey } from '../domain/day';
+import { migrateMonthPriorityLists, migrateToFocusList } from '../domain/focusProjects';
 
 /**
  * Backup file format. A backup holds every user table; importing one replaces all data.
@@ -22,7 +23,7 @@ import { migrateMonthPriorityLists } from '../domain/priorityProjects';
  */
 
 export const BACKUP_FORMAT = 'best-app-backup';
-export const BACKUP_SCHEMA_VERSION = 6;
+export const BACKUP_SCHEMA_VERSION = 7;
 
 export interface BackupTables {
   blocks: Block[];
@@ -105,7 +106,7 @@ function isRecord(value: unknown): value is Record<string, unknown> {
  * Brings the tables of an older backup to the current version. Each version only adds
  * tables or optional fields, so older backups stay importable.
  */
-function upgradeTables(tables: Record<string, unknown>, version: number): Record<string, unknown> {
+function upgradeTables(tables: Record<string, unknown>, version: number, exportedAt: string): Record<string, unknown> {
   const upgraded = { ...tables };
   if (version < 2) upgraded.priorities = []; // 1b added day priorities.
   if (version < 3) {
@@ -120,6 +121,10 @@ function upgradeTables(tables: Record<string, unknown>, version: number): Record
   }
   // Section 2 moved the priority projects from the month to the week (ADR-035).
   if (version < 6 && Array.isArray(upgraded.priorities)) upgraded.priorities = migrateMonthPriorityLists(upgraded.priorities);
+  // The reviews replaced the week lists with the single list in focus, as it was when exported.
+  if (version < 7 && Array.isArray(upgraded.priorities)) {
+    upgraded.priorities = migrateToFocusList(upgraded.priorities, toDayKey(new Date(exportedAt)));
+  }
   return upgraded;
 }
 
@@ -145,7 +150,7 @@ export function parseBackup(value: unknown): ParseResult {
     return { ok: false, error: 'O backup está incompleto.' };
   }
 
-  const tables = upgradeTables(value.tables, version);
+  const tables = upgradeTables(value.tables, version, value.exportedAt);
   for (const name of BACKUP_TABLES) {
     const rows = tables[name];
     if (!Array.isArray(rows)) {

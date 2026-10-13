@@ -1,9 +1,10 @@
 import { useEffect, useState } from 'react';
-import { setWeeklyReflectionSchedule } from '../../application/reflection';
+import { setReviewCadence } from '../../application/reviews';
 import { setActiveDays, setCleanupLimits, setWarmupItems } from '../../application/settings';
 import { ASSISTANT_IDS, limitsFor, withLimit, type AssistantId, type StatusLimits } from '../../domain/cleanupStatus';
 import { ALL_DAYS } from '../../domain/dayFlow';
 import type { Settings, WarmupItem } from '../../domain/entities';
+import { DEFAULT_REVIEW_CADENCE } from '../../domain/reviews';
 import { ASSISTANT_INFO } from '../cleanup/assistantInfo';
 import { appContext, reader } from '../services';
 import { LoadingPage } from '../components/Skeleton';
@@ -13,14 +14,12 @@ const WEEKDAYS = ['domingo', 'segunda', 'terça', 'quarta', 'quinta', 'sexta', '
 /** Monday first, as people read a work week. */
 const WEEK_ORDER = [1, 2, 3, 4, 5, 6, 0];
 
-/** User settings: weekly reflection (section 2), active days and warm up (section 3). */
+/** User settings: review cadence (section 2), active days and warm up (section 3). */
 export function SettingsScreen() {
   const settings = useLiveQuery(async () => (await reader.settings()) ?? null);
   if (settings === undefined) return <LoadingPage title="Configurações" />;
-  const schedule = settings?.weeklyReflection ?? null;
+  const cadence = { ...DEFAULT_REVIEW_CADENCE, ...settings?.reviewCadence };
   const activeDays = settings?.activeDays ?? [...ALL_DAYS];
-
-  const updateSchedule = (next: typeof schedule) => void setWeeklyReflectionSchedule(appContext, next);
 
   return (
     <main className="page">
@@ -58,48 +57,23 @@ export function SettingsScreen() {
       </section>
 
       <section className="panel settings__panel">
-        <h2>Reflexão semanal</h2>
+        <h2>Revisões</h2>
         <p className="muted">
-          O app não envia notificações: no horário escolhido, um aviso aparece na nota do dia. A reflexão também pode ser
-          feita a qualquer hora pelo menu.
+          As revisões não têm data marcada. Cada uma fica disponível depois de um número de checkouts ou de Revisões de
+          Foco, ou antes, se algo sair do lugar. Também dá para fazer qualquer uma a qualquer hora, pelo menu.
         </p>
-        <label className="check-row">
-          <input
-            type="checkbox"
-            checked={schedule !== null}
-            onChange={(event) => updateSchedule(event.target.checked ? { weekday: 5, hour: 17 } : null)}
-          />
-          Avisar toda semana
-        </label>
-        {schedule && (
-          <div className="settings__row">
-            <select
-              className="text-input"
-              value={schedule.weekday}
-              onChange={(event) => updateSchedule({ ...schedule, weekday: Number(event.target.value) })}
-              aria-label="Dia da semana"
-            >
-              {WEEK_ORDER.map((weekday) => (
-                <option key={weekday} value={weekday}>
-                  {WEEKDAYS[weekday]}
-                </option>
-              ))}
-            </select>
-            <span>às</span>
-            <select
-              className="text-input"
-              value={schedule.hour}
-              onChange={(event) => updateSchedule({ ...schedule, hour: Number(event.target.value) })}
-              aria-label="Hora"
-            >
-              {Array.from({ length: 24 }, (_, hour) => (
-                <option key={hour} value={hour}>
-                  {String(hour).padStart(2, '0')}h
-                </option>
-              ))}
-            </select>
-          </div>
-        )}
+        <CadenceField
+          label="Revisão de Foco a cada"
+          unit="checkouts"
+          value={cadence.focusCheckouts}
+          onChange={(focusCheckouts) => void setReviewCadence(appContext, { focusCheckouts })}
+        />
+        <CadenceField
+          label="Revisão de Rumo a cada"
+          unit="Revisões de Foco"
+          value={cadence.directionFocusReviews}
+          onChange={(directionFocusReviews) => void setReviewCadence(appContext, { directionFocusReviews })}
+        />
       </section>
 
       <section className="panel settings__panel">
@@ -266,5 +240,30 @@ function WarmupEditor({ items }: { items: WarmupItem[] }) {
         <button type="submit">Adicionar</button>
       </form>
     </>
+  );
+}
+
+/** A whole number from 1 to 99, saved when it is valid. */
+function CadenceField({ label, unit, value, onChange }: { label: string; unit: string; value: number; onChange(value: number): void }) {
+  const [text, setText] = useState(String(value));
+  useEffect(() => setText(String(value)), [value]);
+  return (
+    <label className="settings__row">
+      <span>{label}</span>
+      <input
+        className="text-input settings__number"
+        type="number"
+        min={1}
+        max={99}
+        value={text}
+        onChange={(event) => {
+          setText(event.target.value);
+          const next = Number(event.target.value);
+          if (Number.isInteger(next) && next >= 1 && next <= 99 && next !== value) onChange(next);
+        }}
+        onBlur={() => setText(String(value))}
+      />
+      <span>{unit}</span>
+    </label>
   );
 }

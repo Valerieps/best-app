@@ -1,11 +1,11 @@
 import { useEffect, useState, type KeyboardEvent, type ReactNode } from 'react';
-import { addPriorityProject } from '../../application/priorityProjects';
+import { addFocusProject } from '../../application/focusProjects';
 import { createProject } from '../../application/projects';
 import { loadProjectList, type ProjectListItem, type ProjectListView } from '../../application/queries';
 import { setProjectListGroupOpen } from '../../application/settings';
 import { toDayKey, type DayKey } from '../../domain/day';
 import type { ProjectListGroup } from '../../domain/entities';
-import { PRIORITY_PROJECT_LIMIT } from '../../domain/priorityProjects';
+import { FOCUS_PROJECT_LIMIT } from '../../domain/focusProjects';
 import { CARD_MAP_WEEKS, ROW_MAP_WEEKS } from '../../domain/projectActivity';
 import { Dropdown, DropdownItem } from '../components/Dropdown';
 import { Icon } from '../components/Icon';
@@ -27,8 +27,8 @@ function write(work: () => Promise<unknown>) {
 }
 
 /**
- * The project list (spec/projetos.md, "Projetos"): where projects are followed. The week's priority
- * projects are cards with a 16-week activity map; the other active ones are rows with 8 weeks.
+ * The project list (spec/projetos.md, "Projetos"): where projects are followed. The projects in
+ * focus are cards with a 16-week activity map; the other active ones are rows with 8 weeks.
  */
 export function ProjectsScreen({ today }: { today: DayKey }) {
   const view = useLiveQuery(() => loadProjectList(reader, today), [today]);
@@ -36,7 +36,7 @@ export function ProjectsScreen({ today }: { today: DayKey }) {
   if (!view) return <LoadingPage title="Projetos" />;
 
   const candidates = view.others.map((item) => item.project);
-  const freeSlots = PRIORITY_PROJECT_LIMIT - view.priority.length;
+  const freeSlots = FOCUS_PROJECT_LIMIT - view.priority.length;
   const hasActive = view.summary.active > 0;
 
   return (
@@ -61,7 +61,7 @@ export function ProjectsScreen({ today }: { today: DayKey }) {
         <section className="projects__group" aria-labelledby="projects-priority">
           <div className="projects__group-head">
             <h2 className="projects__group-title" id="projects-priority">
-              Prioritários da semana
+              Em foco
             </h2>
             <ActivityLegend />
           </div>
@@ -177,18 +177,18 @@ function Count({ value, one, many }: { value: number; one: string; many: string 
   );
 }
 
-/** A dashed free slot: "Definir prioridade" lets an active project take it. */
+/** A dashed free slot: "Colocar em foco" lets an active project take it. */
 function FreeSlot({ candidates }: { candidates: ProjectListItem['project'][] }) {
   return (
     <Dropdown
       className="priority-slot"
       triggerClassName="priority-slot__button"
       align="left"
-      label="Definir prioridade: escolher um projeto ativo"
+      label="Colocar em foco: escolher um projeto ativo"
       trigger={
         <>
           <Icon name="plus" />
-          Definir prioridade
+          Colocar em foco
         </>
       }
     >
@@ -201,7 +201,7 @@ function FreeSlot({ candidates }: { candidates: ProjectListItem['project'][] }) 
               key={project.id}
               onSelect={() => {
                 close();
-                write(() => addPriorityProject(appContext, project.id));
+                write(() => addFocusProject(appContext, project.id));
               }}
             >
               <span className="project-link">

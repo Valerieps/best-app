@@ -4,8 +4,8 @@ import type { Route } from './hooks';
 export type SidebarPlace =
   | 'day'
   | 'checkout'
-  | 'reflection'
-  | 'monthReflection'
+  | 'focusReview'
+  | 'directionReview'
   | 'cleanup'
   | 'projects'
   | 'objectives'
@@ -28,7 +28,7 @@ export function sidebarPlace(route: Route): SidebarPlace {
   }
 }
 
-const RITUALS: readonly SidebarPlace[] = ['checkout', 'reflection', 'monthReflection', 'cleanup'];
+const RITUALS: readonly SidebarPlace[] = ['checkout', 'focusReview', 'directionReview', 'cleanup'];
 
 /** Whether the current place is one of the rituals, so the "Rituais" list starts open. */
 export function isRitual(place: SidebarPlace): boolean {
