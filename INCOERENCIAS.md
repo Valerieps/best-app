@@ -2,10 +2,10 @@
 
 12/10/2026
 
-Regras que se contradizem ou ficaram ambíguas entre `SPEC.md`, `spec/checkout.md`, `spec/assistentes.md`, `DECISOES.md`, `ARQUITETURA.md`, `DEBITO-TECNICO.md`, `AVALIACAO-UX.md`, `google-safe.md` e as ADRs. As incoerências dos feature requests estão no próprio `FEATURE-REQUESTS.md`, logo após cada pedido.
+Regras que se contradizem ou ficaram ambíguas entre `SPEC.md`, `spec/checkout.md`, `spec/assistentes.md`, `DECISOES.md`, `ARQUITETURA.md`, `DEBITO-TECNICO.md`, `AVALIACAO-UX.md`, `google-safe.md` e as ADRs. As incoerências dos feature requests estão na issue de cada pedido, no GitHub.
 
 - **Entra aqui:** contradições e ambiguidades entre os documentos, com a pergunta que resolve cada uma.
-- **Não entra aqui:** incoerências de um pedido (ficam no arquivo do pedido, em `pedidos/`), bugs (`DEBITO-TECNICO.md`) e perguntas em aberto que não vêm de uma contradição (`SPEC.md`, "Em aberto").
+- **Não entra aqui:** incoerências de um pedido (ficam na issue do pedido, no GitHub), bugs (`DEBITO-TECNICO.md`) e perguntas em aberto que não vêm de uma contradição (`SPEC.md`, "Em aberto").
 
 Quando um item for decidido, a regra vai para o `SPEC.md` e o item sai daqui.
 
@@ -17,7 +17,7 @@ Já resolvidos e retirados desta lista: a fonte da verdade (o `SPEC.md`; o `prom
 
 - O `spec/checkout.md` ("Checkout") diz que, numa seção vinculada a um projeto, as tarefas chegam com "dia seguinte" pré-selecionado e "eu confirmo o destino de cada uma". O `DECISOES.md` repete: "para não virar adiamento automático".
 - O mesmo arquivo, em "Checkout em lote", diz que "Aceitar sugestões" confirma tudo de uma vez.
-- **Encaminhado:** vai ser decidido na revisão do fluxo de checkout (`FEATURE-REQUESTS.md`, pedido 6), junto com os itens 2.1, 2.4, 2.5 e a parte de lembretes do 2.9.
+- **Encaminhado:** vai ser decidido na revisão do fluxo de checkout ([issue #11](https://github.com/Valerieps/best-app/issues/11)), junto com os itens 2.1, 2.4, 2.5 e a parte de lembretes do 2.9.
 
 ### 1.2 O princípio "sempre dá para criar ou editar qualquer coisa fora dos rituais"
 
@@ -29,7 +29,7 @@ Remover a frase tira a contradição do texto, mas não resolve os casos concret
   - Tarefas criadas na página do projeto não entram no checkout e, por isso, não têm como sair de circulação (`DEBITO-TECNICO.md`, "Projetos e projetos em foco").
 - **Onde a frase sustenta regras:** finalizar uma tarefa a qualquer momento, promover uma prioridade a qualquer momento, converter um quadro branco a qualquer momento, criar tarefas na página do projeto.
 - **Ambiguidade que continua sem ela:** o `spec/nota-do-dia.md` ("Execução") diz que, para tirar de circulação uma tarefa que veio de outro dia, "eu arquivo ou abandono", sem dizer se isso é possível durante o dia.
-- **Alternativa a remover:** trocar a frase por uma regra precisa. Por exemplo: "Criar, editar, agendar e finalizar é livre a qualquer hora. Tirar coisas de circulação (arquivar, abandonar, descartar) e trocar prioritários são decisões dos rituais." Ou o contrário, se o pedido 1 do `FEATURE-REQUESTS.md` (arquivar de qualquer tela) for aceito.
+- **Alternativa a remover:** trocar a frase por uma regra precisa. Por exemplo: "Criar, editar, agendar e finalizar é livre a qualquer hora. Tirar coisas de circulação (arquivar, abandonar, descartar) e trocar prioritários são decisões dos rituais." Ou o contrário, se a [issue #7](https://github.com/Valerieps/best-app/issues/7) (arquivar de qualquer tela) for aceita.
 - **Pergunta:** qual das duas regras vale? E como uma tarefa do backlog do projeto, criada por engano, sai de circulação?
 
 ## 2. Regras de produto
