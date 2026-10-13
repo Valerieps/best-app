@@ -7,7 +7,7 @@
 
 - O app sempre avisa em vez de bloquear.
 - Sempre dá para criar ou editar qualquer coisa fora dos rituais. Os rituais existem apenas para garantir que isso será feito em alguma hora.
-- Qualquer ritual pode ser acionado a qualquer hora, independente dos agendamentos.
+- Qualquer ritual pode ser acionado a qualquer hora, independente da cadência e dos sinais que deixam uma revisão disponível (`rituais.md`, "Quando uma revisão fica disponível").
 
 ## Primeiro uso
 
