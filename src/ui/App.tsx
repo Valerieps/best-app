@@ -28,9 +28,11 @@ import { autoBackup, db, reader } from './services';
 import { SettingsScreen } from './settings/SettingsScreen';
 import { Sidebar } from './Sidebar';
 import { useLiveQuery } from './useLiveQuery';
+import { enabledRoute, visibleReviews } from './features';
 
 export function App() {
-  const route = useRoute();
+  // Screens of features hidden until their spec is done open the day note (ui/features.ts).
+  const route = enabledRoute(useRoute());
   const today = useToday();
   const backup = useBackup();
   const backupState = useAutoBackupState();
@@ -60,7 +62,7 @@ export function App() {
   useReminderSignals(dueReminders.length);
   // One warning at a time at the top; reminders that came back are not in this queue.
   const [snoozed, snooze] = useSnoozedNotices(today);
-  const reviews = useLiveQuery(() => loadReviewAvailability(reader, today), [today]);
+  const reviews = visibleReviews(useLiveQuery(() => loadReviewAvailability(reader, today), [today]));
   const [reviewSnoozedAt, snoozeReview] = useReviewSnooze();
   const reviewNotice = isReviewSnoozed(reviewSnoozedAt, reviews?.lastCheckoutAt ?? null) ? null : pickReviewNotice(reviews);
   const notice = pickTopNotice({

@@ -15,6 +15,7 @@ import { navigate, routeHash } from '../hooks';
 import { ProjectIconBadge } from '../projects/ProjectIcon';
 import { appContext, reader } from '../services';
 import { useLiveQuery } from '../useLiveQuery';
+import { FEATURES } from '../features';
 import { Metric, Step } from './ReviewParts';
 
 /** "Flow da Revisão de Foco" (spec/rituais.md): the review of the projects, since the previous one. */
@@ -74,7 +75,7 @@ export function FocusReviewScreen({ today }: { today: DayKey }) {
           />
           <Metric value={view.metrics.postponedTasks} label="tarefas adiadas" />
         </div>
-        {view.habits.length > 0 && (
+        {FEATURES.habits && view.habits.length > 0 && (
           <ul className="card-list reflection__habits">
             {view.habits.map(({ habit, stats }) => (
               <li className="card-list__item" key={habit.id}>

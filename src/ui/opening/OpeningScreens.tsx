@@ -10,6 +10,7 @@ import type { WarmupItem } from '../../domain/entities';
 import { formatLongDate, pendingDaysSentence } from '../format';
 import { navigate, routeHash } from '../hooks';
 import { ProjectIconBadge } from '../projects/ProjectIcon';
+import { FEATURES } from '../features';
 import { appContext } from '../services';
 
 /** A simple line drawing of a sun, in the theme's colors. */
@@ -109,7 +110,7 @@ export function DashboardScreen({ view, today }: { view: DayOpeningView; today: 
   const [saved, setSaved] = useState(false);
   const [loggingHabits, setLoggingHabits] = useState(false);
   const habits = (useLiveQuery(() => loadHabits(reader, today), [today]) ?? []).filter(
-    (habit) => habit.habit.status === 'active' && habit.expectedToday,
+    (habit) => FEATURES.habits && habit.habit.status === 'active' && habit.expectedToday,
   );
 
   return (

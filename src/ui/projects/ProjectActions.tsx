@@ -7,6 +7,7 @@ import { Dropdown, DropdownItem } from '../components/Dropdown';
 import { Icon } from '../components/Icon';
 import { navigate } from '../hooks';
 import { appContext } from '../services';
+import { FEATURES } from '../features';
 import { enqueue } from '../writeQueue';
 
 function write(work: () => Promise<unknown>) {
@@ -71,7 +72,9 @@ export function ProjectActionsMenu({ project, objectives, canAddToPriorities }: 
         }
         return (
           <>
-            <DropdownItem onSelect={() => setChoosing(true)}>{current ? 'Trocar o objetivo' : 'Vincular a um objetivo'}</DropdownItem>
+            {FEATURES.objectives && (
+              <DropdownItem onSelect={() => setChoosing(true)}>{current ? 'Trocar o objetivo' : 'Vincular a um objetivo'}</DropdownItem>
+            )}
             {canAddToPriorities && (
               <DropdownItem onSelect={() => run(() => addFocusProject(appContext, project.id))}>Colocar em foco</DropdownItem>
             )}

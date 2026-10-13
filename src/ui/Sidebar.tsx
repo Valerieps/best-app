@@ -11,6 +11,7 @@ import { navigate, type Route } from './hooks';
 import { appContext, reader } from './services';
 import { isRitual, sidebarPlace, type SidebarPlace } from './sidebarPlace';
 import { useLiveQuery } from './useLiveQuery';
+import { directionReviewEnabled, FEATURES } from './features';
 import { enqueue } from './writeQueue';
 
 interface Props {
@@ -105,13 +106,18 @@ export function Sidebar({ route, today, pendingDays, reviews, backupState }: Pro
       label: 'Revisão de Foco',
       badge: focusDue ? 'disponível' : undefined,
     },
-    {
-      key: 'directionReview',
-      place: 'directionReview',
-      route: { name: 'directionReview' },
-      label: 'Revisão de Rumo',
-      badge: directionDue ? 'disponível' : undefined,
-    },
+    // Hidden until the objectives' spec is done (ui/features.ts).
+    ...(directionReviewEnabled()
+      ? [
+          {
+            key: 'directionReview',
+            place: 'directionReview' as const,
+            route: { name: 'directionReview' as const },
+            label: 'Revisão de Rumo',
+            badge: directionDue ? 'disponível' : undefined,
+          },
+        ]
+      : []),
     {
       key: 'cleanup',
       place: 'cleanup',
@@ -131,18 +137,11 @@ export function Sidebar({ route, today, pendingDays, reviews, backupState }: Pro
           label: 'Projetos',
           count: counts?.projects,
         },
-        {
-          key: 'objectives',
-          place: 'objectives',
-          route: { name: 'objectives' },
-          label: 'Objetivos',
-        },
-        {
-          key: 'habits',
-          place: 'habits',
-          route: { name: 'habits' },
-          label: 'Hábitos',
-        },
+        // Hidden until their spec is done (ui/features.ts).
+        ...(FEATURES.objectives
+          ? [{ key: 'objectives', place: 'objectives' as const, route: { name: 'objectives' as const }, label: 'Objetivos' }]
+          : []),
+        ...(FEATURES.habits ? [{ key: 'habits', place: 'habits' as const, route: { name: 'habits' as const }, label: 'Hábitos' }] : []),
       ],
     },
     {

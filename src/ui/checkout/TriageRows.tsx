@@ -4,6 +4,7 @@ import type { NotesDecision, TaskDecision, TriageRow, WhiteboardDecision } from 
 import { KindChip, NoteChip, ProjectChip, WhiteboardChip } from '../components/Chips';
 import { Linkified } from '../components/Linkified';
 import { Segmented } from '../components/Segmented';
+import { FEATURES } from '../features';
 import { formatTime, postponedLabel, relativeDay } from '../format';
 
 export type Decision = TaskDecision | NotesDecision | WhiteboardDecision;
@@ -86,7 +87,7 @@ export function TaskRowView({
             { value: 'archive', label: 'Arquivar' },
             { value: 'abandon', label: 'Abandonar' },
             ...(allowReflection ? [{ value: 'reflection' as const, label: 'Revisão de Foco' }] : []),
-            { value: 'habit', label: 'Virar hábito' },
+            ...(FEATURES.habits ? [{ value: 'habit' as const, label: 'Virar hábito' }] : []),
           ]}
           onChange={(value) => {
             if (value === 'next') onChange({ kind: 'schedule', date: nextDay });

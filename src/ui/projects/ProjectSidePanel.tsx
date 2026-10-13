@@ -8,6 +8,7 @@ import { Icon } from '../components/Icon';
 import { Linkified, toSafeHref } from '../components/Linkified';
 import { formatShortDate, linkDomain } from '../format';
 import { navigate } from '../hooks';
+import { FEATURES } from '../features';
 import { appContext } from '../services';
 
 interface Props {
@@ -226,12 +227,14 @@ export function ProjectSidePanel({ view, objectives, resources, pinned, floating
 
       <h2 className="project-panel__heading">Detalhes</h2>
       <dl className="project-panel__details">
-        <div>
-          <dt className="muted">Objetivo</dt>
-          <dd>
-            <ObjectiveField view={view} objectives={objectives} />
-          </dd>
-        </div>
+        {FEATURES.objectives && (
+          <div>
+            <dt className="muted">Objetivo</dt>
+            <dd>
+              <ObjectiveField view={view} objectives={objectives} />
+            </dd>
+          </div>
+        )}
         <div>
           <dt className="muted">Status</dt>
           <dd>{status}</dd>

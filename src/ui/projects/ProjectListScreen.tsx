@@ -18,6 +18,7 @@ import { useLiveQuery } from '../useLiveQuery';
 import { enqueue } from '../writeQueue';
 import { ActivityLegend, ActivityMap } from './ActivityMap';
 import { ProjectActionsMenu } from './ProjectActions';
+import { FEATURES } from '../features';
 import { ProjectIconBadge } from './ProjectIcon';
 
 function write(work: () => Promise<unknown>) {
@@ -147,16 +148,18 @@ function PriorityCard({ item, view, today }: { item: ProjectListItem; view: Proj
           <Count value={item.finishedLastTwoWeeks} one="finalizada" many="finalizadas" /> nas últimas 2 semanas
         </p>
       </div>
-      <p className="priority-card__objective" title={item.objective?.goal}>
-        {item.objective ? (
-          <>
-            <span className="muted">Objetivo: </span>
-            {item.objective.goal}
-          </>
-        ) : (
-          <span className="muted">Sem objetivo</span>
-        )}
-      </p>
+      {FEATURES.objectives && (
+        <p className="priority-card__objective" title={item.objective?.goal}>
+          {item.objective ? (
+            <>
+              <span className="muted">Objetivo: </span>
+              {item.objective.goal}
+            </>
+          ) : (
+            <span className="muted">Sem objetivo</span>
+          )}
+        </p>
+      )}
       <p className={`priority-card__last ${item.stalledDays !== null ? 'priority-card__last--warning' : ''}`}>
         {item.stalledDays !== null
           ? `Parado há ${item.stalledDays} dias`
