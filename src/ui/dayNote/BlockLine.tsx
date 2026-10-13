@@ -1,9 +1,10 @@
-import { useEffect, useRef, useState, type KeyboardEvent, type ReactNode } from 'react';
+import { useEffect, useRef, useState, type KeyboardEvent, type PointerEvent, type ReactNode } from 'react';
 import { detectKind } from '../../domain/blockKind';
 import type { DayKey } from '../../domain/day';
 import type { Block } from '../../domain/entities';
 import { relativeDay } from '../format';
 import { useFocusTarget } from './focus';
+import { partMoveKey } from './lineDrag';
 
 /** Wait after the last keystroke before saving the text. */
 const SAVE_DELAY_MS = 400;
@@ -18,6 +19,18 @@ export interface LineHandlers {
   onSetDate(block: Block, date: DayKey | null): void;
   onSetDeadline(block: Block, date: DayKey | null): void;
   onTogglePriority(block: Block, on: boolean): void;
+  /** Alt + ↑/↓: moves the line inside its group (request 2). Absent where lines keep their order. */
+  onMove?(block: Block, direction: 'up' | 'down'): void;
+}
+
+/** Reordering by dragging the line's handle (request 2). */
+export interface LineDragProps {
+  /** The lines that can trade places: one section's own lines, or the carried tasks. */
+  group: string;
+  onStart(event: PointerEvent<HTMLElement>): void;
+  dragging: boolean;
+  /** Where the dragged line would land, drawn as a bar above or below this line. */
+  mark: 'before' | 'after' | null;
 }
 
 interface Props {
@@ -38,6 +51,7 @@ interface Props {
   extraMeta?: ReactNode;
   /** The intended date is shown elsewhere, like the project agenda's date block: no chip, only the hover shortcut. */
   hideDate?: boolean;
+  drag?: LineDragProps;
 }
 
 /** Hint on an empty line, shown only while the line is being written (P3 in AVALIACAO-UX.md). */
@@ -90,7 +104,7 @@ export function DatePicker({
   );
 }
 
-export function BlockLine({ block, free, day, today, isPriority, allowNewLines, handlers, extraMeta, hideDate = false }: Props) {
+export function BlockLine({ block, free, day, today, isPriority, allowNewLines, handlers, extraMeta, hideDate = false, drag }: Props) {
   const ref = useRef<HTMLTextAreaElement>(null);
   const [text, setText] = useState(block.text);
   const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -135,7 +149,12 @@ export function BlockLine({ block, free, day, today, isPriority, allowNewLines, 
     const element = event.currentTarget;
     const atStart = element.selectionStart === 0 && element.selectionEnd === 0;
     const atEnd = element.selectionStart === element.value.length;
-    if (event.key === 'Enter' && !event.shiftKey && !event.nativeEvent.isComposing) {
+    // Moving the whole section is handled by the section around the line.
+    if (partMoveKey(event)) return;
+    if (event.altKey && (event.key === 'ArrowUp' || event.key === 'ArrowDown') && handlers.onMove) {
+      event.preventDefault();
+      handlers.onMove(block, event.key === 'ArrowUp' ? 'up' : 'down');
+    } else if (event.key === 'Enter' && !event.shiftKey && !event.nativeEvent.isComposing) {
       event.preventDefault();
       if (!allowNewLines) return;
       if (saveTimer.current) clearTimeout(saveTimer.current);
@@ -179,8 +198,19 @@ export function BlockLine({ block, free, day, today, isPriority, allowNewLines, 
   );
   const priorityLabel = isPriority ? 'Tirar das prioridades do dia' : 'Promover a prioridade do dia';
 
+  const dragClasses = drag ? `${drag.dragging ? 'line--dragging' : ''} ${drag.mark ? `line--drop-${drag.mark}` : ''}` : '';
+
   return (
-    <div className={`line line--${block.kind} ${done ? 'line--done' : ''}`}>
+    <div
+      className={`line line--${block.kind} ${done ? 'line--done' : ''} ${dragClasses}`}
+      data-drag-group={drag?.group}
+      data-drag-id={block.id}
+    >
+      {drag && (
+        <span className="line__handle" title="Arraste para mudar a ordem (ou Alt + ↑/↓)" aria-hidden="true" onPointerDown={drag.onStart}>
+          ⠿
+        </span>
+      )}
       {isTask && (
         <input
           type="checkbox"

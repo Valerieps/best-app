@@ -42,6 +42,8 @@ export interface DayNoteView {
   /** Every section a shown block belongs to, including the origin of carried tasks. */
   sectionsById: Map<string, Section>;
   projects: Project[];
+  /** Order of the note's parts, when it was changed (`orderDayParts`). */
+  sectionOrder?: string[];
 }
 
 /** Sections of a day's note: the section behind a project page belongs to no day. */
@@ -56,11 +58,13 @@ export async function loadDayNote(reader: Reader, day: DayKey): Promise<DayNoteV
   const originIds = intended.map((task) => task.sectionId).filter((id) => !sections.some((s) => s.id === id));
   const origins = await reader.sectionsByIds(originIds);
   const projects = await reader.projects();
+  const sectionOrder = (await reader.dayRecord(day))?.sectionOrder;
   return {
     day,
     entries: buildDayNote({ day, sections, blocks, intended }),
     sectionsById: new Map([...sections, ...origins].map((section) => [section.id, section])),
     projects,
+    sectionOrder,
   };
 }
 
@@ -72,7 +76,8 @@ export async function loadDayTriage(reader: Reader, day: DayKey, today: DayKey):
   const carried = intended.filter((task) => !sectionIds.has(task.sectionId));
   const projects = await reader.projects();
   const activeDays = (await reader.settings())?.activeDays;
-  return buildDayTriage({ day, today, sections, blocks, carried, projects, activeDays });
+  const sectionOrder = (await reader.dayRecord(day))?.sectionOrder;
+  return buildDayTriage({ day, today, sections, blocks, carried, projects, activeDays, sectionOrder });
 }
 
 /** Past days with something left to triage, oldest first. */

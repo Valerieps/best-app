@@ -24,7 +24,7 @@ Durante o uso contínuo da nota do dia, a tela pode acumular muitas seções e b
 
 * **Cabeçalho.** O `spec/navegacao.md` ("Navegação") permite no máximo uma ação principal no cabeçalho da tela, e na nota do dia ela é "Fazer checkout". "Sair do modo foco" seria uma segunda ação, ou tomaria o lugar do checkout enquanto o foco durar.
 * **Seta de voltar.** No resto do app, "←" volta para outra tela, e a N3 da `AVALIACAO-UX.md` pede um padrão só. Usar "←" para sair do foco dá a ela outro sentido.
-* **O que fica visível.** Falta dizer se o bloco de prioridades, as tarefas de outros dias (no topo da primeira seção geral) e os avisos da nota do dia (checkout pendente, reflexão, lembretes) continuam na tela ao focar outra seção.
+* **O que fica visível.** Falta dizer se o bloco de prioridades, a seção "De outros dias" e os avisos da nota do dia (checkout pendente, reflexão, lembretes) continuam na tela ao focar outra seção.
 * **Clique cria linha.** Em dias passados, o editor não cria linhas (ADR-018). As linhas novas só são gravadas na primeira tecla (ADR-013 e ADR-014); um clique não deveria gravar um bloco vazio.
 * **Bug, não pedido.** O cursor indo para o fim da linha anterior é um defeito do editor atual e poderia ir para o `DEBITO-TECNICO.md`, separado do modo foco.
 * **Formato.** O pedido não tem "O que muda" nem "Em aberto".

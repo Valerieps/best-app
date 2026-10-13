@@ -7,6 +7,9 @@ import {
   deleteBlock,
   linkSectionToProject,
   mergeIntoPrevious,
+  reorderCarriedTasks,
+  reorderDayParts,
+  reorderSectionLines,
   setSectionTitle,
   setTaskDone,
   splitBlock,
@@ -20,13 +23,15 @@ import { detectKind } from '../../domain/blockKind';
 import type { DayKey } from '../../domain/day';
 import type { DayNoteSection } from '../../domain/dayNote';
 import type { Block, BlockKind, Reminder, SectionKind } from '../../domain/entities';
+import { CARRIED_PART, FIRST_PART, moveByOne, moveItem, orderDayParts, PRIORITIES_PART } from '../../domain/order';
 import { comparePositions, positionBetween } from '../../domain/position';
 import { canEditFreely } from '../../domain/tasks';
 import { appContext as ctx, reader } from '../services';
 import { useLiveQuery } from '../useLiveQuery';
 import { enqueue } from '../writeQueue';
-import { BlockLine, GhostLine, NOTE_HINT, type LineHandlers } from './BlockLine';
+import { BlockLine, GhostLine, NOTE_HINT, type LineDragProps, type LineHandlers } from './BlockLine';
 import { requestFocus } from './focus';
+import { isSamePlace, partMoveKey, useLineDrag } from './lineDrag';
 import { MeetingDetails } from './MeetingDetails';
 import { PendingDaysBanner } from './PendingDaysBanner';
 import { PrioritiesBlock, usePinnedPriorities } from './PrioritiesBlock';
@@ -61,9 +66,23 @@ interface Props {
 interface Entry {
   key: string;
   note: DayNoteSection;
+  /** Tasks carried from other days, in the order shown. */
+  carried: Block[];
   /** Own blocks, including new lines not saved yet. */
   blocks: Block[];
 }
+
+/**
+ * A part of the note that can be moved as a whole: a section, the tasks carried from other days
+ * (shown as a section of their own) or the day priorities, while they are not pinned.
+ */
+type Part =
+  | { key: string; kind: 'priorities' }
+  | { key: string; kind: 'carried'; entry: Entry }
+  | { key: string; kind: 'section'; entry: Entry };
+
+/** Drag group of the day's parts; line groups are named after their entry. */
+const PARTS_GROUP = 'parts';
 
 /** Where a line lives: its entry and its index among that entry's own blocks. */
 interface LineSlot {
@@ -81,6 +100,23 @@ interface Optimistic {
 
 /** Key of the day's first general section, which exists before anything is saved in it. */
 const DAY_ENTRY = 'day';
+
+/** Lines that trade places when reordering (request 2): an entry's own lines, or its carried tasks. */
+function groupKey(entryKey: string, carried: boolean): string {
+  return `${entryKey}:${carried ? 'carried' : 'own'}`;
+}
+
+/** The lines in the order just chosen, while the database has not answered yet. */
+function inOrder(blocks: Block[], ids: readonly string[] | undefined): Block[] {
+  if (!ids) return blocks;
+  const index = new Map(ids.map((id, at) => [id, at]));
+  const rank = (block: Block) => index.get(block.id) ?? ids.length;
+  return [...blocks].sort((a, b) => rank(a) - rank(b));
+}
+
+function sameIds(blocks: readonly Block[], ids: readonly string[]): boolean {
+  return blocks.length === ids.length && blocks.every((block, at) => block.id === ids[at]);
+}
 
 function draftBlock(id: string, sectionId: string, kind: BlockKind, text: string, position: string): Block {
   const at = new Date().toISOString();
@@ -127,6 +163,12 @@ export function DayNoteScreen({
   const nextDay = pendingDays.find((pending) => pending > day) ?? (day < today ? today : null);
   const goToDay = (target: DayKey) => navigate(target === today ? { name: 'day' } : { name: 'day', day: target });
   const [optimistic, setOptimistic] = useState<Optimistic[]>([]);
+  // Order chosen by moving a line, per group, until the database shows it.
+  const [orders, setOrders] = useState<Record<string, string[]>>({});
+  // Order chosen by moving a part, until the database shows it. `base` is the saved order then.
+  const [partOrder, setPartOrder] = useState<{ day: DayKey; keys: string[]; base: string } | null>(null);
+  const dropItem = useRef<(group: string, id: string, toIndex: number) => void>(() => {});
+  const { drag, start: startDrag } = useLineDrag((group, id, toIndex) => dropItem.current(group, id, toIndex));
   // The section created from the day's empty first section keeps its screen key, so the line
   // being typed in is not rebuilt (and does not lose focus) when the section is saved.
   const [adoptedSectionId, setAdoptedSectionId] = useState<string | null>(null);
@@ -143,9 +185,15 @@ export function DayNoteScreen({
       const key = !note.section || note.section.id === adoptedSectionId ? DAY_ENTRY : note.section.id;
       const saved = new Set(note.blocks.map((block) => block.id));
       const drafts = optimistic.filter((item) => item.entryKey === key && !saved.has(item.block.id));
-      return { key, note, blocks: [...note.blocks, ...drafts.map((item) => item.block)].sort(comparePositions) };
+      const blocks = [...note.blocks, ...drafts.map((item) => item.block)].sort(comparePositions);
+      return {
+        key,
+        note,
+        carried: inOrder(note.carried, orders[groupKey(key, true)]),
+        blocks: inOrder(blocks, orders[groupKey(key, false)]),
+      };
     });
-  }, [view, optimistic, adoptedSectionId]);
+  }, [view, optimistic, adoptedSectionId, orders]);
 
   // Drop drafts once the database has them.
   useEffect(() => {
@@ -157,13 +205,55 @@ export function DayNoteScreen({
     });
   }, [view]);
 
+  // Drop a chosen order once the database shows the lines that way.
+  useEffect(() => {
+    if (!view) return;
+    setOrders((previous) => {
+      const keys = Object.keys(previous);
+      if (keys.length === 0) return previous;
+      const saved = new Map<string, Block[]>();
+      for (const note of view.entries) {
+        const key = !note.section || note.section.id === adoptedSectionId ? DAY_ENTRY : note.section.id;
+        saved.set(groupKey(key, true), note.carried);
+        saved.set(groupKey(key, false), note.blocks);
+      }
+      const next = Object.fromEntries(
+        Object.entries(previous).filter(([key, ids]) => !sameIds(saved.get(key) ?? [], ids)),
+      );
+      return Object.keys(next).length === keys.length ? previous : next;
+    });
+  }, [view, adoptedSectionId]);
+
+  // The saved order changed, so the one chosen on screen is in the database.
+  const savedOrder = view?.sectionOrder?.join() ?? '';
+  useEffect(() => {
+    setPartOrder((previous) => (previous && previous.base !== savedOrder ? null : previous));
+  }, [savedOrder]);
+
+  const parts = useMemo<Part[]>(() => {
+    if (!view) return [];
+    const host = entries.find((entry) => entry.carried.length > 0);
+    // A past day only shows what it has; the empty first section is for writing today.
+    const sections = isToday ? entries : entries.filter((entry) => entry.note.section);
+    const all: Part[] = [
+      ...(isToday && !pinned ? [{ key: PRIORITIES_PART, kind: 'priorities' as const }] : []),
+      ...(host ? [{ key: CARRIED_PART, kind: 'carried' as const, entry: host }] : []),
+      ...sections.map((entry) => ({ key: entry.note.section?.id ?? FIRST_PART, kind: 'section' as const, entry })),
+    ];
+    const byKey = new Map(all.map((part) => [part.key, part]));
+    const saved = partOrder?.day === day ? partOrder.keys : view.sectionOrder;
+    return orderDayParts(all.map((part) => part.key), saved).map((key) => byKey.get(key)!);
+  }, [view, entries, isToday, pinned, partOrder, day]);
+
+  // Lines in the order shown, for the arrows and Backspace.
   const lines = useMemo<LineSlot[]>(
     () =>
-      entries.flatMap((entry) => [
-        ...entry.note.carried.map((block) => ({ block, entry, ownIndex: -1 })),
-        ...entry.blocks.map((block, ownIndex) => ({ block, entry, ownIndex })),
-      ]),
-    [entries],
+      parts.flatMap((part): LineSlot[] => {
+        if (part.kind === 'carried') return part.entry.carried.map((block) => ({ block, entry: part.entry, ownIndex: -1 }));
+        if (part.kind === 'section') return part.entry.blocks.map((block, ownIndex) => ({ block, entry: part.entry, ownIndex }));
+        return [];
+      }),
+    [parts],
   );
 
   // The header needs nothing from the database, so it shows at once, with a skeleton below.
@@ -243,6 +333,68 @@ export function DayNoteScreen({
     return positionBetween(slot.block.position, own[slot.ownIndex + 1]?.position ?? null);
   }
 
+  /** The lines that trade places with this one: the carried tasks, or the section's own lines. */
+  function groupOf(slot: LineSlot) {
+    const carried = slot.ownIndex === -1;
+    const blocks = carried ? slot.entry.carried : slot.entry.blocks;
+    return { key: groupKey(slot.entry.key, carried), carried, ids: blocks.map((block) => block.id) };
+  }
+
+  /** Request 2: shows the new order at once and saves it after the writes already queued. */
+  function reorder(slot: LineSlot, ids: string[]) {
+    const group = groupOf(slot);
+    if (ids.join() === group.ids.join()) return;
+    setOrders((previous) => ({ ...previous, [group.key]: ids }));
+    const movedId = slot.block.id;
+    enqueue(() =>
+      group.carried ? reorderCarriedTasks(ctx, day, ids, movedId) : reorderSectionLines(ctx, ids, movedId),
+    ).catch(() => {
+      // Logged by the queue; go back to the saved order.
+      setOrders(({ [group.key]: _dropped, ...rest }) => rest);
+    });
+  }
+
+  /** Moves the parts of the day: shows the new order at once and saves it for this day. */
+  function moveParts(keys: string[]) {
+    if (keys.join() === parts.map((part) => part.key).join()) return;
+    setPartOrder({ day, keys, base: savedOrder });
+    enqueue(() => reorderDayParts(ctx, day, keys)).catch(() => {
+      // Logged by the queue; go back to the saved order.
+      setPartOrder(null);
+    });
+  }
+
+  dropItem.current = (group, id, toIndex) => {
+    if (group === PARTS_GROUP) {
+      moveParts(moveItem(parts.map((part) => part.key), id, toIndex));
+      return;
+    }
+    const slot = lines.find((line) => line.block.id === id);
+    if (slot) reorder(slot, moveItem(groupOf(slot).ids, id, toIndex));
+  };
+
+  /** Where a dragged item would land among `keys`, drawn on the item at `index`. */
+  function dropMark(group: string, keys: readonly string[], index: number): LineDragProps['mark'] {
+    const active = drag?.group === group ? drag : null;
+    if (!active || isSamePlace(keys.indexOf(active.id), active.toIndex)) return null;
+    if (active.toIndex === index) return 'before';
+    if (active.toIndex === keys.length && index === keys.length - 1) return 'after';
+    return null;
+  }
+
+  function dragProps(entry: Entry, carried: boolean, block: Block, index: number): LineDragProps | undefined {
+    const blocks = carried ? entry.carried : entry.blocks;
+    if (blocks.length < 2) return undefined;
+    const group = groupKey(entry.key, carried);
+    const ids = blocks.map((line) => line.id);
+    return {
+      group,
+      onStart: (event) => startDrag(event, group, block.id),
+      dragging: drag?.group === group && drag.id === block.id,
+      mark: dropMark(group, ids, index),
+    };
+  }
+
   const handlers: LineHandlers = {
     onSaveText: (block, text) => write(() => updateBlockText(ctx, block.id, text)),
     onEnter: (block, text, caret) => {
@@ -266,7 +418,7 @@ export function DayNoteScreen({
       }
       const index = lines.findIndex((line) => line.block.id === block.id);
       const previous = index > 0 ? lines[index - 1] : null;
-      if (previous && previous.entry === lines[index].entry) {
+      if (previous && previous.entry === lines[index].entry && previous.ownIndex !== -1) {
         const caret = previous.block.text.length;
         requestFocus(previous.block.id, caret);
         write(() => mergeIntoPrevious(ctx, block.id, text, previous.block.id));
@@ -285,12 +437,17 @@ export function DayNoteScreen({
     onSetDate: (block, date) => write(() => setIntendedDate(ctx, block.id, date)),
     onSetDeadline: (block, date) => write(() => setDeadline(ctx, block.id, date)),
     onTogglePriority: (block, on) => write(() => setDayPriority(ctx, block.id, on)),
+    onMove: (block, direction) => {
+      const slot = slotOf(block);
+      if (slot) reorder(slot, moveByOne(groupOf(slot).ids, block.id, direction));
+    },
   };
 
   const priorityIds = new Set(priorities.map((priority) => priority.task.id));
   const lineProps = { day, today, allowNewLines: isToday, handlers };
-  // A past day only shows what it has; the empty first section is for writing today.
-  const shown = isToday ? entries : entries.filter((entry) => entry.note.section || entry.note.carried.length > 0);
+  const partKeys = parts.map((part) => part.key);
+  const projects = view.projects;
+  const onlyPriorities = parts.every((part) => part.kind === 'priorities');
 
   function createFirstLine(entry: Entry, typed: string) {
     const target = newLineTarget(entry, positionBetween(entry.blocks.at(-1)?.position ?? null, null));
@@ -304,6 +461,92 @@ export function DayNoteScreen({
     write(() => createSection(ctx, kind).then((section) => requestFocus(`ghost:${section.id}`)));
   }
 
+  const prioritiesBlock = (
+    <PrioritiesBlock
+      priorities={priorities}
+      today={today}
+      pinned={pinned}
+      onToggleDone={(taskId, done) => write(() => setTaskDone(ctx, taskId, done))}
+      onDemote={(taskId) => write(() => setDayPriority(ctx, taskId, false))}
+    />
+  );
+
+  function partLabel(part: Part): string {
+    if (part.kind === 'priorities') return 'as prioridades do dia';
+    if (part.kind === 'carried') return 'as tarefas de outros dias';
+    const section = part.entry.note.section;
+    const name = section?.title ? ` "${section.title}"` : '';
+    return `a seção${name}`;
+  }
+
+  function dragClasses(key: string, index: number): string {
+    const mark = dropMark(PARTS_GROUP, partKeys, index);
+    const dragging = drag?.group === PARTS_GROUP && drag.id === key;
+    return `${dragging ? 'day-part--dragging' : ''} ${mark ? `day-part--drop-${mark}` : ''}`;
+  }
+
+  function renderPart(part: Part) {
+    if (part.kind === 'priorities') return prioritiesBlock;
+    if (part.kind === 'carried') {
+      const entry = part.entry;
+      return (
+        <section className="section section--general section--carried" aria-label="Tarefas de outros dias">
+          <div className="section__header">
+            <span className="section__carried-title">De outros dias</span>
+          </div>
+          {entry.carried.map((block, index) => (
+            <BlockLine
+              key={block.id}
+              block={block}
+              free={false}
+              isPriority={priorityIds.has(block.id)}
+              drag={dragProps(entry, true, block, index)}
+              {...lineProps}
+            />
+          ))}
+        </section>
+      );
+    }
+    const entry = part.entry;
+    const section = entry.note.section;
+    const kind = section?.kind ?? 'general';
+    return (
+      <section
+        className={`section section--${kind} ${section?.projectId ? 'section--project' : ''}`}
+        aria-label={kind === 'meeting' ? 'Seção de reunião' : 'Seção geral'}
+      >
+        <SectionHeader
+          section={section}
+          kind={kind}
+          projects={projects}
+          onSaveTitle={(title) => section && write(() => setSectionTitle(ctx, section.id, title))}
+          onLinkProject={(project) => section && write(() => linkSectionToProject(ctx, section.id, project.id))}
+          onCreateProject={(name) => section && write(() => convertSectionToProject(ctx, section.id, name))}
+        />
+        {section?.kind === 'meeting' && (
+          <MeetingDetails section={section} onSave={(details) => write(() => setSectionDetails(ctx, section.id, details))} />
+        )}
+        {entry.blocks.map((block, index) => (
+          <BlockLine
+            key={block.id}
+            block={block}
+            free={isFree(block)}
+            isPriority={priorityIds.has(block.id)}
+            drag={dragProps(entry, false, block, index)}
+            {...lineProps}
+          />
+        ))}
+        {isToday && entry.blocks.length === 0 && (
+          <GhostLine
+            id={`ghost:${section?.id ?? DAY_ENTRY}`}
+            placeholder={NOTE_HINT}
+            onCreate={(text) => createFirstLine(entry, text)}
+          />
+        )}
+      </section>
+    );
+  }
+
   return (
     <>
       <main className="page">
@@ -315,53 +558,37 @@ export function DayNoteScreen({
             <RemindersBanner reminders={reminders} />
           </div>
         )}
-        {isToday && (
-          <PrioritiesBlock
-            priorities={priorities}
-            today={today}
-            pinned={pinned}
-            onToggleDone={(taskId, done) => write(() => setTaskDone(ctx, taskId, done))}
-            onDemote={(taskId) => write(() => setDayPriority(ctx, taskId, false))}
-          />
-        )}
+        {/* Pinned, the priorities stay at the top and do not move with the other parts. */}
+        {isToday && pinned && prioritiesBlock}
         <div className="note">
-          {shown.length === 0 && <p className="muted">Nada pendente neste dia.</p>}
-          {shown.map((entry) => {
-            const section = entry.note.section;
-            const kind = section?.kind ?? 'general';
-            return (
-              <section
-                key={entry.key}
-                className={`section section--${kind} ${section?.projectId ? 'section--project' : ''}`}
-                aria-label={kind === 'meeting' ? 'Seção de reunião' : 'Seção geral'}
-              >
-                <SectionHeader
-                  section={section}
-                  kind={kind}
-                  projects={view.projects}
-                  onSaveTitle={(title) => section && write(() => setSectionTitle(ctx, section.id, title))}
-                  onLinkProject={(project) => section && write(() => linkSectionToProject(ctx, section.id, project.id))}
-                  onCreateProject={(name) => section && write(() => convertSectionToProject(ctx, section.id, name))}
-                />
-                {section?.kind === 'meeting' && (
-                  <MeetingDetails section={section} onSave={(details) => write(() => setSectionDetails(ctx, section.id, details))} />
-                )}
-                {entry.note.carried.map((block) => (
-                  <BlockLine key={block.id} block={block} free={false} isPriority={priorityIds.has(block.id)} {...lineProps} />
-                ))}
-                {entry.blocks.map((block) => (
-                  <BlockLine key={block.id} block={block} free={isFree(block)} isPriority={priorityIds.has(block.id)} {...lineProps} />
-                ))}
-                {isToday && entry.blocks.length === 0 && (
-                  <GhostLine
-                    id={`ghost:${section?.id ?? DAY_ENTRY}`}
-                    placeholder={NOTE_HINT}
-                    onCreate={(text) => createFirstLine(entry, text)}
-                  />
-                )}
-              </section>
-            );
-          })}
+          {onlyPriorities && !isToday && <p className="muted">Nada pendente neste dia.</p>}
+          {parts.map((part, index) => (
+            <div
+              key={part.kind === 'section' ? part.entry.key : part.key}
+              className={`day-part day-part--${part.kind} ${dragClasses(part.key, index)}`}
+              data-drag-group={PARTS_GROUP}
+              data-drag-id={part.key}
+              onKeyDown={(event) => {
+                const direction = partMoveKey(event);
+                if (!direction) return;
+                event.preventDefault();
+                moveParts(moveByOne(partKeys, part.key, direction));
+              }}
+            >
+              {parts.length > 1 && (
+                <button
+                  type="button"
+                  className="day-part__handle"
+                  title="Arraste para mudar a ordem (ou Ctrl + Shift + ↑/↓)"
+                  aria-label={`Mover ${partLabel(part)} (Ctrl + Shift + ↑/↓)`}
+                  onPointerDown={(event) => startDrag(event, PARTS_GROUP, part.key)}
+                >
+                  ⠿
+                </button>
+              )}
+              {renderPart(part)}
+            </div>
+          ))}
           {isToday && (
             <div className="note__actions">
               <button type="button" className="tertiary" onClick={() => addSection('general')}>

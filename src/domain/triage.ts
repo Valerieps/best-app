@@ -1,5 +1,6 @@
 import { toDayKey, type DayKey } from './day';
 import type { Block, Project, Section } from './entities';
+import { CARRIED_PART, orderDayParts, sortCarried } from './order';
 import { comparePositions } from './position';
 import { isTaskPendingOn, isTaskShownOn, nextPlanningDay, POSTPONE_ATTENTION_THRESHOLD } from './tasks';
 import { findCitedName } from './text';
@@ -81,6 +82,8 @@ export interface DayTriageInput {
   projects: Project[];
   /** Section 3: weekdays the user works; "dia seguinte" skips the others. */
   activeDays?: readonly number[];
+  /** Order of the day note's parts, when it was changed; the checkout follows it. */
+  sectionOrder?: readonly string[];
 }
 
 function byCreatedAt(a: { createdAt: string }, b: { createdAt: string }): number {
@@ -130,15 +133,25 @@ export function buildDayTriage(input: DayTriageInput): DayTriage {
     task.intendedDate > day &&
     (task.lastTriagedDay === null || task.lastTriagedDay < day);
 
-  // Tasks carried from other days show up first, as at the top of the day note.
-  for (const task of [...input.carried].sort(byCreatedAt)) {
-    if (isTaskPendingOn(task, null, day)) rows.push(taskRow(task, null));
-    else if (isTaskShownOn(task, null, day) && finishedOn(task, day)) {
-      automatic.push({ type: 'finishedDuringDay', task, section: null });
+  // Tasks carried from other days come where they are in the day note: first, unless moved.
+  const addCarried = () => {
+    for (const task of sortCarried(input.carried, day)) {
+      if (isTaskPendingOn(task, null, day)) rows.push(taskRow(task, null));
+      else if (isTaskShownOn(task, null, day) && finishedOn(task, day)) {
+        automatic.push({ type: 'finishedDuringDay', task, section: null });
+      }
     }
-  }
+  };
 
-  for (const section of [...input.sections].sort(byCreatedAt)) {
+  const sections = [...input.sections].sort(byCreatedAt);
+  const sectionsById = new Map(sections.map((section) => [section.id, section]));
+  const parts = orderDayParts([CARRIED_PART, ...sections.map((section) => section.id)], input.sectionOrder);
+  for (const part of parts) {
+    if (part === CARRIED_PART) {
+      addCarried();
+      continue;
+    }
+    const section = sectionsById.get(part)!;
     const blocks = input.blocks.filter((block) => block.sectionId === section.id).sort(comparePositions);
     const notes = blocks.filter((block) => block.kind === 'note');
 

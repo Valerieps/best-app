@@ -48,3 +48,4 @@ Read only the ADRs your task touches: find them in this table or by grepping `ad
 | [ADR-037](adr/037-the-sidebar-remembers-whether-it-is-collapsed-in-the.md) | The sidebar remembers whether it is collapsed in the settings | 2026-10-12 | Accepted |
 | [ADR-038](adr/038-a-single-list-of-projects-in-focus-database-and.md) | A single list of projects in focus; database and backup version 7 | 2026-10-12 | Accepted |
 | [ADR-039](adr/039-reviews-without-a-calendar-open-record-cadence-and.md) | Reviews without a calendar: open record, cadence and signals | 2026-10-12 | Accepted |
+| [ADR-040](adr/040-reordering-lines-and-day-parts-without-events.md) | Reordering lines and the parts of a day, without events or a schema version | 2026-10-13 | Accepted |

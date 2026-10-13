@@ -8,7 +8,7 @@ A Revisão de Foco escolhe projetos, e o checkout escolhe tarefas. Não há prio
 ## Prioridades do dia *(1b)*
 
 - Data de intenção é diferente de prioridade: as prioridades são um destaque dentro das tarefas do dia.
-- As 3 prioridades do dia são sempre tarefas, e a qualquer momento uma tarefa pode ser promovida a prioridade do dia. A tarefa priorizada aparece nos dois lugares: no bloco de prioridades e na seção em que está. O bloco de prioridades pode ser fixado no topo, para não sumir quando eu rolar a nota.
+- As 3 prioridades do dia são sempre tarefas, e a qualquer momento uma tarefa pode ser promovida a prioridade do dia. A tarefa priorizada aparece nos dois lugares: no bloco de prioridades e na seção em que está. O bloco de prioridades pode ser fixado no topo, para não sumir quando eu rolar a nota. Quando não está fixado, ele fica entre as seções da nota e muda de lugar como elas (`nota-do-dia.md`, "Ordem das linhas e das seções").
 - No dia do prazo máximo, a tarefa se torna prioridade automaticamente. Se as 3 prioridades do dia já estiverem definidas, ela ocupa o lugar da terceira, sem criar uma quarta.
 - A lista pode estar vazia: no primeiro uso, quando o checkout do dia anterior não foi feito, ou quando as 3 prioridades já foram completadas. Prioridades finalizadas saem da lista.
 - Promover uma tarefa quando as 3 prioridades já estão definidas não é bloqueado: a nova ocupa o lugar da terceira.

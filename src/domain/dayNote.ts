@@ -1,5 +1,6 @@
 import type { DayKey } from './day';
 import type { Block, Section } from './entities';
+import { sortCarried } from './order';
 import { comparePositions } from './position';
 import { isVisibleTask } from './tasks';
 
@@ -32,9 +33,10 @@ function byCreatedAt(a: { createdAt: string }, b: { createdAt: string }): number
 export function buildDayNote(input: DayNoteInput): DayNoteSection[] {
   const sections = [...input.sections].sort(byCreatedAt);
   const ownSectionIds = new Set(sections.map((section) => section.id));
-  const carried = input.intended
-    .filter((task) => !ownSectionIds.has(task.sectionId) && isVisibleTask(task))
-    .sort(byCreatedAt);
+  const carried = sortCarried(
+    input.intended.filter((task) => !ownSectionIds.has(task.sectionId) && isVisibleTask(task)),
+    input.day,
+  );
 
   const note: DayNoteSection[] = sections.map((section) => ({
     section,

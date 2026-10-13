@@ -17,7 +17,7 @@
 ## Execução *(1a)*
 
 - Interface: uma página parecida com uma nota do Obsidian ou Notion, ou seja, como se fosse um arquivo de texto, mas com blocos estruturados de conteúdo.
-- O dia abre com uma seção geral já criada. As tarefas com data de intenção para aquele dia, incluindo as escolhidas no checkout do dia anterior, entram no topo dela, sem distinção visual das tarefas criadas no dia.
+- O dia abre com uma seção geral já criada. As tarefas com data de intenção para aquele dia, incluindo as escolhidas no checkout do dia anterior, entram no topo dela, sem distinção visual das tarefas criadas no dia. A partir do 1b, elas ficam numa seção própria, "De outros dias", que de começo vem logo acima da primeira seção geral e que eu posso mudar de lugar como as outras (veja "Ordem das linhas e das seções").
 - Ao longo do dia eu vou coletando tudo em uma única nota, de forma sequencial, como um bloco de notas. A ideia é não gastar processamento mental escolhendo onde salvar cada coisa.
 - Cada tarefa tem um checkbox para finalizar.
 - Enquanto escrevo, posso apagar uma linha ou tirar o `[]` do começo para mudar o tipo, como num editor de texto, mas só em blocos criados no dia e ainda não triados. Uma tarefa que veio de outro dia não some quando eu apago o texto: para tirá-la de circulação, eu arquivo ou abandono.
@@ -30,6 +30,15 @@
 - A seção de reunião ganha dois campos opcionais: participantes e link para documentos.
 - Eu posso interagir com cada tipo de bloco com atalhos que aparecem com mouse hover. Na tarefa: finalizar, definir a data de intenção e o prazo máximo, e promover a prioridade. Na nota geral: converter em tarefa.
 - No topo da nota do dia, onde aparece a data, um botão de setinha pagina entre os dias. Ele passa somente pelas notas que ainda têm itens pendentes.
+
+## Ordem das linhas e das seções *(1b)*
+
+- Eu posso mudar a ordem das linhas (tarefas e notas) dentro de uma seção: arrastando pela alça que aparece à esquerda da linha no hover, ou com Alt + ↑/↓ com o cursor na linha. Vale para todas as linhas da seção, mesmo as já triadas ou finalizadas, porque a ordem não muda data, status nem triagem. Uma linha não muda de seção assim.
+- As tarefas de outros dias mudam de ordem só entre elas, dentro da seção "De outros dias". A ordem vale para aquele dia: uma tarefa que chega depois, ou que vai para outro dia, entra no fim das tarefas de outros dias.
+- Eu também posso mudar a ordem das seções da nota do dia: as seções gerais e de reunião, a seção "De outros dias" e o bloco de prioridades, quando ele não está fixado no topo. Arrasto pela alça à esquerda da seção, ou uso Ctrl + Shift + ↑/↓ (⌘ + Shift no Mac) com o cursor em qualquer linha, no título da seção ou na alça.
+- Cada dia tem a sua ordem. Um dia novo começa no padrão: prioridades, tarefas de outros dias e depois as seções na ordem em que foram criadas. Uma seção nova entra no fim.
+- Eu posso reordenar linhas e seções em qualquer dia, inclusive nos dias passados com itens pendentes: mudar a ordem não cria linhas.
+- O checkout segue a ordem da nota do dia (`checkout.md`, "Checkout").
 
 ## Wiki pessoal
 

@@ -81,6 +81,7 @@ Cada entidade é um registro separado. Um bloco existe uma vez só: notas, proje
 | `lastTriagedDay` | Último dia cujo checkout decidiu a tarefa; é o que diz se ela está pendente (ADR-011) |
 | `deadline` | Prazo máximo (1b) |
 | `awaitingReflection` | Deixada para "decidir na Revisão de Foco" (2; o nome gravado é antigo, ADR-039) |
+| `carriedOrder` | `{ day, position }`: ordem entre as tarefas de outros dias, só enquanto `day` é a data de intenção (ADR-040) |
 | `closedAt`, `createdAt`, `updatedAt` | Datas e horários |
 
 **`sections`**: as seções da nota do dia.
@@ -97,7 +98,7 @@ Cada entidade é um registro separado. Um bloco existe uma vez só: notas, proje
 
 **`projects`**: `name`, `status` (`active`, `finished` ou `merged`), `finishedAt`, `mergedInto` e `keepSeparateFrom` (assistente de projetos repetidos), `objectiveId` (4) e `icon` (2).
 
-**`days`**: `day` (chave), `lastCheckoutAt` e, a partir da seção 3, `startedAt`, `warmup` (resultado de cada item do dia) e `executionStartedAt`. Se o checkout está pendente é sempre calculado a partir dos blocos; esta tabela só guarda o que não dá para calcular. A etapa do dia também é calculada (ADR-023).
+**`days`**: `day` (chave), `lastCheckoutAt` e, a partir da seção 3, `startedAt`, `warmup` (resultado de cada item do dia) e `executionStartedAt`; `sectionOrder`, a ordem das partes da nota do dia quando eu a mudo (ADR-040). Se o checkout está pendente é sempre calculado a partir dos blocos; esta tabela só guarda o que não dá para calcular. A etapa do dia também é calculada (ADR-023).
 
 **`priorities`**: listas ordenadas, com id `escopo:período`. `day:2026-10-11` guarda as tarefas escolhidas à mão para o dia; as tarefas com prazo no dia entram na leitura (ADR-017). `focusProjects` guarda a lista única de até 3 projetos em foco; cada mudança grava um evento com a lista inteira, que é o histórico lido pelo raio-x (ADR-038). As listas `weekProjects:2026-W42`, de antes das revisões, ficam como histórico dos dias anteriores à primeira mudança.
 
@@ -132,7 +133,7 @@ Nada disso é guardado: é calculado a partir das tabelas, por funções de `app
 
 | Visão | Como é montada |
 | --- | --- |
-| Nota do dia | Seções com `day` igual ao dia, mais as tarefas `active` com `intendedDate` igual ao dia, no topo da primeira seção geral. A tarefa não é copiada; ela só aparece ali |
+| Nota do dia | Seções com `day` igual ao dia, mais as tarefas `active` com `intendedDate` igual ao dia, na seção "De outros dias", que só existe na tela. A tarefa não é copiada; ela só aparece ali. As partes (seções, "De outros dias" e prioridades) seguem `days.sectionOrder` por `orderDayParts` (`domain/order.ts`, ADR-040) |
 | Dia pendente | Tem tarefa com `lastTriagedDay` anterior ao dia, ou seção sem destino |
 | Tarefas ativas e arquivadas | Blocos `task` por `status` |
 | Wiki | Seções com `notesDestination = 'wiki'`, cada entrada com as notas da seção, em ordem cronológica |
@@ -181,6 +182,7 @@ Reativar uma tarefa arquivada limpa a data sem contar adiamento (ADR-015).
 - **Enter** cria um bloco logo abaixo, com uma `position` entre os vizinhos. **Backspace** no começo de uma linha transforma uma tarefa em nota; numa nota, junta com a linha de cima da mesma seção, ou apaga o bloco se ele estiver vazio e for o primeiro da seção.
 - A primeira seção do dia existe só na tela até alguém escrever nela (ADR-013).
 - O tipo do bloco é detectado por uma lista de detectores no domínio (`domain/blockKind.ts`), testados em ordem. O primeiro que reconhece o texto decide o tipo, e o que nenhum reconhece vira nota. Hoje há um detector só (`[] ` vira tarefa). A seção 5 acrescenta o de compromisso, sem mexer no editor. Uma correção manual do tipo, que é pergunta em aberto da seção 5, vira um campo que tem prioridade sobre os detectores.
+- **Reordenar** (ADR-040): a alça de cada linha e de cada parte usa eventos de ponteiro (`ui/dayNote/lineDrag.ts`), para funcionar também com o dedo. Alt + ↑/↓ move a linha e Ctrl + Shift + ↑/↓ move a parte. Mover uma linha grava só a `position` dela entre as vizinhas; mover uma parte grava a lista do dia em `days.sectionOrder`. A nova ordem aparece antes de ser gravada e sai da fila de escrita depois das gravações já pedidas.
 - **Digitação rápida** (ADR-014): uma linha nova aparece na tela antes de ser gravada, e as gravações do editor rodam uma depois da outra numa fila (`ui/writeQueue.ts`), para que salvar o texto nunca procure um bloco que ainda está sendo criado.
 - O texto é salvo 400 ms depois da última tecla, ao perder o foco e ao sair da tela, sem gerar evento. A criação, a exclusão e a mudança de tipo geram evento.
 - Fora do editor (wiki, listas, checkout), links no texto viram `<a target="_blank" rel="noopener noreferrer">`, só para `http` e `https`, e o texto nunca é inserido como HTML (`google-safe.md`). No editor, o texto continua editável e os links não são clicáveis.
@@ -192,6 +194,7 @@ Reativar uma tarefa arquivada limpa a data sem contar adiamento (ADR-015).
 - "Fechar dias pendentes" usa a mesma função para vários dias. A diferença é que as tarefas não feitas voltam sem data.
 - O mesmo mecanismo de lote serve aos assistentes de limpeza (`spec/assistentes.md`): cada assistente só fornece a busca (`domain/assistants.ts`) e as ações (`application/assistants.ts`).
 - "Dia seguinte" num checkout atrasado é o próximo dia ativo depois do dia triado, mas nunca antes de hoje.
+- A triagem segue a ordem da nota do dia: as partes por `days.sectionOrder` e as tarefas de outros dias por `carriedOrder` (ADR-040).
 
 ## 9. Métricas (implementado em parte)
 

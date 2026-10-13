@@ -3,6 +3,7 @@ import type { Project, Section } from '../../domain/entities';
 import { normalizeForMatch } from '../../domain/text';
 import { formatTime } from '../format';
 import { KindChip, ProjectChip, WhiteboardChip } from '../components/Chips';
+import { partMoveKey } from './lineDrag';
 
 interface Props {
   section: Section | null;
@@ -62,6 +63,8 @@ export function SectionHeader({ section, kind, projects, onSaveTitle, onLinkProj
   }
 
   function onKeyDown(event: KeyboardEvent<HTMLInputElement>) {
+    // Moving the whole section is handled by the section around the header.
+    if (partMoveKey(event)) return;
     if (event.key === 'Escape') {
       setOpen(false);
       return;

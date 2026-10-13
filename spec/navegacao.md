@@ -21,7 +21,7 @@ Toda opção do app mora num de três níveis, e cada nível tem um lugar fixo, 
 ## 2. Da tela: um cabeçalho no topo do centro
 
 - Título à esquerda; à direita, no máximo uma ação principal e um "⋯" com as outras.
-- Na nota do dia, o título é a data com as setas entre dias pendentes, a ação principal é "Fazer checkout" daquele dia, e o "⋯" tem "Fixar prioridades". Os botões "+ Seção geral" e "+ Seção de reunião" ficam sempre visíveis no fim da nota, porque abrir seção é parte da captura. As seções seguem a ordem em que foram criadas, então não há botão entre elas. O checkout fica nos dois lugares: em "Rituais" e na nota do dia.
+- Na nota do dia, o título é a data com as setas entre dias pendentes, a ação principal é "Fazer checkout" daquele dia, e o "⋯" tem "Fixar prioridades". Os botões "+ Seção geral" e "+ Seção de reunião" ficam sempre visíveis no fim da nota, porque abrir seção é parte da captura. Uma seção nova entra no fim da nota, então não há botão entre as seções; depois eu posso mudá-la de lugar (`nota-do-dia.md`, "Ordem das linhas e das seções"). O checkout fica nos dois lugares: em "Rituais" e na nota do dia.
 - Os avisos que dizem respeito só àquela tela ficam logo abaixo do cabeçalho dela, como o checkout pendente, a revisão disponível e os lembretes que voltaram, que aparecem só na nota do dia.
 - Nos fluxos (checkout e revisões), a decisão fica no fim da página, porque eu leio de cima para baixo antes de decidir. O botão de confirmar a triagem se chama "Confirmar decisões".
 - A tela "Iniciar Dia" é a única sem barra lateral: é uma tela branca só com um desenho simples de sol e o botão.
