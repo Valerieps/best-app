@@ -23,6 +23,7 @@ import { formatLongDate, plural, postponedLabel, relativeDay } from '../format';
 import { navigate } from '../hooks';
 import { appContext, reader } from '../services';
 import { useLiveQuery } from '../useLiveQuery';
+import { FEATURES } from '../features';
 import {
   GroupHeader,
   NotesRowView,
@@ -111,7 +112,7 @@ export function CheckoutScreen({ day, today }: Props) {
     setChoices((previous) => new Map(previous).set(rowKey(row), decision));
   const resourceOwners: ResourceOwner[] = [
     ...objectives
-      .filter((objective) => objective.status === 'active')
+      .filter((objective) => FEATURES.objectives && objective.status === 'active')
       .map((objective) => ({ ownerType: 'objective' as const, ownerId: objective.id, label: objective.goal })),
     ...projects
       .filter((project) => project.status === 'active')

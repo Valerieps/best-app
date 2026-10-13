@@ -60,5 +60,6 @@ Decisões de produto que dependem da Valeria:
 
 ## Adiado de propósito
 
+- **Objetivos, hábitos e a Revisão de Rumo escondidos até a spec ficar pronta** (decisão de 13/10/2026): o código das fases 4 e 6 continua, mas a interface esconde tudo que depende deles: os itens da barra lateral, as telas, o objetivo do projeto, os recursos de objetivo e "Virar hábito" no checkout, os hábitos no dashboard e na Revisão de Foco, e a Revisão de Rumo inteira, que sai de "Rituais", do contador, dos avisos e das configurações. Os dados ficam guardados. Para voltar, basta ligar a chave em `src/ui/features.ts` (ADR-041) e conferir a spec.
 - **App no Android e sincronização entre aparelhos:** fase posterior, quando houver uma forma de sincronizar que respeite o `google-safe.md`.
 - **Integração com o Google Agenda:** só numa fase que permita conexões externas.

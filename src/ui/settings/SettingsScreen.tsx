@@ -8,6 +8,7 @@ import { DEFAULT_REVIEW_CADENCE } from '../../domain/reviews';
 import { ASSISTANT_INFO } from '../cleanup/assistantInfo';
 import { appContext, reader } from '../services';
 import { LoadingPage } from '../components/Skeleton';
+import { directionReviewEnabled } from '../features';
 import { useLiveQuery } from '../useLiveQuery';
 
 const WEEKDAYS = ['domingo', 'segunda', 'terça', 'quarta', 'quinta', 'sexta', 'sábado'];
@@ -58,22 +59,31 @@ export function SettingsScreen() {
 
       <section className="panel settings__panel">
         <h2>Revisões</h2>
-        <p className="muted">
-          As revisões não têm data marcada. Cada uma fica disponível depois de um número de checkouts ou de Revisões de
-          Foco, ou antes, se algo sair do lugar. Também dá para fazer qualquer uma a qualquer hora, pelo menu.
-        </p>
+        {directionReviewEnabled() ? (
+          <p className="muted">
+            As revisões não têm data marcada. Cada uma fica disponível depois de um número de checkouts ou de Revisões de
+            Foco, ou antes, se algo sair do lugar. Também dá para fazer qualquer uma a qualquer hora, pelo menu.
+          </p>
+        ) : (
+          <p className="muted">
+            A Revisão de Foco não tem data marcada. Ela fica disponível depois de um número de checkouts, ou antes, se algo
+            sair do lugar. Também dá para fazê-la a qualquer hora, pelo menu.
+          </p>
+        )}
         <CadenceField
           label="Revisão de Foco a cada"
           unit="checkouts"
           value={cadence.focusCheckouts}
           onChange={(focusCheckouts) => void setReviewCadence(appContext, { focusCheckouts })}
         />
-        <CadenceField
-          label="Revisão de Rumo a cada"
-          unit="Revisões de Foco"
-          value={cadence.directionFocusReviews}
-          onChange={(directionFocusReviews) => void setReviewCadence(appContext, { directionFocusReviews })}
-        />
+        {directionReviewEnabled() && (
+          <CadenceField
+            label="Revisão de Rumo a cada"
+            unit="Revisões de Foco"
+            value={cadence.directionFocusReviews}
+            onChange={(directionFocusReviews) => void setReviewCadence(appContext, { directionFocusReviews })}
+          />
+        )}
       </section>
 
       <section className="panel settings__panel">
