@@ -1,6 +1,6 @@
 import type { Block, Habit, PriorityList, Project } from './entities';
-import { listInEffect, recordedPriorityProjects } from './priorityProjects';
-import { weekKey } from './week';
+import type { DomainEvent } from './events';
+import { focusProjectsOnDay } from './focusProjects';
 
 /**
  * Section 4: the "raio-x da desconexão" between the day to day and the objectives. Metrics with
@@ -13,8 +13,8 @@ export interface MonthlyMetrics {
   habitsWithoutObjective: number;
   /** Day priorities of the month. */
   dayPriorities: number;
-  /** Those that were tasks of a priority project of their day's week. */
-  dayPrioritiesInPriorityProjects: number;
+  /** Those that were tasks of a project in focus on their day. */
+  dayPrioritiesInFocusProjects: number;
 }
 
 export function monthlyMetrics(input: {
@@ -22,16 +22,18 @@ export function monthlyMetrics(input: {
   habits: readonly Habit[];
   dayPriorityLists: readonly PriorityList[];
   priorityTasks: readonly Block[];
-  /** Every week list of priority projects up to the month's last week (they carry over). */
-  weekProjectLists: readonly PriorityList[];
+  /** Changes of the list in focus, which carry the whole list (its history). */
+  focusEvents: readonly DomainEvent[];
+  /** The week lists of priority projects from before the reviews, for the days before any change. */
+  legacyWeekLists: readonly PriorityList[];
 }): MonthlyMetrics {
   const active = input.projects.filter((project) => project.status === 'active');
   const taskById = new Map(input.priorityTasks.map((task) => [task.id, task]));
   let dayPriorities = 0;
   let inPriorityProjects = 0;
   for (const list of input.dayPriorityLists) {
-    // What was chosen that week, even if the project was finished later.
-    const projectIds = new Set(recordedPriorityProjects(listInEffect(input.weekProjectLists, weekKey(list.period))));
+    // What was in focus that day, even if the project was finished later.
+    const projectIds = new Set(focusProjectsOnDay(list.period, input.focusEvents, input.legacyWeekLists));
     for (const id of list.itemIds) {
       dayPriorities++;
       const projectId = taskById.get(id)?.projectId;
@@ -43,6 +45,6 @@ export function monthlyMetrics(input: {
     projectsWithoutObjective: active.filter((project) => !project.objectiveId).length,
     habitsWithoutObjective: input.habits.filter((habit) => habit.status === 'active' && !habit.objectiveId).length,
     dayPriorities,
-    dayPrioritiesInPriorityProjects: inPriorityProjects,
+    dayPrioritiesInFocusProjects: inPriorityProjects,
   };
 }

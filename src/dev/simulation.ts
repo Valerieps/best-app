@@ -9,7 +9,7 @@ import {
   setTaskDone,
 } from '../application/notebook';
 import type { AppContext, IdGenerator } from '../application/ports';
-import { addPriorityProject } from '../application/priorityProjects';
+import { addFocusProject } from '../application/focusProjects';
 import { createProject, setProjectFinished, setProjectIcon } from '../application/projects';
 import { loadDayTriage, loadPendingTriages } from '../application/queries';
 import { setDayPriority, setDeadline, setIntendedDate, setSectionDetails } from '../application/dayTools';
@@ -129,10 +129,10 @@ export class Simulation {
     await setProjectIcon(this.ctx, project.id, icon);
   }
 
-  /** Takes a free slot among the week's priority projects. */
+  /** Takes a free slot among the projects in focus. */
   async prioritize(project: Project): Promise<void> {
     this.step();
-    await addPriorityProject(this.ctx, project.id);
+    await addFocusProject(this.ctx, project.id);
   }
 
   async done(...tasks: Block[]): Promise<void> {

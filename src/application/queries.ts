@@ -26,10 +26,10 @@ import { monthlyMetrics, type MonthlyMetrics } from '../domain/monthMetrics';
 import { dayStage, dueReminders, type DayStage } from '../domain/dayFlow';
 import { weeklyMetrics, type WeeklyMetrics } from '../domain/metrics';
 import { dueReflectionWeek } from '../domain/reflectionSchedule';
-import { weekKey, weekOf, type WeekKey, type WeekRange } from '../domain/week';
+import { weekOf, type WeekRange } from '../domain/week';
 import { comparePositions } from '../domain/position';
 import { buildDayPriorities, dayPriorityListId, type DayPriority } from '../domain/priorities';
-import { hasFreeSlot, listInEffect, nextWeek, priorityProjectIds, priorityProjectsRange } from '../domain/priorityProjects';
+import { FOCUS_LIST_ID, focusProjectIds, hasFreeSlot, LEGACY_WEEK_LISTS_RANGE } from '../domain/focusProjects';
 import { activityByDay, lastActivityDay, recentlyFinished, stalledDays, type ActivityByDay } from '../domain/projectActivity';
 import { isDaySection, isStuckTask } from '../domain/projectPage';
 import { buildDayTriage, findPendingDays, isTriagePending, type DayTriage, type TriageRow } from '../domain/triage';
@@ -251,10 +251,8 @@ export interface ReflectionView {
   /** Step 4, section 6: longest streak and completion of each active habit. */
   habits: { habit: Habit; week: HabitStats; month: HabitStats }[];
   projects: Project[];
-  /** Step 6: the week after the evaluated one, whose priority projects the reflection defines. */
-  nextWeek: WeekRange;
-  /** Its priority projects in effect, carried over from the evaluated week if not changed yet. */
-  nextWeekPriorityIds: string[];
+  /** The projects in focus, which the review can change freely. */
+  focusIds: string[];
 }
 
 /** Everything the weekly reflection of `week` shows (spec/rituais.md). */
@@ -288,7 +286,6 @@ export async function loadReflection(reader: Reader, week: WeekRange, today: Day
   ];
   const events = await reader.eventsBetween(week.start, week.end);
   const projects = await reader.projects();
-  const following = nextWeek(week);
   return {
     week,
     reflection,
@@ -297,8 +294,7 @@ export async function loadReflection(reader: Reader, week: WeekRange, today: Day
     metrics: weeklyMetrics(events, week),
     habits: await habitsOfPeriod(reader, week.start, week.end),
     projects,
-    nextWeek: following,
-    nextWeekPriorityIds: await loadPriorityProjectIds(reader, following.key, projects),
+    focusIds: await loadFocusProjectIds(reader, projects),
   };
 }
 
@@ -323,10 +319,10 @@ export async function loadDueReflection(reader: Reader, now: Date): Promise<Week
   return reflection?.closedAt ? null : candidate;
 }
 
-/** The week's priority projects in effect (they carry over from earlier weeks), active ones only. */
-async function loadPriorityProjectIds(reader: Reader, week: WeekKey, projects: readonly Project[]): Promise<string[]> {
-  const lists = await reader.priorityListsBetween(...priorityProjectsRange(week));
-  return priorityProjectIds(listInEffect(lists, week), projects);
+/** The projects in focus, active ones only, in the order chosen. */
+async function loadFocusProjectIds(reader: Reader, projects: readonly Project[]): Promise<string[]> {
+  const [list] = await reader.priorityListsBetween(FOCUS_LIST_ID, FOCUS_LIST_ID);
+  return focusProjectIds(list, projects);
 }
 
 /** What the "⋯" of a project offers, in the list and on its page. */
@@ -397,7 +393,7 @@ async function loadActivities(reader: Reader, projects: readonly Project[], toda
 export async function loadProjectList(reader: Reader, today: DayKey): Promise<ProjectListView> {
   const projects = (await reader.projects()).filter((project) => project.status !== 'merged');
   const objectives = await reader.objectives();
-  const priorityIds = await loadPriorityProjectIds(reader, weekOf(today).key, projects);
+  const priorityIds = await loadFocusProjectIds(reader, projects);
   const settings = await reader.settings();
   const items = (await loadActivities(reader, projects, today)).map(({ project, tasks, activity, stalledDays }): ProjectListItem => {
     const active = tasks.filter((task) => task.status === 'active');
@@ -447,7 +443,7 @@ export interface ProjectView extends ProjectActions {
   sections: number;
 }
 
-export async function loadProject(reader: Reader, projectId: string, today: DayKey): Promise<ProjectView | null> {
+export async function loadProject(reader: Reader, projectId: string): Promise<ProjectView | null> {
   const projects = await reader.projects();
   const project = projects.find((candidate) => candidate.id === projectId);
   if (!project) return null;
@@ -455,7 +451,7 @@ export async function loadProject(reader: Reader, projectId: string, today: DayK
   const sections = (await reader.sectionsOfProject(projectId)).filter(isDaySection);
   const wiki = await loadWiki(reader);
   const done = tasks.filter((task) => task.status === 'done').sort((a, b) => ((a.closedAt ?? '') < (b.closedAt ?? '') ? 1 : -1));
-  const priorityIds = await loadPriorityProjectIds(reader, weekOf(today).key, projects);
+  const priorityIds = await loadFocusProjectIds(reader, projects);
   return {
     project,
     activeTasks: await withOrigins(reader, tasks.filter((task) => task.status === 'active').sort(byIntendedDateThenCreation)),
@@ -605,14 +601,15 @@ export async function loadMonthlyReflection(reader: Reader, key: MonthKey): Prom
   const habits = await reader.habits();
   const dayLists = await reader.priorityListsBetween(`day:${month.start}`, `day:${month.end}`);
   const priorityTasks = await reader.blocksByIds([...new Set(dayLists.flatMap((list) => list.itemIds))]);
-  const weekProjectLists = await reader.priorityListsBetween(...priorityProjectsRange(weekKey(month.end)));
+  const focusEvents = await reader.eventsOfEntities([FOCUS_LIST_ID]);
+  const legacyWeekLists = await reader.priorityListsBetween(...LEGACY_WEEK_LISTS_RANGE);
   return {
     month,
     reflection: (await reader.reflection(`month:${key}`)) ?? null,
     objectives: await loadObjectives(reader),
     projects,
     habits,
-    metrics: monthlyMetrics({ projects, habits, dayPriorityLists: dayLists, priorityTasks, weekProjectLists }),
+    metrics: monthlyMetrics({ projects, habits, dayPriorityLists: dayLists, priorityTasks, focusEvents, legacyWeekLists }),
   };
 }
 

@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { linkProjectToObjective } from '../../application/objectives';
-import { addPriorityProject } from '../../application/priorityProjects';
+import { addFocusProject } from '../../application/focusProjects';
 import { setProjectFinished } from '../../application/projects';
 import type { Objective, Project } from '../../domain/entities';
 import { Dropdown, DropdownItem } from '../components/Dropdown';
@@ -73,7 +73,7 @@ export function ProjectActionsMenu({ project, objectives, canAddToPriorities }: 
           <>
             <DropdownItem onSelect={() => setChoosing(true)}>{current ? 'Trocar o objetivo' : 'Vincular a um objetivo'}</DropdownItem>
             {canAddToPriorities && (
-              <DropdownItem onSelect={() => run(() => addPriorityProject(appContext, project.id))}>Adicionar aos prioritários da semana</DropdownItem>
+              <DropdownItem onSelect={() => run(() => addFocusProject(appContext, project.id))}>Adicionar aos prioritários da semana</DropdownItem>
             )}
             <DropdownItem onSelect={() => run(() => setProjectFinished(appContext, project.id, !finished))}>
               {finished ? 'Reabrir projeto' : 'Finalizar projeto'}

@@ -111,15 +111,16 @@ export interface DayRecord {
 export type WarmupResult = 'done' | 'skipped' | 'later';
 
 /**
- * Ordered priorities of a period. Ids look like `day:2026-10-11` (tasks) or
- * `weekProjects:2026-W42` (section 2, the week's priority projects; ADR-035). Before version 6
- * the priority projects were per month, with ids `month:AAAA-MM`.
+ * Ordered priorities. Ids look like `day:2026-10-11` (the day's tasks) or `focusProjects` (section
+ * 2, the single list of projects in focus). `weekProjects:2026-W42` lists are the week's priority
+ * projects from before the reviews (ADR-035), kept as history for the raio-x; before version 6
+ * they were per month, with ids `month:AAAA-MM`.
  */
 export interface PriorityList {
   id: string;
-  /** `weekProjects` lists projects; `day` lists tasks. */
-  scope: 'day' | 'weekProjects';
-  /** A day (AAAA-MM-DD) or an ISO week (AAAA-Www). */
+  /** `focusProjects` and `weekProjects` list projects; `day` lists tasks. */
+  scope: 'day' | 'focusProjects' | 'weekProjects';
+  /** A day (AAAA-MM-DD), an ISO week (AAAA-Www) for the old week lists, or empty. */
   period: string;
   itemIds: string[];
   updatedAt: string;

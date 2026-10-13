@@ -43,6 +43,7 @@ Read only the ADRs your task touches: find them in this table or by grepping `ad
 | [ADR-032](adr/032-project-page-details-icon-pinned-column-tab-in.md) | Project page details: icon, pinned column, tab in the route | 2026-10-12 | Accepted, updated 2026-10-12 |
 | [ADR-033](adr/033-project-pace-comes-from-the-finish-events-a.md) | Project pace comes from the finish events; a reopening cancels the latest finish | 2026-10-12 | Superseded by ADR-034 |
 | [ADR-034](adr/034-project-activity-map-computed-from-events.md) | Project activity map, computed from events | 2026-10-12 | Accepted |
-| [ADR-035](adr/035-priority-projects-belong-to-the-week-database-and.md) | Priority projects belong to the week; database and backup version 6 | 2026-10-12 | Accepted |
+| [ADR-035](adr/035-priority-projects-belong-to-the-week-database-and.md) | Priority projects belong to the week; database and backup version 6 | 2026-10-12 | Superseded by ADR-038 |
 | [ADR-036](adr/036-the-project-list-remembers-its-open-groups-in-the.md) | The project list remembers its open groups in the settings | 2026-10-12 | Accepted |
 | [ADR-037](adr/037-the-sidebar-remembers-whether-it-is-collapsed-in-the.md) | The sidebar remembers whether it is collapsed in the settings | 2026-10-12 | Accepted |
+| [ADR-038](adr/038-a-single-list-of-projects-in-focus-database-and.md) | A single list of projects in focus; database and backup version 7 | 2026-10-12 | Accepted |

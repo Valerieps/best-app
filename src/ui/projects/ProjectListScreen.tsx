@@ -1,11 +1,11 @@
 import { useEffect, useState, type KeyboardEvent, type ReactNode } from 'react';
-import { addPriorityProject } from '../../application/priorityProjects';
+import { addFocusProject } from '../../application/focusProjects';
 import { createProject } from '../../application/projects';
 import { loadProjectList, type ProjectListItem, type ProjectListView } from '../../application/queries';
 import { setProjectListGroupOpen } from '../../application/settings';
 import { toDayKey, type DayKey } from '../../domain/day';
 import type { ProjectListGroup } from '../../domain/entities';
-import { PRIORITY_PROJECT_LIMIT } from '../../domain/priorityProjects';
+import { FOCUS_PROJECT_LIMIT } from '../../domain/focusProjects';
 import { CARD_MAP_WEEKS, ROW_MAP_WEEKS } from '../../domain/projectActivity';
 import { Dropdown, DropdownItem } from '../components/Dropdown';
 import { Icon } from '../components/Icon';
@@ -36,7 +36,7 @@ export function ProjectsScreen({ today }: { today: DayKey }) {
   if (!view) return <LoadingPage title="Projetos" />;
 
   const candidates = view.others.map((item) => item.project);
-  const freeSlots = PRIORITY_PROJECT_LIMIT - view.priority.length;
+  const freeSlots = FOCUS_PROJECT_LIMIT - view.priority.length;
   const hasActive = view.summary.active > 0;
 
   return (
@@ -201,7 +201,7 @@ function FreeSlot({ candidates }: { candidates: ProjectListItem['project'][] }) 
               key={project.id}
               onSelect={() => {
                 close();
-                write(() => addPriorityProject(appContext, project.id));
+                write(() => addFocusProject(appContext, project.id));
               }}
             >
               <span className="project-link">

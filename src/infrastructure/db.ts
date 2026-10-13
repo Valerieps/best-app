@@ -15,7 +15,8 @@ import type {
   Settings,
 } from '../domain/entities';
 import type { DomainEvent } from '../domain/events';
-import { migrateMonthPriorityLists } from '../domain/priorityProjects';
+import { toDayKey } from '../domain/day';
+import { migrateMonthPriorityLists, migrateToFocusList } from '../domain/focusProjects';
 
 /** App settings and bookkeeping that never go into a backup (e.g. file handles). */
 export interface MetaEntry {
@@ -92,6 +93,16 @@ export class AppDatabase extends Dexie {
         const migrated = migrateMonthPriorityLists(rows);
         await table.clear();
         await table.bulkPut(migrated);
+      });
+    // Section 2: the Revisão de Foco replaces the week lists with a single list in focus. The
+    // week lists stay as the history of the raio-x.
+    this.version(7)
+      .stores({ priorities: 'id' })
+      .upgrade(async (tx) => {
+        const table = tx.table('priorities');
+        const rows = await table.toArray();
+        const migrated = migrateToFocusList(rows, toDayKey(new Date()));
+        if (migrated.length > rows.length) await table.put(migrated[migrated.length - 1]);
       });
   }
 }

@@ -4,7 +4,7 @@ import { positionBetween } from '../domain/position';
 import { isProjectIcon } from '../domain/projectPage';
 import { record } from './events';
 import type { AppContext, StoreTransaction } from './ports';
-import { releasePriorityProject } from './priorityProjects';
+import { releaseFocusProject } from './focusProjects';
 
 /** Creates a project inside an existing transaction. */
 export async function addProject(ctx: AppContext, tx: StoreTransaction, name: string): Promise<Project> {
@@ -58,7 +58,7 @@ export async function setProjectFinished(ctx: AppContext, projectId: string, fin
       updatedAt: at,
     });
     await record(ctx, tx, finished ? 'project.finished' : 'project.reopened', 'project', project.id, toDayKey(ctx.clock.now()));
-    if (finished) await releasePriorityProject(ctx, tx, project.id);
+    if (finished) await releaseFocusProject(ctx, tx, project.id);
   });
 }
 

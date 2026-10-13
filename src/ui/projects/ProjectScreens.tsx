@@ -91,7 +91,7 @@ function FoldedGroup({ label, count, initiallyOpen, className, children }: { lab
 }
 
 export function ProjectScreen({ id, tab, today }: { id: string; tab: 'tasks' | 'notes'; today: DayKey }) {
-  const view = useLiveQuery(() => loadProject(reader, id, today), [id, today]);
+  const view = useLiveQuery(() => loadProject(reader, id), [id]);
   const objectives = useLiveQuery(() => reader.objectives()) ?? [];
   const resources = useLiveQuery(() => loadProjectResources(reader, id), [id]) ?? [];
   const dayPriorities = useLiveQuery(() => loadDayPriorities(reader, today), [today]) ?? [];

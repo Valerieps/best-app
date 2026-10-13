@@ -107,7 +107,7 @@ export function MonthlyReflectionScreen({ month, today }: { month?: string; toda
           </div>
           <div className="metric">
             <span className="metric__value">
-              {view.metrics.dayPrioritiesInPriorityProjects} de {view.metrics.dayPriorities}
+              {view.metrics.dayPrioritiesInFocusProjects} de {view.metrics.dayPriorities}
             </span>
             <span className="metric__label">prioridades do dia em projetos prioritários da semana</span>
           </div>
