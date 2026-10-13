@@ -55,6 +55,8 @@ src/
 
 As telas montam o que mostram com as funções de `application/queries.ts` (`loadDayNote`, `loadProjectList`, …), chamadas dentro de `useLiveQuery` (`ui/useLiveQuery.ts`). Cada consulta lê pelo `Reader` e entrega os dados ao domínio, que calcula a visão. A reatividade funciona porque o Dexie rastreia as leituras feitas durante a consulta; por isso uma consulta não deve esperar nada que não venha do `Reader`.
 
+Uma consulta que falha não finge que está carregando: `useLiveQuery` registra o erro no console e o lança, e o error boundary da tela mostra "Algo deu errado nesta tela" no lugar dela, com a barra lateral funcionando. O que fica em volta das telas (barra lateral, avisos, "Dados e backup") usa `useLiveQueryState`, que registra o erro e segue sem o dado (ADR-042).
+
 ### Desvios conhecidos
 
 Alguns pontos ainda não seguem essas regras: o fluxo de backup é chamado pela interface direto na infraestrutura, os serviços são globais em vez de entregues por contexto, e a interface lê o relógio com `new Date()` em vez do `Clock`. Estão na seção 6 de `DEBITO-TECNICO.md`.

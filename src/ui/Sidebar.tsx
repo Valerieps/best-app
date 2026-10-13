@@ -10,7 +10,7 @@ import { formatShortDate, weekdayName } from './format';
 import { navigate, type Route } from './hooks';
 import { appContext, reader } from './services';
 import { isRitual, sidebarPlace, type SidebarPlace } from './sidebarPlace';
-import { useLiveQuery } from './useLiveQuery';
+import { useLiveQueryState } from './useLiveQuery';
 import { directionReviewEnabled, FEATURES } from './features';
 import { enqueue } from './writeQueue';
 
@@ -42,16 +42,17 @@ function Badge({ count }: { count: number }) {
  */
 export function Sidebar({ route, today, pendingDays, reviews, backupState }: Props) {
   const current = sidebarPlace(route);
-  const storedCollapsed = useLiveQuery(async () => (await reader.settings())?.sidebarCollapsed ?? false);
+  const storedCollapsed = useLiveQueryState(async () => (await reader.settings())?.sidebarCollapsed ?? false).value;
   // The toggle shows at once; the settings write follows (as in ADR-036).
   const [collapsedNow, setCollapsedNow] = useState<boolean | null>(null);
   const collapsed = collapsedNow ?? storedCollapsed ?? false;
   const [ritualsOpen, setRitualsOpen] = useState(() => isRitual(current));
 
-  const counts = useLiveQuery(() => loadMenuCounts(reader));
+  // Counts are extras: a failed query is logged and the sidebar goes on without them.
+  const counts = useLiveQueryState(() => loadMenuCounts(reader)).value;
   const focusDue = (reviews?.focus.length ?? 0) > 0;
   const directionDue = (reviews?.direction.length ?? 0) > 0;
-  const cleanup = useLiveQuery(() => loadCleanup(reader));
+  const cleanup = useLiveQueryState(() => loadCleanup(reader)).value;
   const cleanupCount = cleanup ? cleanup.whiteboards.length + cleanup.duplicates.length : 0;
   const dueCount = pendingDays.length + (focusDue ? 1 : 0) + (directionDue ? 1 : 0);
 

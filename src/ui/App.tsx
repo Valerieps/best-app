@@ -11,7 +11,7 @@ import { CleanupScreen } from './cleanup/CleanupScreen';
 import { ScreenHeader } from './components/ScreenHeader';
 import { DayNoteScreen } from './dayNote/DayNoteScreen';
 import { HabitsScreen } from './habits/HabitsScreen';
-import { useRoute, useToday } from './hooks';
+import { navigate, routeHash, useRoute, useToday } from './hooks';
 import { ActiveTasksScreen, ArchivedTasksScreen } from './lists/ListScreens';
 import { WikiScreen } from './lists/WikiScreen';
 import { ObjectiveScreen, ObjectivesScreen } from './objectives/ObjectiveScreens';
@@ -27,7 +27,9 @@ import { isReviewSnoozed, pickReviewNotice } from './reviews/reviewNotice';
 import { autoBackup, db, reader } from './services';
 import { SettingsScreen } from './settings/SettingsScreen';
 import { Sidebar } from './Sidebar';
-import { useLiveQuery } from './useLiveQuery';
+import { useLiveQueryState } from './useLiveQuery';
+import { ErrorBoundary } from './components/ErrorBoundary';
+import { ScreenError } from './components/ErrorScreens';
 import { enabledRoute, visibleReviews } from './features';
 
 export function App() {
@@ -37,8 +39,10 @@ export function App() {
   const backup = useBackup();
   const backupState = useAutoBackupState();
   const [storagePersisted, setStoragePersisted] = useState<boolean | null>(null);
-  const hasData = useLiveQuery(async () => (await db.events.count()) > 0) ?? false;
-  const everBackedUp = useLiveQuery(async () => (await getLastBackupAt(db)) !== null) ?? false;
+  // The shell keeps working when one of its queries fails: the failure is logged, and the screen
+  // below still has its own error boundary.
+  const hasData = useLiveQueryState(async () => (await db.events.count()) > 0).value ?? false;
+  const everBackedUp = useLiveQueryState(async () => (await getLastBackupAt(db)) !== null).value ?? false;
 
   useEffect(() => {
     requestPersistentStorage().then(setStoragePersisted, () => setStoragePersisted(false));
@@ -53,16 +57,18 @@ export function App() {
 
   // The day note pages only through days that still have pending items (1b).
   const shownDay = route.name === 'day' && route.day && route.day < today ? route.day : today;
-  const pendingDays = useLiveQuery(() => loadPendingDays(reader, today), [today]) ?? [];
+  const pendingDays = useLiveQueryState(() => loadPendingDays(reader, today), [today]).value ?? [];
   // Section 3: with a warm-up checklist, today opens on "Iniciar Dia", warm up and dashboard.
-  const opening = useLiveQuery(() => loadDayOpening(reader, today), [today]);
+  const openingQuery = useLiveQueryState(() => loadDayOpening(reader, today), [today]);
+  const opening = openingQuery.value;
   const onToday = route.name === 'day' && shownDay === today;
-  const stage = onToday ? (opening?.stage ?? null) : 'execution';
+  // If the day's stage cannot be read, the day note opens, instead of a blank screen.
+  const stage = onToday && openingQuery.error === undefined ? (opening?.stage ?? null) : 'execution';
   const dueReminders = useDueReminders();
   useReminderSignals(dueReminders.length);
   // One warning at a time at the top; reminders that came back are not in this queue.
   const [snoozed, snooze] = useSnoozedNotices(today);
-  const reviews = visibleReviews(useLiveQuery(() => loadReviewAvailability(reader, today), [today]));
+  const reviews = visibleReviews(useLiveQueryState(() => loadReviewAvailability(reader, today), [today]).value);
   const [reviewSnoozedAt, snoozeReview] = useReviewSnooze();
   const reviewNotice = isReviewSnoozed(reviewSnoozedAt, reviews?.lastCheckoutAt ?? null) ? null : pickReviewNotice(reviews);
   const notice = pickTopNotice({
@@ -85,40 +91,52 @@ export function App() {
           <BackupBanner state={backupState} actions={backup} onSnooze={() => snooze('backupSetup')} />
         )}
 
-        {route.name === 'day' && stage === 'warmup' && opening && <WarmupScreen view={opening} />}
-        {route.name === 'day' && stage === 'dashboard' && opening && <DashboardScreen view={opening} today={today} />}
-        {route.name === 'day' && stage === 'execution' && (
-          <DayNoteScreen
-            key={shownDay}
-            day={shownDay}
-            today={today}
-            pendingDays={pendingDays}
-            reminders={dueReminders}
-            showPendingNotice={notice === 'pendingCheckout'}
-            onSnoozePending={() => snooze('pendingCheckout')}
-            reviewNotice={notice === 'reviewAvailable' ? reviewNotice : null}
-            onSnoozeReview={snoozeReview}
-          />
-        )}
-        {route.name === 'checkout' && <CheckoutScreen key={route.day} day={route.day} today={today} />}
-        {route.name === 'active' && <ActiveTasksScreen today={today} />}
-        {route.name === 'archived' && <ArchivedTasksScreen today={today} />}
-        {route.name === 'wiki' && <WikiScreen focus={route.section} />}
-        {route.name === 'cleanup' && <CleanupScreen today={today} assistant={route.assistant} />}
-        {route.name === 'focusReview' && <FocusReviewScreen today={today} />}
-        {route.name === 'projects' && <ProjectsScreen today={today} />}
-        {route.name === 'project' && <ProjectScreen key={route.id} id={route.id} tab={route.tab ?? 'tasks'} today={today} />}
-        {route.name === 'settings' && <SettingsScreen />}
-        {route.name === 'objectives' && <ObjectivesScreen />}
-        {route.name === 'objective' && <ObjectiveScreen id={route.id} />}
-        {route.name === 'habits' && <HabitsScreen today={today} />}
-        {route.name === 'directionReview' && <DirectionReviewScreen today={today} />}
-        {route.name === 'data' && (
-          <main className="page">
-            <ScreenHeader title="Dados e backup" />
-            <BackupPanel state={backupState} actions={backup} storagePersisted={storagePersisted} />
-          </main>
-        )}
+        {/* One broken screen shows an error in its place; the sidebar keeps working. */}
+        <ErrorBoundary
+          key={routeHash(route)}
+          fallback={(error, retry) => (
+            <ScreenError
+              error={error}
+              onRetry={retry}
+              onOpenData={route.name === 'data' ? undefined : () => navigate({ name: 'data' })}
+            />
+          )}
+        >
+          {route.name === 'day' && stage === 'warmup' && opening && <WarmupScreen view={opening} />}
+          {route.name === 'day' && stage === 'dashboard' && opening && <DashboardScreen view={opening} today={today} />}
+          {route.name === 'day' && stage === 'execution' && (
+            <DayNoteScreen
+              key={shownDay}
+              day={shownDay}
+              today={today}
+              pendingDays={pendingDays}
+              reminders={dueReminders}
+              showPendingNotice={notice === 'pendingCheckout'}
+              onSnoozePending={() => snooze('pendingCheckout')}
+              reviewNotice={notice === 'reviewAvailable' ? reviewNotice : null}
+              onSnoozeReview={snoozeReview}
+            />
+          )}
+          {route.name === 'checkout' && <CheckoutScreen key={route.day} day={route.day} today={today} />}
+          {route.name === 'active' && <ActiveTasksScreen today={today} />}
+          {route.name === 'archived' && <ArchivedTasksScreen today={today} />}
+          {route.name === 'wiki' && <WikiScreen focus={route.section} />}
+          {route.name === 'cleanup' && <CleanupScreen today={today} assistant={route.assistant} />}
+          {route.name === 'focusReview' && <FocusReviewScreen today={today} />}
+          {route.name === 'projects' && <ProjectsScreen today={today} />}
+          {route.name === 'project' && <ProjectScreen key={route.id} id={route.id} tab={route.tab ?? 'tasks'} today={today} />}
+          {route.name === 'settings' && <SettingsScreen />}
+          {route.name === 'objectives' && <ObjectivesScreen />}
+          {route.name === 'objective' && <ObjectiveScreen id={route.id} />}
+          {route.name === 'habits' && <HabitsScreen today={today} />}
+          {route.name === 'directionReview' && <DirectionReviewScreen today={today} />}
+          {route.name === 'data' && (
+            <main className="page">
+              <ScreenHeader title="Dados e backup" />
+              <BackupPanel state={backupState} actions={backup} storagePersisted={storagePersisted} />
+            </main>
+          )}
+        </ErrorBoundary>
 
         {backup.pendingImport && (
           <ImportDialog

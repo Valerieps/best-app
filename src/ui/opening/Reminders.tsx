@@ -4,7 +4,7 @@ import { loadDueReminders } from '../../application/queries';
 import { askAgainAt } from '../../domain/dayFlow';
 import type { Reminder } from '../../domain/entities';
 import { appContext, reader } from '../services';
-import { useLiveQuery } from '../useLiveQuery';
+import { useLiveQueryState } from '../useLiveQuery';
 
 /** Due reminders, re-checked every minute since they come due at a set time. */
 export function useDueReminders(): Reminder[] {
@@ -13,7 +13,7 @@ export function useDueReminders(): Reminder[] {
     const timer = setInterval(() => setTick((value) => value + 1), 60_000);
     return () => clearInterval(timer);
   }, []);
-  return useLiveQuery(() => loadDueReminders(reader, new Date()), [tick]) ?? [];
+  return useLiveQueryState(() => loadDueReminders(reader, new Date()), [tick]).value ?? [];
 }
 
 function laterTime(): string {

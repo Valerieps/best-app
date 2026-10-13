@@ -3,7 +3,7 @@ import type { AutoBackupState } from '../../infrastructure/autoBackup';
 import { getImportSnapshotDate, getLastBackupAt } from '../../infrastructure/backupRepository';
 import { randomIds } from '../../infrastructure/browser';
 import { db } from '../services';
-import { useLiveQuery } from '../useLiveQuery';
+import { useLiveQueryState } from '../useLiveQuery';
 import type { BackupActions } from './useBackup';
 
 interface Props {
@@ -22,8 +22,9 @@ function fileName(state: AutoBackupState): string | null {
 
 export function BackupPanel({ state, actions, storagePersisted }: Props) {
   const fileInput = useRef<HTMLInputElement>(null);
-  const lastBackupAt = useLiveQuery(() => getLastBackupAt(db));
-  const snapshotDate = useLiveQuery(() => getImportSnapshotDate(db));
+  // This panel is the way out when something breaks, so its details never take it down.
+  const lastBackupAt = useLiveQueryState(() => getLastBackupAt(db)).value;
+  const snapshotDate = useLiveQueryState(() => getImportSnapshotDate(db)).value;
   const currentFile = fileName(state);
 
   function onFileChosen(event: ChangeEvent<HTMLInputElement>) {

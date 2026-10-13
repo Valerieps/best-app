@@ -2847,3 +2847,26 @@ button.project-actions {
   font-weight: 500;
   color: var(--color-text-muted);
 }
+
+/* A screen, or the whole app, that failed to draw (DEBITO-TECNICO.md, section 6) */
+.error-screen p {
+  margin: 0 0 var(--space-4);
+}
+
+.error-screen__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+.error-screen__details {
+  margin-top: var(--space-4);
+  color: var(--color-text-muted);
+  font-size: var(--font-size-sm);
+}
+
+.error-screen__details pre {
+  white-space: pre-wrap;
+  word-break: break-word;
+  margin: var(--space-2) 0 0;
+}
