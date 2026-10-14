@@ -5,7 +5,7 @@
 Regras que se contradizem ou ficaram ambíguas entre `SPEC.md`, `spec/checkout.md`, `spec/assistentes.md`, `DECISOES.md`, `ARQUITETURA.md`, `DEBITO-TECNICO.md`, `AVALIACAO-UX.md`, `google-safe.md` e as ADRs. As incoerências dos feature requests estão na issue de cada pedido, no GitHub.
 
 - **Entra aqui:** contradições e ambiguidades entre os documentos, com a pergunta que resolve cada uma.
-- **Não entra aqui:** incoerências de um pedido (ficam na issue do pedido, no GitHub), bugs (issues do GitHub com a label `bug`) e perguntas em aberto que não vêm de uma contradição (`SPEC.md`, "Em aberto").
+- **Não entra aqui:** incoerências de um pedido (ficam na issue do pedido, no GitHub), bugs (issues do GitHub com a label `t:bug`) e perguntas em aberto que não vêm de uma contradição (`SPEC.md`, "Em aberto").
 
 Quando um item for decidido, a regra vai para o `SPEC.md` e o item sai daqui.
 

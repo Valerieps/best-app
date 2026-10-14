@@ -2,7 +2,7 @@
 
 Atualizado em Oct 12, 2026
 
-O desenho técnico do app para a spec inteira, seções 1a a 6. A spec (`SPEC.md`) diz o que o app faz; este documento diz como ele é construído. As decisões pontuais e o porquê de cada uma estão em `architecture-decision-records.md`, e o que ficou para trás está nas issues do GitHub (labels `bug` e `debito-tecnico`).
+O desenho técnico do app para a spec inteira, seções 1a a 6. A spec (`SPEC.md`) diz o que o app faz; este documento diz como ele é construído. As decisões pontuais e o porquê de cada uma estão em `architecture-decision-records.md`, e o que ficou para trás está nas issues do GitHub (labels `t:bug` e `t:debito-tecnico`).
 
 Este documento descreve o desenho, não o andamento: o que está feito e o que falta por fase fica no `ROADMAP.md`. Aqui, **planejado** marca só o desenho do que ainda não existe no código.
 
