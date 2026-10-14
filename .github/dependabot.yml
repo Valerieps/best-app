@@ -1,0 +1,13 @@
+# Weekly check of the npm dependencies (issue #23). Runs on GitHub, not in the app: it adds no
+# network call to the app (google-safe.md). Versions stay pinned; each update is a pull request
+# to review, with the tests and the build run before merging.
+version: 2
+updates:
+  - package-ecosystem: npm
+    directory: /
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 5
+    groups:
+      dev-dependencies:
+        dependency-type: development
