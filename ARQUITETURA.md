@@ -2,7 +2,7 @@
 
 Atualizado em Oct 12, 2026
 
-O desenho técnico do app para a spec inteira, seções 1a a 6. A spec (`SPEC.md`) diz o que o app faz; este documento diz como ele é construído. As decisões pontuais e o porquê de cada uma estão em `architecture-decision-records.md`, e o que ficou para trás está em `DEBITO-TECNICO.md`.
+O desenho técnico do app para a spec inteira, seções 1a a 6. A spec (`SPEC.md`) diz o que o app faz; este documento diz como ele é construído. As decisões pontuais e o porquê de cada uma estão em `architecture-decision-records.md`, e o que ficou para trás está nas issues do GitHub (labels `bug` e `debito-tecnico`).
 
 Este documento descreve o desenho, não o andamento: o que está feito e o que falta por fase fica no `ROADMAP.md`. Aqui, **planejado** marca só o desenho do que ainda não existe no código.
 
@@ -59,7 +59,7 @@ Uma consulta que falha não finge que está carregando: `useLiveQuery` registra 
 
 ### Desvios conhecidos
 
-Alguns pontos ainda não seguem essas regras: o fluxo de backup é chamado pela interface direto na infraestrutura, os serviços são globais em vez de entregues por contexto, e a interface lê o relógio com `new Date()` em vez do `Clock`. Estão na seção 6 de `DEBITO-TECNICO.md`.
+Alguns pontos ainda não seguem essas regras: o fluxo de backup é chamado pela interface direto na infraestrutura, os serviços são globais em vez de entregues por contexto, e a interface lê o relógio com `new Date()` em vez do `Clock`. Estão nas issues [#53](https://github.com/Valerieps/best-app/issues/53), [#54](https://github.com/Valerieps/best-app/issues/54) e [#59](https://github.com/Valerieps/best-app/issues/59).
 
 ## 4. Modelo de dados
 
@@ -148,7 +148,7 @@ Nada disso é guardado: é calculado a partir das tabelas, por funções de `app
 ## 6. Histórico de eventos (implementado)
 
 - Cada mudança estrutural grava um evento: `id`, `type`, `entityType`, `entityId`, `at` (horário), `day` (dia a que pertence) e `data` (detalhes, como `{ from, to }`).
-- Os eventos são só acrescentados, nunca editados nem apagados. A gravação usa `add`, então um evento existente não pode ser sobrescrito. A exceção é importar um backup ou desfazer a importação, que substituem o histórico inteiro (veja a seção 3 de `DEBITO-TECNICO.md`).
+- Os eventos são só acrescentados, nunca editados nem apagados. A gravação usa `add`, então um evento existente não pode ser sobrescrito. A exceção é importar um backup ou desfazer a importação, que substituem o histórico inteiro (veja a issue [#37](https://github.com/Valerieps/best-app/issues/37)).
 - Editar o texto de um bloco não gera evento (ADR-004).
 - Campos como `postponeCount` são atalhos que dá para recalcular a partir do histórico.
 - **Exclusões.** Um bloco apagado (linha esvaziada ou juntada com a de cima) e um recurso removido saem da tabela, mas deixam `block.deleted` e `resource.removed` no histórico. É por esses eventos que o backup automático sabe que um registro ausente foi apagado de propósito e não perdido (seção 10).
@@ -167,7 +167,7 @@ Nada disso é guardado: é calculado a partir das tabelas, por funções de `app
 
 **Planejado:** compromisso migrado (5).
 
-O campo `data` ainda não tem um tipo por evento; quem grava e quem lê combinam os campos por convenção (seção 6 de `DEBITO-TECNICO.md`).
+O campo `data` ainda não tem um tipo por evento; quem grava e quem lê combinam os campos por convenção (issue [#52](https://github.com/Valerieps/best-app/issues/52)).
 
 ### Adiamento
 
@@ -202,7 +202,7 @@ Reativar uma tarefa arquivada limpa a data sem contar adiamento (ADR-015).
 
 - São funções puras no domínio que recebem os eventos de um período (`domain/metrics.ts`, `directionMetrics.ts`, `projectActivity.ts`, `habits.ts`, `reviews.ts`). Ficam testáveis sem banco, e uma métrica nova não exige migração.
 - As métricas da Revisão de Foco vêm só dos eventos, desde a última revisão, pelo momento do evento (ADR-021, ADR-039). As do raio-x que dependem de pergunta em aberto ficaram de fora (ADR-026).
-- O volume de dados de uma pessoa é pequeno o bastante para calcular tudo no navegador. A lista de projetos é o primeiro ponto onde isso já pesa (seção 8 de `DEBITO-TECNICO.md`, "Projetos e projetos em foco").
+- O volume de dados de uma pessoa é pequeno o bastante para calcular tudo no navegador. A lista de projetos é o primeiro ponto onde isso já pesa (issue [#81](https://github.com/Valerieps/best-app/issues/81)).
 
 | Fase | Métricas | Função |
 | --- | --- | --- |

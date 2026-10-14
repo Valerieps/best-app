@@ -3,7 +3,7 @@
 Technical decisions that fill gaps in the spec. Product and business decisions go into the spec itself (`spec/`).
 
 - **Goes here:** one file per decision in `adr/`, named `NNN-short-title.md`, with Date, Decision and Why. A later change to a decision is an **Update** paragraph in the same file; a decision replaced by a new one gets a **Superseded by ADR-NNN** paragraph. Keep this table in sync.
-- **Does not go here:** product rules (`spec/`), the current design as a whole (`ARQUITETURA.md`) and known debt (`DEBITO-TECNICO.md`).
+- **Does not go here:** product rules (`spec/`), the current design as a whole (`ARQUITETURA.md`) and known debt (GitHub issues labeled `debito-tecnico` or `bug`).
 
 Read only the ADRs your task touches: find them in this table or by grepping `adr/`.
 

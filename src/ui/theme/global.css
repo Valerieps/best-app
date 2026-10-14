@@ -2848,7 +2848,7 @@ button.project-actions {
   color: var(--color-text-muted);
 }
 
-/* A screen, or the whole app, that failed to draw (DEBITO-TECNICO.md, section 6) */
+/* A screen, or the whole app, that failed to draw (ADR-042) */
 .error-screen p {
   margin: 0 0 var(--space-4);
 }
