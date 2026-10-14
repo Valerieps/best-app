@@ -41,6 +41,17 @@
 - Eu posso reordenar linhas e seções em qualquer dia, inclusive nos dias passados com itens pendentes: mudar a ordem não cria linhas.
 - O "Fechar o dia" segue a ordem da nota do dia (`checkout.md`, "Fechar o dia").
 
+## Modo foco *(1b)*
+
+Quando a nota do dia acumula muitas seções, eu posso focar numa só, para escrever sem distração.
+
+- Dá para focar qualquer parte da nota: uma seção geral ou de reunião, a seção "De outros dias" ou o bloco de prioridades, mesmo fixado no topo.
+- Eu entro no foco pelo ícone de seta dupla na diagonal, à esquerda do cabeçalho da parte, ou com Ctrl + Shift + Enter (⌘ + Shift + Enter no Mac) com o cursor em qualquer lugar dela.
+- No foco, a tela mostra só a parte ampliada e a barra lateral. Somem o título do dia, as setas entre os dias, o "Fechar o dia", os avisos do topo e os lembretes que voltaram. Por isso não há como trocar de dia com o foco aberto.
+- Eu saio do foco pelo ícone de reduzir, que fica no lugar do ícone de ampliar, ou pelo mesmo atalho. Escrever, criar linhas e editar funcionam como na nota inteira.
+- O foco sobrevive a recarregar a página e a passar por outras telas: "Hoje" volta para a parte em foco.
+- O app nunca sai do foco sozinho, para não interromper um fluxo de pensamento. Se virar meia-noite, eu continuo escrevendo na mesma parte, e nem o "Iniciar Dia" nem o "Fechar o dia" começam sozinhos. Se a parte em foco deixar de existir, a tela avisa e espera eu sair.
+
 ## Wiki pessoal
 
 - A wiki pessoal, para onde vão sozinhas as notas gerais no fim do dia, é interna ao app. No núcleo, ela é uma lista em ordem cronológica, em que cada entrada reúne as notas de uma seção, com o título e o horário dela. As notas não moram num lugar só: cada nota também fica ligada ao projeto da seção de onde veio, quando a seção tem um. *(1a)*

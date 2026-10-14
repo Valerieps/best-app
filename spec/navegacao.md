@@ -23,6 +23,7 @@ Toda opção do app mora num de três níveis, e cada nível tem um lugar fixo, 
 
 - Título à esquerda; à direita, no máximo uma ação principal e um "⋯" com as outras.
 - Na nota do dia, o título é a data com as setas entre dias pendentes, a ação principal é "Fechar o dia" daquele dia, e o "⋯" tem "Fixar prioridades". Os botões "+ Seção geral" e "+ Seção de reunião" ficam sempre visíveis no fim da nota, porque abrir seção é parte da captura. Uma seção nova entra no fim da nota, então não há botão entre as seções; depois eu posso mudá-la de lugar (`nota-do-dia.md`, "Ordem das linhas e das seções"). O "Fechar o dia" fica nos dois lugares: em "Rituais" e na nota do dia.
+- No modo foco da nota do dia, o cabeçalho da tela sai: fica só a parte em foco, e o ícone de reduzir dela faz o papel da ação principal (`nota-do-dia.md`, "Modo foco").
 - Os avisos que dizem respeito só àquela tela ficam logo abaixo do cabeçalho dela, como o fechamento pendente, a revisão disponível e os lembretes que voltaram, que aparecem só na nota do dia.
 - Nos fluxos ("Fechar o dia" e revisões), a decisão fica no fim da página, porque eu leio de cima para baixo antes de decidir. O botão de confirmar a triagem se chama "Confirmar decisões".
 - A tela "Iniciar Dia" é a única sem barra lateral: é uma tela branca só com um desenho simples de sol e o botão.

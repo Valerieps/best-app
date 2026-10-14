@@ -155,6 +155,18 @@ export interface Reflection {
 }
 
 /** User settings, a single record with id `main`. Goes into backups. */
+/** Focus mode on one part of a day note: a section, "De outros dias" or the priorities. */
+export interface DayNoteFocus {
+  day: DayKey;
+  /** The part's key: a section id, or the keys of the parts in `domain/order.ts`. */
+  part: string;
+  /**
+   * Whether new lines can be written: true when the focus started on today's note. It stays
+   * true past midnight, so the day turning never interrupts what I am writing.
+   */
+  writable: boolean;
+}
+
 export interface Settings {
   id: 'main';
   /**
@@ -183,6 +195,11 @@ export interface Settings {
   projectListGroups?: Partial<Record<ProjectListGroup, boolean>>;
   /** Whether the sidebar is collapsed to a narrow strip. Absent means open. */
   sidebarCollapsed?: boolean;
+  /**
+   * The part of the day note shown alone, in focus mode (spec/nota-do-dia.md, "Modo foco").
+   * Absent or null shows the whole note. Only the user leaves it.
+   */
+  dayNoteFocus?: DayNoteFocus | null;
   updatedAt: string;
 }
 

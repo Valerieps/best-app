@@ -14,6 +14,8 @@ const PATHS = {
   pin: 'M15 4.5l-4 4l-4 1.5l-1.5 1.5l7 7l1.5-1.5l1.5-4l4-4zM9 15l-4.5 4.5M14.5 4l5.5 5.5',
   sidebar: 'M6 4h12a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-12a2 2 0 0 1-2-2v-12a2 2 0 0 1 2-2M15 4v16',
   close: 'M18 6l-12 12M6 6l12 12',
+  maximize: 'M16 4h4v4M14 10l6-6M8 20h-4v-4M4 20l6-6',
+  minimize: 'M5 9h4v-4M3 3l6 6M5 15h4v4M3 21l6-6M19 9h-4v-4M15 9l6-6M19 15h-4v4M15 15l6 6',
   // Project icons (PROJECT_ICONS in the domain)
   pot: 'M4 11h16M6 11v6a3 3 0 0 0 3 3h6a3 3 0 0 0 3-3v-6M3 11h1M20 11h1M10 7c0-1 1-2 1-3M14 7c0-1 1-2 1-3',
   home: 'M5 12h-2l9-9l9 9h-2M5 12v7a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-7M9 21v-6a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v6',

@@ -63,15 +63,20 @@ export function App() {
     };
   }, []);
 
+  // Focus mode on a part of the day note survives reloading, and only the user leaves it: no
+  // new day, opening screen or notice takes its place (spec/nota-do-dia.md, "Modo foco").
+  const focusQuery = useLiveQueryState(async () => (await reader.settings())?.dayNoteFocus ?? null);
+  const focus = route.name === 'day' ? (focusQuery.value ?? null) : null;
   // The day note pages only through days that still have pending items (1b).
-  const shownDay = route.name === 'day' && route.day && route.day < today ? route.day : today;
+  const routeDay = route.name === 'day' && route.day && route.day < today ? route.day : today;
+  const shownDay = focus ? focus.day : routeDay;
   const pendingDays = useLiveQueryState(() => loadPendingDays(reader, today), [today]).value ?? [];
   // Section 3: with a warm-up checklist, today opens on "Iniciar Dia", warm up and dashboard.
   const openingQuery = useLiveQueryState(() => loadDayOpening(reader, today), [today]);
   const opening = openingQuery.value;
   const onToday = route.name === 'day' && shownDay === today;
   // If the day's stage cannot be read, the day note opens, instead of a blank screen.
-  const stage = onToday && openingQuery.error === undefined ? (opening?.stage ?? null) : 'execution';
+  const stage = focus ? 'execution' : onToday && openingQuery.error === undefined ? (opening?.stage ?? null) : 'execution';
   const dueReminders = useDueReminders();
   useReminderSignals(dueReminders.length);
   // One warning at a time at the top; reminders that came back are not in this queue.
@@ -87,6 +92,8 @@ export function App() {
     reviewAvailable: onToday && stage === 'execution' && reviewNotice !== null,
   });
 
+  // Wait for the focus too, so a focused part never flashes the opening screens on reload.
+  if (route.name === 'day' && focusQuery.value === undefined && focusQuery.error === undefined) return null;
   if (onToday && stage === null) return null;
   // "Iniciar Dia" is the only screen without the sidebar (spec/navegacao.md, "Navegação").
   if (onToday && stage === 'start') return <StartDayScreen />;
@@ -95,7 +102,7 @@ export function App() {
     <div className="shell">
       <Sidebar route={route} today={today} pendingDays={pendingDays} reviews={reviews} backupState={backupState} />
       <div className="shell__main">
-        {(notice === 'backupProblem' || notice === 'backupSetup') && (
+        {!focus && (notice === 'backupProblem' || notice === 'backupSetup') && (
           <BackupBanner state={backupState} actions={backup} onSnooze={() => snooze('backupSetup')} />
         )}
 
@@ -123,6 +130,7 @@ export function App() {
               onSnoozePending={() => snooze('pendingCheckout')}
               reviewNotice={notice === 'reviewAvailable' ? reviewNotice : null}
               onSnoozeReview={snoozeReview}
+              focus={focus}
             />
           )}
           {route.name === 'checkout' && <CheckoutScreen key={route.day} day={route.day} today={today} />}
