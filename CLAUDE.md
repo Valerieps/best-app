@@ -1,7 +1,7 @@
 # Best App - Claude Code Context & Instructions
 
 A personal productivity PWA: capture everything during the day without deciding where it goes,
-and triage it at the daily checkout. Rituals (weekly, monthly) are added in phases and link the
+and triage it when closing the day ("Fechar o dia", formerly the checkout). Rituals (weekly, monthly) are added in phases and link the
 day-to-day to projects and objectives.
 
 ## Docs

@@ -1,12 +1,12 @@
 # Nota do dia e wiki
 
 - **Entra aqui:** a captura ao longo do dia: nota do dia, seções, blocos, o editor, a paginação entre dias e a wiki pessoal.
-- **Não entra aqui:** as regras das tarefas e das datas (`tarefas.md`), das prioridades (`prioridades.md`), do checkout (`checkout.md`) e dos compromissos (`compromissos.md`).
+- **Não entra aqui:** as regras das tarefas e das datas (`tarefas.md`), das prioridades (`prioridades.md`), do "Fechar o dia" (`checkout.md`) e dos compromissos (`compromissos.md`).
 
 ## Blocos e notas *(1a)*
 
 - Blocos ∈ notas semânticas: notas são agrupamentos de blocos, e um bloco pode aparecer em mais de uma nota.
-- A nota do dia é um agrupamento de blocos que só existe enquanto houver blocos vinculados a ela. Depois do checkout completo, ela desaparece.
+- A nota do dia é um agrupamento de blocos que só existe enquanto houver blocos vinculados a ela. Depois do fechamento completo, ela desaparece.
 - A nota do dia é dividida em seções, como um notebook do Colab. Há dois tipos de seção: geral e reunião.
 - Ao longo do dia, se eu entrar em reunião, abro uma seção de reunião para deixar separadas as notas que tomei naquela reunião.
 - Toda seção guarda o horário de criação como metadado e pode ter um título opcional. Ao digitar o título, o app sugere os projetos que já existem, como "Data Studios"; escolher um deles vincula a seção ao projeto. Por baixo dos panos, os projetos existem desde o 1a, ainda sem funcionalidades próprias: eles só agrupam as seções, tarefas e notas vinculadas.
@@ -17,14 +17,14 @@
 ## Execução *(1a)*
 
 - Interface: uma página parecida com uma nota do Obsidian ou Notion, ou seja, como se fosse um arquivo de texto, mas com blocos estruturados de conteúdo.
-- O dia abre com uma seção geral já criada. As tarefas com data de intenção para aquele dia, incluindo as escolhidas no checkout do dia anterior, entram no topo dela, sem distinção visual das tarefas criadas no dia. A partir do 1b, elas ficam numa seção própria, "De outros dias", que de começo vem logo acima da primeira seção geral e que eu posso mudar de lugar como as outras (veja "Ordem das linhas e das seções").
+- O dia abre com uma seção geral já criada. As tarefas com data de intenção para aquele dia, incluindo as escolhidas no fechamento do dia anterior, entram no topo dela, sem distinção visual das tarefas criadas no dia. A partir do 1b, elas ficam numa seção própria, "De outros dias", que de começo vem logo acima da primeira seção geral e que eu posso mudar de lugar como as outras (veja "Ordem das linhas e das seções").
 - Ao longo do dia eu vou coletando tudo em uma única nota, de forma sequencial, como um bloco de notas. A ideia é não gastar processamento mental escolhendo onde salvar cada coisa.
 - Cada tarefa tem um checkbox para finalizar.
 - Clicar no espaço vazio abaixo das linhas de uma seção, até a próxima seção, abre uma linha nova no fim dela, já com o cursor, para eu escrever sem ir até o fim da última linha e apertar Enter. A linha só é gravada quando eu digito; se eu sair dela vazia, ela some. Só a nota de hoje ganha linhas novas.
 - Enquanto escrevo, posso apagar uma linha ou tirar o `[]` do começo para mudar o tipo, como num editor de texto, mas só em blocos criados no dia e ainda não triados. Uma tarefa que veio de outro dia não some quando eu apago o texto: para tirá-la de circulação, eu arquivo ou abandono.
-- Se eu abrir o app sem ter feito o checkout do dia anterior, a nota de hoje abre normalmente, com um aviso no topo e um botão para fazer o checkout pendente.
+- Se eu abrir o app sem ter fechado o dia anterior, a nota de hoje abre normalmente, com um aviso no topo e um botão para fechar o dia pendente.
 - A barra lateral dá acesso às listas: tarefas ativas, tarefas arquivadas e wiki pessoal (`navegacao.md`, "Navegação").
-- No final do dia, eu clico em "fazer checkout".
+- No final do dia, ou na manhã seguinte, eu clico em "Fechar o dia".
 
 ## Seções e atalhos *(1b)*
 
@@ -39,9 +39,10 @@
 - Eu também posso mudar a ordem das seções da nota do dia: as seções gerais e de reunião, a seção "De outros dias" e o bloco de prioridades, quando ele não está fixado no topo. Arrasto pela alça à esquerda da seção, ou uso Ctrl + Shift + ↑/↓ (⌘ + Shift no Mac) com o cursor em qualquer linha, no título da seção ou na alça.
 - Cada dia tem a sua ordem. Um dia novo começa no padrão: prioridades, tarefas de outros dias e depois as seções na ordem em que foram criadas. Uma seção nova entra no fim.
 - Eu posso reordenar linhas e seções em qualquer dia, inclusive nos dias passados com itens pendentes: mudar a ordem não cria linhas.
-- O checkout segue a ordem da nota do dia (`checkout.md`, "Checkout").
+- O "Fechar o dia" segue a ordem da nota do dia (`checkout.md`, "Fechar o dia").
 
 ## Wiki pessoal
 
-- A wiki pessoal, para onde vão as notas gerais, é interna ao app. No núcleo, ela é uma lista em ordem cronológica, em que cada entrada reúne as notas de uma seção, com o título e o horário dela. As notas não moram num lugar só: cada nota também fica ligada ao projeto da seção de onde veio, quando a seção tem um. *(1a)*
+- A wiki pessoal, para onde vão sozinhas as notas gerais no fim do dia, é interna ao app. No núcleo, ela é uma lista em ordem cronológica, em que cada entrada reúne as notas de uma seção, com o título e o horário dela. As notas não moram num lugar só: cada nota também fica ligada ao projeto da seção de onde veio, quando a seção tem um. *(1a)*
+- Em cada entrada da wiki, posso descartar as notas daquela seção. *(1a)* A partir da seção 4, também posso vinculá-las como recurso de um objetivo ou projeto (`objetivos.md`).
 - A wiki pessoal pode ser ordenada por linha temporal ou por ordem alfabética e tem um campo de busca textual. As notas também podem ser vistas por tipo ou por projeto vinculado. *(1b)*
