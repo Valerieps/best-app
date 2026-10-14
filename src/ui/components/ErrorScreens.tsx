@@ -51,7 +51,7 @@ export function AppError({ error }: { error: unknown }) {
       <section className="panel error-screen">
         <p>
           O app não conseguiu abrir. Seus dados continuam guardados neste navegador, e o backup automático, se estiver
-          ativo, continua no arquivo que você escolheu.
+          ativo, continua na pasta que você escolheu, com as cópias datadas.
         </p>
         <div className="error-screen__actions">
           <button type="button" className="primary" onClick={() => window.location.reload()}>

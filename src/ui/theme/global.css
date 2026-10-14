@@ -3369,3 +3369,10 @@ button.project-actions {
 .line__clear:hover {
   color: var(--color-text);
 }
+
+/* Dated copies of the backup, in "Dados e backup" */
+.backup-copies__title {
+  margin: var(--space-4) 0 var(--space-2);
+  font-size: var(--font-size-md);
+  font-weight: 600;
+}

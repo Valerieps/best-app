@@ -89,7 +89,7 @@ Ao projetar e gerar código para este projeto:
 2. **Nuvem só de forma indireta:**
    - A integração com o Google Drive é indireta, pela **File System Access API** do navegador: a pessoa escolhe um arquivo numa pasta sincronizada do Drive, e o próprio Drive sincroniza o arquivo. O app nunca fala com o Drive.
    - Como o app atende isso hoje (ADR-007 e ADR-008):
-     - **Backup automático:** a pessoa escolhe o arquivo uma vez com `showSaveFilePicker`, e o app regrava esse arquivo alguns segundos depois de cada mudança, sem gravar por cima de dados que o navegador não tem.
+     - **Backup automático:** a pessoa escolhe uma pasta uma vez com `showDirectoryPicker`, e o app regrava nela o arquivo do backup alguns segundos depois de cada mudança, sem gravar por cima de dados que o navegador não tem. Na subpasta `copias`, guarda cópias datadas e apaga as que passam do limite, só as dele (ADR-047). A pasta deve ficar no Google Drive da empresa: no Drive pessoal, os dados de trabalho sairiam do ambiente da empresa.
      - **Baixar uma cópia:** um arquivo `.json` gerado no navegador (`Blob`), como pede a seção 3.
      - **Importar:** um campo de arquivo comum, que valida o backup e substitui as tabelas do `IndexedDB`, com uma cópia para desfazer.
    - O status do backup fica sempre visível no rodapé da barra lateral, e um clique abre "Dados e backup" (`spec/navegacao.md`). Isso substitui o atalho de backup manual "antes de trocar de estação de trabalho", porque o arquivo já está sempre atualizado.

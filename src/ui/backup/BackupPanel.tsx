@@ -1,8 +1,9 @@
-import { useRef, type ChangeEvent } from 'react';
-import type { AutoBackupState } from '../../infrastructure/autoBackup';
+import { useEffect, useRef, useState, type ChangeEvent } from 'react';
+import { COPIES_FOLDER, COPIES_KEPT_TODAY, PAST_DAYS_KEPT } from '../../application/backupCopies';
+import type { AutoBackupState, BackupCopy } from '../../infrastructure/autoBackup';
 import { getImportSnapshotDate, getLastBackupAt } from '../../infrastructure/backupRepository';
 import { randomIds } from '../../infrastructure/browser';
-import { db } from '../services';
+import { autoBackup, db } from '../services';
 import { useLiveQueryState } from '../useLiveQuery';
 import type { BackupActions } from './useBackup';
 
@@ -26,6 +27,7 @@ export function BackupPanel({ state, actions, storagePersisted }: Props) {
   const lastBackupAt = useLiveQueryState(() => getLastBackupAt(db)).value;
   const snapshotDate = useLiveQueryState(() => getImportSnapshotDate(db)).value;
   const currentFile = fileName(state);
+  const copies = useBackupCopies(state);
 
   function onFileChosen(event: ChangeEvent<HTMLInputElement>) {
     const file = event.target.files?.[0];
@@ -37,8 +39,10 @@ export function BackupPanel({ state, actions, storagePersisted }: Props) {
     <section className="panel" aria-labelledby="backup-title">
       <h2 id="backup-title">Dados e backup</h2>
       <p className="muted">
-        Seus dados ficam só neste navegador. O backup automático grava uma cópia num arquivo a cada mudança. Escolha
-        um arquivo numa pasta sincronizada do Google Drive para trocar de computador sem perder nada.
+        Seus dados ficam só neste navegador. O backup automático grava tudo numa pasta que você escolhe, a cada
+        mudança, e guarda cópias datadas na subpasta "{COPIES_FOLDER}": hoje, uma a cada 2 horas (as {COPIES_KEPT_TODAY}{' '}
+        mais recentes); dos {PAST_DAYS_KEPT} dias anteriores, a última versão de cada dia. Escolha uma pasta sincronizada
+        do Google Drive da empresa para trocar de computador sem perder nada.
       </p>
 
       <div className="panel__actions">
@@ -51,9 +55,9 @@ export function BackupPanel({ state, actions, storagePersisted }: Props) {
           <button
             type="button"
             className={state.status === 'needsPermission' ? undefined : 'primary'}
-            onClick={actions.chooseFile}
+            onClick={actions.chooseFolder}
           >
-            {currentFile ? 'Trocar arquivo do backup' : 'Ativar backup automático'}
+            {currentFile ? 'Trocar pasta do backup' : 'Ativar backup automático'}
           </button>
         )}
         <button type="button" onClick={actions.download}>
@@ -99,6 +103,33 @@ export function BackupPanel({ state, actions, storagePersisted }: Props) {
         {currentFile ? `Backup automático em "${currentFile}". ` : ''}
         {lastBackupAt ? `Último backup: ${formatDate(lastBackupAt)}.` : 'Nenhum backup feito ainda.'}
       </p>
+      {state.status === 'active' && state.copies === 'off' && (
+        <p className="muted">
+          O backup ainda vai para um arquivo só, sem cópias datadas. Para guardá-las, escolha a pasta do backup em
+          "Trocar pasta do backup".
+        </p>
+      )}
+      {state.status === 'active' && state.copies === 'failed' && (
+        <p className="status status--error" role="status">
+          Não foi possível gravar as cópias datadas. O backup principal continua sendo gravado.
+        </p>
+      )}
+      {copies.length > 0 && (
+        <>
+          <h3 className="backup-copies__title">Cópias datadas</h3>
+          <ul className="card-list backup-copies">
+            {copies.map((copy) => (
+              <li className="card-list__item" key={copy.name}>
+                <span>{copy.at.toLocaleString('pt-BR', { dateStyle: 'medium', timeStyle: 'short' })}</span>
+                <button type="button" className="link" onClick={() => void actions.restoreCopy(copy.name)}>
+                  Restaurar
+                </button>
+              </li>
+            ))}
+          </ul>
+          <p className="muted">Restaurar mostra antes o que seria perdido, e dá para desfazer depois.</p>
+        </>
+      )}
       {storagePersisted === false && (
         <p className="muted">O Chrome não garantiu o armazenamento permanente deste site. Mantenha o backup ativo.</p>
       )}
@@ -110,4 +141,21 @@ export function BackupPanel({ state, actions, storagePersisted }: Props) {
       )}
     </section>
   );
+}
+
+/** The dated copies in the backup folder, read again after each backup. */
+function useBackupCopies(state: AutoBackupState): BackupCopy[] {
+  const [copies, setCopies] = useState<BackupCopy[]>([]);
+  const savedAt = state.status === 'active' ? state.lastSavedAt : null;
+  useEffect(() => {
+    let current = true;
+    autoBackup.listCopies().then(
+      (list) => current && setCopies(list),
+      () => current && setCopies([]),
+    );
+    return () => {
+      current = false;
+    };
+  }, [state.status, savedAt]);
+  return copies;
 }

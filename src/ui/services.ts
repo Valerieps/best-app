@@ -1,6 +1,6 @@
 import type { AppContext } from '../application/ports';
 import { AutoBackup } from '../infrastructure/autoBackup';
-import { canPickBackupFile, dexieHandleStorage, pickBackupFile } from '../infrastructure/backupFiles';
+import { canPickBackupFolder, dexieHandleStorage, pickBackupFolder } from '../infrastructure/backupFiles';
 import { systemClock, randomIds } from '../infrastructure/browser';
 import { AppDatabase } from '../infrastructure/db';
 import { DexieReader } from '../infrastructure/dexieReader';
@@ -14,8 +14,8 @@ export const reader = new DexieReader(db);
 export const autoBackup = new AutoBackup({
   db,
   handles: dexieHandleStorage(db),
-  pick: pickBackupFile,
-  supported: canPickBackupFile(),
+  pick: pickBackupFolder,
+  supported: canPickBackupFolder(),
   now: () => systemClock.now(),
 });
 

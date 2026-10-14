@@ -27,7 +27,7 @@ describe('backupNoticeLevel', () => {
 
   it('says nothing while loading or when the backup is active', () => {
     expect(backupNoticeLevel({ status: 'loading' }, true, false)).toBeNull();
-    expect(backupNoticeLevel({ status: 'active', fileName: 'a.json', lastSavedAt: null, saving: false }, true, false)).toBeNull();
+    expect(backupNoticeLevel({ status: 'active', fileName: 'a.json', lastSavedAt: null, saving: false, copies: 'ok' }, true, false)).toBeNull();
   });
 });
 

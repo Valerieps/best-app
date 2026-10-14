@@ -27,12 +27,12 @@ export function useBackup() {
   const [message, setMessage] = useState<BackupMessage | null>(null);
   const [pendingImport, setPendingImport] = useState<PendingImport | null>(null);
 
-  const chooseFile = useCallback(async () => {
+  const chooseFolder = useCallback(async () => {
     try {
-      await autoBackup.chooseFile();
-      setMessage({ kind: 'success', text: 'Backup automático ativado.' });
+      await autoBackup.chooseFolder();
+      if (autoBackup.getState().status === 'active') setMessage({ kind: 'success', text: 'Backup automático ativado.' });
     } catch (error) {
-      if (!isUserCancel(error)) setMessage({ kind: 'error', text: 'Não foi possível gravar nesse arquivo.' });
+      if (!isUserCancel(error)) setMessage({ kind: 'error', text: 'Não foi possível gravar nessa pasta.' });
     }
   }, []);
 
@@ -47,6 +47,20 @@ export function useBackup() {
   const reviewImport = useCallback(async (backup: BackupFile) => {
     setPendingImport({ backup, loss: await previewImport(db, backup) });
   }, []);
+
+  /** Restores a dated copy through the import, which shows what would be lost and can be undone. */
+  const restoreCopy = useCallback(
+    async (name: string) => {
+      try {
+        const result = parseBackup(JSON.parse(await autoBackup.readCopy(name)));
+        if (!result.ok) return setMessage({ kind: 'error', text: result.error });
+        await reviewImport(result.backup);
+      } catch {
+        setMessage({ kind: 'error', text: 'Não foi possível ler essa cópia.' });
+      }
+    },
+    [reviewImport],
+  );
 
   const importFromFile = useCallback(
     async (file: File) => {
@@ -84,7 +98,8 @@ export function useBackup() {
   return {
     message,
     pendingImport,
-    chooseFile,
+    chooseFolder,
+    restoreCopy,
     resume,
     retry: () => autoBackup.flush(),
     download,

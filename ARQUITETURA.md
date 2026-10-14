@@ -116,7 +116,7 @@ Cada entidade é um registro separado. Um bloco existe uma vez só: notas, proje
 
 **`events`**: o histórico (seção 6 deste documento).
 
-**`meta`** e **`snapshots`**: configurações internas (arquivo do backup, data do último backup) e a cópia para desfazer uma importação. Não entram no backup.
+**`meta`** e **`snapshots`**: configurações internas (pasta do backup, ou o arquivo escolhido antes das pastas, e data do último backup) e a cópia para desfazer uma importação. Não entram no backup.
 
 ### Planejado
 
@@ -217,7 +217,7 @@ Reativar uma tarefa arquivada limpa a data sem contar adiamento (ADR-015).
 
 ## 10. Backup e segurança (implementado)
 
-- **Backup automático** num arquivo escolhido pela pessoa (ADR-007), regravado 3 segundos depois da última mudança e ao esconder ou fechar a aba. Antes de cada gravação, o app lê o arquivo e não grava por cima de dados que o navegador não tem (ADR-008): eventos que só o arquivo tem, registros em versão mais nova no arquivo, ou registros que sumiram do navegador sem um evento de exclusão.
+- **Backup automático** numa pasta escolhida pela pessoa, com cópias datadas na subpasta `copias` (ADR-047; as regras ficam em `application/backupCopies.ts`). O arquivo `best-app-backup.json` é regravado 3 segundos depois da última mudança e ao esconder ou fechar a aba. Antes de cada gravação, o app lê o arquivo e não grava por cima de dados que o navegador não tem (ADR-008): eventos que só o arquivo tem, registros em versão mais nova no arquivo, ou registros que sumiram do navegador sem um evento de exclusão.
 - **Importar** substitui tudo, com aviso em destaque do que vai se perder e uma cópia para desfazer, gravada na mesma transação (ADR-006).
 - **CSP** com `connect-src 'none'` no build de produção (ADR-009). O `src/security.test.ts` procura no código chamadas de rede e inserção de HTML.
 - **Offline** pelo service worker, que só guarda os arquivos do próprio app (ADR-010).
