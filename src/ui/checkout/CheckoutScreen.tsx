@@ -21,6 +21,7 @@ import { Linkified } from '../components/Linkified';
 import { LoadingPage, SkeletonLines } from '../components/Skeleton';
 import { formatLongDate, plural, postponedLabel, relativeDay } from '../format';
 import { navigate } from '../hooks';
+import { loadLatest } from '../loadLatest';
 import { appContext, reader } from '../services';
 import { useLiveQuery } from '../useLiveQuery';
 import { FEATURES } from '../features';
@@ -89,13 +90,24 @@ export function CheckoutScreen({ day, today }: Props) {
   const [noteResources, setNoteResources] = useState<Map<string, string | null>>(new Map());
   const [busy, setBusy] = useState(false);
 
-  useEffect(() => {
-    // A snapshot: the triage does not change under the user's hands while choosing.
-    loadDayTriage(reader, day, today).then(setTriage);
-    reader.projects().then(setProjects);
-    reader.objectives().then(setObjectives);
-    loadReminderQuestions(reader, day).then(setReminders);
-  }, [day, today]);
+  const [loadError, setLoadError] = useState<unknown>(undefined);
+
+  useEffect(
+    // A snapshot: the triage does not change under the user's hands while choosing. An answer
+    // for a day that is no longer shown is dropped, and a failure goes to the screen's boundary.
+    () =>
+      loadLatest(
+        () => Promise.all([loadDayTriage(reader, day, today), reader.projects(), reader.objectives(), loadReminderQuestions(reader, day)]),
+        ([dayTriage, allProjects, allObjectives, questions]) => {
+          setProjects(allProjects);
+          setObjectives(allObjectives);
+          setReminders(questions);
+          setTriage(dayTriage);
+        },
+        setLoadError,
+      ),
+    [day, today],
+  );
 
   const rows = useMemo(() => {
     if (!triage) return [];
@@ -103,6 +115,7 @@ export function CheckoutScreen({ day, today }: Props) {
     return [...triage.rows, ...reopened];
   }, [triage, undone]);
 
+  if (loadError !== undefined) throw loadError;
   if (!triage) return <LoadingPage title={`Checkout · ${formatLongDate(day)}`} />;
   const automatic = triage.automatic.filter((item) => !undone.has(automaticKey(item)));
   const attention = rows.filter((row) => row.attention);
