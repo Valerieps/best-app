@@ -184,6 +184,20 @@ export async function updateBlockText(ctx: AppContext, blockId: string, text: st
   });
 }
 
+/**
+ * Puts back text typed just before the tab closed, which the browser had no time to save. Only
+ * when the line is still as it was then (`base` is its `updatedAt` at the time), so a newer
+ * edit is never overwritten. Returns whether the text was restored.
+ */
+export async function restoreUnsavedText(ctx: AppContext, blockId: string, text: string, base: string): Promise<boolean> {
+  return ctx.store.transaction(async (tx) => {
+    const block = await tx.blocks.get(blockId);
+    if (!block || block.updatedAt !== base || block.text === text) return false;
+    await tx.blocks.put({ ...block, text, updatedAt: nowIso(ctx) });
+    return true;
+  });
+}
+
 /** Kind of the line Enter creates: a task line starts another task, like a checklist. */
 export function splitKind(currentKind: BlockKind, textAfterCaret: string): BlockKind {
   const detected = detectKind(textAfterCaret).kind;

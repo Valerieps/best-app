@@ -1,8 +1,10 @@
-import { useEffect, useRef, useState, type KeyboardEvent, type PointerEvent, type ReactNode } from 'react';
+import { useCallback, useEffect, useRef, useState, type KeyboardEvent, type PointerEvent, type ReactNode } from 'react';
 import { detectKind } from '../../domain/blockKind';
 import type { DayKey } from '../../domain/day';
 import type { Block } from '../../domain/entities';
 import { relativeDay } from '../format';
+import { useSaveOnPageLeave } from '../pageLeave';
+import { rememberUnsavedLine } from '../unsavedLines';
 import { useFocusTarget } from './focus';
 import { partMoveKey } from './lineDrag';
 
@@ -120,15 +122,24 @@ export function BlockLine({ block, free, day, today, isPriority, allowNewLines, 
     synced.current = block.text;
   }, [block.text]);
 
-  const flush = () => {
+  // Reads only refs, so one function serves every render.
+  const flush = useCallback(() => {
     if (saveTimer.current) clearTimeout(saveTimer.current);
     saveTimer.current = null;
     const { block: current, text: value, handlers: h } = latest.current;
     if (value !== current.text) h.onSaveText(current, value);
-  };
+  }, []);
 
   // Save what is pending when the line goes away.
-  useEffect(() => flush, []);
+  useEffect(() => flush, [flush]);
+  // The tab may be about to close: the save may not finish in time, so the text is also kept
+  // aside, to be put back at the next start (`unsavedLines.ts`).
+  const keepAndFlush = useCallback(() => {
+    const { block: current, text: value } = latest.current;
+    if (value !== current.text) rememberUnsavedLine(current.id, value, current.updatedAt);
+    flush();
+  }, [flush]);
+  useSaveOnPageLeave(keepAndFlush);
 
   function onChange(value: string) {
     if (block.kind === 'note' && free) {
@@ -271,10 +282,15 @@ interface GhostProps {
   placeholder: string;
   /** Called on the first keystroke; the new line replaces this one right away and takes the focus. */
   onCreate(text: string): void;
+  /** Called when the focus leaves the line before anything was typed. */
+  onLeave?(): void;
 }
 
-/** Empty line of a section with no blocks: typing in it creates the first block. */
-export function GhostLine({ id, placeholder, onCreate }: GhostProps) {
+/**
+ * Empty line that is not saved yet: the first line of a section with no blocks, or a new line
+ * at the end of a section. Typing in it creates the block.
+ */
+export function GhostLine({ id, placeholder, onCreate, onLeave }: GhostProps) {
   const ref = useRef<HTMLTextAreaElement>(null);
   useFocusTarget(id, ref);
   return (
@@ -288,6 +304,7 @@ export function GhostLine({ id, placeholder, onCreate }: GhostProps) {
         onChange={(event) => {
           if (event.target.value) onCreate(event.target.value);
         }}
+        onBlur={onLeave}
         aria-label="Nova linha"
       />
     </div>

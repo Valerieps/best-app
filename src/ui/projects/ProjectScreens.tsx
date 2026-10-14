@@ -19,6 +19,7 @@ import { useLiveQuery } from '../useLiveQuery';
 import { enqueue } from '../writeQueue';
 import { ProjectActionsMenu } from './ProjectActions';
 import { ProjectIconPicker } from './ProjectIcon';
+import { panelOnOpen } from './panelState';
 import { ProjectSidePanel } from './ProjectSidePanel';
 
 function write(work: () => Promise<unknown>) {
@@ -103,8 +104,15 @@ export function ProjectScreen({ id, tab, today }: { id: string; tab: 'tasks' | '
     if (view) setName(view.project.name);
   }, [view?.project.name]);
 
-  const docked = pinned && !narrow;
+  const opening = panelOnOpen(pinned, narrow);
+  const docked = opening === 'docked';
   const panelShown = docked || peek;
+
+  // Pinned on a narrow screen, the column opens over the tasks on its own, like peeking; Escape
+  // or a click outside closes it, as when peeking.
+  useEffect(() => {
+    if (opening === 'peek') setPeek(true);
+  }, [opening]);
 
   // A peeking column closes on Escape and on a click outside it (or its toggle).
   useEffect(() => {
