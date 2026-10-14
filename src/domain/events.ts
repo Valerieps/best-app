@@ -21,7 +21,8 @@ export type EntityType =
   | 'reminder'
   | 'objective'
   | 'resource'
-  | 'habit';
+  | 'habit'
+  | 'backup';
 
 /** No details: the type, the entity and the time say everything. */
 type NoData = Record<string, never>;
@@ -106,6 +107,10 @@ export interface EventData {
   'habit.updated': { name: string; criterion: string; weekdays: number[]; objectiveId: string | null };
   'habit.archived': { archived: boolean };
   'habit.logged': { done: boolean };
+  /** A backup file replaced the data; the event lands in the history it brought (ADR-006). */
+  'backup.imported': { exportedAt: string; schemaVersion: number };
+  /** The last import was undone; the event lands in the history from before it. */
+  'backup.importUndone': { importedAt: string };
 }
 
 /**

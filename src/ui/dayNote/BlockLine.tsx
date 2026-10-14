@@ -67,6 +67,7 @@ export function DatePicker({
   onChange,
   className,
   children,
+  clearLabel,
 }: {
   label: string;
   value: DayKey | null;
@@ -74,6 +75,8 @@ export function DatePicker({
   onChange(date: DayKey | null): void;
   className: string;
   children: string;
+  /** With a date set, shows a × that clears it, instead of relying on the calendar's own button (issue #70). */
+  clearLabel?: string;
 }) {
   const ref = useRef<HTMLInputElement>(null);
   return (
@@ -102,6 +105,11 @@ export function DatePicker({
         value={value ?? ''}
         onChange={(event) => onChange(event.target.value || null)}
       />
+      {clearLabel && value && (
+        <button type="button" className="line__clear line__reveal" title={clearLabel} aria-label={clearLabel} onClick={() => onChange(null)}>
+          ×
+        </button>
+      )}
     </span>
   );
 }
@@ -197,13 +205,20 @@ export function BlockLine({ block, free, day, today, isPriority, allowNewLines, 
   const showDate = isTask && !hideDate && block.intendedDate !== null && block.intendedDate !== day;
   const dateLabel = showDate ? relativeDay(block.intendedDate!, today) : '';
   const deadlineLabel = deadline ? `prazo ${relativeDay(deadline, today)}` : '';
-  const pickDate = (label: string, className: string, children: string) => (
-    <DatePicker label={label} className={className} value={block.intendedDate} min={today} onChange={(date) => handlers.onSetDate(block, date)}>
+  const pickDate = (label: string, className: string, children: string, clearLabel?: string) => (
+    <DatePicker
+      label={label}
+      className={className}
+      value={block.intendedDate}
+      min={today}
+      onChange={(date) => handlers.onSetDate(block, date)}
+      clearLabel={clearLabel}
+    >
       {children}
     </DatePicker>
   );
-  const pickDeadline = (label: string, className: string, children: string) => (
-    <DatePicker label={label} className={className} value={deadline} onChange={(date) => handlers.onSetDeadline(block, date)}>
+  const pickDeadline = (label: string, className: string, children: string, clearLabel?: string) => (
+    <DatePicker label={label} className={className} value={deadline} onChange={(date) => handlers.onSetDeadline(block, date)} clearLabel={clearLabel}>
       {children}
     </DatePicker>
   );
@@ -247,9 +262,9 @@ export function BlockLine({ block, free, day, today, isPriority, allowNewLines, 
       <span className="line__meta">
         {extraMeta}
         {showDate &&
-          (active ? pickDate('Mudar a data de intenção', 'line__chip', dateLabel) : <span className="muted">{dateLabel}</span>)}
+          (active ? pickDate('Mudar a data de intenção', 'line__chip', dateLabel, 'Tirar a data de intenção') : <span className="muted">{dateLabel}</span>)}
         {deadline &&
-          (active ? pickDeadline('Mudar o prazo máximo', 'line__chip', deadlineLabel) : <span className="chip chip--muted">{deadlineLabel}</span>)}
+          (active ? pickDeadline('Mudar o prazo máximo', 'line__chip', deadlineLabel, 'Tirar o prazo máximo') : <span className="chip chip--muted">{deadlineLabel}</span>)}
       </span>
       {/* Shortcuts on hover and focus. The checkbox finalizes, so there is no separate button for it. */}
       <span className="line__actions">

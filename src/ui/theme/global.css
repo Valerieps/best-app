@@ -2888,3 +2888,17 @@ button.project-actions {
   border-radius: var(--radius-md);
   color: var(--color-danger);
 }
+
+/* Clears a date already set, next to its chip (issue #70); shown with the line's other shortcuts */
+.line__clear {
+  border: none;
+  background: none;
+  padding: 0 var(--space-1);
+  color: var(--color-text-muted);
+  font-size: var(--font-size-sm);
+  line-height: 1.4;
+}
+
+.line__clear:hover {
+  color: var(--color-text);
+}
