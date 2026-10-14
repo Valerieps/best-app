@@ -5,7 +5,7 @@ Atualizado em Oct 12, 2026
 A ordem das fases e o estado de cada funcionalidade. É o único lugar que diz o que está feito e o que falta.
 
 - **Entra aqui:** o que está construído, o que falta e por quê, onde o código ainda não segue o `SPEC.md`, e o que foi adiado de propósito.
-- **Não entra aqui:** as regras (`SPEC.md`), o texto das perguntas em aberto (fica no topo de cada arquivo de `spec/`; aqui só se aponta para elas), o desenho técnico (`ARQUITETURA.md`) e o débito técnico (issues do GitHub com as labels `bug` e `debito-tecnico`).
+- **Não entra aqui:** as regras (`SPEC.md`), o texto das perguntas em aberto (fica no topo de cada arquivo de `spec/`; aqui só se aponta para elas), o desenho técnico (`ARQUITETURA.md`) e o débito técnico (issues do GitHub com as labels `t:bug` e `t:debito-tecnico`).
 
 ## Fases
 
