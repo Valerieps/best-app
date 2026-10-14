@@ -223,10 +223,15 @@ function keyOf(name: BackupTableName, row: object): string {
   return (row as Record<string, string>)[TABLE_KEYS[name]];
 }
 
-/** Events that record a row being removed from its table, as opposed to changed. */
-const DELETION_EVENTS: ReadonlySet<EventType> = new Set<EventType>(['block.deleted', 'resource.removed']);
+/**
+ * Events that record a row being removed from its table, as opposed to changed. A use case that
+ * deletes a row of a protected table must record one of these, or the automatic backup pauses
+ * with a false warning (`deletionGuard.test.ts` checks it).
+ */
+export const DELETION_EVENTS: ReadonlySet<EventType> = new Set<EventType>(['block.deleted', 'resource.removed']);
 
-const ENTITY_OF: Record<'blocks' | 'sections' | 'projects' | 'days', EntityType> = {
+/** Tables whose rows the automatic backup protects from disappearing (`computeImportLoss`). */
+export const ENTITY_OF: Record<'blocks' | 'sections' | 'projects' | 'days', EntityType> = {
   blocks: 'block',
   sections: 'section',
   projects: 'project',
