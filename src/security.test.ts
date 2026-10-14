@@ -1,7 +1,7 @@
 import { readdirSync, readFileSync, statSync } from 'node:fs';
 import { join, relative } from 'node:path';
 import { describe, expect, it } from 'vitest';
-import { CONTENT_SECURITY_POLICY } from '../vite.config';
+import { CONTENT_SECURITY_POLICY, LIBRARY_URLS, stripLibraryUrls } from '../vite.config';
 
 /**
  * Guards for google-safe.md: the app must never make outbound requests or inject HTML.
@@ -47,5 +47,12 @@ describe('security rules', () => {
     expect(CONTENT_SECURITY_POLICY).toContain("connect-src 'none'");
     expect(CONTENT_SECURITY_POLICY).toContain("script-src 'self'");
     expect(CONTENT_SECURITY_POLICY).toContain("object-src 'none'");
+  });
+
+  it('the build drops the protocol from the libraries\' doc links (issue #25)', () => {
+    const code = LIBRARY_URLS.map((url) => `"see ${url}"`).join(';');
+    expect(stripLibraryUrls(code)).not.toMatch(/https?:\/\/(?!www\.w3\.org\/)[a-z0-9-]+\.[a-z]/i);
+    expect(stripLibraryUrls('var t=`https://react.dev/errors/`+e')).toBe('var t=`react.dev/errors/`+e');
+    expect(stripLibraryUrls('"https://"')).toBe('"https://"');
   });
 });

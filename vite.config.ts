@@ -33,6 +33,26 @@ function contentSecurityPolicy(): Plugin {
   };
 }
 
+// Links to the libraries' docs inside their error messages (React, Dexie). They are text, never
+// requested, and the CSP would block them anyway, but they show up in an audit of the bundle
+// (issue #25). Without the protocol the reference stays readable and is no longer a link.
+export const LIBRARY_URLS = ['https://react.dev/errors/', 'https://tinyurl.com/y2uuvskb', 'http://bit.ly/2kdckMn'];
+
+export function stripLibraryUrls(code: string): string {
+  return LIBRARY_URLS.reduce((result, url) => result.split(url).join(url.replace(/^https?:\/\//, '')), code);
+}
+
+function libraryUrls(): Plugin {
+  return {
+    name: 'strip-library-urls',
+    apply: 'build',
+    renderChunk: (code) => {
+      const stripped = stripLibraryUrls(code);
+      return stripped === code ? null : { code: stripped, map: null };
+    },
+  };
+}
+
 // Lets tooling assign a port through the PORT environment variable.
 const port = process.env.PORT ? Number(process.env.PORT) : undefined;
 
@@ -41,7 +61,7 @@ export default defineConfig({
   preview: { port },
   // Relative base so the build works from any path (Cloudflare Pages, a subfolder, preview).
   base: './',
-  plugins: [react(), contentSecurityPolicy()],
+  plugins: [react(), contentSecurityPolicy(), libraryUrls()],
   build: {
     // Keep everything as files under 'self'; never inline assets as scripts.
     assetsInlineLimit: 0,
