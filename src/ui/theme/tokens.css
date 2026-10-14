@@ -14,6 +14,9 @@
   --color-border-strong: #cfcac0;
   /* Background of tertiary buttons on hover, and of the current item */
   --color-hover: #efece5;
+  /* Rows selected for a batch edit, such as in the checkout's planning */
+  --color-select-bg: #e6e1d6;
+  --color-shadow: #1c1c1c1f;
 
   /* Actions */
   --color-accent: #1c1c1c;
@@ -33,6 +36,7 @@
   --color-project-bar: #8b7fe0;
   --color-whiteboard-bg: #fbebd3;
   --color-whiteboard-text: #8a5a12;
+  --color-whiteboard-bar: #e2b46e;
 
   /* Feedback */
   --color-warning-bg: #f8ead6;

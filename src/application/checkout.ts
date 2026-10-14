@@ -144,26 +144,21 @@ export async function applyTriage(ctx: AppContext, day: DayKey, decisions: Triag
 
 export interface PlanningChange {
   taskId: string;
-  /** True to put the task in the target day's note, false to take it out (it loses its date). */
-  include: boolean;
+  /** The new intended date; null leaves the task without a date, in the active list. */
+  date: DayKey | null;
 }
 
-/** Planning the next day: chooses, among active tasks, those that go into the target day's note. */
-export async function applyPlanning(
-  ctx: AppContext,
-  day: DayKey,
-  target: DayKey,
-  changes: readonly PlanningChange[],
-): Promise<void> {
+/**
+ * Planning the next day: sets the intended date of active tasks, putting them in the target
+ * day's note, on another day, or back in the active list without a date. Nothing is finished.
+ */
+export async function applyPlanning(ctx: AppContext, day: DayKey, changes: readonly PlanningChange[]): Promise<void> {
   await ctx.store.transaction(async (tx) => {
     for (const change of changes) {
       const task = await tx.blocks.get(change.taskId);
       if (!task || task.kind !== 'task' || task.status !== 'active') continue;
-      if (change.include && task.intendedDate !== target) {
-        await tx.blocks.put(await moveIntendedDate(ctx, tx, task, target, day, 'planning'));
-      }
-      if (!change.include && task.intendedDate === target) {
-        await tx.blocks.put(await moveIntendedDate(ctx, tx, task, null, day, 'planning'));
+      if (task.intendedDate !== change.date) {
+        await tx.blocks.put(await moveIntendedDate(ctx, tx, task, change.date, day, 'planning'));
       }
     }
   });

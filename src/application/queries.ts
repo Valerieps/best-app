@@ -5,6 +5,7 @@ import {
   type WhiteboardGroup,
 } from '../domain/assistants';
 import { assistantCards, type AssistantCard } from '../domain/cleanupStatus';
+import { planningGroup } from '../domain/checkoutSteps';
 import { addDays, fromDayKey, type DayKey } from '../domain/day';
 import { buildDayNote, type DayNoteSection } from '../domain/dayNote';
 import type {
@@ -169,12 +170,17 @@ export async function loadWiki(reader: Reader): Promise<WikiEntry[]> {
 
 export interface PlanningView {
   target: DayKey;
+  /** Tasks already in the target day's note. */
   planned: TaskListItem[];
+  /** Tasks scheduled for the next few days after the target (`PLANNING_HORIZON_DAYS`). */
+  soon: TaskListItem[];
+  /** Other active tasks: without a date, or with a date already past. */
   others: TaskListItem[];
 }
 
 /**
- * Step 2 of the checkout: active tasks, split by whether they are in the target day's note. The
+ * The planning step of the checkout: active tasks, split into the target day's note, the next
+ * few days, and the others. The
  * tasks of the projects in focus come first in each group, in the order of the projects
  * (spec/prioridades.md, "Projetos em foco").
  */
@@ -189,8 +195,9 @@ export async function loadPlanning(reader: Reader, target: DayKey): Promise<Plan
   const focusFirst = (list: TaskListItem[]) => list.map((item, index) => ({ item, index })).sort((a, b) => rank(a.item) - rank(b.item) || a.index - b.index).map(({ item }) => item);
   return {
     target,
-    planned: focusFirst(items.filter((item) => item.task.intendedDate === target)),
-    others: focusFirst(items.filter((item) => item.task.intendedDate !== target)),
+    planned: focusFirst(items.filter((item) => planningGroup(item.task.intendedDate, target) === 'target')),
+    soon: focusFirst(items.filter((item) => planningGroup(item.task.intendedDate, target) === 'soon')),
+    others: focusFirst(items.filter((item) => planningGroup(item.task.intendedDate, target) === 'other')),
   };
 }
 

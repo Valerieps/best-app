@@ -192,7 +192,8 @@ Reativar uma tarefa arquivada limpa a data sem contar adiamento (ADR-015).
 ## 8. Checkout e auto-triagem (implementado)
 
 - A auto-triagem é uma função pura no domínio (`domain/triage.ts`). Ela recebe um dia (seções, blocos e projetos) e devolve três listas: decisões automáticas, sugestões pré-selecionadas e itens manuais, seguindo `spec/checkout.md`.
-- A tela de checkout carrega a triagem uma vez, como uma foto, para que nada mude enquanto a pessoa escolhe. Ela mostra as decisões automáticas e as sugestões, permite trocar qualquer uma e desfazer o que foi automático. "Aceitar sugestões" grava tudo, inclusive as decisões automáticas, numa transação só (ADR-012).
+- A tela de checkout é feita de etapas (`domain/checkoutSteps.ts` decide quais existem e a ordem; cada etapa é um componente em `ui/checkout/`). Ela carrega a triagem como uma foto, para que nada mude enquanto a pessoa escolhe, e cada etapa grava só as suas decisões com `applyTriage`, numa transação, ao avançar. Depois de gravar, a tela relê a triagem e pula as etapas que ficaram vazias (ADR-044). As decisões automáticas e as sugestões que sobram são gravadas na confirmação, numa transação só (ADR-012).
+- O planejamento grava a data de cada tarefa mudada (`applyPlanning`), inclusive das já agendadas; a seleção em lote só existe na tela, até "Finalizar meu dia".
 - "Fechar dias pendentes" usa a mesma função para vários dias. A diferença é que as tarefas não feitas voltam sem data.
 - O mesmo mecanismo de lote serve aos assistentes de limpeza (`spec/assistentes.md`): cada assistente só fornece a busca (`domain/assistants.ts`) e as ações (`application/assistants.ts`).
 - "Dia seguinte" num checkout atrasado é o próximo dia ativo depois do dia triado, mas nunca antes de hoje.

@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { addDays } from '../domain/day';
 import { positionBetween } from '../domain/position';
 import type { TaskDecision } from '../domain/triage';
 import { createTestContext } from '../test/fixtures';
@@ -169,13 +170,26 @@ describe('day cycle', () => {
       tasks: new Map([[a.id, { kind: 'schedule', date: MONDAY } as const]]),
     });
 
-    await applyPlanning(ctx, SUNDAY, MONDAY, [
-      { taskId: a.id, include: false },
-      { taskId: b.id, include: true },
+    await applyPlanning(ctx, SUNDAY, [
+      { taskId: a.id, date: null },
+      { taskId: b.id, date: MONDAY },
     ]);
 
     expect(await db.blocks.get(a.id)).toMatchObject({ intendedDate: null, postponeCount: 1 });
     expect(await db.blocks.get(b.id)).toMatchObject({ intendedDate: MONDAY, postponeCount: 0 });
+  });
+
+  it('planning: moves a task already scheduled to another day', async () => {
+    const { ctx, db } = createTestContext();
+    const a = await createBlock(ctx, { sectionId: null, position: nextPosition() }, '[] A');
+    await applyTriage(ctx, SUNDAY, {
+      ...noDecisions(),
+      tasks: new Map([[a.id, { kind: 'schedule', date: addDays(MONDAY, 2) } as const]]),
+    });
+
+    await applyPlanning(ctx, SUNDAY, [{ taskId: a.id, date: MONDAY }]);
+
+    expect(await db.blocks.get(a.id)).toMatchObject({ intendedDate: MONDAY, status: 'active' });
   });
 
   it('archive and abandon take tasks out of the active list without deleting them', async () => {

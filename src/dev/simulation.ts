@@ -206,8 +206,8 @@ export class Simulation {
     await applyTriage(this.ctx, day, decisions);
 
     this.step();
-    const unplan = (choices.unplan ?? []).map((task) => ({ taskId: task.id, include: false }));
-    if (unplan.length > 0) await applyPlanning(this.ctx, day, next, unplan);
+    const unplan = (choices.unplan ?? []).map((task) => ({ taskId: task.id, date: null }));
+    if (unplan.length > 0) await applyPlanning(this.ctx, day, unplan);
     this.step();
     await completeCheckout(this.ctx, day);
   }
