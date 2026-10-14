@@ -51,3 +51,4 @@ Read only the ADRs your task touches: find them in this table or by grepping `ad
 | [ADR-040](adr/040-reordering-lines-and-day-parts-without-events.md) | Reordering lines and the parts of a day, without events or a schema version | 2026-10-13 | Accepted |
 | [ADR-041](adr/041-objectives-and-habits-hidden-behind-a-code-flag.md) | Objectives and habits hidden behind a code flag | 2026-10-13 | Accepted |
 | [ADR-042](adr/042-screens-fail-alone-and-queries-report-errors.md) | Screens fail alone, and live queries report their errors | 2026-10-13 | Accepted |
+| [ADR-043](adr/043-typed-event-details-with-legacy-shapes-and-version.md) | Typed event details, with legacy shapes and a version | 2026-10-14 | Accepted |

@@ -48,12 +48,12 @@ describe('DexieStore', () => {
       entityId: 'p1',
       at: '2026-10-11T12:00:00.000Z',
       day: '2026-10-11',
-      data: {},
+      data: { name: 'Projeto' },
     };
     await ctx.store.transaction((tx) => tx.appendEvent(event));
 
-    await expect(ctx.store.transaction((tx) => tx.appendEvent({ ...event, data: { changed: true } }))).rejects.toThrow();
-    expect((await db.events.get('e1'))?.data).toEqual({});
+    await expect(ctx.store.transaction((tx) => tx.appendEvent({ ...event, data: { name: 'Outro' } }))).rejects.toThrow();
+    expect((await db.events.get('e1'))?.data).toEqual({ name: 'Projeto' });
   });
 
   it('rejects an empty project name', async () => {

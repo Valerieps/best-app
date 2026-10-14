@@ -22,7 +22,7 @@ function event(id: string): DomainEvent {
     entityId: 'p',
     at: '2026-10-11T12:00:00.000Z',
     day: '2026-10-11',
-    data: {},
+    data: { name: 'p' },
   };
 }
 
@@ -133,7 +133,7 @@ describe('computeImportLoss', () => {
   });
 
   it('does not count a line the backup deleted on purpose', () => {
-    const deleted: DomainEvent = { ...event('e1'), type: 'block.deleted', entityType: 'block', entityId: 'b1' };
+    const deleted: DomainEvent = { ...event('e1'), type: 'block.deleted', data: { kind: 'note', text: '' }, entityType: 'block', entityId: 'b1' };
     const line = { id: 'b1', updatedAt: '2026-10-11' } as BackupTables['blocks'][number];
     const loss = computeImportLoss(tables({ blocks: [line] }), tables({ events: [deleted] }));
     expect(loss.blocks).toEqual({ removed: 0, reverted: 0 });
@@ -141,7 +141,7 @@ describe('computeImportLoss', () => {
   });
 
   it('only excuses the kind of record the deletion was about', () => {
-    const deleted: DomainEvent = { ...event('e1'), type: 'block.deleted', entityType: 'block', entityId: 'p1' };
+    const deleted: DomainEvent = { ...event('e1'), type: 'block.deleted', data: { kind: 'note', text: '' }, entityType: 'block', entityId: 'p1' };
     const loss = computeImportLoss(tables({ projects: [project('p1', '2026-10-10')] }), tables({ events: [deleted] }));
     expect(loss.projects.removed).toBe(1);
   });
