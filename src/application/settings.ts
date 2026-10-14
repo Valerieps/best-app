@@ -1,6 +1,6 @@
 import { normalizeLimits, type AssistantId } from '../domain/cleanupStatus';
 import { toDayKey } from '../domain/day';
-import type { ProjectListGroup, Settings, WarmupItem } from '../domain/entities';
+import type { DayNoteFocus, ProjectListGroup, Settings, WarmupItem } from '../domain/entities';
 import { record } from './events';
 import type { AppContext } from './ports';
 
@@ -52,6 +52,14 @@ export function setProjectListGroupOpen(ctx: AppContext, group: ProjectListGroup
 /** Whether the sidebar is collapsed. Kept with the settings, like the other interface choices. */
 export function setSidebarCollapsed(ctx: AppContext, collapsed: boolean): Promise<void> {
   return updateSettings(ctx, { sidebarCollapsed: collapsed });
+}
+
+/**
+ * Focus mode on one part of the day note; null shows the whole note again. Kept with the
+ * settings so it survives reloading the page (spec/nota-do-dia.md, "Modo foco").
+ */
+export function setDayNoteFocus(ctx: AppContext, focus: DayNoteFocus | null): Promise<void> {
+  return updateSettings(ctx, { dayNoteFocus: focus });
 }
 
 /** Section 3: the warm-up checklist, defined by hand. Empty turns the warm up off. */

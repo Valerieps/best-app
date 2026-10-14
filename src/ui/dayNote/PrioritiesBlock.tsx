@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, type ReactNode } from 'react';
 import type { DayKey } from '../../domain/day';
 import type { DayPriority } from '../../domain/priorities';
 import { Linkified } from '../components/Linkified';
@@ -34,13 +34,18 @@ interface Props {
   pinned: boolean;
   onToggleDone(taskId: string, done: boolean): void;
   onDemote(taskId: string): void;
+  /** Shown at the left of the title, like the focus mode button. */
+  leading?: ReactNode;
 }
 
 /** "Prioridades do dia": up to 3 tasks, highlighted. */
-export function PrioritiesBlock({ priorities, today, pinned, onToggleDone, onDemote }: Props) {
+export function PrioritiesBlock({ priorities, today, pinned, onToggleDone, onDemote, leading }: Props) {
   return (
     <section className={`priorities ${pinned ? 'priorities--pinned' : ''}`} aria-label="Prioridades do dia">
-      <h2 className="priorities__title">Prioridades do dia</h2>
+      <div className="priorities__header">
+        {leading}
+        <h2 className="priorities__title">Prioridades do dia</h2>
+      </div>
       {priorities.length === 0 ? (
         <p className="muted priorities__empty">Nenhuma prioridade agora. Promova uma tarefa com ★.</p>
       ) : (

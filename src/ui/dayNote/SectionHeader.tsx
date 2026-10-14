@@ -1,8 +1,9 @@
-import { useEffect, useRef, useState, type KeyboardEvent } from 'react';
+import { useEffect, useRef, useState, type KeyboardEvent, type ReactNode } from 'react';
 import type { Project, Section } from '../../domain/entities';
 import { normalizeForMatch } from '../../domain/text';
 import { formatTime } from '../format';
 import { KindChip, ProjectChip, WhiteboardChip } from '../components/Chips';
+import { isFocusToggleKey } from './focusMode';
 import { partMoveKey } from './lineDrag';
 
 interface Props {
@@ -12,6 +13,8 @@ interface Props {
   onSaveTitle(title: string): void;
   onLinkProject(project: Project): void;
   onCreateProject(name: string): void;
+  /** Shown at the left of the header, like the focus mode button. */
+  leading?: ReactNode;
 }
 
 type Option =
@@ -25,7 +28,7 @@ const MAX_SUGGESTIONS = 5;
  * Section header: kind, time and an optional title. While typing the title of a whiteboard
  * section, existing projects are suggested; choosing one links the section to it.
  */
-export function SectionHeader({ section, kind, projects, onSaveTitle, onLinkProject, onCreateProject }: Props) {
+export function SectionHeader({ section, kind, projects, onSaveTitle, onLinkProject, onCreateProject, leading }: Props) {
   const [title, setTitle] = useState(section?.title ?? '');
   const [open, setOpen] = useState(false);
   const [highlight, setHighlight] = useState(0);
@@ -63,8 +66,8 @@ export function SectionHeader({ section, kind, projects, onSaveTitle, onLinkProj
   }
 
   function onKeyDown(event: KeyboardEvent<HTMLInputElement>) {
-    // Moving the whole section is handled by the section around the header.
-    if (partMoveKey(event)) return;
+    // Moving the whole section, and its focus mode, are handled by the section around the header.
+    if (partMoveKey(event) || isFocusToggleKey(event)) return;
     if (event.key === 'Escape') {
       setOpen(false);
       return;
@@ -90,6 +93,7 @@ export function SectionHeader({ section, kind, projects, onSaveTitle, onLinkProj
 
   return (
     <div className="section__header">
+      {leading}
       <KindChip kind={kind} />
       {section && <span className="section__time">{formatTime(section.createdAt)}</span>}
       <div className="title-field">
