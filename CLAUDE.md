@@ -44,11 +44,11 @@ in this table. Never copy content between docs: link to the home instead (see `s
 | Terms | `GLOSSARIO.md` | One term, one meaning. Use these names in UI text and docs |
 | Why product decisions were made; origin; product risks | `DECISOES.md` | The rule itself stays in `spec/` |
 | What is built, what is missing, where code lags behind the spec, what is deferred | `ROADMAP.md` | The only place that tracks progress. Update it whenever you build or skip something |
-| Feature requests not yet decided | GitHub issues of the repository, label `enhancement`, one per request | Each issue holds what changes in the spec, its "Em aberto" questions and its incoherences with the current model. When decided: rule to `spec/`, progress to `ROADMAP.md`, issue closed |
+| Feature requests not yet decided | GitHub issues of the repository, label `enhancement` plus a size label (`s:small`, `s:medium`, `s:large`), one per request | Each issue holds what changes in the spec, its "Em aberto" questions and its incoherences with the current model. When decided: rule to `spec/`, progress to `ROADMAP.md`, issue closed |
 | Contradictions between docs | `INCOERENCIAS.md` | Temporary: remove an item once it is resolved |
 | Technical design (data model, events, editor, triage, metrics) | `ARQUITETURA.md` | Design only, no progress. Keep it in sync when the design changes |
 | Technical decisions | `adr/`, one file per decision | `architecture-decision-records.md` is the index, with each ADR's status. Technical only; product rules go to `spec/` |
-| Known bugs, technical debt, known limitations | GitHub issues, label `bug` or `debito-tecnico`, plus a priority label (`p:alta`, `p:media`, `p:baixa`) | Every new bug or debt issue gets a priority label. Close the issue when resolved; open one when you knowingly leave something behind |
+| Known bugs, technical debt, known limitations | GitHub issues, label `bug` or `debito-tecnico`, plus a priority label (`p:alta`, `p:media`, `p:baixa`) and a size label (`s:small`, `s:medium`, `s:large`) | Every new bug or debt issue gets a priority and a size label. Close the issue when resolved; open one when you knowingly leave something behind |
 | Checks and setup only the owner can do | `DEBITO-TECNICO.md` | Checks in her Chrome, configuration and publishing. Remove an item when done |
 | Security and compliance (local-only, no network, CSP, backups) | `google-safe.md` | Mandatory for every change |
 | Screen drafts and implementation briefs | `rascunhos/` | `rascunhos/README.md` gives each draft's status; the spec wins over a draft |
