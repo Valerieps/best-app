@@ -285,7 +285,7 @@ export function DayNoteScreen({
           </button>
         </span>
       }
-      primary={{ label: 'Fazer checkout', onSelect: () => navigate({ name: 'checkout', day }) }}
+      primary={{ label: 'Fechar o dia', onSelect: () => navigate({ name: 'checkout', day }) }}
       more={
         isToday
           ? [{ label: pinned ? 'Desafixar prioridades' : 'Fixar prioridades no topo', onSelect: () => setPinned(!pinned) }]

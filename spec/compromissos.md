@@ -1,7 +1,7 @@
 # Compromissos e detecção de tipo
 
 - **Entra aqui:** o compromisso como tipo de bloco e a detecção automática do tipo pelo formato do texto. *(5)*
-- **Não entra aqui:** os destinos do compromisso no checkout (`checkout.md`, "Destinos").
+- **Não entra aqui:** os destinos do compromisso no "Fechar o dia" (`checkout.md`, "Destinos").
 
 ## Em aberto
 

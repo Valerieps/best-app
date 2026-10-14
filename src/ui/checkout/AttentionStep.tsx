@@ -1,6 +1,6 @@
-import { useMemo, useState } from 'react';
+import { useState } from 'react';
 import { applyTriage } from '../../application/checkout';
-import { attentionReason, attentionRows } from '../../domain/checkoutSteps';
+import { attentionReason } from '../../domain/checkoutSteps';
 import { addDays } from '../../domain/day';
 import type { TaskDecision } from '../../domain/triage';
 import { ProjectChip } from '../components/Chips';
@@ -32,7 +32,7 @@ function choiceOf(decision: TaskDecision, nextDay: string): Choice {
  * "dia seguinte". Archiving and abandoning are offered, never suggested.
  */
 export function AttentionStep({ day, today, triage, projects, busy, onBack, onNext }: StepProps) {
-  const rows = useMemo(() => attentionRows(triage), [triage]);
+  const rows = triage.rows;
   const [index, setIndex] = useState(0);
   const [decisions, setDecisions] = useState<Map<string, TaskDecision>>(new Map());
   const nextDay = triage.nextDay;
@@ -86,7 +86,7 @@ export function AttentionStep({ day, today, triage, projects, busy, onBack, onNe
         <StepQuestion focusKey={row.task.id} eyebrow={`Tarefa ${index + 1} de ${rows.length} que pede atenção`}>
           {reason === 'postponed'
             ? `Você já adiou esta tarefa ${row.task.postponeCount} vezes. O que fazer com ela?`
-            : `O prazo desta tarefa é ${relativeDay(row.task.deadline ?? nextDay, today)}. O que fazer com ela?`}
+            : `O prazo desta tarefa ${(row.task.deadline ?? nextDay) < today ? 'era' : 'é'} ${relativeDay(row.task.deadline ?? nextDay, today)}. O que fazer com ela?`}
         </StepQuestion>
         <TaskReplica
           task={row.task}

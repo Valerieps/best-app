@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { loadDayTriage, loadReminderQuestions } from '../../application/queries';
 import { checkoutSteps, nextStep, previousStep, stepCounts, type CheckoutStep } from '../../domain/checkoutSteps';
 import type { DayKey } from '../../domain/day';
-import type { Objective, Project, Reminder } from '../../domain/entities';
+import type { Project, Reminder } from '../../domain/entities';
 import type { DayTriage } from '../../domain/triage';
 import { LoadingPage } from '../components/Skeleton';
 import { formatLongDate, relativeDay } from '../format';
@@ -15,19 +15,16 @@ import { DoneCheckStep } from './DoneCheckStep';
 import { PlanningStep } from './PlanningStep';
 import { ReminderStep } from './ReminderStep';
 import type { Resolved, StepProps } from './StepParts';
-import { WhiteboardStep } from './WhiteboardStep';
 
 interface Props {
   day: DayKey;
   today: DayKey;
 }
 
-const NOTHING_RESOLVED: Resolved = { doneNow: 0, attention: 0, whiteboards: 0, reminders: 0 };
+const NOTHING_RESOLVED: Resolved = { doneNow: 0, attention: 0, reminders: 0 };
 
 function stepLabel(step: CheckoutStep, nextDay: DayKey, today: DayKey): string {
   switch (step) {
-    case 'whiteboards':
-      return 'Quadros brancos';
     case 'doneCheck':
       return 'Fez e não marcou?';
     case 'attention':
@@ -35,7 +32,7 @@ function stepLabel(step: CheckoutStep, nextDay: DayKey, today: DayKey): string {
     case 'reminders':
       return 'Lembretes';
     case 'confirm':
-      return 'Confirmação do checkout';
+      return 'Confirmação';
     case 'planning': {
       const label = relativeDay(nextDay, today);
       return label.charAt(0).toUpperCase() + label.slice(1);
@@ -51,7 +48,6 @@ function stepLabel(step: CheckoutStep, nextDay: DayKey, today: DayKey): string {
 export function CheckoutScreen({ day, today }: Props) {
   const [triage, setTriage] = useState<DayTriage | null>(null);
   const [projects, setProjects] = useState<Project[]>([]);
-  const [objectives, setObjectives] = useState<Objective[]>([]);
   const [reminders, setReminders] = useState<Reminder[]>([]);
   const [remindersAnswered, setRemindersAnswered] = useState(false);
   const [plan, setPlan] = useState<CheckoutStep[]>([]);
@@ -63,11 +59,10 @@ export function CheckoutScreen({ day, today }: Props) {
   useEffect(
     () =>
       loadLatest(
-        () => Promise.all([loadDayTriage(reader, day, today), reader.projects(), reader.objectives(), loadReminderQuestions(reader, day)]),
-        ([dayTriage, allProjects, allObjectives, questions]) => {
+        () => Promise.all([loadDayTriage(reader, day, today), reader.projects(), loadReminderQuestions(reader, day)]),
+        ([dayTriage, allProjects, questions]) => {
           const steps = checkoutSteps(stepCounts(dayTriage, questions.length));
           setProjects(allProjects);
-          setObjectives(allObjectives);
           setReminders(questions);
           setTriage(dayTriage);
           setPlan(steps);
@@ -79,7 +74,7 @@ export function CheckoutScreen({ day, today }: Props) {
   );
 
   if (loadError !== undefined) throw loadError;
-  if (!triage || !step) return <LoadingPage title={`Checkout · ${formatLongDate(day)}`} />;
+  if (!triage || !step) return <LoadingPage title={`Fechar o dia · ${formatLongDate(day)}`} />;
 
   const reminderCount = (answered: boolean) => (answered ? 0 : reminders.length);
   const counts = stepCounts(triage, reminderCount(remindersAnswered));
@@ -99,7 +94,6 @@ export function CheckoutScreen({ day, today }: Props) {
         setResolved((current) => ({
           doneNow: current.doneNow + (settled.doneNow ?? 0),
           attention: current.attention + (settled.attention ?? 0),
-          whiteboards: current.whiteboards + (settled.whiteboards ?? 0),
           reminders: current.reminders + (settled.reminders ?? 0),
         }));
       }
@@ -119,10 +113,10 @@ export function CheckoutScreen({ day, today }: Props) {
           <button type="button" className="icon-button" onClick={() => navigate({ name: 'day' })} aria-label="Voltar para a nota do dia">
             ←
           </button>
-          <h1 className="card__title">Checkout · {formatLongDate(day)}</h1>
+          <h1 className="card__title">Fechar o dia · {formatLongDate(day)}</h1>
           <span />
         </header>
-        <nav className="checkout-stepper" aria-label="Etapas do checkout">
+        <nav className="checkout-stepper" aria-label="Etapas do fechamento">
           <ol>
             {plan.map((each, index) => (
               <li
@@ -136,11 +130,10 @@ export function CheckoutScreen({ day, today }: Props) {
             ))}
           </ol>
         </nav>
-        {step === 'whiteboards' && <WhiteboardStep key={step} {...props} />}
         {step === 'doneCheck' && <DoneCheckStep key={step} {...props} />}
         {step === 'attention' && <AttentionStep key={step} {...props} />}
         {step === 'reminders' && <ReminderStep key={step} reminders={reminders} busy={busy} onBack={onBack} onNext={onNext} />}
-        {step === 'confirm' && <ConfirmStep key={step} {...props} objectives={objectives} resolved={resolved} />}
+        {step === 'confirm' && <ConfirmStep key={step} {...props} resolved={resolved} />}
         {step === 'planning' && <PlanningStep key={step} day={day} target={triage.nextDay} today={today} onBack={onBack} />}
       </div>
     </main>

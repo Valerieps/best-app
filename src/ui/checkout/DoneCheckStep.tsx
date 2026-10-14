@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { applyTriage } from '../../application/checkout';
-import type { TaskDecision, TaskRow } from '../../domain/triage';
+import type { OpenTask, TaskDecision } from '../../domain/triage';
 import { KindChip, ProjectChip } from '../components/Chips';
 import { Linkified } from '../components/Linkified';
 import { plural, postponedLabel } from '../format';
@@ -8,8 +8,8 @@ import { appContext } from '../services';
 import { noDecisions, StepFooter, StepQuestion, useStepKeys, type StepProps } from './StepParts';
 
 /** Consecutive task rows from the same section (or from other days), in the day note's order. */
-export function groupBySection(rows: readonly TaskRow[]): TaskRow[][] {
-  const groups: TaskRow[][] = [];
+export function groupBySection<T extends OpenTask>(rows: readonly T[]): T[][] {
+  const groups: T[][] = [];
   for (const row of rows) {
     const last = groups.at(-1);
     if (last && last[0].section?.id === row.section?.id) last.push(row);
@@ -18,7 +18,7 @@ export function groupBySection(rows: readonly TaskRow[]): TaskRow[][] {
   return groups;
 }
 
-export function SectionHeading({ row }: { row: TaskRow }) {
+export function SectionHeading({ row }: { row: OpenTask }) {
   if (!row.section) return <h3 className="checkout-group__title">De outros dias</h3>;
   return (
     <h3 className="checkout-group__title">
@@ -28,9 +28,12 @@ export function SectionHeading({ row }: { row: TaskRow }) {
   );
 }
 
-/** Step "Fez e não marcou?": one checklist for every task not finished, a single decision. */
+/**
+ * Step "Fez e não marcou?": one checklist for every task still open, a single decision. The
+ * tasks rolling over on their own are here too, so finishing one never needs the confirmation.
+ */
 export function DoneCheckStep({ day, triage, busy, onBack, onNext }: StepProps) {
-  const rows = triage.rows.filter((row): row is TaskRow => row.type === 'task');
+  const rows = triage.open;
   const [done, setDone] = useState<Set<string>>(new Set());
   const finishedDuringDay = triage.automatic.filter((item) => item.type === 'finishedDuringDay').length;
 

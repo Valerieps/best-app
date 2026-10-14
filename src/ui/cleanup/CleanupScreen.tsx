@@ -13,7 +13,7 @@ import { listDays, plural } from '../format';
 import { navigate } from '../hooks';
 import { appContext, reader } from '../services';
 import { useLiveQuery } from '../useLiveQuery';
-import { ASSISTANT_INFO, AssistantIcon, STATUS_LABELS } from './assistantInfo';
+import { ageLabel, ASSISTANT_INFO, AssistantIcon, STATUS_LABELS } from './assistantInfo';
 
 interface Props {
   today: DayKey;
@@ -23,7 +23,8 @@ interface Props {
 
 /**
  * "Colocar ordem na casa" (spec/assistentes.md): a dashboard with one card per assistant, colored
- * by how much it found. The details and suggested actions only show after opening a card.
+ * by how long its oldest item has been waiting. The details and suggested actions only show after
+ * opening a card.
  */
 export function CleanupScreen({ today, assistant }: Props) {
   const dashboard = useLiveQuery(() => loadCleanupDashboard(reader, today), [today]);
@@ -41,15 +42,16 @@ function Dashboard({ dashboard }: { dashboard: CleanupDashboard }) {
     <main className="page">
       <ScreenHeader title="Colocar ordem na casa" />
       <ul className="cleanup-grid">
-        {dashboard.cards.map(({ id, status }) => {
+        {dashboard.cards.map(({ id, status, ageInDays }) => {
           const { name } = ASSISTANT_INFO[id];
+          const age = ageLabel(ageInDays);
           return (
             <li key={id}>
               <button
                 type="button"
                 className={`cleanup-card status--${status}`}
-                title={STATUS_LABELS[status]}
-                aria-label={`${name}, ${STATUS_LABELS[status]}`}
+                title={[STATUS_LABELS[status], age].filter(Boolean).join(', ')}
+                aria-label={[name, STATUS_LABELS[status], age].filter(Boolean).join(', ')}
                 onClick={() => navigate({ name: 'cleanup', assistant: id })}
               >
                 <span className="status-icon">
@@ -91,7 +93,10 @@ function AssistantScreen({
         </span>
         <div>
           <h1 className="assistant-header__title">{name}</h1>
-          <p className="assistant-header__description">{description}</p>
+          <p className="assistant-header__description">
+            {description}
+            {card.count > 0 && ` ${(ageLabel(card.ageInDays) ?? '').replace(/^o/, 'O')}.`}
+          </p>
         </div>
         <span className="visually-hidden">Estado: {STATUS_LABELS[card.status]}</span>
       </header>
@@ -115,7 +120,7 @@ function PendingDaysAssistant({ days, today }: { days: DayKey[]; today: DayKey }
   const [closing, setClosing] = useState(false);
   return (
     <section className="assistant">
-      <p>{listDays(days, today)} ainda sem checkout.</p>
+      <p>{listDays(days, today)} ainda sem fechamento.</p>
       <div className="assistant__actions">
         <button type="button" className="primary" onClick={() => setClosing(true)}>
           Fechar dias pendentes

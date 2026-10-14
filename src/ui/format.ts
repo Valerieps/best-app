@@ -43,13 +43,14 @@ function recentDayName(day: DayKey, today: DayKey): string {
   return formatShortDate(day);
 }
 
-/** "Sexta e sábado estão com checkout pendente" */
+/**
+ * "Falta fechar sexta e sábado". Plain, without urgency: closing yesterday this morning is not
+ * late (spec/checkout.md).
+ */
 export function pendingDaysSentence(days: readonly DayKey[], today: DayKey): string {
-  if (days.length === 1) return `${capitalize(recentDayName(days[0], today))} está com checkout pendente`;
-  if (days.length === 2) {
-    return `${capitalize(recentDayName(days[0], today))} e ${recentDayName(days[1], today)} estão com checkout pendente`;
-  }
-  return `${days.length} dias estão com checkout pendente`;
+  if (days.length === 1) return `Falta fechar ${recentDayName(days[0], today)}`;
+  if (days.length === 2) return `Falta fechar ${recentDayName(days[0], today)} e ${recentDayName(days[1], today)}`;
+  return `Faltam fechar ${days.length} dias`;
 }
 
 /** "sexta, sábado e domingo" */

@@ -13,7 +13,7 @@ import {
 import { loadFocusReview, loadReviewAvailability } from '../application/reviewQueries';
 import { addDays, toDayKey } from '../domain/day';
 import { activityGrid, CARD_MAP_WEEKS } from '../domain/projectActivity';
-import type { TaskRow, WhiteboardRow } from '../domain/triage';
+import type { TaskRow } from '../domain/triage';
 import { importBackup } from '../infrastructure/backupRepository';
 import { createTestContext, sequentialIds } from '../test/fixtures';
 import { buildSyntheticBackup } from './syntheticData';
@@ -36,7 +36,6 @@ describe('synthetic data', () => {
     if (!task) throw new Error(`No task "${text}"`);
     return task;
   };
-  const projectId = (name: string) => backup.tables.projects.find((project) => project.name === name)!.id;
 
   it('is a valid backup', () => {
     expect(parseBackup(JSON.parse(JSON.stringify(backup))).ok).toBe(true);
@@ -62,15 +61,18 @@ describe('synthetic data', () => {
     const apiDocs = threeDaysAgo.rows.find((row): row is TaskRow => row.type === 'task' && row.task.text === 'Atualizar a documentação da API');
     expect(apiDocs?.task.postponeCount).toBe(3);
     expect(apiDocs).toMatchObject({ attention: true, suggestion: { kind: 'reflection' } });
-    const daily = threeDaysAgo.rows.find((row): row is WhiteboardRow => row.type === 'whiteboard');
-    expect(daily?.suggestion).toEqual({ kind: 'link', projectId: projectId('App de agendamento') });
+    // Whiteboards no longer pass through the closing: the "Seções soltas" assistant takes them.
+    expect(threeDaysAgo.automatic.some((item) => item.type === 'whiteboardUnlinked')).toBe(true);
     expect(threeDaysAgo.automatic.some((item) => item.type === 'finishedDuringDay')).toBe(true);
 
     const dumpster = twoDaysAgo.rows.find((row): row is TaskRow => row.type === 'task' && row.task.deadline === day(-1));
     expect(dumpster?.attention).toBe(true);
     expect(twoDaysAgo.automatic.some((item) => item.type === 'notesToWiki')).toBe(true);
 
-    expect(yesterday.rows.map((row) => row.type)).toEqual(['whiteboard', 'notes', 'task', 'task']);
+    expect(yesterday.automatic.map((item) => item.type)).toEqual(
+      expect.arrayContaining(['whiteboardUnlinked', 'notesToWiki', 'rolledOver']),
+    );
+    expect(yesterday.open).toHaveLength(2);
   });
 
   it('gives the whiteboards assistant groups to link, convert and keep', async () => {

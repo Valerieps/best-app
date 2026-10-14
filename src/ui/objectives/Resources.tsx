@@ -17,7 +17,7 @@ export function Resources({ owner, resources }: Props) {
   return (
     <>
       {resources.length === 0 ? (
-        <p className="muted">Nenhum recurso. No checkout, as notas de uma seção podem virar recurso; links entram aqui.</p>
+        <p className="muted">Nenhum recurso. Na wiki, as notas de uma seção podem virar recurso; links entram aqui.</p>
       ) : (
         <ul className="card-list">
           {resources.map(({ resource, notes }) => {

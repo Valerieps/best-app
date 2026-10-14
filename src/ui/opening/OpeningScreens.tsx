@@ -153,7 +153,7 @@ export function DashboardScreen({ view, today }: { view: DayOpeningView; today: 
         )}
         {view.pendingDays.length > 0 && (
           <button type="button" onClick={() => navigate({ name: 'checkout', day: view.pendingDays[0] })}>
-            Fazer checkout pendente
+            Fechar o dia pendente
           </button>
         )}
       </div>

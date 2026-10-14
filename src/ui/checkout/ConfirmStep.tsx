@@ -1,99 +1,58 @@
 import { useState } from 'react';
-import { applyTriage, type TriageDecisions } from '../../application/checkout';
-import type { Objective } from '../../domain/entities';
-import {
-  automaticToRow,
-  type AutomaticItem,
-  type NotesDecision,
-  type NotesRow,
-  type TaskDecision,
-  type TaskRow,
-  type TriageRow,
-  type WhiteboardDecision,
-} from '../../domain/triage';
+import { applyTriage, defaultClosingDecisions } from '../../application/checkout';
+import { automaticTaskDecision, automaticToRow, type TaskAutomaticItem, type TaskDecision, type TaskRow } from '../../domain/triage';
 import { Linkified } from '../components/Linkified';
-import { FEATURES } from '../features';
 import { plural, relativeDay } from '../format';
 import { appContext } from '../services';
 import { StepFooter, StepQuestion, useStepKeys, type Resolved, type StepProps } from './StepParts';
-import { NotesRowView, rowKey, TaskRowView, WhiteboardRowView, type Decision, type ResourceOwner } from './TriageRows';
+import { TaskRowView } from './TriageRows';
 
-function automaticKey(item: AutomaticItem): string {
-  return item.type === 'notesToWiki' ? `notes:${item.section.id}` : `task:${item.task.id}`;
-}
-
-function sameDecision(a: Decision, b: Decision): boolean {
+function sameDecision(a: TaskDecision, b: TaskDecision): boolean {
   return JSON.stringify(a) === JSON.stringify(b);
 }
 
-/** "Fechar" for the change field; the decision stays. */
-function CloseButton({ onClick }: { onClick(): void }) {
-  return (
-    <button type="button" className="link confirm-item__change" onClick={onClick}>
-      fechar
-    </button>
-  );
-}
-
 /**
- * Step "Confirmação do checkout": what happens when confirming, grouped by destination rather
- * than by section. Everything comes decided; changing an item is the exception.
+ * Step "Confirmação do fechamento": what happens when confirming. The tasks rolling over on their
+ * own sit in a collapsed group, with their number; opening it lets me finish or change any of
+ * them. Notes and whiteboards only show as a line: they no longer pass through the closing.
  */
-export function ConfirmStep({
-  day,
-  today,
-  triage,
-  projects,
-  objectives,
-  resolved,
-  busy,
-  onBack,
-  onNext,
-}: StepProps & { objectives: Objective[]; resolved: Resolved }) {
-  const [undone, setUndone] = useState<Set<string>>(new Set());
-  const [choices, setChoices] = useState<Map<string, Decision>>(new Map());
+export function ConfirmStep({ day, today, triage, projects, resolved, busy, onBack, onNext }: StepProps & { resolved: Resolved }) {
+  const [choices, setChoices] = useState<Map<string, TaskDecision>>(new Map());
   const [taskProjects, setTaskProjects] = useState<Map<string, string | null>>(new Map());
-  const [noteResources, setNoteResources] = useState<Map<string, string | null>>(new Map());
   const [open, setOpen] = useState<Set<string>>(new Set());
-
-  const reopened = triage.automatic.filter((item) => undone.has(automaticKey(item))).map(automaticToRow);
-  const rows: TriageRow[] = [...triage.rows, ...reopened];
-  const automatic = triage.automatic.filter((item) => !undone.has(automaticKey(item)));
-  const taskRows = rows.filter((row): row is TaskRow => row.type === 'task');
-  const noteRows = rows.filter((row): row is NotesRow => row.type === 'notes');
-  const leftover = rows.filter((row) => row.type === 'whiteboard');
-  const autoNotes = automatic.filter((item) => item.type === 'notesToWiki');
-  const autoTasks = automatic.filter((item) => item.type !== 'notesToWiki');
-
-  const decisionOf = (row: TriageRow) => choices.get(rowKey(row)) ?? row.suggestion;
-  const setDecision = (row: TriageRow, decision: Decision) => setChoices((previous) => new Map(previous).set(rowKey(row), decision));
-  const toggleOpen = (key: string) =>
-    setOpen((previous) => {
-      const updated = new Set(previous);
-      if (updated.has(key)) updated.delete(key);
-      else updated.add(key);
-      return updated;
-    });
-  const undo = (item: AutomaticItem) => {
-    setUndone((previous) => new Set(previous).add(automaticKey(item)));
-    setOpen((previous) => new Set(previous).add(automaticKey(item)));
-  };
+  const [undone, setUndone] = useState<Set<string>>(new Set());
+  const [expanded, setExpanded] = useState(false);
 
   const nextDay = triage.nextDay;
   const nextLabel = relativeDay(nextDay, today);
-  const isNext = (decision: Decision) => typeof decision === 'object' && decision.kind === 'schedule' && decision.date === nextDay;
-  const nextCount = taskRows.filter((row) => isNext(decisionOf(row))).length;
-  const projectName = (id: string | null | undefined) => projects.find((project) => project.id === id)?.name;
-  const resourceOwners: ResourceOwner[] = [
-    ...objectives
-      .filter((objective) => FEATURES.objectives && objective.status === 'active')
-      .map((objective) => ({ ownerType: 'objective' as const, ownerId: objective.id, label: objective.goal })),
-    ...projects
-      .filter((project) => project.status === 'active')
-      .map((project) => ({ ownerType: 'project' as const, ownerId: project.id, label: project.name })),
-  ];
+  const rolled = triage.automatic.filter((item): item is TaskAutomaticItem & { type: 'rolledOver' } => item.type === 'rolledOver');
+  const settledDuringDay = triage.automatic.filter(
+    (item): item is TaskAutomaticItem => item.type === 'finishedDuringDay' || item.type === 'scheduledDuringDay',
+  );
+  const reopened = settledDuringDay.filter((item) => undone.has(item.task.id)).map((item) => automaticToRow(item, nextDay));
+  const kept = settledDuringDay.filter((item) => !undone.has(item.task.id));
+  const notes = triage.automatic.filter((item) => item.type === 'notesToWiki').length;
+  const whiteboards = triage.automatic.filter((item) => item.type === 'whiteboardUnlinked').length;
+  // Rows left from the attention step, if any, and the automatic decisions reopened here.
+  const rows: TaskRow[] = [...triage.rows, ...reopened];
 
-  function taskDestination(decision: TaskDecision): string {
+  const decisionOf = (id: string, fallback: TaskDecision) => choices.get(id) ?? fallback;
+  const setDecision = (id: string, decision: TaskDecision) => setChoices((previous) => new Map(previous).set(id, decision));
+  const projectOf = (row: TaskRow) => (taskProjects.has(row.task.id) ? taskProjects.get(row.task.id) : row.task.projectId);
+  const toggle = (id: string) =>
+    setOpen((previous) => {
+      const updated = new Set(previous);
+      if (updated.has(id)) updated.delete(id);
+      else updated.add(id);
+      return updated;
+    });
+  const projectName = (id: string | null | undefined) => projects.find((project) => project.id === id)?.name;
+  const stillRolling = rolled.filter((item) => {
+    const decision = decisionOf(item.task.id, automaticTaskDecision(item, nextDay));
+    return decision.kind === 'schedule' && decision.date === nextDay;
+  }).length;
+
+  function destination(decision: TaskDecision): string {
     switch (decision.kind) {
       case 'schedule':
         return relativeDay(decision.date, today);
@@ -109,201 +68,119 @@ export function ConfirmStep({
         return 'virar hábito';
     }
   }
-  const notesDestination: Record<NotesDecision, string> = { wiki: 'wiki', discarded: 'descartar', weeklyReflection: 'Revisão de Foco' };
+
+  const renderTask = (row: TaskRow) => {
+    const id = row.task.id;
+    const decision = decisionOf(id, row.suggestion);
+    const projectId = projectOf(row);
+    if (open.has(id)) {
+      return (
+        <li className="confirm-item confirm-item--open" key={id}>
+          <TaskRowView
+            row={row}
+            decision={decision}
+            onChange={(value) => setDecision(id, value)}
+            nextDay={nextDay}
+            today={today}
+            projects={projects}
+            projectId={projectId}
+            onProjectChange={(value) => setTaskProjects((previous) => new Map(previous).set(id, value))}
+          />
+          <button type="button" className="link confirm-item__change" onClick={() => toggle(id)}>
+            fechar
+          </button>
+        </li>
+      );
+    }
+    const changed = !sameDecision(decision, row.suggestion) || projectId !== row.task.projectId;
+    const from = [row.section ? (row.section.title ?? 'Sem título') : 'De outros dias', projectName(projectId)].filter(Boolean).join(' · ');
+    const isNext = decision.kind === 'schedule' && decision.date === nextDay;
+    return (
+      <li className="confirm-item" key={id}>
+        <span className="task-box" aria-hidden="true" />
+        <span className="confirm-item__text">
+          <Linkified text={row.task.text || '(tarefa sem texto)'} />
+          <span className="confirm-item__from">{from}</span>
+        </span>
+        {!isNext && <span className="confirm-item__dest">→ {destination(decision)}</span>}
+        {changed && <span className="chip chip--warning">mudou</span>}
+        <button type="button" className="link confirm-item__change" onClick={() => toggle(id)}>
+          mudar
+        </button>
+      </li>
+    );
+  };
 
   const resolvedLines = [
-    resolved.whiteboards > 0 && `${plural(resolved.whiteboards, 'quadro branco decidido', 'quadros brancos decididos')}`,
     resolved.doneNow > 0 && `${plural(resolved.doneNow, 'tarefa marcada como feita', 'tarefas marcadas como feitas')} agora`,
-    resolved.attention > 0 && `${plural(resolved.attention, 'tarefa que pedia atenção decidida', 'tarefas que pediam atenção decididas')}`,
-    resolved.reminders > 0 && `${plural(resolved.reminders, 'lembrete respondido', 'lembretes respondidos')}`,
+    resolved.attention > 0 && plural(resolved.attention, 'tarefa que pedia decisão decidida', 'tarefas que pediam decisão decididas'),
+    resolved.reminders > 0 && plural(resolved.reminders, 'lembrete respondido', 'lembretes respondidos'),
+    notes > 0 && `As notas de ${plural(notes, 'seção vão', 'seções vão')} sozinhas para a wiki`,
+    whiteboards > 0 &&
+      `${plural(whiteboards, 'seção em quadro branco fica', 'seções em quadro branco ficam')} sem projeto; o assistente “Seções soltas” cuida delas depois`,
   ].filter((line): line is string => Boolean(line));
-  const empty = rows.length === 0 && automatic.length === 0;
+  const empty = rolled.length === 0 && rows.length === 0 && kept.length === 0 && resolvedLines.length === 0;
 
   function confirm() {
     if (busy) return;
-    const decisions: TriageDecisions = {
-      tasks: new Map(),
-      notes: new Map(),
-      whiteboards: new Map(),
-      taskProjects,
-      noteResources: new Map(
-        [...noteResources].flatMap(([sectionId, key]) => {
-          if (!key) return [];
-          const [ownerType, ownerId] = key.split(':') as ['objective' | 'project', string];
-          return [[sectionId, { ownerType, ownerId }] as const];
-        }),
-      ),
-    };
-    for (const row of rows) {
-      const decision = decisionOf(row);
-      if (row.type === 'task') (decisions.tasks as Map<string, TaskDecision>).set(row.task.id, decision as TaskDecision);
-      if (row.type === 'notes') (decisions.notes as Map<string, NotesDecision>).set(row.section.id, decision as NotesDecision);
-      if (row.type === 'whiteboard') {
-        const whiteboard = decision as WhiteboardDecision;
-        const safe = whiteboard.kind === 'convert' && !whiteboard.name.trim() ? { kind: 'leaveUnlinked' as const } : whiteboard;
-        (decisions.whiteboards as Map<string, WhiteboardDecision>).set(row.section.id, safe);
-      }
-    }
-    for (const item of autoNotes) (decisions.notes as Map<string, NotesDecision>).set(item.section.id, 'wiki');
-    onNext(empty ? undefined : () => applyTriage(appContext, day, decisions));
+    const decisions = defaultClosingDecisions(triage);
+    for (const item of reopened) decisions.tasks.set(item.task.id, item.suggestion);
+    for (const [id, decision] of choices) decisions.tasks.set(id, decision);
+    const nothing = decisions.tasks.size + decisions.notes.size + decisions.whiteboards.size + taskProjects.size === 0;
+    onNext(nothing ? undefined : () => applyTriage(appContext, day, { ...decisions, taskProjects }));
   }
   useStepKeys({ onEnter: confirm });
 
   return (
     <>
       <div className="card__body checkout-step">
-        <StepQuestion focusKey="confirm" eyebrow="Confirmação do checkout">
+        <StepQuestion focusKey="confirm" eyebrow="Confirmação do fechamento">
           Isto acontece quando você confirmar
         </StepQuestion>
         <p className="muted">
           {empty ? 'Nada mais para decidir neste dia.' : 'Não há nada para responder aqui. Para mudar algum item, clique em “mudar” ao lado dele.'}
         </p>
 
-        {taskRows.length > 0 && (
+        {rolled.length > 0 && (
           <section className="confirm-group">
             <h3 className="checkout-group__title">
-              {plural(nextCount, 'tarefa vai', 'tarefas vão')} para {nextLabel}
+              {plural(stillRolling, 'tarefa vai sozinha', 'tarefas vão sozinhas')} para {nextLabel}
+              <button type="button" className="link checkout-group__pick" aria-expanded={expanded} onClick={() => setExpanded(!expanded)}>
+                {expanded ? 'recolher' : 'ver e mudar'}
+              </button>
             </h3>
-            <ul className="confirm-list">
-              {taskRows.map((row) => {
-                const key = rowKey(row);
-                const decision = decisionOf(row) as TaskDecision;
-                const projectId = taskProjects.has(row.task.id) ? taskProjects.get(row.task.id) : row.task.projectId;
-                const changed = !sameDecision(decision, row.suggestion) || projectId !== row.task.projectId;
-                if (open.has(key)) {
-                  return (
-                    <li className="confirm-item confirm-item--open" key={key}>
-                      <TaskRowView
-                        row={row}
-                        decision={decision}
-                        onChange={(value) => setDecision(row, value)}
-                        nextDay={nextDay}
-                        today={today}
-                        projects={projects}
-                        projectId={projectId}
-                        onProjectChange={(id) => setTaskProjects((previous) => new Map(previous).set(row.task.id, id))}
-                      />
-                      <CloseButton onClick={() => toggleOpen(key)} />
-                    </li>
-                  );
-                }
-                const from = [row.section ? (row.section.title ?? 'Sem título') : 'De outros dias', projectName(projectId)]
-                  .filter(Boolean)
-                  .join(' · ');
-                return (
-                  <li className="confirm-item" key={key}>
-                    <span className="task-box" aria-hidden="true" />
-                    <span className="confirm-item__text">
-                      <Linkified text={row.task.text || '(tarefa sem texto)'} />
-                      <span className="confirm-item__from">{from}</span>
-                    </span>
-                    {!isNext(decision) && <span className="confirm-item__dest">→ {taskDestination(decision)}</span>}
-                    {changed && <span className="chip chip--warning">mudou</span>}
-                    <button type="button" className="link confirm-item__change" onClick={() => toggleOpen(key)}>
-                      mudar
-                    </button>
-                  </li>
-                );
-              })}
-            </ul>
+            {expanded && <ul className="confirm-list">{rolled.map((item) => renderTask(automaticToRow(item, nextDay)))}</ul>}
           </section>
         )}
 
-        {(noteRows.length > 0 || autoNotes.length > 0) && (
+        {rows.length > 0 && (
           <section className="confirm-group">
-            <h3 className="checkout-group__title">As notas vão para a wiki</h3>
-            <ul className="confirm-list">
-              {autoNotes.map((item) => (
-                <li className="confirm-item" key={automaticKey(item)}>
-                  <span className="confirm-item__text">
-                    <span>
-                      {plural(item.noteCount, 'nota', 'notas')} de <b>{item.section.title ?? 'Sem título'}</b>
-                    </span>
-                    <span className="confirm-item__from">ligadas a {item.project?.name ?? 'um projeto'} · automático</span>
-                  </span>
-                  <button type="button" className="link confirm-item__change" onClick={() => undo(item)}>
-                    mudar
-                  </button>
-                </li>
-              ))}
-              {noteRows.map((row) => {
-                const key = rowKey(row);
-                const decision = decisionOf(row) as NotesDecision;
-                const resource = noteResources.get(row.section.id) ?? null;
-                if (open.has(key)) {
-                  return (
-                    <li className="confirm-item confirm-item--open" key={key}>
-                      <span className="confirm-item__text">
-                        <b>{row.section.title ?? 'Sem título'}</b>
-                      </span>
-                      <NotesRowView
-                        row={row}
-                        decision={decision}
-                        onChange={(value) => setDecision(row, value)}
-                        owners={resourceOwners}
-                        resourceOwner={resource}
-                        onResourceChange={(owner) => setNoteResources((previous) => new Map(previous).set(row.section.id, owner))}
-                      />
-                      <CloseButton onClick={() => toggleOpen(key)} />
-                    </li>
-                  );
-                }
-                const project = row.section.projectId ? projectName(row.section.projectId) : null;
-                return (
-                  <li className="confirm-item" key={key}>
-                    <span className="confirm-item__text">
-                      <span>
-                        {plural(row.noteCount, 'nota', 'notas')} de <b>{row.section.title ?? 'Sem título'}</b>
-                      </span>
-                      <span className="confirm-item__from">{project ? `ligadas a ${project}` : 'sem projeto'}</span>
-                    </span>
-                    {decision !== 'wiki' && <span className="confirm-item__dest">→ {notesDestination[decision]}</span>}
-                    {(decision !== row.suggestion || resource) && <span className="chip chip--warning">mudou</span>}
-                    <button type="button" className="link confirm-item__change" onClick={() => toggleOpen(key)}>
-                      mudar
-                    </button>
-                  </li>
-                );
-              })}
-            </ul>
+            <h3 className="checkout-group__title">Desfeitas ou ainda sem decisão</h3>
+            <ul className="confirm-list">{rows.map(renderTask)}</ul>
           </section>
         )}
 
-        {leftover.length > 0 && (
-          <section className="confirm-group">
-            <h3 className="checkout-group__title">Quadros brancos ainda sem decisão</h3>
-            <ul className="confirm-list">
-              {leftover.map((row) => (
-                <li className="confirm-item confirm-item--open" key={rowKey(row)}>
-                  <span className="confirm-item__text">
-                    <b>{row.section?.title ?? 'Sem título'}</b>
-                  </span>
-                  <WhiteboardRowView
-                    row={row}
-                    decision={decisionOf(row) as WhiteboardDecision}
-                    onChange={(value) => setDecision(row, value)}
-                    projects={projects}
-                  />
-                </li>
-              ))}
-            </ul>
-          </section>
-        )}
-
-        {(autoTasks.length > 0 || resolvedLines.length > 0) && (
+        {(kept.length > 0 || resolvedLines.length > 0) && (
           <section className="confirm-group">
             <h3 className="checkout-group__title">Já resolvido</h3>
             <ul className="confirm-resolved">
               {resolvedLines.map((line) => (
                 <li key={line}>{line}</li>
               ))}
-              {autoTasks.map((item) => (
-                <li key={automaticKey(item)}>
+              {kept.map((item) => (
+                <li key={item.task.id}>
                   “{item.task.text || 'tarefa sem texto'}”{' '}
                   {item.type === 'scheduledDuringDay' && item.task.intendedDate
                     ? `já tem data (${relativeDay(item.task.intendedDate, today)})`
                     : 'foi finalizada durante o dia'}{' '}
-                  <button type="button" className="link confirm-item__change" onClick={() => undo(item)}>
+                  <button
+                    type="button"
+                    className="link confirm-item__change"
+                    onClick={() => {
+                      setUndone((previous) => new Set(previous).add(item.task.id));
+                      setOpen((previous) => new Set(previous).add(item.task.id));
+                    }}
+                  >
                     desfazer
                   </button>
                 </li>

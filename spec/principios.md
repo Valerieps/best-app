@@ -13,7 +13,7 @@
 
 Não há onboarding: no primeiro uso eu já saio usando o ciclo diário, e os rituais e conceitos entram aos poucos.
 
-- Primeiros dias: nota do dia, checkout e planejamento do dia seguinte, sem projetos nem objetivos.
+- Primeiros dias: nota do dia, "Fechar o dia" e planejamento do dia seguinte, sem projetos nem objetivos.
 - Primeira Revisão de Foco: o app sugere agregar tarefas em projetos e definir o checklist de warm up.
 - Primeira Revisão de Rumo: o app sugere objetivos, a partir dos projetos que já existem.
 

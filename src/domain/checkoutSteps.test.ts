@@ -9,44 +9,37 @@ import {
   stepCounts,
   type StepCounts,
 } from './checkoutSteps';
-import type { Block, Section } from './entities';
-import type { DayTriage, TriageRow } from './triage';
+import type { Block } from './entities';
+import type { DayTriage } from './triage';
 
-const NONE: StepCounts = { whiteboards: 0, tasks: 0, attention: 0, reminders: 0 };
-const FULL: StepCounts = { whiteboards: 1, tasks: 3, attention: 1, reminders: 1 };
-
-function taskRow(attention: boolean): TriageRow {
-  return { type: 'task', task: {} as Block, section: null, suggestion: { kind: 'schedule', date: '2026-10-14' }, attention };
-}
+const NONE: StepCounts = { tasks: 0, attention: 0, reminders: 0 };
+const FULL: StepCounts = { tasks: 3, attention: 1, reminders: 1 };
 
 describe('checkout steps', () => {
   it('skips the steps with nothing to decide, but always confirms and plans', () => {
     expect(checkoutSteps(NONE)).toEqual(['confirm', 'planning']);
     expect(checkoutSteps({ ...NONE, tasks: 2 })).toEqual(['doneCheck', 'confirm', 'planning']);
-    expect(checkoutSteps(FULL)).toEqual(['whiteboards', 'doneCheck', 'attention', 'reminders', 'confirm', 'planning']);
+    expect(checkoutSteps(FULL)).toEqual(['doneCheck', 'attention', 'reminders', 'confirm', 'planning']);
   });
 
-  it('counts the rows of a triage', () => {
+  it('counts the open tasks and the ones needing a decision', () => {
     const triage: DayTriage = {
       day: '2026-10-13',
       nextDay: '2026-10-14',
-      automatic: [],
-      rows: [
-        taskRow(true),
-        taskRow(false),
-        { type: 'whiteboard', section: {} as Section, suggestion: { kind: 'leaveUnlinked' }, citedProject: null, attention: false },
-      ],
+      rows: [{ type: 'task', task: {} as Block, section: null, suggestion: { kind: 'reflection' }, attention: true }],
+      automatic: [{ type: 'rolledOver', task: {} as Block, section: null }],
+      open: [],
     };
-    expect(stepCounts(triage, 2)).toEqual({ whiteboards: 1, tasks: 2, attention: 1, reminders: 2 });
+    expect(stepCounts(triage, 2)).toEqual({ tasks: 2, attention: 1, reminders: 2 });
   });
 
   it('moves forward and back over the steps that still have items', () => {
     const plan = checkoutSteps(FULL);
-    // Marking the only task needing attention as done empties its step.
+    // Marking the only task needing a decision as done empties its step.
     const after = { ...FULL, attention: 0 };
     expect(nextStep(plan, 'doneCheck', after)).toBe('reminders');
     expect(previousStep(plan, 'reminders', after)).toBe('doneCheck');
-    expect(previousStep(plan, 'whiteboards', FULL)).toBeNull();
+    expect(previousStep(plan, 'doneCheck', FULL)).toBeNull();
     expect(nextStep(plan, 'planning', FULL)).toBeNull();
   });
 });

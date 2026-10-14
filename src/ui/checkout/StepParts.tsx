@@ -149,7 +149,6 @@ export function StepFooter({
 export interface Resolved {
   doneNow: number;
   attention: number;
-  whiteboards: number;
   reminders: number;
 }
 

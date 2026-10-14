@@ -1,49 +1,32 @@
 import { addDays, type DayKey } from './day';
 import type { Block } from './entities';
 import { POSTPONE_ATTENTION_THRESHOLD } from './tasks';
-import type { DayTriage, TaskRow } from './triage';
+import type { DayTriage } from './triage';
 
 /**
- * The checkout in steps (spec/checkout.md, "Checkout em etapas"). Each step handles one kind of
- * decision, and a step with nothing to decide is skipped.
+ * "Fechar o dia" in steps (spec/checkout.md, "Fechamento em etapas"). Each step handles one kind
+ * of decision, and a step with nothing to decide is skipped.
  */
-export type CheckoutStep = 'whiteboards' | 'doneCheck' | 'attention' | 'reminders' | 'confirm' | 'planning';
+export type CheckoutStep = 'doneCheck' | 'attention' | 'reminders' | 'confirm' | 'planning';
 
-export const CHECKOUT_STEP_ORDER: readonly CheckoutStep[] = [
-  'whiteboards',
-  'doneCheck',
-  'attention',
-  'reminders',
-  'confirm',
-  'planning',
-];
+export const CHECKOUT_STEP_ORDER: readonly CheckoutStep[] = ['doneCheck', 'attention', 'reminders', 'confirm', 'planning'];
 
 /** How many items each step that can be empty has to decide. */
 export interface StepCounts {
-  whiteboards: number;
+  /** Every task still open: the ones needing a decision and the ones rolling over. */
   tasks: number;
   attention: number;
   reminders: number;
 }
 
-export function attentionRows(triage: DayTriage): TaskRow[] {
-  return triage.rows.filter((row): row is TaskRow => row.type === 'task' && row.attention);
-}
-
 export function stepCounts(triage: DayTriage, reminders: number): StepCounts {
-  return {
-    whiteboards: triage.rows.filter((row) => row.type === 'whiteboard').length,
-    tasks: triage.rows.filter((row) => row.type === 'task').length,
-    attention: attentionRows(triage).length,
-    reminders,
-  };
+  const rolledOver = triage.automatic.filter((item) => item.type === 'rolledOver').length;
+  return { tasks: triage.rows.length + rolledOver, attention: triage.rows.length, reminders };
 }
 
 /** The confirmation and the planning always show: they close the day even when it is empty. */
 export function stepHasItems(step: CheckoutStep, counts: StepCounts): boolean {
   switch (step) {
-    case 'whiteboards':
-      return counts.whiteboards > 0;
     case 'doneCheck':
       return counts.tasks > 0;
     case 'attention':
@@ -73,7 +56,7 @@ export function previousStep(plan: readonly CheckoutStep[], current: CheckoutSte
 
 export type AttentionReason = 'postponed' | 'deadline';
 
-/** Why a task asks for attention: postponed too often, or a deadline before "dia seguinte". */
+/** Why a task asks for a decision: postponed too often, or a deadline before "dia seguinte". */
 export function attentionReason(task: Block): AttentionReason {
   return task.postponeCount >= POSTPONE_ATTENTION_THRESHOLD ? 'postponed' : 'deadline';
 }

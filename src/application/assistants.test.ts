@@ -74,39 +74,46 @@ describe('cleanup assistants', () => {
 });
 
 describe('cleanup dashboard', () => {
-  it('colors each assistant by its count, most urgent first', async () => {
+  it('colors each assistant by how long its oldest item has waited, most urgent first', async () => {
     const { ctx, reader } = createTestContext();
     await createProject(ctx, 'Data Studios');
     await createProject(ctx, 'DataStudios');
     await unlinkedSection(ctx, 'Leituras');
 
-    const dashboard = await loadCleanupDashboard(reader, '2026-10-11');
-    expect(dashboard.cards.map((card) => [card.id, card.count, card.status])).toEqual([
-      ['whiteboards', 1, 1],
-      ['duplicates', 1, 1],
-      ['pendingDays', 0, 0],
+    // Everything is from 11/10. Two days later only the day left open is yellow; the section and
+    // the repeat are still green. Forty days later, the open day is red and the others orange.
+    expect((await loadCleanupDashboard(reader, '2026-10-13')).cards.map((card) => [card.id, card.count, card.status])).toEqual([
+      ['pendingDays', 1, 1],
+      ['whiteboards', 1, 0],
+      ['duplicates', 1, 0],
+    ]);
+    const later = await loadCleanupDashboard(reader, '2026-11-20');
+    expect(later.cards.map((card) => [card.id, card.ageInDays, card.status])).toEqual([
+      ['pendingDays', 40, 3],
+      ['whiteboards', 40, 2],
+      ['duplicates', 40, 2],
     ]);
   });
 
-  it('uses the limits saved in the settings, and can go back to the defaults', async () => {
+  it('uses the limits saved in the settings, in days, and can go back to the defaults', async () => {
     const { ctx, reader } = createTestContext();
     await createProject(ctx, 'Data Studios');
     await createProject(ctx, 'DataStudios');
-    const statusOf = async () => (await loadCleanupDashboard(reader, '2026-10-11')).cards.find((c) => c.id === 'duplicates')!.status;
+    const statusOf = async () => (await loadCleanupDashboard(reader, '2026-10-12')).cards.find((c) => c.id === 'duplicates')!.status;
 
     await setCleanupLimits(ctx, 'duplicates', [1, 1, 1]);
     expect(await statusOf()).toBe(3);
     await setCleanupLimits(ctx, 'whiteboards', [2, 3, 4]);
-    expect((await reader.settings())?.cleanupLimits).toEqual({ duplicates: [1, 1, 1], whiteboards: [2, 3, 4] });
+    expect((await reader.settings())?.cleanupAgeLimits).toEqual({ duplicates: [1, 1, 1], whiteboards: [2, 3, 4] });
 
     await setCleanupLimits(ctx, 'duplicates', null);
-    expect(await statusOf()).toBe(1);
-    expect((await reader.settings())?.cleanupLimits).toEqual({ whiteboards: [2, 3, 4] });
+    expect(await statusOf()).toBe(0);
+    expect((await reader.settings())?.cleanupAgeLimits).toEqual({ whiteboards: [2, 3, 4] });
   });
 
   it('saves limits normalized', async () => {
     const { ctx, reader } = createTestContext();
     await setCleanupLimits(ctx, 'pendingDays', [3, 1, 0]);
-    expect((await reader.settings())?.cleanupLimits?.pendingDays).toEqual([3, 3, 3]);
+    expect((await reader.settings())?.cleanupAgeLimits?.pendingDays).toEqual([3, 3, 3]);
   });
 });

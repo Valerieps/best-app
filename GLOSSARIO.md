@@ -14,17 +14,17 @@ Os termos marcados com ⚠ ainda têm mais de um sentido nos documentos; o item 
 - **Quadro branco:** o estado de uma seção sem vínculo com projeto. Não é um tipo de seção. (`spec/nota-do-dia.md`)
 - **De outros dias:** a seção da nota do dia com as tarefas que vieram de outros dias para aquele dia. Muda de lugar como as outras seções, mas não é gravada como uma. (`spec/nota-do-dia.md`)
 - **Bloco:** uma linha da nota, gravada como um registro próprio. É **tarefa** (começa com `[] `), **nota geral** (todo o resto) ou, a partir da seção 5, **compromisso**. (`spec/nota-do-dia.md`; `spec/compromissos.md`)
-- **Wiki pessoal:** a lista das notas que foram para a wiki no checkout, uma entrada por seção. (`spec/nota-do-dia.md`)
+- **Wiki pessoal:** a lista das notas que foram para a wiki no fim do dia, uma entrada por seção. (`spec/nota-do-dia.md`)
 
 ## Tarefas e datas
 
 - **Data de intenção (de execução):** o dia em que a tarefa aparece na nota do dia. (`spec/tarefas.md`)
 - **Prazo máximo:** a segunda data, opcional. No dia do prazo, a tarefa vira prioridade do dia. (`spec/tarefas.md`)
-- **Adiamento:** mudar a data de intenção para depois, tirar a data, ou passar pelo checkout sem fazer a tarefa no dia da intenção. (`spec/tarefas.md`)
+- **Adiamento:** mudar a data de intenção para depois, tirar a data, ou passar pelo fechamento do dia sem fazer a tarefa no dia da intenção, inclusive quando ela vai sozinha para o dia seguinte. (`spec/tarefas.md`)
 - **Precisão da data de intenção:** a parte das tarefas finalizadas com data de intenção que foram feitas no dia da intenção. (`spec/rituais.md`)
 - **Tarefas ativas:** as tarefas não finalizadas, arquivadas nem abandonadas. (`spec/tarefas.md`)
 - **Tarefa travada:** tarefa de projeto adiada 3 vezes ou mais, ou com a data de intenção vencida. ⚠ Não confundir com o assistente "Prioridades travadas" (`INCOERENCIAS.md`, 2.10). (`spec/projetos.md`)
-- **Dia seguinte:** num checkout, o próximo dia ativo depois do dia triado, nunca antes de hoje. (`spec/checkout.md`)
+- **Dia seguinte:** num fechamento do dia, o próximo dia ativo depois do dia triado, nunca antes de hoje. (`spec/checkout.md`)
 - **Dias ativos:** os dias da semana em que o app espera uso; os outros não contam como pulados. (`spec/rituais.md`)
 
 ## Destinos
@@ -35,12 +35,12 @@ Os termos marcados com ⚠ ainda têm mais de um sentido nos documentos; o item 
 - **Descartar:** as notas de uma seção saem de circulação e não vão para a wiki. Só para notas (e, na seção 5, compromissos). (`spec/checkout.md`)
 - **Largar:** um lembrete sai de circulação. (`spec/abertura-do-dia.md`)
 - **Migrar:** marcar que um compromisso foi criado no Google Agenda. Conta como concluído. (`spec/compromissos.md`)
-- **Decidir na Revisão de Foco:** deixar um item para ser triado na Revisão de Foco. (`spec/checkout.md`)
+- **Decidir na Revisão de Foco:** deixar uma tarefa para ser triado na Revisão de Foco. (`spec/checkout.md`)
 
-## Checkout e triagem
+## Fechar o dia e triagem
 
-- **Checkout:** a triagem de um dia, que dá destino a tudo o que foi coletado. ⚠ "Checkout completo" tem três definições (`INCOERENCIAS.md`, 2.4).
-- **Checkout pendente:** um dia com algum item ainda sem destino. (`spec/checkout.md`)
+- **Fechar o dia:** o ritual diário e curto que dá destino ao que perece de um dia para o outro: as tarefas do dia, os lembretes ignorados e o planejamento do dia seguinte. As notas vão sozinhas para a wiki. Em texto corrido, "o fechamento do dia". Antes se chamava checkout, nome que o código ainda usa. ⚠ "Fechamento completo" tem três definições (`INCOERENCIAS.md`, 2.4). (`spec/checkout.md`)
+- **Fechamento pendente:** um dia com algum item ainda sem destino. (`spec/checkout.md`)
 - **Auto-triagem:** as regras que decidem sozinhas (**automático**), pré-selecionam (**sugerido**) ou deixam para mim (**sempre manual**). (`spec/checkout.md`)
 - **Fechar dias pendentes:** aplica a auto-triagem a vários dias pendentes de uma vez; as tarefas não feitas voltam sem data. (`spec/checkout.md`)
 - **Planejamento do dia seguinte:** escolher, na lista de tarefas ativas, as tarefas da próxima nota do dia. Não é o mesmo que priorizar. (`spec/checkout.md`)
@@ -64,10 +64,10 @@ Os termos marcados com ⚠ ainda têm mais de um sentido nos documentos; o item 
 
 ## Rituais e abertura do dia
 
-- **Ritual:** warm up, checkout, Revisão de Foco e Revisão de Rumo (`spec/rituais.md`, "Rituais pulados"). O menu "Rituais" lista os checkouts, as revisões e "Colocar ordem na casa" (`spec/navegacao.md`, "Navegação").
+- **Ritual:** warm up, "Fechar o dia", Revisão de Foco e Revisão de Rumo (`spec/rituais.md`, "Rituais pulados"). O menu "Rituais" lista os dias a fechar, as revisões e "Colocar ordem na casa" (`spec/navegacao.md`, "Navegação").
 - **Revisão de Foco:** a revisão frequente, dos projetos: "no que eu estou trabalhando agora?". Substitui a reflexão semanal. (`spec/rituais.md`)
 - **Revisão de Rumo:** a revisão rara, dos objetivos: "estou indo para onde eu quero ir?". Substitui a reflexão mensal. (`spec/rituais.md`)
-- **Cadência (de uma revisão):** quantos checkouts (Foco) ou Revisões de Foco (Rumo) até a revisão ficar disponível. (`spec/rituais.md`)
+- **Cadência (de uma revisão):** quantos dias fechados (Foco) ou Revisões de Foco (Rumo) até a revisão ficar disponível. (`spec/rituais.md`)
 - **Iniciar Dia:** a tela branca que abre o dia e começa o warm up. (`spec/abertura-do-dia.md`)
 - **Warm up:** o checklist que eu defino para começar o dia. (`spec/abertura-do-dia.md`)
 - **Dashboard:** a tela de boas-vindas depois do warm up, com os projetos em foco, mural e "Iniciar o Flow de Execução". ⚠ A `ARQUITETURA.md` e o código também chamam "Colocar ordem na casa" de dashboard (`INCOERENCIAS.md`, seção 3).
@@ -77,7 +77,7 @@ Os termos marcados com ⚠ ainda têm mais de um sentido nos documentos; o item 
 
 ## Limpeza
 
-- **Colocar ordem na casa:** a tela que lista os assistentes que têm algo a limpar. (`spec/assistentes.md`)
+- **Colocar ordem na casa:** a tela sem data que lista os assistentes que têm algo a limpar, com uma cor que diz há quanto tempo o item mais antigo espera. Recebe tudo o que não perece de um dia para o outro. Não confundir com "Fechar o dia". (`spec/assistentes.md`)
 - **Assistente (de limpeza):** encontra o que está fora do lugar e sugere uma ação, que aceito em lote. Os nomes de cada um estão na tabela do `spec/assistentes.md`.
 
 ## Backup e avisos

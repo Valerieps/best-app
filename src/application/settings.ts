@@ -29,13 +29,13 @@ export function setActiveDays(ctx: AppContext, activeDays: number[]): Promise<vo
 }
 
 /**
- * Limits for the color of one cleanup assistant on the dashboard; null brings back the
- * defaults. Limits are normalized, so orange never starts before yellow.
+ * Limits, in days, for the color of one cleanup assistant on the dashboard; null brings back
+ * the defaults. Limits are normalized, so orange never starts before yellow.
  */
 export function setCleanupLimits(ctx: AppContext, id: AssistantId, limits: readonly number[] | null): Promise<void> {
   return updateSettings(ctx, (current) => {
-    const { [id]: _previous, ...others } = current.cleanupLimits ?? {};
-    return { cleanupLimits: limits ? { ...others, [id]: normalizeLimits(limits) } : others };
+    const { [id]: _previous, ...others } = current.cleanupAgeLimits ?? {};
+    return { cleanupAgeLimits: limits ? { ...others, [id]: normalizeLimits(limits) } : others };
   });
 }
 

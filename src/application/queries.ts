@@ -4,9 +4,9 @@ import {
   type DuplicateGroup,
   type WhiteboardGroup,
 } from '../domain/assistants';
-import { assistantCards, type AssistantCard } from '../domain/cleanupStatus';
+import { assistantCards, oldestDay, type AssistantCard } from '../domain/cleanupStatus';
 import { planningGroup } from '../domain/checkoutSteps';
-import { addDays, fromDayKey, type DayKey } from '../domain/day';
+import { addDays, fromDayKey, toDayKey, type DayKey } from '../domain/day';
 import { buildDayNote, type DayNoteSection } from '../domain/dayNote';
 import type {
   Block,
@@ -218,8 +218,11 @@ export interface CleanupView {
 export async function loadCleanup(reader: Reader): Promise<CleanupView> {
   const sections = await reader.sectionsWithStatus('leftUnlinked');
   const projects = await reader.projects();
+  const blocks = await reader.blocksInSections(sections.map((section) => section.id));
+  const texts = new Map<string, string>();
+  for (const block of blocks) texts.set(block.sectionId, [texts.get(block.sectionId) ?? '', block.text].join('\n'));
   return {
-    whiteboards: findWhiteboardGroups(sections, projects),
+    whiteboards: findWhiteboardGroups(sections, projects, texts),
     duplicates: findDuplicateProjects(projects),
   };
 }
@@ -235,12 +238,19 @@ export async function loadCleanupDashboard(reader: Reader, today: DayKey): Promi
   const cleanup = await loadCleanup(reader);
   const pendingDays = await loadPendingDays(reader, today);
   const settings = await reader.settings();
-  const counts = {
-    pendingDays: pendingDays.length,
-    whiteboards: cleanup.whiteboards.length,
-    duplicates: cleanup.duplicates.length,
+  const findings = {
+    pendingDays: { count: pendingDays.length, oldest: oldestDay(pendingDays) },
+    whiteboards: {
+      count: cleanup.whiteboards.length,
+      oldest: oldestDay(cleanup.whiteboards.flatMap((group) => group.sections.map((section) => section.day))),
+    },
+    // A repeat starts waiting when the second project of the group was created.
+    duplicates: {
+      count: cleanup.duplicates.length,
+      oldest: oldestDay(cleanup.duplicates.map((group) => group.projects[1] && toDayKey(new Date(group.projects[1].createdAt)))),
+    },
   };
-  return { ...cleanup, pendingDays, cards: assistantCards(counts, settings?.cleanupLimits) };
+  return { ...cleanup, pendingDays, cards: assistantCards(findings, today, settings?.cleanupAgeLimits) };
 }
 
 export interface MenuCounts {

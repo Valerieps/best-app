@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import type { DayKey } from '../../domain/day';
+import { addDays, type DayKey } from '../../domain/day';
 import { pendingDaysSentence } from '../format';
 import { navigate } from '../hooks';
 import { ClosePendingDaysDialog } from './ClosePendingDaysDialog';
@@ -11,7 +11,10 @@ interface Props {
   onSnooze(): void;
 }
 
-/** Warns about past days without checkout. The day note opens normally: it never blocks. */
+/**
+ * Warns about past days not closed yet. The day note opens normally: it never blocks. Only
+ * yesterday pending is not late, so it shows without the warning sign (spec/checkout.md).
+ */
 export function PendingDaysBanner({ days, today, onSnooze }: Props) {
   const [closing, setClosing] = useState(false);
   if (days.length === 0) return null;
@@ -19,12 +22,12 @@ export function PendingDaysBanner({ days, today, onSnooze }: Props) {
     <>
       <div className="banner" role="status">
         <span>
-          <span aria-hidden="true">⚠ </span>
+          {(days.length > 1 || days[0] < addDays(today, -1)) && <span aria-hidden="true">⚠ </span>}
           {pendingDaysSentence(days, today)}
         </span>
         <span className="banner__actions">
           <button type="button" className="link" onClick={() => navigate({ name: 'checkout', day: days[0] })}>
-            Fazer checkout
+            Fechar o dia
           </button>
           {days.length > 1 && (
             <button type="button" className="link" onClick={() => setClosing(true)}>

@@ -167,7 +167,15 @@ export interface Settings {
   activeDays?: number[];
   /** Section 3: the warm-up checklist, in order. Empty or absent means no warm up. */
   warmupItems?: WarmupItem[];
-  /** Limits for the colors of the cleanup dashboard; absent assistants use the defaults. */
+  /**
+   * Limits, in days of waiting, for the colors of the cleanup dashboard; absent assistants use
+   * the defaults (ADR-045).
+   */
+  cleanupAgeLimits?: Partial<Record<AssistantId, StatusLimits>>;
+  /**
+   * Limits by number of items, from before the colors measured age. Nothing reads them anymore:
+   * a count would make no sense as days.
+   */
   cleanupLimits?: Partial<Record<AssistantId, StatusLimits>>;
   /** Whether the side column of the project page stays docked, for every project. */
   projectPanelPinned?: boolean;
