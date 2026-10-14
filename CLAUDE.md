@@ -88,7 +88,7 @@ Portuguese; ADRs, code and this file in English.
 - `npm ci` - install exactly what the lockfile pins
 - `npm run dev` - dev server (no CSP, no service worker)
 - `npm test` - unit tests, including `src/security.test.ts` (no network APIs, no HTML injection)
-- `npm run build` - typecheck and production build into `dist/` (CSP injected)
+- `npm run build` - typecheck, unit tests, and production build into `dist/` (CSP injected); a failing test stops the deploy
 - `npm run preview` - serve the production build locally
 
 ## Deployment
