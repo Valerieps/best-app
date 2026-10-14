@@ -44,7 +44,7 @@ function memoryHandles(initial: BackupFileHandle | null = null): HandleStorage {
   return { load: async () => saved, save: async (handle) => void (saved = handle) };
 }
 
-function setup(options: { remembered?: BackupFileHandle | null; supported?: boolean } = {}) {
+function setup(options: { remembered?: BackupFileHandle | null; supported?: boolean; delayMs?: number } = {}) {
   const { db, ctx } = createTestContext();
   const picked = memoryFile('picked.json');
   const auto = new AutoBackup({
@@ -53,7 +53,7 @@ function setup(options: { remembered?: BackupFileHandle | null; supported?: bool
     pick: async () => picked.handle,
     supported: options.supported ?? true,
     now: () => NOW,
-    delayMs: 10,
+    delayMs: options.delayMs ?? 10,
   });
   return { db, ctx, auto, picked };
 }
@@ -79,7 +79,9 @@ describe('AutoBackup', () => {
 
   it('rewrites the file after changes, merging a burst into one write', async () => {
     const remembered = memoryFile();
-    const { ctx, auto } = setup({ remembered: remembered.handle });
+    // A delay long enough that both changes land in it even under a full parallel run, where
+    // saving a project can take longer than the 10 ms the other tests use.
+    const { ctx, auto } = setup({ remembered: remembered.handle, delayMs: 300 });
     await auto.init();
     const writesAfterInit = remembered.file.writes;
 
