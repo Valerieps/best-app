@@ -1,14 +1,14 @@
 # Projetos
 
 - **Entra aqui:** o que é um projeto, a lista de projetos, a página do projeto, a atividade, o projeto parado e a tarefa travada.
-- **Não entra aqui:** os projetos em foco (`prioridades.md`), o vínculo de projeto no checkout (`checkout.md`) e os objetivos (`objetivos.md`).
+- **Não entra aqui:** os projetos em foco (`prioridades.md`), o vínculo de projeto no fechamento do dia (`checkout.md`) e os objetivos (`objetivos.md`).
 
 ## Projetos *(2)*
 
 - Um projeto é uma coleção de tarefas que fazem sentido juntas. Os projetos já existem por baixo dos panos desde o 1a, criados a partir de seções em quadro branco convertidas; esta parte dá a eles funcionalidades próprias.
 - Uma tarefa pode existir sem projeto e se vincula a no máximo um projeto.
 - Projetos só são finalizados manualmente: eu abro o projeto e finalizo.
-- Posso criar uma tarefa direto na página do projeto; ela já nasce vinculada a ele. Ela nasce ativa e sem data, e fica só no projeto: não entra na nota do dia de hoje nem no checkout. Ela só aparece numa nota do dia quando eu der a ela uma data de intenção, como qualquer tarefa. Assim eu monto o backlog do projeto sem precisar triar cada item no fim do dia.
+- Posso criar uma tarefa direto na página do projeto; ela já nasce vinculada a ele. Ela nasce ativa e sem data, e fica só no projeto: não entra na nota do dia de hoje nem no fechamento do dia. Ela só aparece numa nota do dia quando eu der a ela uma data de intenção, como qualquer tarefa. Assim eu monto o backlog do projeto sem precisar triar cada item no fim do dia.
 - Cada projeto tem um ícone, que eu escolho numa coleção de ícones estilizados do app. Enquanto eu não escolho, o projeto mostra a inicial do nome.
 
 ## Lista de projetos *(2)*
