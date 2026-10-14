@@ -17,7 +17,8 @@ export type EntityType =
   | 'reminder'
   | 'objective'
   | 'resource'
-  | 'habit';
+  | 'habit'
+  | 'backup';
 
 export type EventType =
   | 'block.created'
@@ -72,7 +73,9 @@ export type EventType =
   | 'habit.archived'
   | 'habit.logged'
   | 'task.convertedToHabit'
-  | 'day.checkoutCompleted';
+  | 'day.checkoutCompleted'
+  | 'backup.imported'
+  | 'backup.importUndone';
 
 export interface DomainEvent {
   id: string;

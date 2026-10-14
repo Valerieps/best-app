@@ -148,7 +148,7 @@ Nada disso é guardado: é calculado a partir das tabelas, por funções de `app
 ## 6. Histórico de eventos (implementado)
 
 - Cada mudança estrutural grava um evento: `id`, `type`, `entityType`, `entityId`, `at` (horário), `day` (dia a que pertence) e `data` (detalhes, como `{ from, to }`).
-- Os eventos são só acrescentados, nunca editados nem apagados. A gravação usa `add`, então um evento existente não pode ser sobrescrito. A exceção é importar um backup ou desfazer a importação, que substituem o histórico inteiro (veja a issue [#37](https://github.com/Valerieps/best-app/issues/37)).
+- Os eventos são só acrescentados, nunca editados nem apagados. A gravação usa `add`, então um evento existente não pode ser sobrescrito. A exceção é importar um backup ou desfazer a importação, que substituem o histórico inteiro. Cada uma deixa um evento no histórico que põe no lugar, `backup.imported` ou `backup.importUndone`, para o histórico mostrar que os dados vieram de um arquivo (ADR-006).
 - Editar o texto de um bloco não gera evento (ADR-004).
 - Campos como `postponeCount` são atalhos que dá para recalcular a partir do histórico.
 - **Exclusões.** Um bloco apagado (linha esvaziada ou juntada com a de cima) e um recurso removido saem da tabela, mas deixam `block.deleted` e `resource.removed` no histórico. É por esses eventos que o backup automático sabe que um registro ausente foi apagado de propósito e não perdido (seção 10).

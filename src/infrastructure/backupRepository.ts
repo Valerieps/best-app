@@ -6,6 +6,8 @@ import {
   type BackupTables,
   type ImportLoss,
 } from '../application/backup';
+import { toDayKey } from '../domain/day';
+import type { DomainEvent, EventType } from '../domain/events';
 import type { AppDatabase } from './db';
 
 const SNAPSHOT_ID = 'before-import';
@@ -60,14 +62,23 @@ export async function previewImport(db: AppDatabase, backup: BackupFile): Promis
 }
 
 /**
+ * Importing and undoing replace the whole history, so each leaves an event in the history it
+ * puts in place (issue #37): the history then shows that its data came from a file.
+ */
+function backupEvent(type: EventType, now: Date, id: string, data: Record<string, unknown>): DomainEvent {
+  return { id, type, entityType: 'backup', entityId: 'backup', at: now.toISOString(), day: toDayKey(now), data };
+}
+
+/**
  * Replaces all user data with the backup. The current data is saved first as a snapshot,
  * in the same transaction, so a failed import changes nothing and a finished one can be undone.
  */
-export async function importBackup(db: AppDatabase, backup: BackupFile, now: Date): Promise<void> {
+export async function importBackup(db: AppDatabase, backup: BackupFile, now: Date, eventId: string = crypto.randomUUID()): Promise<void> {
   await db.transaction('rw', [...userTables(db), db.snapshots, db.meta], async () => {
     const current = await readAllTables(db);
     await db.snapshots.put({ id: SNAPSHOT_ID, createdAt: now.toISOString(), tables: current });
     await replaceAllTables(db, backup.tables);
+    await db.events.add(backupEvent('backup.imported', now, eventId, { exportedAt: backup.exportedAt, schemaVersion: backup.schemaVersion }));
     await allowAutoBackupOverwrite(db);
   });
 }
@@ -95,11 +106,12 @@ export async function getImportSnapshotDate(db: AppDatabase): Promise<string | n
 }
 
 /** Restores the data as it was right before the last import. */
-export async function undoImport(db: AppDatabase): Promise<void> {
+export async function undoImport(db: AppDatabase, now = new Date(), eventId: string = crypto.randomUUID()): Promise<void> {
   await db.transaction('rw', [...userTables(db), db.snapshots, db.meta], async () => {
     const snapshot = await db.snapshots.get(SNAPSHOT_ID);
     if (!snapshot) throw new Error('There is no import to undo');
     await replaceAllTables(db, snapshot.tables);
+    await db.events.add(backupEvent('backup.importUndone', now, eventId, { importedAt: snapshot.createdAt }));
     await db.snapshots.delete(SNAPSHOT_ID);
     await allowAutoBackupOverwrite(db);
   });
