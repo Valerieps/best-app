@@ -1,7 +1,7 @@
 # Diretrizes de Desenvolvimento Seguro: Aplicativo de Produtividade Local-Only para Ambiente Corporativo Google
 
 - **Entra aqui:** as regras de segurança e de compliance que todo código do app precisa seguir.
-- **Não entra aqui:** como cada regra foi implementada em detalhe (ADRs em `adr/`, citadas abaixo) e o que ainda falta verificar (`DEBITO-TECNICO.md`, "Segurança e privacidade").
+- **Não entra aqui:** como cada regra foi implementada em detalhe (ADRs em `adr/`, citadas abaixo) e o que ainda falta verificar (issues [#22](https://github.com/Valerieps/best-app/issues/22) a [#27](https://github.com/Valerieps/best-app/issues/27)).
 
 ## 1. Contexto e Objetivo
 Este documento define as regras arquiteturais, de segurança e de compliance para o desenvolvimento do aplicativo de produtividade pessoal descrito na spec (`SPEC.md` e a pasta `spec/`).

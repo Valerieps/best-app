@@ -19,7 +19,7 @@ edits docs between messages).
 | Implementing or changing a feature | Its file in `spec/` (the table in `SPEC.md` says which); its row in `ROADMAP.md`; the matching part of `ARQUITETURA.md`; ADRs found in the index or by grepping `adr/` |
 | Answering a product question or deciding a rule | The relevant file in `spec/` and its "Em aberto"; `GLOSSARIO.md` for the terms; `DECISOES.md` only when the "why" matters |
 | Working on a feature request | Its GitHub issue (`gh issue view <n>`; open requests carry the `enhancement` label) and the `spec/` files it cites |
-| Fixing a bug or refactoring | `DEBITO-TECNICO.md` (grep the area) and the relevant ADRs |
+| Fixing a bug or refactoring | Its GitHub issue (`gh issue list --label bug` or `--label debito-tecnico`) and the relevant ADRs |
 | Reviewing or reorganizing the docs | All of them; this is the only task that needs the whole set |
 
 Never read `AVALIACAO-UX.md` (frozen) unless the task cites one of its codes (N1, P4...).
@@ -48,7 +48,8 @@ in this table. Never copy content between docs: link to the home instead (see `s
 | Contradictions between docs | `INCOERENCIAS.md` | Temporary: remove an item once it is resolved |
 | Technical design (data model, events, editor, triage, metrics) | `ARQUITETURA.md` | Design only, no progress. Keep it in sync when the design changes |
 | Technical decisions | `adr/`, one file per decision | `architecture-decision-records.md` is the index, with each ADR's status. Technical only; product rules go to `spec/` |
-| Technical debt, unverified behavior, known bugs | `DEBITO-TECNICO.md` | Remove an item when resolved; add one when you knowingly leave something behind |
+| Known bugs, technical debt, known limitations | GitHub issues, label `bug` or `debito-tecnico`, plus a priority label (`p:alta`, `p:media`, `p:baixa`) | Every new bug or debt issue gets a priority label. Close the issue when resolved; open one when you knowingly leave something behind |
+| Checks and setup only the owner can do | `DEBITO-TECNICO.md` | Checks in her Chrome, configuration and publishing. Remove an item when done |
 | Security and compliance (local-only, no network, CSP, backups) | `google-safe.md` | Mandatory for every change |
 | Screen drafts and implementation briefs | `rascunhos/` | `rascunhos/README.md` gives each draft's status; the spec wins over a draft |
 | UX review of 12/10/2026 | `AVALIACAO-UX.md` | Frozen report; do not update. Open items live in issue [#19](https://github.com/Valerieps/best-app/issues/19) |

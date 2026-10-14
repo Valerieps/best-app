@@ -5,7 +5,7 @@
 Regras que se contradizem ou ficaram ambíguas entre `SPEC.md`, `spec/checkout.md`, `spec/assistentes.md`, `DECISOES.md`, `ARQUITETURA.md`, `DEBITO-TECNICO.md`, `AVALIACAO-UX.md`, `google-safe.md` e as ADRs. As incoerências dos feature requests estão na issue de cada pedido, no GitHub.
 
 - **Entra aqui:** contradições e ambiguidades entre os documentos, com a pergunta que resolve cada uma.
-- **Não entra aqui:** incoerências de um pedido (ficam na issue do pedido, no GitHub), bugs (`DEBITO-TECNICO.md`) e perguntas em aberto que não vêm de uma contradição (`SPEC.md`, "Em aberto").
+- **Não entra aqui:** incoerências de um pedido (ficam na issue do pedido, no GitHub), bugs (issues do GitHub com a label `bug`) e perguntas em aberto que não vêm de uma contradição (`SPEC.md`, "Em aberto").
 
 Quando um item for decidido, a regra vai para o `SPEC.md` e o item sai daqui.
 
@@ -26,7 +26,7 @@ Remover a frase tira a contradição do texto, mas não resolve os casos concret
 - **Onde a frase é contrariada hoje:**
   - Arquivar e abandonar só aparecem como destinos do checkout e da Revisão de Foco.
   - Trocar ou tirar um projeto em foco só é possível na Revisão de Foco (`spec/prioridades.md`, "Projetos em foco").
-  - Tarefas criadas na página do projeto não entram no checkout e, por isso, não têm como sair de circulação (`DEBITO-TECNICO.md`, "Projetos e projetos em foco").
+  - Tarefas criadas na página do projeto não entram no checkout e, por isso, não têm como sair de circulação (issue [#76](https://github.com/Valerieps/best-app/issues/76)).
 - **Onde a frase sustenta regras:** finalizar uma tarefa a qualquer momento, promover uma prioridade a qualquer momento, converter um quadro branco a qualquer momento, criar tarefas na página do projeto.
 - **Ambiguidade que continua sem ela:** o `spec/nota-do-dia.md` ("Execução") diz que, para tirar de circulação uma tarefa que veio de outro dia, "eu arquivo ou abandono", sem dizer se isso é possível durante o dia.
 - **Alternativa a remover:** trocar a frase por uma regra precisa. Por exemplo: "Criar, editar, agendar e finalizar é livre a qualquer hora. Tirar coisas de circulação (arquivar, abandonar, descartar) e trocar prioritários são decisões dos rituais." Ou o contrário, se a [issue #7](https://github.com/Valerieps/best-app/issues/7) (arquivar de qualquer tela) for aceita.
@@ -36,7 +36,7 @@ Remover a frase tira a contradição do texto, mas não resolve os casos concret
 
 ### 2.1 Prioridades do dia: a regra das vagas
 
-- Promover uma tarefa com as 3 prioridades definidas "ocupa o lugar da terceira" (`spec/prioridades.md`). Mas uma tarefa que entrou pelo prazo tem precedência, e a estrela parece não responder (`DEBITO-TECNICO.md`, "Editor e telas").
+- Promover uma tarefa com as 3 prioridades definidas "ocupa o lugar da terceira" (`spec/prioridades.md`). Mas uma tarefa que entrou pelo prazo tem precedência, e a estrela parece não responder (issue [#74](https://github.com/Valerieps/best-app/issues/74)).
 - Não está definido o que acontece com 4 ou mais tarefas com prazo no mesmo dia.
 - O `spec/prioridades.md` diz que a lista fica vazia "quando o checkout do dia anterior não foi feito", o que sugere que o checkout define prioridades. Mas o planejamento do dia seguinte (`spec/checkout.md`) só escolhe tarefas, e o `DECISOES.md` separa "planejar" de "priorizar".
 - **Pergunta:** quem ganha a vaga, a escolha manual ou o prazo? O planejamento do dia seguinte inclui escolher as prioridades?
@@ -60,7 +60,7 @@ Remover a frase tira a contradição do texto, mas não resolve os casos concret
 
 - O status usa "Backup pausado" (`spec/principios.md`, "Backup", e `spec/navegacao.md`); a fila de avisos fala em "backup bloqueado ou com erro".
 - A pausa da proteção contra sobrescrita ("pausa e sugere importar") é a mais grave, mas não está claro se ela entra como "bloqueado".
-- A pausa por falta de autorização tem só "um aviso discreto", e o `DEBITO-TECNICO.md` (seção 3, item 2) mostra que dá para passar semanas sem backup sem perceber.
+- A pausa por falta de autorização tem só "um aviso discreto", e a issue [#29](https://github.com/Valerieps/best-app/issues/29) mostra que dá para passar semanas sem backup sem perceber.
 - **Pergunta:** "pausado" e "bloqueado" são a mesma coisa? A pausa por autorização deveria subir para a fila de avisos depois de um prazo?
 
 ### 2.7 A ordem de construção é quebrada
@@ -88,7 +88,7 @@ As fases do `SPEC.md` deveriam poder ser construídas em ordem, mas:
 
 ### 2.11 Projetos em foco ao juntar projetos
 
-- Juntar projetos repetidos com um projeto em foco: o destino não herda a vaga, e não há regra para isso (`DEBITO-TECNICO.md`, "Projetos e projetos em foco").
+- Juntar projetos repetidos com um projeto em foco: o destino não herda a vaga, e não há regra para isso (issue [#83](https://github.com/Valerieps/best-app/issues/83)).
 
 ### 2.12 Sugestão de projetos na Revisão de Foco
 

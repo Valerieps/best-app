@@ -77,5 +77,5 @@ Cada etapa é um commit (ou PR) com testes, e deixa o app funcionando.
 
 ## Riscos
 
-- **Migração de dados reais.** As etapas 2 e 3 mexem em banco e backup. O backup automático guarda o estado anterior, mas a migração da versão 6 ainda não foi verificada num banco de verdade (`DEBITO-TECNICO.md`); vale verificar as duas juntas.
+- **Migração de dados reais.** As etapas 2 e 3 mexem em banco e backup. O backup automático guarda o estado anterior, mas a migração da versão 6 ainda não foi verificada num banco de verdade (`DEBITO-TECNICO.md`, seção 1); vale verificar as duas juntas.
 - **Etapas 2 a 4 se tocam.** Entre elas, o app pode mostrar nomes novos com regras velhas por um commit. Por isso a ordem é domínio, dados, telas.
