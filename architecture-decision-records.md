@@ -36,7 +36,7 @@ Read only the ADRs your task touches: find them in this table or by grepping `ad
 | [ADR-025](adr/025-database-and-backup-version-5-sections-4-and-6.md) | Database and backup version 5 (sections 4 and 6) | 2026-10-11 | Accepted, updated 2026-10-12 |
 | [ADR-026](adr/026-monthly-metrics-with-open-questions-are-left-out.md) | Monthly metrics with open questions are left out | 2026-10-11 | Accepted, updated 2026-10-12 |
 | [ADR-027](adr/027-synthetic-data-is-played-through-the-real-use.md) | Synthetic data is played through the real use cases, dev only | 2026-10-12 | Accepted |
-| [ADR-028](adr/028-cleanup-dashboard-status-is-computed-with-limits.md) | Cleanup dashboard status is computed, with limits in the settings | 2026-10-12 | Accepted |
+| [ADR-028](adr/028-cleanup-dashboard-status-is-computed-with-limits.md) | Cleanup dashboard status is computed, with limits in the settings | 2026-10-12 | Superseded in part by ADR-045 |
 | [ADR-029](adr/029-top-warnings-are-picked-in-the-ui-snoozes-stay-in.md) | Top warnings are picked in the UI, snoozes stay in this browser | 2026-10-12 | Accepted |
 | [ADR-030](adr/030-loading-screens-show-the-title-and-a-delayed.md) | Loading screens show the title and a delayed skeleton | 2026-10-12 | Accepted |
 | [ADR-031](adr/031-tasks-written-on-a-project-page-live-in-a-hidden.md) | Tasks written on a project page live in a hidden section of the project | 2026-10-12 | Accepted |
@@ -52,3 +52,5 @@ Read only the ADRs your task touches: find them in this table or by grepping `ad
 | [ADR-041](adr/041-objectives-and-habits-hidden-behind-a-code-flag.md) | Objectives and habits hidden behind a code flag | 2026-10-13 | Accepted |
 | [ADR-042](adr/042-screens-fail-alone-and-queries-report-errors.md) | Screens fail alone, and live queries report their errors | 2026-10-13 | Accepted |
 | [ADR-043](adr/043-typed-event-details-with-legacy-shapes-and-version.md) | Typed event details, with legacy shapes and a version | 2026-10-14 | Accepted |
+| [ADR-044](adr/044-the-checkout-saves-each-step-when-moving-on.md) | The checkout saves each step when moving on | 2026-10-14 | Accepted |
+| [ADR-045](adr/045-cleanup-colors-measure-the-age-of-the-oldest-item.md) | Cleanup colors measure the age of the oldest item | 2026-10-14 | Accepted |

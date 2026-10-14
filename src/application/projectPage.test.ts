@@ -44,7 +44,7 @@ describe('tasks created on a project page', () => {
     const note = await loadDayNote(reader, '2026-10-13');
     expect(note.entries.flatMap((entry) => entry.carried).map((block) => block.id)).toEqual([task.id]);
     const triage = await loadDayTriage(reader, '2026-10-13', '2026-10-13');
-    expect(triage.rows.map((row) => row.type === 'task' && row.task.id)).toEqual([task.id]);
+    expect(triage.open.map((item) => item.task.id)).toEqual([task.id]);
   });
 
   it('share one hidden section per project, which is not counted as a project section', async () => {

@@ -5,18 +5,23 @@ import {
   DEFAULT_STATUS_LIMITS,
   limitsFor,
   normalizeLimits,
+  oldestDay,
   withLimit,
 } from './cleanupStatus';
 
 describe('cleanup status', () => {
-  it('is green only when there is nothing to clean', () => {
-    expect(cleanupStatus(0, [1, 2, 3])).toBe(0);
-    expect(cleanupStatus(1, [5, 10, 20])).toBe(1);
+  it('is green with nothing to clean, or while the oldest item is younger than the yellow limit', () => {
+    expect(cleanupStatus(null, [1, 2, 3])).toBe(0);
+    expect(cleanupStatus(1, [2, 4, 7])).toBe(0);
   });
 
-  it('turns yellow, orange and red at each limit', () => {
-    const limits = [1, 5, 10] as const;
-    expect([1, 4, 5, 9, 10, 30].map((count) => cleanupStatus(count, limits))).toEqual([1, 1, 2, 2, 3, 3]);
+  it('turns yellow, orange and red as the oldest item waits longer', () => {
+    const limits = [2, 4, 7] as const;
+    expect([2, 3, 4, 6, 7, 30].map((age) => cleanupStatus(age, limits))).toEqual([1, 1, 2, 2, 3, 3]);
+  });
+
+  it('does not count closing yesterday this morning as late', () => {
+    expect(cleanupStatus(1, DEFAULT_STATUS_LIMITS.pendingDays)).toBe(0);
   });
 
   it('normalizes limits to whole numbers that never go down', () => {
@@ -38,12 +43,28 @@ describe('cleanup status', () => {
     expect(limitsFor('duplicates', { whiteboards: [2, 3, 4] })).toEqual(DEFAULT_STATUS_LIMITS.duplicates);
   });
 
-  it('orders the cards from the most urgent, keeping the default order on ties', () => {
-    const cards = assistantCards({ pendingDays: 0, whiteboards: 4, duplicates: 3 }, undefined);
-    expect(cards.map((card) => [card.id, card.status])).toEqual([
-      ['duplicates', 2],
-      ['whiteboards', 1],
-      ['pendingDays', 0],
+  it('colors the cards by the age of the oldest item, not by how many there are', () => {
+    const today = '2026-10-14';
+    const cards = assistantCards(
+      {
+        pendingDays: { count: 0, oldest: null },
+        // Many recent sections: still green.
+        whiteboards: { count: 12, oldest: '2026-10-12' },
+        // One old repeat: red.
+        duplicates: { count: 1, oldest: '2026-08-01' },
+      },
+      today,
+      undefined,
+    );
+    expect(cards.map((card) => [card.id, card.status, card.ageInDays])).toEqual([
+      ['duplicates', 3, 74],
+      ['pendingDays', 0, null],
+      ['whiteboards', 0, 2],
     ]);
+  });
+
+  it('finds the oldest of some days, ignoring the unknown ones', () => {
+    expect(oldestDay(['2026-10-10', null, '2026-09-30', undefined])).toBe('2026-09-30');
+    expect(oldestDay([])).toBeNull();
   });
 });

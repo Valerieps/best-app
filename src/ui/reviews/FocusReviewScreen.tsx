@@ -62,7 +62,7 @@ export function FocusReviewScreen({ today }: { today: DayKey }) {
       <Step number={4} title="Agregar tarefas em projetos">
         <p className="muted">
           Esta etapa espera uma decisão em aberto na spec: se o app propõe os grupos ou se você agrupa à mão. Enquanto
-          isso, vincule tarefas a projetos no checkout ou na triagem acima.
+          isso, vincule tarefas a projetos ao fechar o dia ou na triagem acima.
         </p>
       </Step>
 

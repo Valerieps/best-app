@@ -12,8 +12,8 @@ const quiet: ReviewAvailability = {
 
 describe('reasonText', () => {
   it('says why each review is available', () => {
-    expect(reasonText('focus', { kind: 'cadence', count: 5 }, quiet.names)).toBe('5 checkouts desde a última Revisão de Foco');
-    expect(reasonText('focus', { kind: 'cadence', count: 41 }, quiet.names, false)).toBe('41 checkouts desde o começo');
+    expect(reasonText('focus', { kind: 'cadence', count: 5 }, quiet.names)).toBe('5 dias fechados desde a última Revisão de Foco');
+    expect(reasonText('focus', { kind: 'cadence', count: 41 }, quiet.names, false)).toBe('41 dias fechados desde o começo');
     expect(reasonText('direction', { kind: 'cadence', count: 1 }, quiet.names)).toBe('1 Revisão de Foco desde a última Revisão de Rumo');
     expect(reasonText('focus', { kind: 'awaitingItems', count: 12 }, quiet.names)).toBe('12 itens esperando a Revisão de Foco');
     expect(reasonText('focus', { kind: 'stalledFocusProject', projectId: 'p', days: 15 }, quiet.names)).toBe('o projeto Mudança está parado há 15 dias');
@@ -41,7 +41,7 @@ describe('pickReviewNotice', () => {
     });
     expect(notice).toEqual({
       kind: 'focus',
-      text: 'A Revisão de Foco está disponível: 5 checkouts desde a última Revisão de Foco; o último projeto em foco foi finalizado.',
+      text: 'A Revisão de Foco está disponível: 5 dias fechados desde a última Revisão de Foco; o último projeto em foco foi finalizado.',
     });
   });
 

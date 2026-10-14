@@ -106,7 +106,7 @@ Cada entidade é um registro separado. Um bloco existe uma vez só: notas, proje
 
 **`reflections`**: as revisões, `kind` `focus` ou `direction`. A revisão em andamento tem id fixo (`focus:open`, `direction:open`); ao fechar, vira `kind:id` com `start`, `end` e `closedAt`, e não reabre (ADR-039). Textos livres (melhores momentos, o que pode melhorar). Os registros `week:2026-W41` e `month:2026-10`, das reflexões antigas, contam como a última revisão de cada tipo.
 
-**`settings`**: um registro só, id `main`: cadência das revisões (`reviewCadence`, ADR-039), dias ativos, checklist do warm up, limites das cores de "Colocar ordem na casa" (ADR-028), coluna fixada da página do projeto e grupos abertos da lista de projetos (ADR-036). Entra no backup.
+**`settings`**: um registro só, id `main`: cadência das revisões (`reviewCadence`, ADR-039), dias ativos, checklist do warm up, limites das cores de "Colocar ordem na casa", em dias de espera (`cleanupAgeLimits`, ADR-045; o antigo `cleanupLimits`, por quantidade, não é mais lido), coluna fixada da página do projeto e grupos abertos da lista de projetos (ADR-036). Entra no backup.
 
 **`reminders`**: lembretes que voltam dentro do app (3): origem, texto, `dueAt` e `status` (`pending`, `done` ou `dropped`). O app nunca manda notificação (ADR-024).
 
@@ -141,7 +141,7 @@ Nada disso é guardado: é calculado a partir das tabelas, por funções de `app
 | Wiki | Seções com `notesDestination = 'wiki'`, cada entrada com as notas da seção, em ordem cronológica |
 | Projeto | Seções, tarefas e notas com o `projectId` dele, agrupadas em travadas, próximos dias, sem data e feitas |
 | Lista de projetos | Projetos por status, projetos em foco e mapa de atividade calculado dos eventos (ADR-034) |
-| "Colocar ordem na casa" | Contagens de cada assistente e a cor pelos limites das configurações (ADR-028) |
+| "Colocar ordem na casa" | Contagens de cada assistente e a cor pela idade do item mais antigo, com os limites das configurações (ADR-045) |
 | Abertura do dia | Etapa do dia (iniciar, warm up, dashboard, execução) e lembretes vencidos (ADR-023) |
 | Revisões e métricas | Eventos desde a última revisão de cada tipo passados às funções de métricas (seção 9); disponibilidade de cada revisão por cadência e sinais (`application/reviewQueries.ts`, ADR-039) |
 
@@ -191,10 +191,12 @@ Reativar uma tarefa arquivada limpa a data sem contar adiamento (ADR-015).
 
 ## 8. Checkout e auto-triagem (implementado)
 
-- A auto-triagem é uma função pura no domínio (`domain/triage.ts`). Ela recebe um dia (seções, blocos e projetos) e devolve três listas: decisões automáticas, sugestões pré-selecionadas e itens manuais, seguindo `spec/checkout.md`.
-- A tela de checkout carrega a triagem uma vez, como uma foto, para que nada mude enquanto a pessoa escolhe. Ela mostra as decisões automáticas e as sugestões, permite trocar qualquer uma e desfazer o que foi automático. "Aceitar sugestões" grava tudo, inclusive as decisões automáticas, numa transação só (ADR-012).
+- A auto-triagem é uma função pura no domínio (`domain/triage.ts`). Ela recebe um dia (seções, blocos e projetos) e devolve as decisões automáticas (notas para a wiki, quadros brancos sem vínculo, tarefas que vão sozinhas para o dia seguinte, tarefas resolvidas durante o dia), as tarefas que pedem decisão e a lista das tarefas abertas na ordem da nota, seguindo `spec/checkout.md`. `defaultClosingDecisions` (`application/checkout.ts`) transforma isso nas decisões que o fechamento grava quando nada é mudado.
+- A tela do "Fechar o dia" (no código, ainda `checkout`) é feita de etapas (`domain/checkoutSteps.ts` decide quais existem e a ordem; cada etapa é um componente em `ui/checkout/`). Ela carrega a triagem como uma foto, para que nada mude enquanto a pessoa escolhe, e cada etapa grava só as suas decisões com `applyTriage`, numa transação, ao avançar. Depois de gravar, a tela relê a triagem e pula as etapas que ficaram vazias (ADR-044). As decisões automáticas e as sugestões que sobram são gravadas na confirmação, numa transação só (ADR-012).
+- O planejamento grava a data de cada tarefa mudada (`applyPlanning`), inclusive das já agendadas; a seleção em lote só existe na tela, até "Finalizar meu dia".
 - "Fechar dias pendentes" usa a mesma função para vários dias. A diferença é que as tarefas não feitas voltam sem data.
-- O mesmo mecanismo de lote serve aos assistentes de limpeza (`spec/assistentes.md`): cada assistente só fornece a busca (`domain/assistants.ts`) e as ações (`application/assistants.ts`).
+- O mesmo mecanismo de lote serve aos assistentes de limpeza (`spec/assistentes.md`): cada assistente só fornece a busca (`domain/assistants.ts`) e as ações (`application/assistants.ts`). A sugestão de vincular uma seção solta a um projeto citado no texto dela mora em "Seções soltas", que recebe o texto das seções.
+- Descartar e vincular como recurso acontecem na wiki (`discardWikiNotes` e `linkWikiNotesAsResource`), porque as notas não passam mais pelo fechamento.
 - "Dia seguinte" num checkout atrasado é o próximo dia ativo depois do dia triado, mas nunca antes de hoje.
 - A triagem segue a ordem da nota do dia: as partes por `days.sectionOrder` e as tarefas de outros dias por `carriedOrder` (ADR-040).
 

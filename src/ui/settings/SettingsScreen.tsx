@@ -37,7 +37,7 @@ export function SettingsScreen() {
 
       <section className="panel settings__panel">
         <h2>Dias ativos</h2>
-        <p className="muted">No checkout, “dia seguinte” pula os dias desmarcados: na sexta, o dia seguinte é a segunda.</p>
+        <p className="muted">Ao fechar o dia, “dia seguinte” pula os dias desmarcados: na sexta, o dia seguinte é a segunda.</p>
         <div className="settings__days">
           {WEEK_ORDER.map((weekday) => (
             <label className="check-row" key={weekday}>
@@ -61,18 +61,18 @@ export function SettingsScreen() {
         <h2>Revisões</h2>
         {directionReviewEnabled() ? (
           <p className="muted">
-            As revisões não têm data marcada. Cada uma fica disponível depois de um número de checkouts ou de Revisões de
+            As revisões não têm data marcada. Cada uma fica disponível depois de um número de dias fechados ou de Revisões de
             Foco, ou antes, se algo sair do lugar. Também dá para fazer qualquer uma a qualquer hora, pelo menu.
           </p>
         ) : (
           <p className="muted">
-            A Revisão de Foco não tem data marcada. Ela fica disponível depois de um número de checkouts, ou antes, se algo
+            A Revisão de Foco não tem data marcada. Ela fica disponível depois de um número de dias fechados, ou antes, se algo
             sair do lugar. Também dá para fazê-la a qualquer hora, pelo menu.
           </p>
         )}
         <CadenceField
           label="Revisão de Foco a cada"
-          unit="checkouts"
+          unit="dias fechados"
           value={cadence.focusCheckouts}
           onChange={(focusCheckouts) => void setReviewCadence(appContext, { focusCheckouts })}
         />
@@ -89,10 +89,10 @@ export function SettingsScreen() {
       <section className="panel settings__panel">
         <h2>Colocar ordem na casa</h2>
         <p className="muted">
-          A cor de cada assistente depende de quantos itens ele encontrou. Sem nenhum item, o cartão fica verde. Escolha a
-          partir de quantos itens ele fica amarelo, laranja e vermelho.
+          A cor de cada assistente diz há quanto tempo o item mais antigo dele está esperando. Sem nenhum item, ou com um
+          item recente, o cartão fica verde. Escolha a partir de quantos dias de espera ele fica amarelo, laranja e vermelho.
         </p>
-        <CleanupLimitsEditor saved={settings?.cleanupLimits} />
+        <CleanupLimitsEditor saved={settings?.cleanupAgeLimits} />
       </section>
     </main>
   );
@@ -104,8 +104,8 @@ const LIMIT_COLORS = [
   { label: 'Vermelho', status: 3 },
 ];
 
-/** Limits of the cleanup dashboard colors, one row per assistant. Saved when leaving a field. */
-function CleanupLimitsEditor({ saved }: { saved: Settings['cleanupLimits'] }) {
+/** Limits, in days of waiting, of the cleanup dashboard colors, one row per assistant. Saved when leaving a field. */
+function CleanupLimitsEditor({ saved }: { saved: Settings['cleanupAgeLimits'] }) {
   return (
     <div className="limits__wrap">
       <table className="limits">
@@ -132,7 +132,7 @@ function CleanupLimitsEditor({ saved }: { saved: Settings['cleanupLimits'] }) {
 }
 
 function CleanupLimitsRow({ id, limits, custom }: { id: AssistantId; limits: StatusLimits; custom: boolean }) {
-  const { name, unit } = ASSISTANT_INFO[id];
+  const { name } = ASSISTANT_INFO[id];
   const [draft, setDraft] = useState(limits.map(String));
   // Follow saved changes, including the normalization done when saving.
   const savedKey = limits.join();
@@ -159,9 +159,9 @@ function CleanupLimitsRow({ id, limits, custom }: { id: AssistantId; limits: Sta
             value={draft[index]}
             onChange={(event) => setDraft(draft.map((value, i) => (i === index ? event.target.value : value)))}
             onBlur={() => save(index as 0 | 1 | 2)}
-            aria-label={`${name}: ${label.toLowerCase()} a partir de quantos ${unit[1]}`}
+            aria-label={`${name}: ${label.toLowerCase()} a partir de quantos dias de espera`}
           />{' '}
-          <span className="muted">{Number(draft[index]) === 1 ? unit[0] : unit[1]}</span>
+          <span className="muted">{Number(draft[index]) === 1 ? 'dia' : 'dias'}</span>
         </td>
       ))}
       <td>

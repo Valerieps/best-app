@@ -23,6 +23,13 @@ describe('whiteboards assistant', () => {
     expect(group.suggestion).toEqual({ kind: 'link', projectId: studio.id });
   });
 
+  it('suggests linking when the text of a section cites an existing project', () => {
+    const studio = project('Data Studios');
+    const loose = unlinked('Ideias soltas');
+    const [group] = findWhiteboardGroups([loose], [studio], new Map([[loose.id, 'Falar com o time do data studios']]));
+    expect(group.suggestion).toEqual({ kind: 'link', projectId: studio.id });
+  });
+
   it('ignores sections still pending, kept as they are, or linked', () => {
     expect(
       findWhiteboardGroups(

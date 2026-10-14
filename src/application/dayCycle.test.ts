@@ -1,8 +1,9 @@
 import { describe, expect, it } from 'vitest';
+import { addDays } from '../domain/day';
 import { positionBetween } from '../domain/position';
 import type { TaskDecision } from '../domain/triage';
 import { createTestContext } from '../test/fixtures';
-import { applyPlanning, applyTriage, closePendingDays, completeCheckout } from './checkout';
+import { applyPlanning, applyTriage, closePendingDays, completeCheckout, defaultClosingDecisions } from './checkout';
 import {
   changeBlockKind,
   convertSectionToProject,
@@ -63,9 +64,7 @@ describe('day cycle', () => {
 
     // Sunday checkout: "dia seguinte" is the first intended date, not a postponement.
     let triage = await loadDayTriage(reader, SUNDAY, SUNDAY);
-    const decisions = noDecisions();
-    for (const row of triage.rows) if (row.type === 'task') decisions.tasks.set(row.task.id, row.suggestion);
-    await applyTriage(ctx, SUNDAY, decisions);
+    await applyTriage(ctx, SUNDAY, defaultClosingDecisions(triage));
     await completeCheckout(ctx, SUNDAY);
     expect(await db.blocks.get(task.id)).toMatchObject({ intendedDate: MONDAY, postponeCount: 0, firstIntendedDate: MONDAY });
 
@@ -76,7 +75,7 @@ describe('day cycle', () => {
     expect(monday.entries[0].carried.map((block) => block.id)).toEqual([task.id]);
 
     triage = await loadDayTriage(reader, MONDAY, MONDAY);
-    expect(triage.rows).toEqual([expect.objectContaining({ type: 'task', section: null })]);
+    expect(triage.automatic).toEqual([expect.objectContaining({ type: 'rolledOver', section: null })]);
     await applyTriage(ctx, MONDAY, {
       ...noDecisions(),
       tasks: new Map([[task.id, { kind: 'schedule', date: '2026-10-13' } as const]]),
@@ -92,8 +91,9 @@ describe('day cycle', () => {
     await setTaskDone(ctx, task.id, true);
 
     const triage = await loadDayTriage(reader, SUNDAY, SUNDAY);
-    expect(triage.rows.filter((row) => row.type === 'task')).toEqual([]);
-    expect(triage.automatic).toEqual([expect.objectContaining({ type: 'finishedDuringDay' })]);
+    expect(triage.rows).toEqual([]);
+    expect(triage.automatic).toContainEqual(expect.objectContaining({ type: 'finishedDuringDay' }));
+    expect(triage.automatic.some((item) => item.type === 'rolledOver')).toBe(false);
   });
 
   it('triages notes per section; project sections go to the wiki on their own', async () => {
@@ -155,8 +155,8 @@ describe('day cycle', () => {
 
     await createBlock(ctx, { sectionId: note.sectionId, position: nextPosition() }, 'Nota depois do checkout');
 
-    expect((await loadDayTriage(reader, SUNDAY, SUNDAY)).rows).toEqual([
-      expect.objectContaining({ type: 'notes', noteCount: 2 }),
+    expect((await loadDayTriage(reader, SUNDAY, SUNDAY)).automatic).toEqual([
+      expect.objectContaining({ type: 'notesToWiki', noteCount: 2 }),
     ]);
   });
 
@@ -169,13 +169,26 @@ describe('day cycle', () => {
       tasks: new Map([[a.id, { kind: 'schedule', date: MONDAY } as const]]),
     });
 
-    await applyPlanning(ctx, SUNDAY, MONDAY, [
-      { taskId: a.id, include: false },
-      { taskId: b.id, include: true },
+    await applyPlanning(ctx, SUNDAY, [
+      { taskId: a.id, date: null },
+      { taskId: b.id, date: MONDAY },
     ]);
 
     expect(await db.blocks.get(a.id)).toMatchObject({ intendedDate: null, postponeCount: 1 });
     expect(await db.blocks.get(b.id)).toMatchObject({ intendedDate: MONDAY, postponeCount: 0 });
+  });
+
+  it('planning: moves a task already scheduled to another day', async () => {
+    const { ctx, db } = createTestContext();
+    const a = await createBlock(ctx, { sectionId: null, position: nextPosition() }, '[] A');
+    await applyTriage(ctx, SUNDAY, {
+      ...noDecisions(),
+      tasks: new Map([[a.id, { kind: 'schedule', date: addDays(MONDAY, 2) } as const]]),
+    });
+
+    await applyPlanning(ctx, SUNDAY, [{ taskId: a.id, date: MONDAY }]);
+
+    expect(await db.blocks.get(a.id)).toMatchObject({ intendedDate: MONDAY, status: 'active' });
   });
 
   it('archive and abandon take tasks out of the active list without deleting them', async () => {

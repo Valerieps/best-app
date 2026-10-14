@@ -139,7 +139,7 @@ export function HabitsScreen({ today }: { today: DayKey }) {
   return (
     <main className="page">
       <h1 className="page__title">Hábitos</h1>
-      {active.length === 0 && !creating && <p className="muted">Nenhum hábito. No checkout, uma tarefa também pode virar hábito.</p>}
+      {active.length === 0 && !creating && <p className="muted">Nenhum hábito. Ao fechar o dia, uma tarefa também pode virar hábito.</p>}
       {active.length > 0 && (
         <ul className="card-list">
           {active.map((view) => (

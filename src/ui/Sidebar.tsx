@@ -91,13 +91,13 @@ export function Sidebar({ route, today, pendingDays, reviews, backupState }: Pro
       key: 'checkout-today',
       place: 'checkout',
       route: { name: 'checkout', day: today },
-      label: 'Checkout de hoje',
+      label: 'Fechar o dia de hoje',
     },
     ...pendingDays.map((day): Place => ({
       key: `checkout-${day}`,
       place: 'checkout',
       route: { name: 'checkout', day },
-      label: `Checkout de ${weekdayName(day)}, ${formatShortDate(day)}`,
+      label: `Fechar ${weekdayName(day)}, ${formatShortDate(day)}`,
       badge: 'pendente',
     })),
     {

@@ -1,13 +1,13 @@
 import { addDays, type DayKey } from '../../domain/day';
 import type { Project } from '../../domain/entities';
-import type { NotesDecision, TaskDecision, TriageRow, WhiteboardDecision } from '../../domain/triage';
-import { KindChip, NoteChip, ProjectChip, WhiteboardChip } from '../components/Chips';
+import type { NotesDecision, TaskDecision, TriageRow } from '../../domain/triage';
+import { KindChip, ProjectChip, WhiteboardChip } from '../components/Chips';
 import { Linkified } from '../components/Linkified';
 import { Segmented } from '../components/Segmented';
 import { FEATURES } from '../features';
 import { formatTime, postponedLabel, relativeDay } from '../format';
 
-export type Decision = TaskDecision | NotesDecision | WhiteboardDecision;
+export type Decision = TaskDecision | NotesDecision;
 
 export function rowKey(row: TriageRow): string {
   return row.type === 'task' ? `task:${row.task.id}` : `${row.type}:${row.section.id}`;
@@ -167,67 +167,6 @@ export function NotesRowView({
   );
 }
 
-type WhiteboardChoice = 'convert' | 'link' | 'leaveUnlinked';
-
-export function WhiteboardRowView({
-  row,
-  decision,
-  onChange,
-  projects,
-}: RowProps<WhiteboardDecision> & { projects: Project[] }) {
-  if (row.type !== 'whiteboard') return null;
-  const active = projects.filter((project) => project.status === 'active');
-  const linkTarget =
-    decision.kind === 'link' ? active.find((project) => project.id === decision.projectId) : row.citedProject;
-  const defaultName = row.section.title ?? '';
-  return (
-    <div className="triage-row">
-      <span className="triage-row__label">Vínculo desta seção</span>
-      <span className="triage-row__controls">
-        <Segmented<WhiteboardChoice>
-          label="Vínculo desta seção"
-          value={decision.kind}
-          options={[
-            { value: 'convert', label: 'Converter em projeto' },
-            { value: 'link', label: linkTarget ? `Vincular a ${linkTarget.name}` : 'Vincular a…' },
-            { value: 'leaveUnlinked', label: 'Deixar sem vínculo' },
-          ]}
-          onChange={(value) => {
-            if (value === 'convert') onChange({ kind: 'convert', name: defaultName });
-            else if (value === 'link') {
-              const target = linkTarget ?? active[0];
-              if (target) onChange({ kind: 'link', projectId: target.id });
-            } else onChange({ kind: 'leaveUnlinked' });
-          }}
-        />
-        {decision.kind === 'convert' && (
-          <input
-            className="text-input"
-            value={decision.name}
-            placeholder="Nome do projeto"
-            onChange={(event) => onChange({ kind: 'convert', name: event.target.value })}
-            aria-label="Nome do novo projeto"
-          />
-        )}
-        {decision.kind === 'link' && active.length > 1 && (
-          <select
-            className="text-input"
-            value={decision.projectId}
-            onChange={(event) => onChange({ kind: 'link', projectId: event.target.value })}
-            aria-label="Projeto"
-          >
-            {active.map((project) => (
-              <option key={project.id} value={project.id}>
-                {project.name}
-              </option>
-            ))}
-          </select>
-        )}
-      </span>
-    </div>
-  );
-}
-
 /** Header of a group of rows: the section they came from. */
 export function GroupHeader({ row }: { row: TriageRow }) {
   const section = row.section;
@@ -238,14 +177,12 @@ export function GroupHeader({ row }: { row: TriageRow }) {
       </div>
     );
   }
-  const cited = row.type === 'whiteboard' ? row.citedProject : null;
   return (
     <div className="triage-group__header">
       <KindChip kind={section.kind} />
       <span className="muted">{formatTime(section.createdAt)}</span>
       <span>{section.title ?? 'Sem título'}</span>
       {section.projectId ? <ProjectChip /> : <WhiteboardChip />}
-      {cited && <NoteChip>{`cita “${cited.name}”`}</NoteChip>}
     </div>
   );
 }

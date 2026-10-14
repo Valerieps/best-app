@@ -1,21 +1,18 @@
 import type { AssistantId, CleanupStatus } from '../../domain/cleanupStatus';
 
 /** Name, description and icon of each cleanup assistant, as the user sees them. */
-export const ASSISTANT_INFO: Record<AssistantId, { name: string; description: string; unit: [string, string] }> = {
+export const ASSISTANT_INFO: Record<AssistantId, { name: string; description: string }> = {
   pendingDays: {
     name: 'Dias em aberto',
-    description: 'Dias que ficaram sem checkout.',
-    unit: ['dia', 'dias'],
+    description: 'Dias que ficaram sem fechamento.',
   },
   whiteboards: {
     name: 'Seções soltas',
     description: 'Seções que ficaram sem projeto, agrupadas pelos títulos repetidos.',
-    unit: ['grupo', 'grupos'],
   },
   duplicates: {
     name: 'Projetos repetidos',
     description: 'Projetos com nomes parecidos. Juntar move as seções e tarefas para o projeto mais antigo.',
-    unit: ['par', 'pares'],
   },
 };
 
@@ -50,4 +47,11 @@ export function AssistantIcon({ id }: { id: AssistantId }) {
       )}
     </svg>
   );
+}
+
+/** "o mais antigo espera há 3 dias", for the cards and the assistant header. */
+export function ageLabel(ageInDays: number | null): string | null {
+  if (ageInDays === null) return null;
+  if (ageInDays === 0) return 'o mais antigo é de hoje';
+  return `o mais antigo espera há ${ageInDays} ${ageInDays === 1 ? 'dia' : 'dias'}`;
 }

@@ -21,6 +21,24 @@ export interface TriageDecisions {
   noteResources?: ReadonlyMap<string, { ownerType: 'objective' | 'project'; ownerId: string }>;
 }
 
+/**
+ * What the closing writes when nothing is changed: the suggestion of every task that needs a
+ * decision, and every automatic decision (notes to the wiki, whiteboards left unlinked, tasks
+ * rolling over to "dia seguinte").
+ */
+export function defaultClosingDecisions(triage: DayTriage) {
+  const tasks = new Map<string, TaskDecision>();
+  const notes = new Map<string, NotesDecision>();
+  const whiteboards = new Map<string, WhiteboardDecision>();
+  for (const row of triage.rows) tasks.set(row.task.id, row.suggestion);
+  for (const item of triage.automatic) {
+    if (item.type === 'notesToWiki') notes.set(item.section.id, 'wiki');
+    if (item.type === 'whiteboardUnlinked') whiteboards.set(item.section.id, { kind: 'leaveUnlinked' });
+    if (item.type === 'rolledOver') tasks.set(item.task.id, { kind: 'schedule', date: triage.nextDay });
+  }
+  return { tasks, notes, whiteboards };
+}
+
 function nowIso(ctx: AppContext): string {
   return ctx.clock.now().toISOString();
 }
@@ -86,6 +104,31 @@ const NOTES_EVENTS = {
   weeklyReflection: 'section.notesDeferredToReflection',
 } as const;
 
+/**
+ * Discards the notes of a wiki entry: they leave the wiki, and the event history keeps the
+ * discard (spec/nota-do-dia.md, "Wiki pessoal"). Since the closing shrank, this is the only place
+ * where notes are discarded.
+ */
+export async function discardWikiNotes(ctx: AppContext, sectionId: string): Promise<void> {
+  await ctx.store.transaction(async (tx) => {
+    const section = await tx.sections.get(sectionId);
+    if (!section || section.notesDestination !== 'wiki') return;
+    await applyNotesDecision(ctx, tx, section, 'discarded', toDayKey(ctx.clock.now()));
+  });
+}
+
+/** Section 4: links the notes of a wiki entry as a resource of an objective or project. */
+export async function linkWikiNotesAsResource(
+  ctx: AppContext,
+  sectionId: string,
+  owner: { ownerType: 'objective' | 'project'; ownerId: string },
+): Promise<void> {
+  await ctx.store.transaction(async (tx) => {
+    const section = await tx.sections.get(sectionId);
+    if (section) await addResourceIn(ctx, tx, owner, { sectionId, title: section.title ?? `Notas de ${section.day}` });
+  });
+}
+
 /** Sets the destination of a section's notes. Shared by the checkout and the weekly reflection. */
 export async function applyNotesDecision(
   ctx: AppContext,
@@ -144,26 +187,21 @@ export async function applyTriage(ctx: AppContext, day: DayKey, decisions: Triag
 
 export interface PlanningChange {
   taskId: string;
-  /** True to put the task in the target day's note, false to take it out (it loses its date). */
-  include: boolean;
+  /** The new intended date; null leaves the task without a date, in the active list. */
+  date: DayKey | null;
 }
 
-/** Planning the next day: chooses, among active tasks, those that go into the target day's note. */
-export async function applyPlanning(
-  ctx: AppContext,
-  day: DayKey,
-  target: DayKey,
-  changes: readonly PlanningChange[],
-): Promise<void> {
+/**
+ * Planning the next day: sets the intended date of active tasks, putting them in the target
+ * day's note, on another day, or back in the active list without a date. Nothing is finished.
+ */
+export async function applyPlanning(ctx: AppContext, day: DayKey, changes: readonly PlanningChange[]): Promise<void> {
   await ctx.store.transaction(async (tx) => {
     for (const change of changes) {
       const task = await tx.blocks.get(change.taskId);
       if (!task || task.kind !== 'task' || task.status !== 'active') continue;
-      if (change.include && task.intendedDate !== target) {
-        await tx.blocks.put(await moveIntendedDate(ctx, tx, task, target, day, 'planning'));
-      }
-      if (!change.include && task.intendedDate === target) {
-        await tx.blocks.put(await moveIntendedDate(ctx, tx, task, null, day, 'planning'));
+      if (task.intendedDate !== change.date) {
+        await tx.blocks.put(await moveIntendedDate(ctx, tx, task, change.date, day, 'planning'));
       }
     }
   });
@@ -192,17 +230,21 @@ export interface ClosePendingDaysSummary {
   whiteboards: number;
 }
 
+/** Every task of a triage that is still open: the ones needing a decision and the ones rolling over. */
+export function openTasksOf(triage: DayTriage): string[] {
+  return triage.open.map((item) => item.task.id);
+}
+
 export function summarizeClosePendingDays(triages: readonly DayTriage[]): ClosePendingDaysSummary {
   const tasks = new Set<string>();
   const notes = new Set<string>();
   const whiteboards = new Set<string>();
   for (const triage of triages) {
-    for (const row of triage.rows) {
-      if (row.type === 'task') tasks.add(row.task.id);
-      if (row.type === 'notes') notes.add(row.section.id);
-      if (row.type === 'whiteboard') whiteboards.add(row.section.id);
+    for (const id of openTasksOf(triage)) tasks.add(id);
+    for (const item of triage.automatic) {
+      if (item.type === 'notesToWiki') notes.add(item.section.id);
+      if (item.type === 'whiteboardUnlinked') whiteboards.add(item.section.id);
     }
-    for (const item of triage.automatic) if (item.type === 'notesToWiki') notes.add(item.section.id);
   }
   return {
     days: triages.map((triage) => triage.day),
@@ -222,25 +264,20 @@ export async function closePendingDays(ctx: AppContext, triages: readonly DayTri
     const today = toDayKey(ctx.clock.now());
     for (const triage of triages) {
       const day = triage.day;
-      for (const row of triage.rows) {
-        if (row.type === 'whiteboard') {
-          const section = await tx.sections.get(row.section.id);
-          if (section?.whiteboardDecision === 'pending' && section.projectId === null) {
-            await applyWhiteboardDecision(ctx, tx, section, { kind: 'leaveUnlinked' }, day);
-          }
+      for (const item of triage.automatic) {
+        if (item.type !== 'whiteboardUnlinked') continue;
+        const section = await tx.sections.get(item.section.id);
+        if (section?.whiteboardDecision === 'pending' && section.projectId === null) {
+          await applyWhiteboardDecision(ctx, tx, section, { kind: 'leaveUnlinked' }, day);
         }
       }
-      const noteSections = [
-        ...triage.rows.flatMap((row) => (row.type === 'notes' ? [row.section.id] : [])),
-        ...triage.automatic.flatMap((item) => (item.type === 'notesToWiki' ? [item.section.id] : [])),
-      ];
-      for (const sectionId of noteSections) {
-        const section = await tx.sections.get(sectionId);
+      for (const item of triage.automatic) {
+        if (item.type !== 'notesToWiki') continue;
+        const section = await tx.sections.get(item.section.id);
         if (section?.notesDestination === 'pending') await applyNotesDecision(ctx, tx, section, 'wiki', day);
       }
-      for (const row of triage.rows) {
-        if (row.type !== 'task') continue;
-        const task = await tx.blocks.get(row.task.id);
+      for (const taskId of openTasksOf(triage)) {
+        const task = await tx.blocks.get(taskId);
         if (!task || task.status !== 'active' || (task.lastTriagedDay !== null && task.lastTriagedDay >= day)) continue;
         const from = task.intendedDate;
         await record(ctx, tx, 'task.postponed', 'block', task.id, day, { from, to: null, reason: 'closePendingDays' });

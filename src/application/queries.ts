@@ -4,8 +4,9 @@ import {
   type DuplicateGroup,
   type WhiteboardGroup,
 } from '../domain/assistants';
-import { assistantCards, type AssistantCard } from '../domain/cleanupStatus';
-import { addDays, fromDayKey, type DayKey } from '../domain/day';
+import { assistantCards, oldestDay, type AssistantCard } from '../domain/cleanupStatus';
+import { planningGroup } from '../domain/checkoutSteps';
+import { addDays, fromDayKey, toDayKey, type DayKey } from '../domain/day';
 import { buildDayNote, type DayNoteSection } from '../domain/dayNote';
 import type {
   Block,
@@ -169,12 +170,17 @@ export async function loadWiki(reader: Reader): Promise<WikiEntry[]> {
 
 export interface PlanningView {
   target: DayKey;
+  /** Tasks already in the target day's note. */
   planned: TaskListItem[];
+  /** Tasks scheduled for the next few days after the target (`PLANNING_HORIZON_DAYS`). */
+  soon: TaskListItem[];
+  /** Other active tasks: without a date, or with a date already past. */
   others: TaskListItem[];
 }
 
 /**
- * Step 2 of the checkout: active tasks, split by whether they are in the target day's note. The
+ * The planning step of the checkout: active tasks, split into the target day's note, the next
+ * few days, and the others. The
  * tasks of the projects in focus come first in each group, in the order of the projects
  * (spec/prioridades.md, "Projetos em foco").
  */
@@ -189,8 +195,9 @@ export async function loadPlanning(reader: Reader, target: DayKey): Promise<Plan
   const focusFirst = (list: TaskListItem[]) => list.map((item, index) => ({ item, index })).sort((a, b) => rank(a.item) - rank(b.item) || a.index - b.index).map(({ item }) => item);
   return {
     target,
-    planned: focusFirst(items.filter((item) => item.task.intendedDate === target)),
-    others: focusFirst(items.filter((item) => item.task.intendedDate !== target)),
+    planned: focusFirst(items.filter((item) => planningGroup(item.task.intendedDate, target) === 'target')),
+    soon: focusFirst(items.filter((item) => planningGroup(item.task.intendedDate, target) === 'soon')),
+    others: focusFirst(items.filter((item) => planningGroup(item.task.intendedDate, target) === 'other')),
   };
 }
 
@@ -211,8 +218,11 @@ export interface CleanupView {
 export async function loadCleanup(reader: Reader): Promise<CleanupView> {
   const sections = await reader.sectionsWithStatus('leftUnlinked');
   const projects = await reader.projects();
+  const blocks = await reader.blocksInSections(sections.map((section) => section.id));
+  const texts = new Map<string, string>();
+  for (const block of blocks) texts.set(block.sectionId, [texts.get(block.sectionId) ?? '', block.text].join('\n'));
   return {
-    whiteboards: findWhiteboardGroups(sections, projects),
+    whiteboards: findWhiteboardGroups(sections, projects, texts),
     duplicates: findDuplicateProjects(projects),
   };
 }
@@ -228,12 +238,19 @@ export async function loadCleanupDashboard(reader: Reader, today: DayKey): Promi
   const cleanup = await loadCleanup(reader);
   const pendingDays = await loadPendingDays(reader, today);
   const settings = await reader.settings();
-  const counts = {
-    pendingDays: pendingDays.length,
-    whiteboards: cleanup.whiteboards.length,
-    duplicates: cleanup.duplicates.length,
+  const findings = {
+    pendingDays: { count: pendingDays.length, oldest: oldestDay(pendingDays) },
+    whiteboards: {
+      count: cleanup.whiteboards.length,
+      oldest: oldestDay(cleanup.whiteboards.flatMap((group) => group.sections.map((section) => section.day))),
+    },
+    // A repeat starts waiting when the second project of the group was created.
+    duplicates: {
+      count: cleanup.duplicates.length,
+      oldest: oldestDay(cleanup.duplicates.map((group) => group.projects[1] && toDayKey(new Date(group.projects[1].createdAt)))),
+    },
   };
-  return { ...cleanup, pendingDays, cards: assistantCards(counts, settings?.cleanupLimits) };
+  return { ...cleanup, pendingDays, cards: assistantCards(findings, today, settings?.cleanupAgeLimits) };
 }
 
 export interface MenuCounts {

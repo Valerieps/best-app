@@ -20,9 +20,16 @@ export interface WhiteboardGroup {
 
 /**
  * Sections that ended up without a project, grouped by repeated titles. Untitled sections are
- * left out: there is nothing to group them by or to name a project after.
+ * left out: there is nothing to group them by or to name a project after. When the title or the
+ * text of a section cites an existing project, the suggestion is to link to it; this suggestion
+ * used to be made at the daily closing (spec/assistentes.md, "Seções soltas").
  */
-export function findWhiteboardGroups(sections: readonly Section[], projects: readonly Project[]): WhiteboardGroup[] {
+export function findWhiteboardGroups(
+  sections: readonly Section[],
+  projects: readonly Project[],
+  /** The text of each section's lines, by section id. */
+  texts: ReadonlyMap<string, string> = new Map(),
+): WhiteboardGroup[] {
   const active = projects.filter((project) => project.status === 'active');
   const groups = new Map<string, Section[]>();
   for (const section of sections) {
@@ -36,7 +43,10 @@ export function findWhiteboardGroups(sections: readonly Section[], projects: rea
     .map(([key, grouped]) => {
       const sorted = [...grouped].sort((a, b) => (a.createdAt < b.createdAt ? -1 : 1));
       const title = sorted.at(-1)!.title!.trim();
-      const existing = active.find((project) => normalizeForMatch(project.name) === key) ?? findCitedName(title, active);
+      const cited = sorted
+        .map((section) => findCitedName([section.title ?? '', texts.get(section.id) ?? ''].join('\n'), active))
+        .find(Boolean);
+      const existing = active.find((project) => normalizeForMatch(project.name) === key) ?? findCitedName(title, active) ?? cited;
       const suggestion: WhiteboardGroupAction = existing
         ? { kind: 'link', projectId: existing.id }
         : sorted.length >= 2

@@ -1,5 +1,12 @@
 import { resolveWhiteboardGroup } from '../application/assistants';
-import { applyPlanning, applyTriage, closePendingDays, completeCheckout, type TriageDecisions } from '../application/checkout';
+import {
+  applyPlanning,
+  applyTriage,
+  closePendingDays,
+  completeCheckout,
+  defaultClosingDecisions,
+  type TriageDecisions,
+} from '../application/checkout';
 import {
   convertSectionToProject,
   createBlock,
@@ -185,20 +192,9 @@ export class Simulation {
     this.moment = evening;
     const next = this.nextWorkDay();
     const triage = await loadDayTriage(this.store, day, day);
-    const decisions = {
-      tasks: new Map<string, TaskDecision>(),
-      notes: new Map<string, NotesDecision>(),
-      whiteboards: new Map<string, WhiteboardDecision>(),
-    } satisfies TriageDecisions;
-    for (const row of triage.rows) {
-      if (row.type === 'task') {
-        decisions.tasks.set(row.task.id, row.suggestion.kind === 'schedule' ? { kind: 'schedule', date: next } : row.suggestion);
-      }
-      if (row.type === 'notes') decisions.notes.set(row.section.id, row.suggestion);
-      if (row.type === 'whiteboard') decisions.whiteboards.set(row.section.id, row.suggestion);
-    }
-    for (const item of triage.automatic) {
-      if (item.type === 'notesToWiki') decisions.notes.set(item.section.id, 'wiki');
+    const decisions = defaultClosingDecisions(triage) satisfies TriageDecisions;
+    for (const [id, decision] of decisions.tasks) {
+      if (decision.kind === 'schedule' && decision.date === triage.nextDay) decisions.tasks.set(id, { kind: 'schedule', date: next });
     }
     for (const [task, decision] of choices.tasks ?? []) decisions.tasks.set(task.id, decision);
     for (const [section, decision] of choices.notes ?? []) decisions.notes.set(section.id, decision);
@@ -206,8 +202,8 @@ export class Simulation {
     await applyTriage(this.ctx, day, decisions);
 
     this.step();
-    const unplan = (choices.unplan ?? []).map((task) => ({ taskId: task.id, include: false }));
-    if (unplan.length > 0) await applyPlanning(this.ctx, day, next, unplan);
+    const unplan = (choices.unplan ?? []).map((task) => ({ taskId: task.id, date: null }));
+    if (unplan.length > 0) await applyPlanning(this.ctx, day, unplan);
     this.step();
     await completeCheckout(this.ctx, day);
   }

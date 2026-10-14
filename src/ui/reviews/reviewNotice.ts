@@ -19,7 +19,7 @@ export function reasonText(kind: ReviewKind, reason: ReviewReason, names: Record
     case 'cadence': {
       const since = hadReview ? `desde a última ${REVIEW_NAMES[kind]}` : 'desde o começo';
       return kind === 'focus'
-        ? `${plural(reason.count, 'checkout', 'checkouts')} ${since}`
+        ? `${plural(reason.count, 'dia fechado', 'dias fechados')} ${since}`
         : `${plural(reason.count, 'Revisão de Foco', 'Revisões de Foco')} ${since}`;
     }
     case 'awaitingItems':

@@ -306,7 +306,7 @@ export function ProjectScreen({ id, tab, today }: { id: string; tab: 'tasks' | '
           ) : (
             <div role="tabpanel" aria-label="Notas">
               {view.notes.length === 0 ? (
-                <p className="muted project-tasks__empty">As notas das seções deste projeto aparecem aqui depois do checkout.</p>
+                <p className="muted project-tasks__empty">As notas das seções deste projeto aparecem aqui depois que você fecha o dia.</p>
               ) : (
                 <ol className="timeline">
                   {view.notes.map(({ section, notes }) => (

@@ -51,7 +51,7 @@ describe('reordering lines (request 2)', () => {
     const [entry] = (await loadDayNote(reader, TODAY)).entries;
     expect(entry.carried.map((block) => block.text)).toEqual(['segunda', 'primeira']);
     const triage = await loadDayTriage(reader, TODAY, TODAY);
-    const rows = triage.rows.flatMap((row) => (row.type === 'task' ? [row.task.text] : []));
+    const rows = triage.open.map((item) => item.task.text);
     expect(rows).toEqual(['segunda', 'primeira']);
   });
 
@@ -88,7 +88,7 @@ describe('reordering the parts of a day', () => {
 
     expect((await loadDayNote(reader, TODAY)).sectionOrder).toEqual([meeting.id, CARRIED_PART, first.sectionId]);
     const triage = await loadDayTriage(reader, TODAY, TODAY);
-    const rows = triage.rows.flatMap((row) => (row.type === 'task' ? [row.task.text] : []));
+    const rows = triage.open.map((item) => item.task.text);
     expect(rows).toEqual(['na reunião', 'de ontem', 'na primeira']);
     expect(await db.events.count()).toBe(events);
   });

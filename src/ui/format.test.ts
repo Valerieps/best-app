@@ -27,13 +27,11 @@ describe('format', () => {
     expect(relativeDay('2026-10-14', today)).toBe('14/10');
   });
 
-  it('describes pending days like the draft', () => {
-    expect(pendingDaysSentence(['2026-10-10'], today)).toBe('Ontem está com checkout pendente');
-    expect(pendingDaysSentence(['2026-10-09', '2026-10-10'], today)).toBe('Sexta e ontem estão com checkout pendente');
-    expect(pendingDaysSentence(['2026-10-08', '2026-10-09'], today)).toBe('Quinta e sexta estão com checkout pendente');
-    expect(pendingDaysSentence(['2026-10-01', '2026-10-08', '2026-10-09'], today)).toBe(
-      '3 dias estão com checkout pendente',
-    );
+  it('describes the days left to close, without urgency', () => {
+    expect(pendingDaysSentence(['2026-10-10'], today)).toBe('Falta fechar ontem');
+    expect(pendingDaysSentence(['2026-10-09', '2026-10-10'], today)).toBe('Falta fechar sexta e ontem');
+    expect(pendingDaysSentence(['2026-10-08', '2026-10-09'], today)).toBe('Falta fechar quinta e sexta');
+    expect(pendingDaysSentence(['2026-10-01', '2026-10-08', '2026-10-09'], today)).toBe('Faltam fechar 3 dias');
     expect(listDays(['2026-10-08', '2026-10-09', '2026-10-10'], today)).toBe('Quinta, sexta e ontem');
   });
 

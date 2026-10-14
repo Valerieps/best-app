@@ -44,7 +44,8 @@ O "Fechar o dia" é curto, de cerca de um minuto: ele cuida só do que perece de
 
 ## Planejamento do dia seguinte e fim do dia
 
-- Depois da triagem, eu faço o planejamento do dia seguinte: escolho, na lista de tarefas ativas, as que vão constar na próxima nota do dia. As tarefas que foram sozinhas para o dia seguinte já aparecem escolhidas. *(1a)*
+- Depois da triagem, eu faço o planejamento do dia seguinte: cada tarefa tem uma data, e eu posso mudar a de qualquer uma, para o dia seguinte, para outra data ou para "sem data". A tela mostra as tarefas que já estão na nota do dia seguinte (entre elas, as que foram sozinhas para lá), as agendadas para os 3 dias depois dele e as da lista de tarefas ativas (sem data ou com data que já passou). Nada é finalizado ali, e a tarefa que eu não mudo fica como estava: com a data dela, ou sem data na lista de tarefas ativas. *(1a)*
+- No planejamento, eu posso mudar a data de várias tarefas de uma vez: entro no modo de seleção, seleciono as linhas (Shift + clique seleciona um intervalo, e cada grupo tem "selecionar grupo") e escolho a data numa barra no rodapé. Selecionar uma linha só destaca a linha, sem caixinha, para nunca parecer que finaliza a tarefa. *(1a)*
 - No planejamento do dia seguinte, as tarefas dos projetos em foco aparecem primeiro (`prioridades.md`, "Projetos em foco"). *(2)*
 - Quando tudo for triado, aparece o botão "finalizar meu dia" com sonzinho de "plim" e uma rápida animação de fogos de artifício. *(1a)*
 
@@ -53,9 +54,20 @@ O "Fechar o dia" é curto, de cerca de um minuto: ele cuida só do que perece de
 O fechamento é em lote: o app chega com os destinos já aplicados ou pré-selecionados, e eu cuido só das exceções. O app decide sozinho o que é óbvio e reversível, sugere o que é provável, e nunca decide o que só eu sei ou o que tira coisas de circulação.
 
 - Ao abrir o "Fechar o dia", as decisões automáticas já foram aplicadas e as sugeridas aparecem pré-selecionadas.
-- Os itens que precisam de decisão manual ficam destacados no topo. As tarefas que foram sozinhas para o dia seguinte aparecem num grupo recolhido, com o número delas, e eu posso abrir o grupo para finalizar ou mudar qualquer uma.
-- Um botão "Aceitar sugestões" confirma todas as sugestões de uma vez. Antes disso, eu posso trocar qualquer uma.
-- Tudo o que o app aplicou sozinho pode ser desfeito na própria tela do fechamento.
+- Tudo o que o app aplicou sozinho às tarefas pode ser desfeito no próprio fechamento, na etapa "Confirmação".
+
+### Fechamento em etapas
+
+Mostrar tudo numa tela só pesava, porque misturava tipos de decisão diferentes. O fechamento é uma sequência de etapas, cada uma com um tipo só de decisão, e a etapa sem nada para decidir é pulada. Num dia tranquilo, sobram a confirmação e o planejamento.
+
+1. **Fez e não marcou?:** uma lista só com as tarefas ainda abertas, agrupadas por seção, inclusive as que vão sozinhas para o dia seguinte. Eu marco as que fiz. Vem primeiro para eu não decidir o destino de algo que já fiz.
+2. **Pedem atenção:** um card por tarefa adiada 3 vezes ou mais, ou com prazo antes do dia seguinte. O título é a pergunta, e a tarefa aparece como na nota do dia. Arquivar e abandonar aparecem como opção, nunca como sugestão.
+3. **Lembretes:** um card por lembrete ignorado: manter, mudar ou largar. *(3)*
+4. **Confirmação:** o que vai acontecer quando eu confirmar. As tarefas que vão sozinhas para o dia seguinte ficam num grupo recolhido, com o número delas, e eu posso abrir o grupo para finalizar ou mudar qualquer uma. Uma linha lembra que as notas foram para a wiki e que as seções em quadro branco ficaram para o assistente "Seções soltas".
+5. **Planejamento do dia seguinte** (veja "Planejamento do dia seguinte e fim do dia").
+
+- Nos cards, as opções ficam numa fileira compacta, e só a escolhida mostra a explicação e o campo de que precisa. Os números escolhem a opção e Enter avança.
+- Cada etapa é salva quando eu avanço. Se eu sair no meio, o que decidi fica, e o fechamento recomeça na primeira etapa que ainda tem algo pendente. As tarefas que eu não marquei como feitas continuam abertas até a confirmação, então "Fez e não marcou?" aparece de novo.
 
 ### Regras da auto-triagem
 
