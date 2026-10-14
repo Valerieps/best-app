@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState, type MouseEvent } from 'react';
+import { useEffect, useMemo, useRef, useState, type KeyboardEvent, type MouseEvent } from 'react';
 import {
   changeBlockKind,
   convertSectionToProject,
@@ -18,11 +18,12 @@ import {
   type NewBlockTarget,
 } from '../../application/notebook';
 import { setDayPriority, setDeadline, setIntendedDate, setSectionDetails } from '../../application/dayTools';
+import { setDayNoteFocus } from '../../application/settings';
 import { loadDayNote, loadDayPriorities } from '../../application/queries';
 import { detectKind } from '../../domain/blockKind';
 import type { DayKey } from '../../domain/day';
 import type { DayNoteSection } from '../../domain/dayNote';
-import type { Block, BlockKind, Reminder, SectionKind } from '../../domain/entities';
+import type { Block, BlockKind, DayNoteFocus, Reminder, SectionKind } from '../../domain/entities';
 import { CARRIED_PART, FIRST_PART, moveByOne, moveItem, orderDayParts, PRIORITIES_PART } from '../../domain/order';
 import { comparePositions, positionBetween } from '../../domain/position';
 import { canEditFreely } from '../../domain/tasks';
@@ -31,10 +32,12 @@ import { useLiveQuery } from '../useLiveQuery';
 import { enqueue } from '../writeQueue';
 import { BlockLine, GhostLine, NOTE_HINT, type LineDragProps, type LineHandlers } from './BlockLine';
 import { requestFocus } from './focus';
+import { FOCUS_SHORTCUT, isFocusToggleKey } from './focusMode';
 import { isSamePlace, partMoveKey, useLineDrag } from './lineDrag';
 import { MeetingDetails } from './MeetingDetails';
 import { PendingDaysBanner } from './PendingDaysBanner';
 import { PrioritiesBlock, usePinnedPriorities } from './PrioritiesBlock';
+import { Icon } from '../components/Icon';
 import { ScreenHeader } from '../components/ScreenHeader';
 import { SkeletonLines } from '../components/Skeleton';
 import { formatLongDate } from '../format';
@@ -61,6 +64,8 @@ interface Props {
   reviewNotice?: ReviewNotice | null;
   /** "Lembrar depois" on the review band. */
   onSnoozeReview?(): void;
+  /** Focus mode: only this part of the note shows, without the header or the notices. */
+  focus?: DayNoteFocus | null;
 }
 
 /** A section of the screen, with its stable key and the lines shown in it. */
@@ -154,10 +159,15 @@ export function DayNoteScreen({
   onSnoozePending = () => {},
   reviewNotice = null,
   onSnoozeReview,
+  focus = null,
 }: Props) {
   const isToday = day === today;
+  // In focus mode, a part opened on today's note keeps taking new lines past midnight: the day
+  // turning never interrupts what I am writing (spec/nota-do-dia.md, "Modo foco").
+  const writable = focus ? focus.writable : isToday;
   const view = useLiveQuery(() => loadDayNote(reader, day), [day]);
-  const priorities = useLiveQuery(() => loadDayPriorities(reader, today), [today]) ?? [];
+  const prioritiesDay = focus ? focus.day : today;
+  const priorities = useLiveQuery(() => loadDayPriorities(reader, prioritiesDay), [prioritiesDay]) ?? [];
   const [pinned, setPinned] = usePinnedPriorities();
   // The arrows page only through days that still have pending items (1b).
   const previousDay = [...pendingDays].reverse().find((pending) => pending < day) ?? null;
@@ -237,16 +247,16 @@ export function DayNoteScreen({
     if (!view) return [];
     const host = entries.find((entry) => entry.carried.length > 0);
     // A past day only shows what it has; the empty first section is for writing today.
-    const sections = isToday ? entries : entries.filter((entry) => entry.note.section);
+    const sections = writable ? entries : entries.filter((entry) => entry.note.section);
     const all: Part[] = [
-      ...(isToday && !pinned ? [{ key: PRIORITIES_PART, kind: 'priorities' as const }] : []),
+      ...(writable && !pinned ? [{ key: PRIORITIES_PART, kind: 'priorities' as const }] : []),
       ...(host ? [{ key: CARRIED_PART, kind: 'carried' as const, entry: host }] : []),
       ...sections.map((entry) => ({ key: entry.note.section?.id ?? FIRST_PART, kind: 'section' as const, entry })),
     ];
     const byKey = new Map(all.map((part) => [part.key, part]));
     const saved = partOrder?.day === day ? partOrder.keys : view.sectionOrder;
     return orderDayParts(all.map((part) => part.key), saved).map((key) => byKey.get(key)!);
-  }, [view, entries, isToday, pinned, partOrder, day]);
+  }, [view, entries, writable, pinned, partOrder, day]);
 
   // Lines in the order shown, for the arrows and Backspace.
   const lines = useMemo<LineSlot[]>(
@@ -258,6 +268,13 @@ export function DayNoteScreen({
       }),
     [parts],
   );
+
+  // Focusing the day's empty first section: once it is saved, the focus follows its id.
+  useEffect(() => {
+    if (focus?.part === FIRST_PART && adoptedSectionId) {
+      write(() => setDayNoteFocus(ctx, { ...focus, part: adoptedSectionId }));
+    }
+  }, [focus, adoptedSectionId]);
 
   // The header needs nothing from the database, so it shows at once, with a skeleton below.
   const header = (
@@ -296,8 +313,8 @@ export function DayNoteScreen({
 
   if (!view) {
     return (
-      <main className="page" aria-busy="true">
-        {header}
+      <main className={`page ${focus ? 'page--focus' : ''}`} aria-busy="true">
+        {!focus && header}
         <SkeletonLines />
       </main>
     );
@@ -447,7 +464,7 @@ export function DayNoteScreen({
   };
 
   const priorityIds = new Set(priorities.map((priority) => priority.task.id));
-  const lineProps = { day, today, allowNewLines: isToday, handlers };
+  const lineProps = { day, today, allowNewLines: writable, handlers };
   const partKeys = parts.map((part) => part.key);
   const projects = view.projects;
   const onlyPriorities = parts.every((part) => part.kind === 'priorities');
@@ -468,7 +485,7 @@ export function DayNoteScreen({
    * first keystroke (ADR-013). Only today's note takes new lines (ADR-018).
    */
   function openLineBelow(event: MouseEvent<HTMLElement>) {
-    if (!isToday || event.button !== 0) return;
+    if (!writable || event.button !== 0) return;
     const y = event.clientY;
     const rows = [...event.currentTarget.querySelectorAll<HTMLElement>(':scope > .day-part')];
     const row = rows.filter((element) => element.getBoundingClientRect().top <= y).at(-1);
@@ -490,13 +507,36 @@ export function DayNoteScreen({
     write(() => createSection(ctx, kind).then((section) => requestFocus(`ghost:${section.id}`)));
   }
 
+  /** Focus mode is the same for every part: on, it shows only that part; off, the whole note. */
+  const isFocused = (key: string, entryKey?: string) =>
+    focus !== null && (focus.part === key || (focus.part === FIRST_PART && entryKey === DAY_ENTRY));
+  function toggleFocus(key: string) {
+    write(() => setDayNoteFocus(ctx, focus ? null : { day, part: key, writable: isToday }));
+  }
+  function focusButton(key: string, label: string, entryKey?: string) {
+    const on = isFocused(key, entryKey);
+    return (
+      <button
+        type="button"
+        className="icon-button part-focus"
+        title={on ? `Sair do modo foco (${FOCUS_SHORTCUT})` : `Focar ${label} (${FOCUS_SHORTCUT})`}
+        aria-label={on ? 'Sair do modo foco' : `Focar ${label}`}
+        aria-pressed={on}
+        onClick={() => toggleFocus(key)}
+      >
+        <Icon name={on ? 'minimize' : 'maximize'} size="sm" />
+      </button>
+    );
+  }
+
   const prioritiesBlock = (
     <PrioritiesBlock
       priorities={priorities}
-      today={today}
+      today={prioritiesDay}
       pinned={pinned}
       onToggleDone={(taskId, done) => write(() => setTaskDone(ctx, taskId, done))}
       onDemote={(taskId) => write(() => setDayPriority(ctx, taskId, false))}
+      leading={focusButton(PRIORITIES_PART, 'nas prioridades do dia')}
     />
   );
 
@@ -521,6 +561,7 @@ export function DayNoteScreen({
       return (
         <section className="section section--general section--carried" aria-label="Tarefas de outros dias">
           <div className="section__header">
+            {focusButton(part.key, 'nas tarefas de outros dias')}
             <span className="section__carried-title">De outros dias</span>
           </div>
           {entry.carried.map((block, index) => (
@@ -551,6 +592,7 @@ export function DayNoteScreen({
           onSaveTitle={(title) => section && write(() => setSectionTitle(ctx, section.id, title))}
           onLinkProject={(project) => section && write(() => linkSectionToProject(ctx, section.id, project.id))}
           onCreateProject={(name) => section && write(() => convertSectionToProject(ctx, section.id, name))}
+          leading={focusButton(part.key, section?.title ? `na seção "${section.title}"` : 'nesta seção', entry.key)}
         />
         {section?.kind === 'meeting' && (
           <MeetingDetails section={section} onSave={(details) => write(() => setSectionDetails(ctx, section.id, details))} />
@@ -565,14 +607,14 @@ export function DayNoteScreen({
             {...lineProps}
           />
         ))}
-        {isToday && entry.blocks.length === 0 && (
+        {writable && entry.blocks.length === 0 && (
           <GhostLine
             id={`ghost:${section?.id ?? DAY_ENTRY}`}
             placeholder={NOTE_HINT}
             onCreate={(text) => createFirstLine(entry, text)}
           />
         )}
-        {isToday && entry.blocks.length > 0 && appendingTo === entry.key && (
+        {writable && entry.blocks.length > 0 && appendingTo === entry.key && (
           <GhostLine
             id={`ghost:end:${entry.key}`}
             placeholder={NOTE_HINT}
@@ -581,6 +623,45 @@ export function DayNoteScreen({
           />
         )}
       </section>
+    );
+  }
+
+  /** The wrapper of a part: moving it and its focus mode work with the cursor anywhere inside. */
+  function partKeyDown(event: KeyboardEvent<HTMLElement>, key: string) {
+    if (isFocusToggleKey(event)) {
+      event.preventDefault();
+      toggleFocus(key);
+      return;
+    }
+    if (focus) return;
+    const direction = partMoveKey(event);
+    if (!direction) return;
+    event.preventDefault();
+    moveParts(moveByOne(partKeys, key, direction));
+  }
+
+  if (focus) {
+    // Only the part shows, with the sidebar. The priorities can be focused even when pinned.
+    const part: Part | undefined =
+      focus.part === PRIORITIES_PART
+        ? { key: PRIORITIES_PART, kind: 'priorities' }
+        : parts.find((item) => isFocused(item.key, item.kind === 'section' ? item.entry.key : undefined));
+    return (
+      <main className="page page--focus">
+        <div className="note note--focus" onMouseDown={openLineBelow}>
+          {part ? (
+            <div className={`day-part day-part--${part.kind}`} data-drag-id={part.key} onKeyDown={(event) => partKeyDown(event, part.key)}>
+              {renderPart(part)}
+            </div>
+          ) : (
+            // Never left on its own, even when the part is gone: only I leave focus mode.
+            <div className="note__focus-gone">
+              {focusButton(focus.part, '')}
+              <p className="muted">Esta parte da nota não existe mais.</p>
+            </div>
+          )}
+        </div>
+      </main>
     );
   }
 
@@ -605,12 +686,7 @@ export function DayNoteScreen({
               className={`day-part day-part--${part.kind} ${dragClasses(part.key, index)}`}
               data-drag-group={PARTS_GROUP}
               data-drag-id={part.key}
-              onKeyDown={(event) => {
-                const direction = partMoveKey(event);
-                if (!direction) return;
-                event.preventDefault();
-                moveParts(moveByOne(partKeys, part.key, direction));
-              }}
+              onKeyDown={(event) => partKeyDown(event, part.key)}
             >
               {parts.length > 1 && (
                 <button

@@ -527,7 +527,7 @@ input[type='checkbox'] {
 .priorities__header {
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  gap: var(--space-2);
 }
 
 .priorities__title {
@@ -3368,4 +3368,48 @@ button.project-actions {
 
 .line__clear:hover {
   color: var(--color-text);
+}
+
+/* Focus mode on one part of the day note (spec/nota-do-dia.md, "Modo foco") */
+button.part-focus {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2px;
+  font-size: var(--font-size-sm);
+  color: var(--color-text-muted);
+  opacity: 0;
+}
+
+.day-part:hover button.part-focus,
+.day-part:focus-within button.part-focus,
+button.part-focus:focus-visible,
+button.part-focus[aria-pressed='true'] {
+  opacity: 1;
+}
+
+button.part-focus:hover {
+  color: var(--color-text);
+}
+
+.page--focus {
+  max-width: var(--content-width-wide);
+  padding-top: var(--space-6);
+}
+
+.note--focus {
+  min-height: 60vh;
+  padding: var(--space-5) var(--space-6);
+}
+
+.note--focus .priorities {
+  margin-bottom: 0;
+  border: none;
+  padding: 0;
+}
+
+.note__focus-gone {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
 }

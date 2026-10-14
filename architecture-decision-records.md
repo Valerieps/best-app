@@ -54,3 +54,4 @@ Read only the ADRs your task touches: find them in this table or by grepping `ad
 | [ADR-043](adr/043-typed-event-details-with-legacy-shapes-and-version.md) | Typed event details, with legacy shapes and a version | 2026-10-14 | Accepted |
 | [ADR-044](adr/044-the-checkout-saves-each-step-when-moving-on.md) | The checkout saves each step when moving on | 2026-10-14 | Accepted |
 | [ADR-045](adr/045-cleanup-colors-measure-the-age-of-the-oldest-item.md) | Cleanup colors measure the age of the oldest item | 2026-10-14 | Accepted |
+| [ADR-046](adr/046-day-note-focus-lives-in-the-settings.md) | Day note focus lives in the settings | 2026-10-14 | Accepted |
