@@ -1,6 +1,8 @@
 // Offline support: caches the app's own static files as they are requested.
 // Same-origin GET requests only. The page's CSP already blocks any other request
 // before it reaches this worker, and no user data ever goes through it.
+// The build renames the cache after its files (vite.config.ts, serviceWorkerForBuild), so each
+// version starts a new cache and `activate` deletes the old ones.
 const CACHE = 'best-app-v1';
 
 self.addEventListener('install', () => self.skipWaiting());
