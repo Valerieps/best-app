@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState, type MouseEvent } from 'react';
 import {
   changeBlockKind,
   convertSectionToProject,
@@ -42,6 +42,7 @@ import { navigate } from '../hooks';
 import { RemindersBanner } from '../opening/Reminders';
 import { ReviewBanner } from '../reviews/ReviewBanner';
 import type { ReviewNotice } from '../reviews/reviewNotice';
+import { opensLineBelow } from './lineBelow';
 import { SectionHeader } from './SectionHeader';
 
 interface Props {
@@ -167,6 +168,8 @@ export function DayNoteScreen({
   const [orders, setOrders] = useState<Record<string, string[]>>({});
   // Order chosen by moving a part, until the database shows it. `base` is the saved order then.
   const [partOrder, setPartOrder] = useState<{ day: DayKey; keys: string[]; base: string } | null>(null);
+  // Section whose empty area below the lines was clicked: it shows an empty line at its end.
+  const [appendingTo, setAppendingTo] = useState<string | null>(null);
   const dropItem = useRef<(group: string, id: string, toIndex: number) => void>(() => {});
   const { drag, start: startDrag } = useLineDrag((group, id, toIndex) => dropItem.current(group, id, toIndex));
   // The section created from the day's empty first section keeps its screen key, so the line
@@ -449,12 +452,38 @@ export function DayNoteScreen({
   const projects = view.projects;
   const onlyPriorities = parts.every((part) => part.kind === 'priorities');
 
+  /** Creates a line at the end of a section: its first line, or the one typed after clicking below the lines. */
   function createFirstLine(entry: Entry, typed: string) {
+    setAppendingTo(null);
     const target = newLineTarget(entry, positionBetween(entry.blocks.at(-1)?.position ?? null, null));
     const { kind, text } = detectKind(typed);
     showDraft(entry, target, kind, text);
     requestFocus(target.blockId!);
     write(() => createBlock(ctx, target, typed));
+  }
+
+  /**
+   * A click in the empty area below a section's lines, down to the next part of the day, means
+   * writing something new: it opens an empty line at the end of that section, saved only on the
+   * first keystroke (ADR-013). Only today's note takes new lines (ADR-018).
+   */
+  function openLineBelow(event: MouseEvent<HTMLElement>) {
+    if (!isToday || event.button !== 0) return;
+    const y = event.clientY;
+    const rows = [...event.currentTarget.querySelectorAll<HTMLElement>(':scope > .day-part')];
+    const row = rows.filter((element) => element.getBoundingClientRect().top <= y).at(-1);
+    const part = parts.find((item) => item.key === row?.dataset.dragId);
+    if (!row || !part || part.kind !== 'section' || part.entry.blocks.length === 0) return;
+    const entry = part.entry;
+    const lines = row.querySelectorAll('.line');
+    const lastLine = lines[lines.length - 1];
+    if (!lastLine) return;
+    const onControl = (event.target as HTMLElement).closest('textarea, input, button, a, select, .line, .section__header, .note__actions');
+    if (!opensLineBelow({ y, lastLineBottom: lastLine.getBoundingClientRect().bottom, onControl: onControl !== null })) return;
+    // Keeps the browser from moving the focus; the empty line takes it once it shows.
+    event.preventDefault();
+    setAppendingTo(entry.key);
+    requestFocus(`ghost:end:${entry.key}`);
   }
 
   function addSection(kind: SectionKind) {
@@ -543,6 +572,14 @@ export function DayNoteScreen({
             onCreate={(text) => createFirstLine(entry, text)}
           />
         )}
+        {isToday && entry.blocks.length > 0 && appendingTo === entry.key && (
+          <GhostLine
+            id={`ghost:end:${entry.key}`}
+            placeholder={NOTE_HINT}
+            onCreate={(text) => createFirstLine(entry, text)}
+            onLeave={() => setAppendingTo(null)}
+          />
+        )}
       </section>
     );
   }
@@ -560,7 +597,7 @@ export function DayNoteScreen({
         )}
         {/* Pinned, the priorities stay at the top and do not move with the other parts. */}
         {isToday && pinned && prioritiesBlock}
-        <div className="note">
+        <div className="note" onMouseDown={openLineBelow}>
           {onlyPriorities && !isToday && <p className="muted">Nada pendente neste dia.</p>}
           {parts.map((part, index) => (
             <div

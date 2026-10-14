@@ -271,10 +271,15 @@ interface GhostProps {
   placeholder: string;
   /** Called on the first keystroke; the new line replaces this one right away and takes the focus. */
   onCreate(text: string): void;
+  /** Called when the focus leaves the line before anything was typed. */
+  onLeave?(): void;
 }
 
-/** Empty line of a section with no blocks: typing in it creates the first block. */
-export function GhostLine({ id, placeholder, onCreate }: GhostProps) {
+/**
+ * Empty line that is not saved yet: the first line of a section with no blocks, or a new line
+ * at the end of a section. Typing in it creates the block.
+ */
+export function GhostLine({ id, placeholder, onCreate, onLeave }: GhostProps) {
   const ref = useRef<HTMLTextAreaElement>(null);
   useFocusTarget(id, ref);
   return (
@@ -288,6 +293,7 @@ export function GhostLine({ id, placeholder, onCreate }: GhostProps) {
         onChange={(event) => {
           if (event.target.value) onCreate(event.target.value);
         }}
+        onBlur={onLeave}
         aria-label="Nova linha"
       />
     </div>
