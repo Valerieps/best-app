@@ -4,7 +4,7 @@ import { createProject } from '../application/projects';
 import { createTestContext } from '../test/fixtures';
 import { AutoBackup } from './autoBackup';
 import { exportBackup, importBackup } from './backupRepository';
-import { serializeBackup, type BackupFileHandle, type HandleStorage } from './backupFiles';
+import { serializeBackup, type BackupFileHandle, type BackupFolderHandle, type BackupHandle, type HandleStorage } from './backupFiles';
 
 const NOW = new Date('2026-10-11T18:00:00Z');
 
@@ -39,23 +39,71 @@ function memoryFile(name = 'best-app-backup.json', contents = '') {
   return { file, handle };
 }
 
-function memoryHandles(initial: BackupFileHandle | null = null): HandleStorage {
+interface MemoryFolder {
+  handle: BackupFolderHandle;
+  files: Map<string, ReturnType<typeof memoryFile>>;
+  folders: Map<string, MemoryFolder>;
+  state: { permission: PermissionState };
+}
+
+/** An in-memory folder with files and subfolders, like the Drive folder of the backup. */
+function memoryFolder(name = 'Backup', initial: Record<string, string> = {}): MemoryFolder {
+  const files = new Map<string, ReturnType<typeof memoryFile>>();
+  const folders = new Map<string, MemoryFolder>();
+  for (const [fileName, contents] of Object.entries(initial)) files.set(fileName, memoryFile(fileName, contents));
+  const state: { permission: PermissionState } = { permission: 'granted' };
+  const handle: BackupFolderHandle = {
+    kind: 'directory',
+    name,
+    queryPermission: async () => state.permission,
+    requestPermission: async () => (state.permission = 'granted'),
+    getFileHandle: async (fileName, options) => {
+      if (!files.has(fileName)) {
+        if (!options?.create) throw new DOMException('Not found', 'NotFoundError');
+        files.set(fileName, memoryFile(fileName));
+      }
+      return files.get(fileName)!.handle;
+    },
+    getDirectoryHandle: async (folderName, options) => {
+      if (!folders.has(folderName)) {
+        if (!options?.create) throw new DOMException('Not found', 'NotFoundError');
+        folders.set(folderName, memoryFolder(folderName));
+      }
+      return folders.get(folderName)!.handle;
+    },
+    removeEntry: async (fileName) => {
+      files.delete(fileName);
+    },
+    keys: async function* () {
+      yield* files.keys();
+    },
+  };
+  return { handle, files, folders, state };
+}
+
+function memoryHandles(initial: BackupHandle | null = null): HandleStorage {
   let saved = initial;
   return { load: async () => saved, save: async (handle) => void (saved = handle) };
 }
 
-function setup(options: { remembered?: BackupFileHandle | null; supported?: boolean; delayMs?: number } = {}) {
+function setup(options: { remembered?: BackupHandle | null; supported?: boolean; delayMs?: number; picked?: MemoryFolder } = {}) {
   const { db, ctx } = createTestContext();
-  const picked = memoryFile('picked.json');
+  const picked = options.picked ?? memoryFolder('Backup');
+  const clock = { now: NOW };
   const auto = new AutoBackup({
     db,
     handles: memoryHandles(options.remembered ?? null),
     pick: async () => picked.handle,
     supported: options.supported ?? true,
-    now: () => NOW,
+    now: () => clock.now,
     delayMs: options.delayMs ?? 10,
   });
-  return { db, ctx, auto, picked };
+  return { db, ctx, auto, picked, clock };
+}
+
+/** The names of the dated copies in a backup folder, sorted. */
+function copyNames(folder: MemoryFolder): string[] {
+  return [...(folder.folders.get('copias')?.files.keys() ?? [])].sort();
 }
 
 describe('AutoBackup', () => {
@@ -65,16 +113,77 @@ describe('AutoBackup', () => {
     expect(auto.getState()).toEqual({ status: 'unsupported' });
   });
 
-  it('waits for the user to choose a file, then writes everything to it', async () => {
+  it('waits for the user to choose a folder, then writes everything to it, with a first dated copy', async () => {
     const { ctx, auto, picked } = setup();
     await createProject(ctx, 'Data Studios');
     await auto.init();
     expect(auto.getState()).toEqual({ status: 'noFile' });
 
-    await auto.chooseFile();
+    await auto.chooseFolder();
 
-    expect(auto.getState()).toMatchObject({ status: 'active', fileName: 'picked.json', saving: false });
-    expect(JSON.parse(picked.file.contents).tables.projects).toHaveLength(1);
+    expect(auto.getState()).toMatchObject({ status: 'active', fileName: 'Backup', saving: false, copies: 'ok' });
+    expect(JSON.parse(picked.files.get('best-app-backup.json')!.file.contents).tables.projects).toHaveLength(1);
+    expect(copyNames(picked)).toHaveLength(1);
+  });
+
+  it('keeps one copy every two hours today, and the last version of each earlier day', async () => {
+    const { ctx, auto, picked, clock } = setup();
+    clock.now = new Date(2026, 9, 13, 9, 0);
+    await auto.init();
+    await auto.chooseFolder();
+    await createProject(ctx, 'A');
+    clock.now = new Date(2026, 9, 13, 10, 0);
+    await auto.flush();
+    // Within two hours of the first copy: only the backup file changes.
+    expect(copyNames(picked)).toEqual(['best-app-2026-10-13-09h00.json']);
+
+    await createProject(ctx, 'B');
+    clock.now = new Date(2026, 9, 13, 23, 30);
+    await auto.flush();
+    expect(copyNames(picked)).toEqual(['best-app-2026-10-13-09h00.json', 'best-app-2026-10-13-23h30.json']);
+
+    // The next morning, the night's version is kept as the day's last, and only it stays.
+    await createProject(ctx, 'C');
+    clock.now = new Date(2026, 9, 14, 8, 0);
+    await auto.flush();
+    expect(copyNames(picked)).toEqual(['best-app-2026-10-13-23h30.json', 'best-app-2026-10-14-08h00.json']);
+    const lastOfYesterday = picked.folders.get('copias')!.files.get('best-app-2026-10-13-23h30.json')!.file.contents;
+    expect(JSON.parse(lastOfYesterday).tables.projects).toHaveLength(2);
+  });
+
+  it('lists the copies and reads one back, to restore it', async () => {
+    const { ctx, auto } = setup();
+    await createProject(ctx, 'A');
+    await auto.init();
+    await auto.chooseFolder();
+
+    const [copy] = await auto.listCopies();
+    expect(JSON.parse(await auto.readCopy(copy.name)).tables.projects).toHaveLength(1);
+  });
+
+  it('checks a backup already in the chosen folder before writing over it', async () => {
+    const source = createTestContext();
+    await createProject(source.ctx, 'Only in the folder');
+    const contents = serializeBackup(await exportBackup(source.db, NOW));
+    const folder = memoryFolder('Drive', { 'best-app-backup.json': contents });
+    const { auto } = setup({ picked: folder });
+    await auto.init();
+
+    await auto.chooseFolder();
+
+    expect(auto.getState()).toMatchObject({ status: 'blocked', reason: 'fileHasMoreData' });
+    expect(folder.files.get('best-app-backup.json')!.file.contents).toBe(contents);
+  });
+
+  it('keeps writing to a single file chosen before the folders, without copies', async () => {
+    const remembered = memoryFile();
+    const { auto } = setup({ remembered: remembered.handle });
+
+    await auto.init();
+
+    expect(auto.getState()).toMatchObject({ status: 'active', copies: 'off' });
+    expect(remembered.file.writes).toBe(1);
+    expect(await auto.listCopies()).toEqual([]);
   });
 
   it('rewrites the file after changes, merging a burst into one write', async () => {

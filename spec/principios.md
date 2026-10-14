@@ -34,8 +34,12 @@ Não há onboarding: no primeiro uso eu já saio usando o ciclo diário, e os ri
 
 ## Backup
 
-- Como não há sincronização, o app faz backup automático em arquivo: eu escolho o arquivo uma vez, por exemplo numa pasta sincronizada do Google Drive, e o app regrava esse arquivo alguns segundos depois de cada mudança. Também dá para baixar uma cópia e importar um backup a qualquer momento.
-- O backup automático nunca grava por cima de um arquivo que tenha dados que o navegador não tem, como quando o Chrome apagou os dados do site ou outro computador salvou dados mais novos no mesmo arquivo. Nesse caso, ele pausa e sugere importar o arquivo.
-- O Chrome pode pedir, a cada sessão, autorização para gravar no arquivo. Enquanto eu não autorizo, o backup fica pausado, com um aviso discreto e um botão para retomar.
+- Como não há sincronização, o app faz backup automático numa pasta: eu escolho a pasta uma vez, de preferência sincronizada com o Google Drive da empresa, e o app regrava nela o arquivo do backup alguns segundos depois de cada mudança. Também dá para baixar uma cópia e importar um backup a qualquer momento.
+- Como o arquivo do backup é regravado a cada mudança, um erro que estrague os dados chegaria a ele em segundos. Por isso o app também guarda cópias datadas, na subpasta "copias" da pasta do backup: do dia de hoje, uma cópia a cada 2 horas, ficando com as 5 mais recentes; de cada um dos 14 dias anteriores, só a última versão do dia. O app apaga sozinho as cópias além desse limite, e só elas: nunca mexe em outros arquivos.
+- Antes de uma versão nova do app mudar o formato dos dados, a última versão no formato antigo também vira uma cópia.
+- Em "Dados e backup", eu vejo as cópias por data e posso restaurar qualquer uma. Restaurar funciona como importar: mostra antes o que se perderia, e dá para desfazer.
+- Quem escolheu um arquivo antes das cópias datadas continua com o backup nele, sem cópias, até escolher a pasta.
+- O backup automático nunca grava por cima de um arquivo que tenha dados que o navegador não tem, como quando o Chrome apagou os dados do site ou outro computador salvou dados mais novos no mesmo arquivo. Nesse caso, ele pausa e sugere importar o arquivo. Vale também ao escolher uma pasta que já tem um backup.
+- O Chrome pode pedir, a cada sessão, autorização para gravar na pasta. Enquanto eu não autorizo, o backup fica pausado, com um aviso discreto e um botão para retomar.
 - Importar um backup substitui todos os dados. Se a importação for apagar alguma coisa, o app mostra um aviso em destaque com o que vai se perder, e eu confirmo. Antes de substituir, o app guarda uma cópia do estado anterior, e eu posso desfazer a importação.
 - Como o status e os avisos de backup aparecem na tela está em `navegacao.md`.

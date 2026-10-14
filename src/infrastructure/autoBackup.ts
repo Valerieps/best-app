@@ -1,22 +1,39 @@
 import { AUTO_BACKUP_DELAY_MS, decideAutoBackup } from '../application/autoBackup';
-import { createBackup, type BackupFile, type ImportLoss } from '../application/backup';
+import { BACKUP_SCHEMA_VERSION, createBackup, parseBackup, type BackupFile, type ImportLoss } from '../application/backup';
+import { COPIES_FOLDER, copiesToDelete, copyBeforeOverwrite, copyName, listCopies, needsNewCopy } from '../application/backupCopies';
 import {
   clearAutoBackupOverwrite,
   isAutoBackupOverwriteAllowed,
   markBackupDone,
   readAllTables,
 } from './backupRepository';
-import { writeBackupToHandle, type BackupFileHandle, type HandleStorage } from './backupFiles';
+import {
+  BACKUP_FILE_NAME,
+  fileNames,
+  isFolder,
+  serializeBackup,
+  writeTextToHandle,
+  type BackupFileHandle,
+  type BackupFolderHandle,
+  type BackupHandle,
+  type HandleStorage,
+} from './backupFiles';
 import type { AppDatabase } from './db';
+
+/**
+ * How the dated copies are doing: kept in the backup folder, failing, or off because the backup
+ * still goes to a single file chosen before the folders (issue #28).
+ */
+export type CopiesStatus = 'ok' | 'failed' | 'off';
 
 export type AutoBackupState =
   | { status: 'loading' }
   /** The browser has no File System Access API (not Chrome on desktop). */
   | { status: 'unsupported' }
   | { status: 'noFile' }
-  /** Chrome needs a click to allow writing to the file again in this session. */
+  /** Chrome needs a click to allow writing to the folder again in this session. */
   | { status: 'needsPermission'; fileName: string }
-  | { status: 'active'; fileName: string; lastSavedAt: string | null; saving: boolean }
+  | { status: 'active'; fileName: string; lastSavedAt: string | null; saving: boolean; copies: CopiesStatus }
   | { status: 'blocked'; fileName: string; reason: 'invalidFile' }
   | { status: 'blocked'; fileName: string; reason: 'fileHasMoreData'; fileBackup: BackupFile; loss: ImportLoss }
   | { status: 'error'; fileName: string };
@@ -24,20 +41,37 @@ export type AutoBackupState =
 export interface AutoBackupDeps {
   db: AppDatabase;
   handles: HandleStorage;
-  pick: () => Promise<BackupFileHandle>;
+  pick: () => Promise<BackupFolderHandle>;
   supported: boolean;
   now: () => Date;
   delayMs?: number;
 }
 
+/** A dated copy, newest first in the lists. */
+export interface BackupCopy {
+  name: string;
+  at: Date;
+}
+
+function parseText(text: string): BackupFile | null {
+  if (text.trim() === '') return null;
+  try {
+    const result = parseBackup(JSON.parse(text));
+    return result.ok ? result.backup : null;
+  } catch {
+    return null;
+  }
+}
+
 /**
- * Rewrites the chosen backup file a few seconds after the last change. Each automatic write
- * first checks the file and refuses to overwrite data the browser does not have.
+ * Rewrites the backup file in the chosen folder a few seconds after the last change, and keeps
+ * dated copies in its subfolder (`application/backupCopies.ts`). Each automatic write first checks
+ * the file and refuses to overwrite data the browser does not have.
  */
 export class AutoBackup {
   private state: AutoBackupState = { status: 'loading' };
   private readonly listeners = new Set<() => void>();
-  private handle: BackupFileHandle | null = null;
+  private handle: BackupHandle | null = null;
   private timer: ReturnType<typeof setTimeout> | null = null;
   private running: Promise<void> | null = null;
   private runAgain = false;
@@ -57,7 +91,7 @@ export class AutoBackup {
     if (!this.handle) return this.setState({ status: 'noFile' });
     const permission = await this.handle.queryPermission({ mode: 'readwrite' });
     if (permission !== 'granted') return this.setState({ status: 'needsPermission', fileName: this.handle.name });
-    this.setState({ status: 'active', fileName: this.handle.name, lastSavedAt: null, saving: false });
+    this.setState(this.activeState(null, false, isFolder(this.handle) ? 'ok' : 'off'));
     // Catch up on changes made after the last write, e.g. if the tab closed during the delay.
     await this.flush();
   }
@@ -89,7 +123,7 @@ export class AutoBackup {
     return this.running;
   }
 
-  /** From a click: asks Chrome to allow writing to the remembered file, then writes. */
+  /** From a click: asks Chrome to allow writing to the remembered folder, then writes. */
   async resume(): Promise<void> {
     if (!this.handle) return;
     const permission = await this.handle.requestPermission({ mode: 'readwrite' });
@@ -98,18 +132,35 @@ export class AutoBackup {
   }
 
   /**
-   * From a click: the user picks the backup file. Choosing a file (and confirming Chrome's
-   * "replace?" prompt) is an explicit decision, so this first write skips the overwrite check.
+   * From a click: the user picks the backup folder. A backup file already in it goes through the
+   * same check as any automatic write, since picking a folder, unlike saving over a file, shows
+   * no "replace?" prompt: a folder with more data than the browser blocks instead of losing it.
    */
-  async chooseFile(): Promise<void> {
-    const handle = await this.deps.pick();
-    const now = this.deps.now();
-    await writeBackupToHandle(handle, createBackup(await readAllTables(this.deps.db), now));
-    await this.deps.handles.save(handle);
-    await markBackupDone(this.deps.db, now);
-    await clearAutoBackupOverwrite(this.deps.db);
-    this.handle = handle;
-    this.setState({ status: 'active', fileName: handle.name, lastSavedAt: now.toISOString(), saving: false });
+  async chooseFolder(): Promise<void> {
+    const folder = await this.deps.pick();
+    await this.deps.handles.save(folder);
+    this.handle = folder;
+    this.setState(this.activeState(null, false, 'ok'));
+    await this.flush();
+  }
+
+  /** The dated copies in the backup folder, newest first; empty without a folder or permission. */
+  async listCopies(): Promise<BackupCopy[]> {
+    const folder = this.handle && isFolder(this.handle) ? this.handle : null;
+    if (!folder || (await folder.queryPermission({ mode: 'readwrite' })) !== 'granted') return [];
+    try {
+      return listCopies(await fileNames(await folder.getDirectoryHandle(COPIES_FOLDER)));
+    } catch {
+      // No copies folder yet.
+      return [];
+    }
+  }
+
+  /** The contents of one dated copy, to restore it through the import. */
+  async readCopy(name: string): Promise<string> {
+    if (!this.handle || !isFolder(this.handle)) throw new Error('There is no backup folder');
+    const copies = await this.handle.getDirectoryHandle(COPIES_FOLDER);
+    return (await (await copies.getFileHandle(name)).getFile()).text();
   }
 
   private async write(): Promise<void> {
@@ -120,9 +171,11 @@ export class AutoBackup {
     }
 
     const previous = this.state.status === 'active' ? this.state.lastSavedAt : null;
-    this.setState({ status: 'active', fileName: handle.name, lastSavedAt: previous, saving: true });
+    const copiesBefore: CopiesStatus = isFolder(handle) ? 'ok' : 'off';
+    this.setState(this.activeState(previous, true, this.state.status === 'active' ? this.state.copies : copiesBefore));
     try {
-      const fileText = await (await handle.getFile()).text();
+      const file: BackupFileHandle = isFolder(handle) ? await handle.getFileHandle(BACKUP_FILE_NAME, { create: true }) : handle;
+      const fileText = await (await file.getFile()).text();
       const current = await readAllTables(this.deps.db);
       const decision = decideAutoBackup(fileText, current, await isAutoBackupOverwriteAllowed(this.deps.db));
       if (decision.kind === 'blocked') {
@@ -133,13 +186,47 @@ export class AutoBackup {
         );
       }
       const now = this.deps.now();
-      await writeBackupToHandle(handle, createBackup(current, now));
+      const backup = createBackup(current, now);
+      const text = serializeBackup(backup);
+      // The copies never stop the backup itself: a failure only shows in "Dados e backup".
+      const copies = isFolder(handle) ? await this.keepCopies(handle, fileText, text, now) : 'off';
+      await writeTextToHandle(file, text);
       await markBackupDone(this.deps.db, now);
       await clearAutoBackupOverwrite(this.deps.db);
-      this.setState({ status: 'active', fileName: handle.name, lastSavedAt: now.toISOString(), saving: false });
+      this.setState(this.activeState(now.toISOString(), false, copies));
     } catch {
       this.setState({ status: 'error', fileName: handle.name });
     }
+  }
+
+  /**
+   * Keeps the dated copies: the file's previous contents when they are an earlier day's last
+   * version (or older data, before a migration), a copy of what is about to be written every
+   * two hours, and deletes the copies beyond the limits.
+   */
+  private async keepCopies(folder: BackupFolderHandle, previousText: string, text: string, now: Date): Promise<CopiesStatus> {
+    try {
+      const copies = await folder.getDirectoryHandle(COPIES_FOLDER, { create: true });
+      const names = await fileNames(copies);
+      const before = copyBeforeOverwrite(parseText(previousText), names, now, BACKUP_SCHEMA_VERSION);
+      if (before) {
+        await writeTextToHandle(await copies.getFileHandle(before, { create: true }), previousText);
+        names.push(before);
+      }
+      if (needsNewCopy(names, now)) {
+        const name = copyName(now);
+        await writeTextToHandle(await copies.getFileHandle(name, { create: true }), text);
+        if (!names.includes(name)) names.push(name);
+      }
+      for (const name of copiesToDelete(names, now)) await copies.removeEntry(name);
+      return 'ok';
+    } catch {
+      return 'failed';
+    }
+  }
+
+  private activeState(lastSavedAt: string | null, saving: boolean, copies: CopiesStatus): AutoBackupState {
+    return { status: 'active', fileName: this.handle?.name ?? '', lastSavedAt, saving, copies };
   }
 
   private setState(next: AutoBackupState): void {

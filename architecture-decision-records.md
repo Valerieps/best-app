@@ -15,7 +15,7 @@ Read only the ADRs your task touches: find them in this table or by grepping `ad
 | [ADR-004](adr/004-no-event-for-plain-text-edits.md) | No event for plain text edits | 2026-10-11 | Accepted |
 | [ADR-005](adr/005-day-boundary.md) | Day boundary | 2026-10-11 | Accepted |
 | [ADR-006](adr/006-backup-format-and-import.md) | Backup format and import | 2026-10-11 | Accepted |
-| [ADR-007](adr/007-backup-to-a-user-chosen-file.md) | Backup to a user-chosen file | 2026-10-11 | Accepted |
+| [ADR-007](adr/007-backup-to-a-user-chosen-file.md) | Backup to a user-chosen file | 2026-10-11 | Superseded by ADR-047 |
 | [ADR-008](adr/008-automatic-backup-with-an-overwrite-guard.md) | Automatic backup with an overwrite guard | 2026-10-11 | Accepted |
 | [ADR-009](adr/009-csp-as-a-meta-tag-in-production-builds-only.md) | CSP as a meta tag in production builds only | 2026-10-11 | Accepted |
 | [ADR-010](adr/010-hand-written-service-worker.md) | Hand-written service worker | 2026-10-11 | Accepted |
@@ -55,3 +55,4 @@ Read only the ADRs your task touches: find them in this table or by grepping `ad
 | [ADR-044](adr/044-the-checkout-saves-each-step-when-moving-on.md) | The checkout saves each step when moving on | 2026-10-14 | Accepted |
 | [ADR-045](adr/045-cleanup-colors-measure-the-age-of-the-oldest-item.md) | Cleanup colors measure the age of the oldest item | 2026-10-14 | Accepted |
 | [ADR-046](adr/046-day-note-focus-lives-in-the-settings.md) | Day note focus lives in the settings | 2026-10-14 | Accepted |
+| [ADR-047](adr/047-backup-folder-with-dated-copies.md) | Backup folder with dated copies | 2026-10-14 | Accepted |

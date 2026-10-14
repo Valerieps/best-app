@@ -31,9 +31,9 @@ export function BackupBanner({ state, actions, onSnooze }: Props) {
     case 'noFile':
       return (
         <Banner>
-          <span>Seus dados ainda não têm backup. Escolha um arquivo, e o app passa a salvar sozinho a cada mudança.</span>
+          <span>Seus dados ainda não têm backup. Escolha uma pasta, e o app passa a salvar sozinho a cada mudança.</span>
           <span className="banner__actions">
-            <button type="button" className="link" onClick={actions.chooseFile}>
+            <button type="button" className="link" onClick={actions.chooseFolder}>
               Ativar backup automático
             </button>
             {later}
@@ -56,9 +56,9 @@ export function BackupBanner({ state, actions, onSnooze }: Props) {
       if (state.reason === 'invalidFile') {
         return (
           <Banner tone="danger">
-            <span>"{state.fileName}" não é um backup do app, então o backup automático não grava nele.</span>
-            <button type="button" className="link" onClick={actions.chooseFile}>
-              Escolher outro arquivo
+            <span>O arquivo de backup em "{state.fileName}" não é um backup do app, então o backup automático não grava nele.</span>
+            <button type="button" className="link" onClick={actions.chooseFolder}>
+              Escolher outra pasta
             </button>
           </Banner>
         );
@@ -66,15 +66,15 @@ export function BackupBanner({ state, actions, onSnooze }: Props) {
       return (
         <Banner tone="danger">
           <span>
-            Backup automático pausado: "{state.fileName}" tem dados que este navegador não tem, e gravar por cima
-            apagaria esses dados.
+            Backup automático pausado: o backup em "{state.fileName}" tem dados que este navegador não tem, e gravar
+            por cima apagaria esses dados.
           </span>
           <span className="banner__actions">
             <button type="button" className="link" onClick={() => actions.reviewImport(state.fileBackup)}>
               Ver e importar o backup
             </button>
-            <button type="button" className="link" onClick={actions.chooseFile}>
-              Escolher outro arquivo
+            <button type="button" className="link" onClick={actions.chooseFolder}>
+              Escolher outra pasta
             </button>
           </span>
         </Banner>
