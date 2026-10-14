@@ -82,7 +82,7 @@ describe('projects in focus in the Revisão de Foco', () => {
     await setFocusProjectInReview(ctx, projects[0].id, true);
     await setFocusProjectInReview(ctx, projects[0].id, false);
     const removed = await db.events.where('type').equals('priority.removed').toArray();
-    expect(removed.map((event) => event.data.reason)).toEqual(['review']);
+    expect(removed.map((event) => ('reason' in event.data ? event.data.reason : null))).toEqual(['review']);
   });
 });
 

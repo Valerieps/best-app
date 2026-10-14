@@ -167,7 +167,7 @@ Nada disso é guardado: é calculado a partir das tabelas, por funções de `app
 
 **Planejado:** compromisso migrado (5).
 
-O campo `data` ainda não tem um tipo por evento; quem grava e quem lê combinam os campos por convenção (issue [#52](https://github.com/Valerieps/best-app/issues/52)).
+**Formato dos detalhes.** Cada tipo de evento tem o formato do seu `data` em `EventData` (`src/domain/events.ts`), e `record` só aceita esse formato: um campo com nome errado não compila. Os formatos que o app gravou antes e não grava mais ficam em `LegacyEventData`, e quem lê trata os dois. Um formato já gravado nunca muda; uma mudança incompatível sobe a versão do evento (`v`, ausente quer dizer 1). Como um backup importado de arquivo pode trazer qualquer coisa, quem lê um campo ainda confere o valor (ADR-043).
 
 ### Adiamento
 

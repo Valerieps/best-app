@@ -23,7 +23,7 @@ function project(id: string, status: Project['status'] = 'active'): Project {
 }
 
 let eventId = 0;
-function change(type: 'priority.added' | 'priority.removed', at: string, itemIds: string[], reason?: string): DomainEvent {
+function change(type: 'priority.added' | 'priority.removed', at: string, itemIds: string[], reason?: 'review' | 'finished'): DomainEvent {
   return {
     id: `e${++eventId}`,
     type,
@@ -31,8 +31,8 @@ function change(type: 'priority.added' | 'priority.removed', at: string, itemIds
     entityId: 'focusProjects',
     at,
     day: at.slice(0, 10),
-    data: reason ? { itemIds, reason } : { itemIds },
-  };
+    data: reason ? { projectId: 'p', itemIds, reason } : { projectId: 'p', itemIds },
+  } as DomainEvent;
 }
 
 describe('projects in focus', () => {

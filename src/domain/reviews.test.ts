@@ -15,7 +15,7 @@ import {
 
 let id = 0;
 function event(type: EventType, entityId: string, at: string): DomainEvent {
-  return { id: `e${++id}`, type, entityType: 'day', entityId, at, day: at.slice(0, 10), data: {} };
+  return { id: `e${++id}`, type, entityType: 'day', entityId, at, day: at.slice(0, 10), data: {} } as DomainEvent;
 }
 
 function reflection(kind: Reflection['kind'], closedAt: string | null): Reflection {

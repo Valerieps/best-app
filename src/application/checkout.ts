@@ -169,7 +169,7 @@ export async function applyPlanning(
   });
 }
 
-async function markCheckoutDone(ctx: AppContext, tx: StoreTransaction, day: DayKey, mode: string): Promise<void> {
+async function markCheckoutDone(ctx: AppContext, tx: StoreTransaction, day: DayKey, mode: 'checkout' | 'closePendingDays'): Promise<void> {
   const at = nowIso(ctx);
   // The note can still be written in after a checkout of today; it keeps its order.
   const sectionOrder = (await tx.days.get(day))?.sectionOrder;

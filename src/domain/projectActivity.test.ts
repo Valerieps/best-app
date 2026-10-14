@@ -18,7 +18,7 @@ const ACTIVE = { status: 'active' as const, createdAt: '2026-08-01T09:00:00' };
 let counter = 0;
 function event(type: EventType, entityId: string, day: DayKey, time = '10:00'): DomainEvent {
   counter++;
-  return { id: `e-${counter}`, type, entityType: type.startsWith('section') ? 'section' : 'block', entityId, at: `${day}T${time}:00`, day, data: {} };
+  return { id: `e-${counter}`, type, entityType: type.startsWith('section') ? 'section' : 'block', entityId, at: `${day}T${time}:00`, day, data: {} } as DomainEvent;
 }
 const created = (id: string, day: DayKey, time?: string) => event('block.created', id, day, time);
 const finished = (id: string, day: DayKey, time?: string) => event('task.finished', id, day, time);
