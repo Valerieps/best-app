@@ -3,7 +3,7 @@
 Technical decisions that fill gaps in the spec. Product and business decisions go into the spec itself (`spec/`).
 
 - **Goes here:** one file per decision in `adr/`, named `NNN-short-title.md`, with Date, Decision and Why. A later change to a decision is an **Update** paragraph in the same file; a decision replaced by a new one gets a **Superseded by ADR-NNN** paragraph. Keep this table in sync.
-- **Does not go here:** product rules (`spec/`), the current design as a whole (`ARQUITETURA.md`) and known debt (GitHub issues labeled `debito-tecnico` or `bug`).
+- **Does not go here:** product rules (`spec/`), the current design as a whole (`ARQUITETURA.md`) and known debt (GitHub issues labeled `t:debito-tecnico` or `t:bug`).
 
 Read only the ADRs your task touches: find them in this table or by grepping `adr/`.
 
@@ -51,3 +51,4 @@ Read only the ADRs your task touches: find them in this table or by grepping `ad
 | [ADR-040](adr/040-reordering-lines-and-day-parts-without-events.md) | Reordering lines and the parts of a day, without events or a schema version | 2026-10-13 | Accepted |
 | [ADR-041](adr/041-objectives-and-habits-hidden-behind-a-code-flag.md) | Objectives and habits hidden behind a code flag | 2026-10-13 | Accepted |
 | [ADR-042](adr/042-screens-fail-alone-and-queries-report-errors.md) | Screens fail alone, and live queries report their errors | 2026-10-13 | Accepted |
+| [ADR-043](adr/043-typed-event-details-with-legacy-shapes-and-version.md) | Typed event details, with legacy shapes and a version | 2026-10-14 | Accepted |

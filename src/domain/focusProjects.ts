@@ -1,6 +1,6 @@
 import type { DayKey } from './day';
 import type { PriorityList, Project } from './entities';
-import type { DomainEvent } from './events';
+import type { DomainEvent, EventOf } from './events';
 import { weekKey, type WeekKey } from './week';
 
 /**
@@ -38,13 +38,16 @@ export function withAddedProject(ids: readonly string[], projectId: string): str
 }
 
 /** Events that changed the list in focus, oldest first. */
-function focusListEvents(events: readonly DomainEvent[]): DomainEvent[] {
+function focusListEvents(events: readonly DomainEvent[]): FocusListEvent[] {
   return events
-    .filter((event) => event.entityId === FOCUS_LIST_ID && (event.type === 'priority.added' || event.type === 'priority.removed'))
+    .filter((event): event is FocusListEvent => event.entityId === FOCUS_LIST_ID && (event.type === 'priority.added' || event.type === 'priority.removed'))
     .sort((a, b) => (a.at < b.at ? -1 : a.at > b.at ? 1 : 0));
 }
 
-function itemIdsOf(event: DomainEvent): string[] {
+type FocusListEvent = EventOf<'priority.added'> | EventOf<'priority.removed'>;
+
+/** The list after the change. Checked, since a backup from a file may carry anything. */
+function itemIdsOf(event: FocusListEvent): string[] {
   const ids = event.data.itemIds;
   return Array.isArray(ids) ? ids.filter((id): id is string => typeof id === 'string') : [];
 }
@@ -68,7 +71,7 @@ export function focusListEmptied(events: readonly DomainEvent[], since: string |
   const changes = focusListEvents(events);
   const last = changes[changes.length - 1];
   if (!last || (since !== null && last.at <= since)) return false;
-  return last.type === 'priority.removed' && last.data.reason === 'finished' && itemIdsOf(last).length === 0;
+  return last.type === 'priority.removed' && 'reason' in last.data && last.data.reason === 'finished' && itemIdsOf(last).length === 0;
 }
 
 // Before the reviews (versions 6 and earlier), the priority projects belonged to a week.

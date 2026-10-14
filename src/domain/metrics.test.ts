@@ -5,7 +5,7 @@ import { weekOf } from './week';
 
 let id = 0;
 function event(type: EventType, entityId: string, day: string, data: Record<string, unknown> = {}): DomainEvent {
-  return { id: `e${++id}`, type, entityType: 'block', entityId, at: `${day}T12:00:00Z`, day, data };
+  return { id: `e${++id}`, type, entityType: 'block', entityId, at: `${day}T12:00:00Z`, day, data } as DomainEvent;
 }
 
 const week = weekOf('2026-10-11'); // 5 to 11 October

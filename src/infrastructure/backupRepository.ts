@@ -7,7 +7,7 @@ import {
   type ImportLoss,
 } from '../application/backup';
 import { toDayKey } from '../domain/day';
-import type { DomainEvent, EventType } from '../domain/events';
+import type { EventData, EventOf } from '../domain/events';
 import type { AppDatabase } from './db';
 
 const SNAPSHOT_ID = 'before-import';
@@ -65,7 +65,7 @@ export async function previewImport(db: AppDatabase, backup: BackupFile): Promis
  * Importing and undoing replace the whole history, so each leaves an event in the history it
  * puts in place (issue #37): the history then shows that its data came from a file.
  */
-function backupEvent(type: EventType, now: Date, id: string, data: Record<string, unknown>): DomainEvent {
+function backupEvent<T extends 'backup.imported' | 'backup.importUndone'>(type: T, now: Date, id: string, data: EventData[T]): EventOf<T> {
   return { id, type, entityType: 'backup', entityId: 'backup', at: now.toISOString(), day: toDayKey(now), data };
 }
 

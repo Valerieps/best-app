@@ -1,5 +1,6 @@
 import type { DayKey } from '../domain/day';
 import type { Block } from '../domain/entities';
+import type { DateChangeReason } from '../domain/events';
 import { isPostponement } from '../domain/tasks';
 import { record } from './events';
 import type { AppContext, StoreTransaction } from './ports';
@@ -14,7 +15,7 @@ export async function moveIntendedDate(
   task: Block,
   to: DayKey | null,
   day: DayKey,
-  reason: string,
+  reason: DateChangeReason,
 ): Promise<Block> {
   const from = task.intendedDate;
   if (from === to) return task;

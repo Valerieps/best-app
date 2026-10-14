@@ -18,8 +18,8 @@ edits docs between messages).
 | Any code change | The hard rules below; `google-safe.md` in full only when the change touches storage, backup, links or rendered user text, dependencies, or anything network-like |
 | Implementing or changing a feature | Its file in `spec/` (the table in `SPEC.md` says which); its row in `ROADMAP.md`; the matching part of `ARQUITETURA.md`; ADRs found in the index or by grepping `adr/` |
 | Answering a product question or deciding a rule | The relevant file in `spec/` and its "Em aberto"; `GLOSSARIO.md` for the terms; `DECISOES.md` only when the "why" matters |
-| Working on a feature request | Its GitHub issue (`gh issue view <n>`; open requests carry the `enhancement` label) and the `spec/` files it cites |
-| Fixing a bug or refactoring | Its GitHub issue (`gh issue list --label bug` or `--label debito-tecnico`) and the relevant ADRs |
+| Working on a feature request | Its GitHub issue (`gh issue view <n>`; open requests carry the `t:enhancement` label) and the `spec/` files it cites |
+| Fixing a bug or refactoring | Its GitHub issue (`gh issue list --label t:bug` or `--label t:debito-tecnico`) and the relevant ADRs |
 | Reviewing or reorganizing the docs | All of them; this is the only task that needs the whole set |
 
 Never read `AVALIACAO-UX.md` (frozen) unless the task cites one of its codes (N1, P4...).
@@ -44,11 +44,12 @@ in this table. Never copy content between docs: link to the home instead (see `s
 | Terms | `GLOSSARIO.md` | One term, one meaning. Use these names in UI text and docs |
 | Why product decisions were made; origin; product risks | `DECISOES.md` | The rule itself stays in `spec/` |
 | What is built, what is missing, where code lags behind the spec, what is deferred | `ROADMAP.md` | The only place that tracks progress. Update it whenever you build or skip something |
-| Feature requests not yet decided | GitHub issues of the repository, label `enhancement` plus a size label (`s:small`, `s:medium`, `s:large`), one per request | Each issue holds what changes in the spec, its "Em aberto" questions and its incoherences with the current model. When decided: rule to `spec/`, progress to `ROADMAP.md`, issue closed |
+| Feature requests not yet decided | GitHub issues of the repository, label `t:enhancement` plus a size label (`s:small`, `s:medium`, `s:large`), one per request | Each issue holds what changes in the spec, its "Em aberto" questions and its incoherences with the current model. When decided: rule to `spec/`, progress to `ROADMAP.md`, issue closed |
 | Contradictions between docs | `INCOERENCIAS.md` | Temporary: remove an item once it is resolved |
 | Technical design (data model, events, editor, triage, metrics) | `ARQUITETURA.md` | Design only, no progress. Keep it in sync when the design changes |
 | Technical decisions | `adr/`, one file per decision | `architecture-decision-records.md` is the index, with each ADR's status. Technical only; product rules go to `spec/` |
-| Known bugs, technical debt, known limitations | GitHub issues, label `bug` or `debito-tecnico`, plus a priority label (`p:alta`, `p:media`, `p:baixa`) and a size label (`s:small`, `s:medium`, `s:large`) | Every new bug or debt issue gets a priority and a size label. Close the issue when resolved; open one when you knowingly leave something behind |
+| Known bugs, technical debt, known limitations | GitHub issues, label `t:bug` or `t:debito-tecnico`, plus a priority label (`p:alta`, `p:media`, `p:baixa`) and a size label (`s:small`, `s:medium`, `s:large`) | Every new bug or debt issue gets a priority and a size label. Close the issue when resolved; open one when you knowingly leave something behind |
+| Open questions on an issue | A comment on the issue, plus the label `q:perguntas em aberto`; an issue ready to build carries `q:SEM perguntas em aberto` | Ask product questions there, not in chat, when the owner asks for it. Swap the label once the questions are answered |
 | Checks and setup only the owner can do | `DEBITO-TECNICO.md` | Checks in her Chrome, configuration and publishing. Remove an item when done |
 | Security and compliance (local-only, no network, CSP, backups) | `google-safe.md` | Mandatory for every change |
 | Screen drafts and implementation briefs | `rascunhos/` | `rascunhos/README.md` gives each draft's status; the spec wins over a draft |

@@ -4,7 +4,7 @@ Atualizado em 13/10/2026
 
 O que depende de você para ser verificado ou configurado. Quando um item for feito, ele sai daqui.
 
-Os bugs e o débito técnico moram nas [issues do GitHub](https://github.com/Valerieps/best-app/issues): label `bug` para comportamento errado, `debito-tecnico` para débito, limitações conhecidas e verificações que faltam, e uma prioridade em cada uma (`p:alta`, `p:media`, `p:baixa`).
+Os bugs e o débito técnico moram nas [issues do GitHub](https://github.com/Valerieps/best-app/issues): label `t:bug` para comportamento errado, `t:debito-tecnico` para débito, limitações conhecidas e verificações que faltam, e uma prioridade em cada uma (`p:alta`, `p:media`, `p:baixa`).
 
 - **Entra aqui:** verificações que só você pode fazer no seu Chrome, e configuração e publicação.
 - **Não entra aqui:** bugs, débito técnico e limitações conhecidas (issues do GitHub); funcionalidades que faltam ou esperam pergunta em aberto, e onde o código ainda não segue o `SPEC.md` (`ROADMAP.md`); decisões de produto pendentes (`ROADMAP.md`, "Antes de outras pessoas usarem").
