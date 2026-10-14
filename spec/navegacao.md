@@ -17,6 +17,7 @@ Toda opção do app mora num de três níveis, e cada nível tem um lugar fixo, 
 - O status do backup fica sempre visível, na mesma linha de "Dados e backup", como um ponto colorido com um rótulo curto ("Backup 14:32", "Sem backup", "Backup pausado"). Clicar nele abre "Dados e backup", também quando o backup pede autorização de novo; o botão de retomar fica lá. A faixa de backup aparece em todas as telas só enquanto não houver nenhum backup, ou quando o backup estiver bloqueado ou com erro.
 - Só um aviso aparece por vez no topo da tela, nesta ordem: backup bloqueado ou com erro, checkout pendente, backup ainda não ativado, revisão disponível. Quando um some, o próximo aparece. Os lembretes que voltaram ficam fora dessa fila e aparecem sempre, porque são o único sinal deles.
 - O aviso de checkout pendente e o de backup não ativado têm "Lembrar depois", que os esconde até o dia seguinte. O aviso de revisão disponível também tem "Lembrar depois", mas ele o esconde até o próximo checkout (`rituais.md`). O contador de "Rituais" continua mostrando os checkouts pendentes. O aviso de backup bloqueado ou com erro não pode ser adiado.
+- Quando uma mudança não é salva, a tela volta ao que está salvo e um aviso curto aparece no rodapé, fora da fila do topo: "Uma mudança não foi salva. A tela mostra o que está salvo; tente de novo." Ele fica até eu fechar, e conta as mudanças se mais de uma falhar.
 
 ## 2. Da tela: um cabeçalho no topo do centro
 

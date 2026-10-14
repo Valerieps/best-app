@@ -30,6 +30,8 @@ import { Sidebar } from './Sidebar';
 import { useLiveQueryState } from './useLiveQuery';
 import { ErrorBoundary } from './components/ErrorBoundary';
 import { ScreenError } from './components/ErrorScreens';
+import { SaveErrorNotice } from './components/SaveErrorNotice';
+import { reportSaveError } from './saveErrors';
 import { enabledRoute, visibleReviews } from './features';
 
 export function App() {
@@ -52,7 +54,13 @@ export function App() {
       if (document.visibilityState === 'hidden') void autoBackup.flush();
     };
     document.addEventListener('visibilitychange', onHide);
-    return () => document.removeEventListener('visibilitychange', onHide);
+    // A button whose save failed leaves its error unhandled: tell the user, besides the console.
+    const onUnhandled = () => reportSaveError();
+    window.addEventListener('unhandledrejection', onUnhandled);
+    return () => {
+      document.removeEventListener('visibilitychange', onHide);
+      window.removeEventListener('unhandledrejection', onUnhandled);
+    };
   }, []);
 
   // The day note pages only through days that still have pending items (1b).
@@ -146,6 +154,7 @@ export function App() {
             onCancel={backup.cancelImport}
           />
         )}
+        <SaveErrorNotice />
       </div>
     </div>
   );
