@@ -24,7 +24,7 @@
 - Clicar no espaço vazio abaixo das linhas de uma seção, até a próxima seção, abre uma linha nova no fim dela, já com o cursor, para eu escrever sem ir até o fim da última linha e apertar Enter. A linha só é gravada quando eu digito; se eu sair dela vazia, ela some. Numa seção ainda sem linhas, clicar em qualquer lugar dela, fora do título e dos botões, já me põe na primeira linha. Só a nota de hoje ganha linhas novas.
 - Enquanto escrevo, posso apagar uma linha ou tirar o `[]` do começo para mudar o tipo, como num editor de texto, mas só em blocos criados no dia e ainda não triados. Uma tarefa que veio de outro dia não some quando eu apago o texto: para tirá-la de circulação, eu arquivo ou abandono.
 - Se eu abrir o app sem ter fechado o dia anterior, a nota de hoje abre normalmente, com um aviso no topo e um botão para fechar o dia pendente.
-- A barra lateral dá acesso às listas: tarefas ativas, tarefas arquivadas e wiki pessoal (`navegacao.md`, "Navegação").
+- A barra lateral dá acesso às listas: tarefas ativas e tarefas arquivadas. A wiki pessoal saiu da barra por enquanto (15/10/2026) e abre pelos links "ver na wiki" (`navegacao.md`, "Navegação").
 - No final do dia, ou na manhã seguinte, eu clico em "Fechar o dia".
 
 ## Seções e atalhos *(1b)*
