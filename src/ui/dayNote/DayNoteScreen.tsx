@@ -482,7 +482,8 @@ export function DayNoteScreen({
   /**
    * A click in the empty area below a section's lines, down to the next part of the day, means
    * writing something new: it opens an empty line at the end of that section, saved only on the
-   * first keystroke (ADR-013). Only today's note takes new lines (ADR-018).
+   * first keystroke (ADR-013). In a section with no lines yet, a click anywhere in it goes to its
+   * first line. Only today's note takes new lines (ADR-018).
    */
   function openLineBelow(event: MouseEvent<HTMLElement>) {
     if (!writable || event.button !== 0) return;
@@ -490,15 +491,20 @@ export function DayNoteScreen({
     const rows = [...event.currentTarget.querySelectorAll<HTMLElement>(':scope > .day-part')];
     const row = rows.filter((element) => element.getBoundingClientRect().top <= y).at(-1);
     const part = parts.find((item) => item.key === row?.dataset.dragId);
-    if (!row || !part || part.kind !== 'section' || part.entry.blocks.length === 0) return;
+    if (!row || !part || part.kind !== 'section') return;
     const entry = part.entry;
-    const lines = row.querySelectorAll('.line');
-    const lastLine = lines[lines.length - 1];
-    if (!lastLine) return;
-    const onControl = (event.target as HTMLElement).closest('textarea, input, button, a, select, .line, .section__header, .note__actions');
-    if (!opensLineBelow({ y, lastLineBottom: lastLine.getBoundingClientRect().bottom, onControl: onControl !== null })) return;
+    const empty = entry.blocks.length === 0;
+    const lastLine = row.querySelectorAll('.line:not(.line--ghost)');
+    const lastLineBottom = empty ? null : lastLine[lastLine.length - 1]?.getBoundingClientRect().bottom;
+    if (lastLineBottom === undefined) return;
+    const onControl = (event.target as HTMLElement).closest('textarea, input, button, a, select, .section__header, .note__actions');
+    if (!opensLineBelow({ y, lastLineBottom, onControl: onControl !== null })) return;
     // Keeps the browser from moving the focus; the empty line takes it once it shows.
     event.preventDefault();
+    if (empty) {
+      requestFocus(`ghost:${entry.note.section?.id ?? DAY_ENTRY}`);
+      return;
+    }
     setAppendingTo(entry.key);
     requestFocus(`ghost:end:${entry.key}`);
   }
