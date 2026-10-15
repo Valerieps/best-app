@@ -255,6 +255,12 @@ input[type='checkbox'] {
   padding: var(--space-3) var(--space-4) var(--space-4);
 }
 
+/* Room below the lines, as if a few were already written: more breathing room, and a click
+   there opens a new line at the end of the section (spec/nota-do-dia.md, "Execução") */
+.section:not(.section--carried) {
+  padding-bottom: 3lh;
+}
+
 .section--project {
   border-left-color: var(--color-project-bar);
 }

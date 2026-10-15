@@ -17,7 +17,7 @@
 ## Execução *(1a)*
 
 - Interface: uma página parecida com uma nota do Obsidian ou Notion, ou seja, como se fosse um arquivo de texto, mas com blocos estruturados de conteúdo.
-- *(1b)* A nota ocupa a área principal toda, de lado a lado, como no Obsidian, sobre a área central branca (veja `navegacao.md`, "Global"). Cada parte do dia (prioridades, "De outros dias", seções) fica marcada só pela barra colorida à esquerda e por uma linha fina embaixo, para eu continuar vendo onde uma seção acaba e a outra começa. No modo foco, a parte ocupa também a altura toda.
+- *(1b)* A nota ocupa a área principal toda, de lado a lado, como no Obsidian, sobre a área central branca (veja `navegacao.md`, "Global"). Cada parte do dia (prioridades, "De outros dias", seções) fica marcada só pela barra colorida à esquerda e por uma linha fina embaixo, para eu continuar vendo onde uma seção acaba e a outra começa. Cada seção tem um espaço livre de umas três linhas embaixo, como se já tivesse algumas linhas escritas: dá respiro, e uma seção nova já nasce com espaço para eu escrever. No modo foco, a parte ocupa também a altura toda.
 - O dia abre com uma seção geral já criada. As tarefas com data de intenção para aquele dia, incluindo as escolhidas no fechamento do dia anterior, entram no topo dela, sem distinção visual das tarefas criadas no dia. A partir do 1b, elas ficam numa seção própria, "De outros dias", que de começo vem logo acima da primeira seção geral e que eu posso mudar de lugar como as outras (veja "Ordem das linhas e das seções").
 - Ao longo do dia eu vou coletando tudo em uma única nota, de forma sequencial, como um bloco de notas. A ideia é não gastar processamento mental escolhendo onde salvar cada coisa.
 - Cada tarefa tem um checkbox para finalizar.
