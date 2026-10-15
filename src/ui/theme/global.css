@@ -235,7 +235,13 @@ input[type='checkbox'] {
   color: var(--color-text-muted);
 }
 
-/* Day note: fills the whole main area, like a note in Obsidian; each part is a subtle card of its own */
+/* Day note: the whole main area is white, like a note in Obsidian, so all of it feels like the place to write.
+   Each part is marked only by its colored bar and a thin line below. */
+.shell__main:has(.page--note) {
+  min-height: 100vh;
+  background: var(--color-surface);
+}
+
 .page--note {
   max-width: none;
   /* Room on the left for the parts' drag handles */
@@ -245,15 +251,13 @@ input[type='checkbox'] {
 .note {
   display: flex;
   flex-direction: column;
-  gap: var(--space-3);
+  gap: var(--space-4);
 }
 
 .section {
-  background: var(--color-surface);
-  border: var(--border-width) solid var(--color-border);
   border-left: var(--section-bar-width) solid var(--color-general-bar);
-  border-radius: var(--radius-md);
-  padding: var(--space-3) var(--space-4) var(--space-3) var(--space-4);
+  border-bottom: var(--border-width) solid var(--color-border);
+  padding: var(--space-3) var(--space-4) var(--space-4);
 }
 
 .section--project {
@@ -2211,6 +2215,11 @@ button.sidebar__footer-item {
   border-radius: var(--radius-md);
 }
 
+/* On the white day note, the notices stay light and keep only their border */
+.page--note .screen-notices .banner {
+  background: var(--color-surface-soft);
+}
+
 .opening__sun {
   fill: none;
   stroke: var(--color-firework-1);
@@ -3307,9 +3316,12 @@ button.project-actions {
 /* Unpinned, the priorities sit among the sections and look like one */
 .day-part--priorities .priorities {
   margin: 0;
-  padding: var(--space-3) var(--space-4);
+  padding: var(--space-3) var(--space-4) var(--space-4);
+  border: none;
   border-left: var(--section-bar-width) solid var(--color-firework-1);
-  border-radius: var(--radius-md);
+  border-bottom: var(--border-width) solid var(--color-border);
+  border-radius: 0;
+  background: none;
 }
 
 .section__carried-title {
