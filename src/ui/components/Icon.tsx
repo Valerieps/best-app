@@ -18,6 +18,13 @@ const PATHS = {
   alertCircle: 'M3 12a9 9 0 1 0 18 0a9 9 0 0 0-18 0M12 8v4M12 16h.01',
   maximize: 'M16 4h4v4M14 10l6-6M8 20h-4v-4M4 20l6-6',
   minimize: 'M5 9h4v-4M3 3l6 6M5 15h4v4M3 21l6-6M19 9h-4v-4M15 9l6-6M19 15h-4v4M15 15l6 6',
+  // Text formatting (the toolbar of the day note's sections)
+  bold: 'M7 5h6a3.5 3.5 0 0 1 0 7h-6zM13 12h1a3.5 3.5 0 0 1 0 7h-7v-7',
+  italic: 'M11 5h6M7 19h6M14 5l-4 14',
+  list: 'M9 6h11M9 12h11M9 18h11M5 6v.01M5 12v.01M5 18v.01',
+  listNumbers: 'M11 6h9M11 12h9M12 18h8M4 16a2 2 0 1 1 4 0c0 .591-.5 1-1 1.5l-3 2.5h4M6 10v-6l-2 2',
+  indentIncrease: 'M20 6h-11M20 12h-7M20 18h-11M4 8l4 4l-4 4',
+  indentDecrease: 'M20 6h-7M20 12h-9M20 18h-7M8 8l-4 4l4 4',
   // Project icons (PROJECT_ICONS in the domain)
   pot: 'M4 11h16M6 11v6a3 3 0 0 0 3 3h6a3 3 0 0 0 3-3v-6M3 11h1M20 11h1M10 7c0-1 1-2 1-3M14 7c0-1 1-2 1-3',
   home: 'M5 12h-2l9-9l9 9h-2M5 12v7a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-7M9 21v-6a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v6',

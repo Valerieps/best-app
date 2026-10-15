@@ -49,6 +49,7 @@ import { ReviewBanner } from '../reviews/ReviewBanner';
 import type { ReviewNotice } from '../reviews/reviewNotice';
 import { opensLineBelow } from './lineBelow';
 import { SectionHeader } from './SectionHeader';
+import { FormatToolbar } from './FormatToolbar';
 
 interface Props {
   /** The day shown: today, or a past day with pending items (1b). */
@@ -424,7 +425,7 @@ export function DayNoteScreen({
 
   const handlers: LineHandlers = {
     onSaveText: (block, text) => write(() => updateBlockText(ctx, block.id, text)),
-    onEnter: (block, text, caret) => {
+    onEnter: (block, text, caret, newCaret = 0) => {
       const slot = slotOf(block);
       if (!slot) return;
       // Enter on an empty task line that is still free turns it into a note, like a checklist.
@@ -435,7 +436,7 @@ export function DayNoteScreen({
       const target = newLineTarget(slot.entry, positionAfter(slot));
       const after = text.slice(caret);
       showDraft(slot.entry, target, splitKind(block.kind, after), detectKind(after).text);
-      requestFocus(target.blockId!, 0);
+      requestFocus(target.blockId!, newCaret);
       write(() => splitBlock(ctx, block.id, text, caret, target));
     },
     onBackspaceAtStart: (block, text) => {
@@ -477,12 +478,12 @@ export function DayNoteScreen({
   const onlyPriorities = parts.every((part) => part.kind === 'priorities');
 
   /** Creates a line at the end of a section: its first line, or the one typed after clicking below the lines. */
-  function createFirstLine(entry: Entry, typed: string) {
+  function createFirstLine(entry: Entry, typed: string, caret?: number) {
     setAppendingTo(null);
     const target = newLineTarget(entry, positionBetween(entry.blocks.at(-1)?.position ?? null, null));
     const { kind, text } = detectKind(typed);
     showDraft(entry, target, kind, text);
-    requestFocus(target.blockId!);
+    requestFocus(target.blockId!, caret ?? 'end');
     write(() => createBlock(ctx, target, typed));
   }
 
@@ -505,7 +506,7 @@ export function DayNoteScreen({
     const lastLineBottom = empty ? null : lastLine[lastLine.length - 1]?.getBoundingClientRect().bottom;
     if (lastLineBottom === undefined) return;
     const onControl = (event.target as HTMLElement).closest(
-      'textarea, input, button, a, select, .section__header, .note__actions, .part-insert',
+      'textarea, input, button, a, select, .line__rendered, .section__header, .note__actions, .part-insert',
     );
     if (!opensLineBelow({ y, lastLineBottom, onControl: onControl !== null })) return;
     // Keeps the browser from moving the focus; the empty line takes it once it shows.
@@ -618,7 +619,12 @@ export function DayNoteScreen({
           onCreateProject={(name) => section && write(() => convertSectionToProject(ctx, section.id, name))}
           onUnlink={(title) => section && write(() => unlinkSection(ctx, section.id, title))}
           onRenameProject={(name) => section && write(() => renameSectionProject(ctx, section.id, name))}
-          trailing={focusButton(part.key, section?.title ? `na seção "${section.title}"` : 'nesta seção', entry.key)}
+          trailing={
+            <>
+              <FormatToolbar />
+              {focusButton(part.key, section?.title ? `na seção "${section.title}"` : 'nesta seção', entry.key)}
+            </>
+          }
         />
         {entry.blocks.map((block, index) => (
           <BlockLine
@@ -634,14 +640,14 @@ export function DayNoteScreen({
           <GhostLine
             id={`ghost:${section?.id ?? DAY_ENTRY}`}
             placeholder={NOTE_HINT}
-            onCreate={(text) => createFirstLine(entry, text)}
+            onCreate={(text, caret) => createFirstLine(entry, text, caret)}
           />
         )}
         {writable && entry.blocks.length > 0 && appendingTo === entry.key && (
           <GhostLine
             id={`ghost:end:${entry.key}`}
             placeholder={NOTE_HINT}
-            onCreate={(text) => createFirstLine(entry, text)}
+            onCreate={(text, caret) => createFirstLine(entry, text, caret)}
             onLeave={() => setAppendingTo(null)}
           />
         )}
