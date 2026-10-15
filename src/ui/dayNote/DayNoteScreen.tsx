@@ -5,7 +5,7 @@ import {
   createBlock,
   createSection,
   deleteBlock,
-  linkSectionToProject,
+  titleSectionWithProject,
   mergeIntoPrevious,
   reorderCarriedTasks,
   reorderDayParts,
@@ -594,7 +594,7 @@ export function DayNoteScreen({
           kind={kind}
           projects={projects}
           onSaveTitle={(title) => section && write(() => setSectionTitle(ctx, section.id, title))}
-          onLinkProject={(project) => section && write(() => linkSectionToProject(ctx, section.id, project.id))}
+          onLinkProject={(project) => section && write(() => titleSectionWithProject(ctx, section.id, project.id))}
           onCreateProject={(name) => section && write(() => convertSectionToProject(ctx, section.id, name))}
           leading={focusButton(part.key, section?.title ? `na seção "${section.title}"` : 'nesta seção', entry.key)}
         />

@@ -7,6 +7,7 @@ import { applyPlanning, applyTriage, closePendingDays, completeCheckout, default
 import {
   changeBlockKind,
   convertSectionToProject,
+  titleSectionWithProject,
   createBlock,
   createSection,
   deleteBlock,
@@ -255,6 +256,14 @@ describe('day cycle', () => {
     expect(second).toMatchObject({ kind: 'task', text: ' e leite' });
     const [entry] = (await loadDayNote(reader, SUNDAY)).entries;
     expect(entry.blocks.map((block) => block.text)).toEqual(['Comprar pão', ' e leite']);
+  });
+
+  it('choosing a project in the title links the section and takes the project name as title', async () => {
+    const { ctx, db } = createTestContext();
+    const section = await createSection(ctx, 'general');
+    const project = await createProject(ctx, 'Reforma da cozinha');
+    await titleSectionWithProject(ctx, section.id, project.id);
+    expect(await db.sections.get(section.id)).toMatchObject({ title: 'Reforma da cozinha', projectId: project.id });
   });
 
   it('a whiteboard can become a project at any time, named after the section', async () => {

@@ -83,6 +83,23 @@ export async function linkSectionToProject(ctx: AppContext, sectionId: string, p
   });
 }
 
+/**
+ * Choosing an existing project in a section's title field: the section is linked to it and
+ * takes its name as the title, replacing the text typed to find it (spec/nota-do-dia.md).
+ */
+export async function titleSectionWithProject(ctx: AppContext, sectionId: string, projectId: string): Promise<void> {
+  await ctx.store.transaction(async (tx) => {
+    const section = await getOrThrow(tx.sections.get(sectionId), 'Section');
+    const project = await getOrThrow(tx.projects.get(projectId), 'Project');
+    let titled = section;
+    if (section.title !== project.name) {
+      titled = { ...section, title: project.name };
+      await record(ctx, tx, 'section.titleChanged', 'section', section.id, section.day, { from: section.title, to: project.name });
+    }
+    await linkSection(ctx, tx, titled, project.id, today(ctx));
+  });
+}
+
 /** Turns a whiteboard section into a new project named `name`. */
 export async function convertSectionToProject(ctx: AppContext, sectionId: string, name: string): Promise<void> {
   await ctx.store.transaction(async (tx) => {

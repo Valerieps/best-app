@@ -4,6 +4,7 @@ import { normalizeForMatch } from '../../domain/text';
 import { formatTime } from '../format';
 import { ProjectChip, WhiteboardChip } from '../components/Chips';
 import { Icon } from '../components/Icon';
+import { titleToSaveOnBlur } from './sectionTitle';
 import { isFocusToggleKey } from './focusMode';
 import { partMoveKey } from './lineDrag';
 
@@ -34,6 +35,8 @@ export function SectionHeader({ section, kind, projects, onSaveTitle, onLinkProj
   const [open, setOpen] = useState(false);
   const [highlight, setHighlight] = useState(0);
   const inputRef = useRef<HTMLInputElement>(null);
+  // Set by choosing a suggestion, which then leaves the field: that blur must not save the typed text.
+  const chose = useRef(false);
   const project = section?.projectId ? projects.find((p) => p.id === section.projectId) ?? null : null;
   const whiteboard = section !== null && section.projectId === null;
 
@@ -55,6 +58,7 @@ export function SectionHeader({ section, kind, projects, onSaveTitle, onLinkProj
 
   function choose(option: Option) {
     setOpen(false);
+    chose.current = true;
     if (option.type === 'project') {
       setTitle(option.project.name);
       onLinkProject(option.project);
@@ -78,6 +82,7 @@ export function SectionHeader({ section, kind, projects, onSaveTitle, onLinkProj
       if (options.length > 0) choose(options[Math.min(highlight, options.length - 1)]);
       else {
         onSaveTitle(title);
+        chose.current = true;
         inputRef.current?.blur();
       }
       return;
@@ -117,11 +122,16 @@ export function SectionHeader({ section, kind, projects, onSaveTitle, onLinkProj
             setOpen(true);
             setHighlight(0);
           }}
-          onFocus={() => setOpen(true)}
+          onFocus={() => {
+            chose.current = false;
+            setOpen(true);
+          }}
           onBlur={() => {
             // Let a click on a suggestion land before closing.
             setTimeout(() => setOpen(false), 150);
-            if (title.trim() !== (section?.title ?? '')) onSaveTitle(title);
+            const save = titleToSaveOnBlur(title, section?.title ?? null, chose.current);
+            chose.current = false;
+            if (save !== null) onSaveTitle(save);
           }}
           onKeyDown={onKeyDown}
           aria-label="Título da seção"
