@@ -6,7 +6,7 @@ import { createBlock, linkSectionToProject, setTaskDone } from './notebook';
 import { renameResource, addLinkResource } from './objectives';
 import { createProject, createProjectTask, setProjectFinished, setProjectIcon } from './projects';
 import { loadDayNote, loadDayTriage, loadPendingDays, loadProject, loadProjectList } from './queries';
-import { setProjectListGroupOpen, setProjectPanelPinned, setSidebarCollapsed } from './settings';
+import { setProjectListGroupOpen, setProjectPanelPinned, setSidebarCollapsed, setSidebarWidth } from './settings';
 
 const TODAY = '2026-10-11';
 
@@ -174,5 +174,14 @@ describe('sidebar', () => {
     expect((await reader.settings())?.sidebarCollapsed).toBe(true);
     await setSidebarCollapsed(ctx, false);
     expect((await reader.settings())?.sidebarCollapsed).toBe(false);
+  });
+
+  it('remembers the width it was dragged to, and forgets it to go back to the default', async () => {
+    const { ctx, reader } = createTestContext();
+    expect((await reader.settings())?.sidebarWidth).toBeUndefined();
+    await setSidebarWidth(ctx, 320);
+    expect((await reader.settings())?.sidebarWidth).toBe(320);
+    await setSidebarWidth(ctx, null);
+    expect((await reader.settings())?.sidebarWidth).toBeUndefined();
   });
 });

@@ -54,6 +54,11 @@ export function setSidebarCollapsed(ctx: AppContext, collapsed: boolean): Promis
   return updateSettings(ctx, { sidebarCollapsed: collapsed });
 }
 
+/** Width of the open sidebar, in pixels, set by dragging its edge; null brings back the default. */
+export function setSidebarWidth(ctx: AppContext, width: number | null): Promise<void> {
+  return updateSettings(ctx, { sidebarWidth: width ?? undefined });
+}
+
 /**
  * Focus mode on one part of the day note; null shows the whole note again. Kept with the
  * settings so it survives reloading the page (spec/nota-do-dia.md, "Modo foco").

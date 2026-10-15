@@ -195,6 +195,8 @@ export interface Settings {
   projectListGroups?: Partial<Record<ProjectListGroup, boolean>>;
   /** Whether the sidebar is collapsed to a narrow strip. Absent means open. */
   sidebarCollapsed?: boolean;
+  /** Width of the open sidebar, in pixels, dragged by the user. Absent means the default width. */
+  sidebarWidth?: number;
   /**
    * The part of the day note shown alone, in focus mode (spec/nota-do-dia.md, "Modo foco").
    * Absent or null shows the whole note. Only the user leaves it.

@@ -235,13 +235,8 @@ input[type='checkbox'] {
   color: var(--color-text-muted);
 }
 
-/* Day note: the whole main area is white, like a note in Obsidian, so all of it feels like the place to write.
+/* Day note: like a note in Obsidian, it spans the white main area (see .shell__main).
    Each part is marked only by its colored bar and a thin line below. */
-.shell__main:has(.page--note) {
-  min-height: 100vh;
-  background: var(--color-surface);
-}
-
 .page--note {
   max-width: none;
   /* Room on the left for the parts' drag handles */
@@ -1936,6 +1931,9 @@ button.plan-row--on:hover {
 .shell__main {
   flex: 1;
   min-width: 0;
+  /* The whole main area is white on every screen, so all of it feels like the place to work */
+  min-height: 100vh;
+  background: var(--color-surface);
 }
 
 .sidebar {
@@ -1952,6 +1950,29 @@ button.plan-row--on:hover {
   padding: var(--space-4) var(--space-3);
   background: var(--color-surface-soft);
   border-right: var(--border-width) solid var(--color-border);
+}
+
+/* The sidebar's right edge can be dragged to change its width; the main area shrinks along */
+.sidebar__resize {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: 6px;
+  cursor: col-resize;
+  touch-action: none;
+}
+
+.sidebar__resize:hover,
+.sidebar__resize:focus-visible,
+.resizing-sidebar .sidebar__resize {
+  background: var(--color-border-strong);
+  outline: none;
+}
+
+.resizing-sidebar {
+  cursor: col-resize;
+  user-select: none;
 }
 
 .sidebar--collapsed {
@@ -2210,14 +2231,11 @@ button.sidebar__footer-item {
   margin-bottom: var(--space-4);
 }
 
+/* On the white main area, the notices stay light and keep only their border */
 .screen-notices .banner {
+  background: var(--color-surface-soft);
   border: var(--border-width) solid var(--color-warning-border);
   border-radius: var(--radius-md);
-}
-
-/* On the white day note, the notices stay light and keep only their border */
-.page--note .screen-notices .banner {
-  background: var(--color-surface-soft);
 }
 
 .opening__sun {

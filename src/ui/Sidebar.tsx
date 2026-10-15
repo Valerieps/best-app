@@ -1,7 +1,7 @@
-import { useState } from 'react';
+import { useState, type CSSProperties, type KeyboardEvent, type PointerEvent } from 'react';
 import { loadCleanup, loadMenuCounts } from '../application/queries';
 import type { ReviewAvailability } from '../application/reviewQueries';
-import { setSidebarCollapsed } from '../application/settings';
+import { setSidebarCollapsed, setSidebarWidth } from '../application/settings';
 import type { DayKey } from '../domain/day';
 import type { AutoBackupState } from '../infrastructure/autoBackup';
 import { BackupStatus } from './backup/BackupStatus';
@@ -10,6 +10,7 @@ import { formatShortDate, weekdayName } from './format';
 import { navigate, type Route } from './hooks';
 import { appContext, reader } from './services';
 import { isRitual, sidebarPlace, type SidebarPlace } from './sidebarPlace';
+import { clampSidebarWidth, SIDEBAR_WIDTH, SIDEBAR_WIDTH_STEP } from './sidebarWidth';
 import { useLiveQueryState } from './useLiveQuery';
 import { directionReviewEnabled, FEATURES } from './features';
 import { enqueue } from './writeQueue';
@@ -47,6 +48,10 @@ export function Sidebar({ route, today, pendingDays, reviews, backupState }: Pro
   const [collapsedNow, setCollapsedNow] = useState<boolean | null>(null);
   const collapsed = collapsedNow ?? storedCollapsed ?? false;
   const [ritualsOpen, setRitualsOpen] = useState(() => isRitual(current));
+  const storedWidth = useLiveQueryState(async () => (await reader.settings())?.sidebarWidth ?? null).value;
+  // While dragging, the width follows the mouse; it is saved once, when the drag ends.
+  const [widthNow, setWidthNow] = useState<number | null>(null);
+  const width = clampSidebarWidth(widthNow ?? storedWidth ?? SIDEBAR_WIDTH.default);
 
   // Counts are extras: a failed query is logged and the sidebar goes on without them.
   const counts = useLiveQueryState(() => loadMenuCounts(reader)).value;
@@ -62,6 +67,50 @@ export function Sidebar({ route, today, pendingDays, reviews, backupState }: Pro
     enqueue(() => setSidebarCollapsed(appContext, next)).catch(() => {
       // Logged by the queue; the choice still holds on screen until the next load.
     });
+  };
+
+  const saveWidth = (next: number | null) => {
+    setWidthNow(next ?? SIDEBAR_WIDTH.default);
+    enqueue(() => setSidebarWidth(appContext, next)).catch(() => {
+      // Logged by the queue; the width still holds on screen until the next load.
+    });
+  };
+
+  const startResize = (event: PointerEvent<HTMLDivElement>) => {
+    if (event.button !== 0) return;
+    // No text gets selected while dragging.
+    event.preventDefault();
+    const handle = event.currentTarget;
+    handle.setPointerCapture(event.pointerId);
+    const startX = event.clientX;
+    const startWidth = width;
+    let last = startWidth;
+    document.body.classList.add('resizing-sidebar');
+    const move = (moveEvent: globalThis.PointerEvent) => {
+      last = clampSidebarWidth(startWidth + moveEvent.clientX - startX);
+      setWidthNow(last);
+    };
+    const end = () => {
+      handle.removeEventListener('pointermove', move);
+      handle.removeEventListener('pointerup', end);
+      handle.removeEventListener('pointercancel', end);
+      document.body.classList.remove('resizing-sidebar');
+      if (last !== startWidth) saveWidth(last);
+    };
+    handle.addEventListener('pointermove', move);
+    handle.addEventListener('pointerup', end);
+    handle.addEventListener('pointercancel', end);
+  };
+
+  const resizeKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
+    const step = event.key === 'ArrowRight' ? SIDEBAR_WIDTH_STEP : event.key === 'ArrowLeft' ? -SIDEBAR_WIDTH_STEP : 0;
+    if (step !== 0) {
+      event.preventDefault();
+      saveWidth(clampSidebarWidth(width + step));
+    } else if (event.key === 'Home') {
+      event.preventDefault();
+      saveWidth(null);
+    }
   };
 
   if (collapsed) {
@@ -195,7 +244,21 @@ export function Sidebar({ route, today, pendingDays, reviews, backupState }: Pro
   );
 
   return (
-    <nav className="sidebar" aria-label="Menu">
+    <nav className="sidebar" aria-label="Menu" style={{ '--sidebar-width': `${width}px` } as CSSProperties}>
+      <div
+        className="sidebar__resize"
+        role="separator"
+        aria-orientation="vertical"
+        aria-label="Largura da barra lateral"
+        aria-valuenow={width}
+        aria-valuemin={SIDEBAR_WIDTH.min}
+        aria-valuemax={SIDEBAR_WIDTH.max}
+        tabIndex={0}
+        title="Arraste para mudar a largura (clique duplo volta ao normal)"
+        onPointerDown={startResize}
+        onDoubleClick={() => saveWidth(null)}
+        onKeyDown={resizeKeyDown}
+      />
       <div className="sidebar__header">
         <button type="button" className="sidebar__name" onClick={() => navigate({ name: 'day' })}>
           Best App
