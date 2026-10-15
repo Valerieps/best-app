@@ -101,12 +101,11 @@ describe('projects in focus in the day to day', () => {
     expect(view.others.map((item) => item.task.id)).toEqual(expect.arrayContaining([loose.id, outside.id]));
   });
 
-  it('shows them on the dashboard, which they make show up even without a warm up', async () => {
+  it('lists them for the dashboard, but without a warm up the day still opens on the day note', async () => {
     const { ctx, reader, projects } = await setup(['Foco']);
-    expect((await loadDayOpening(reader, SUNDAY)).stage).toBe('execution');
     await addFocusProject(ctx, projects[0].id);
     const opening = await loadDayOpening(reader, SUNDAY);
-    expect(opening.stage).toBe('dashboard');
+    expect(opening.stage).toBe('execution');
     expect(opening.focusProjects.map((project) => project.name)).toEqual(['Foco']);
   });
 });

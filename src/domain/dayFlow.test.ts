@@ -16,9 +16,7 @@ const record = (overrides: Partial<DayRecord> = {}): DayRecord => ({
 describe('dayStage', () => {
   it('opens straight on the day note while there is no warm-up checklist', () => {
     expect(dayStage(undefined, [])).toBe('execution');
-    // Without a checklist, the projects in focus are enough for the dashboard, until execution starts.
-    expect(dayStage(undefined, [], true)).toBe('dashboard');
-    expect(dayStage(record({ executionStartedAt: 'y' }), [], true)).toBe('execution');
+    expect(dayStage(record({ startedAt: 'x' }), [])).toBe('execution');
   });
 
   it('goes start → warm up → dashboard → execution', () => {
