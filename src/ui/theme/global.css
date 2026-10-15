@@ -237,6 +237,15 @@ input[type='checkbox'] {
   color: var(--color-project-text);
 }
 
+a.chip--link {
+  text-decoration: none;
+}
+
+a.chip--link:hover,
+a.chip--link:focus-visible {
+  text-decoration: underline;
+}
+
 .chip--whiteboard {
   background: var(--color-whiteboard-bg);
   color: var(--color-whiteboard-text);

@@ -30,7 +30,7 @@
 ## Prazo máximo e origem *(1b)*
 
 - A tarefa ganha uma segunda data, o prazo máximo, que é opcional.
-- Na lista de tarefas, clicar numa tarefa mostra de onde ela veio (a seção de origem), sem link para a wiki.
+- Na lista de tarefas, clicar numa tarefa mostra de onde ela veio (a seção de origem), sem link para a wiki. A cápsula com o nome do projeto abre a página do projeto, exceto em "Selecionar várias".
 
 ## Próximos dias *(1b)*
 

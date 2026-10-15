@@ -12,6 +12,7 @@ import { DatePicker } from '../dayNote/BlockLine';
 import { Linkified } from '../components/Linkified';
 import { LoadingPage } from '../components/Skeleton';
 import { formatShortDate, formatTime, plural, postponedLabel, relativeDay } from '../format';
+import { routeHash } from '../hooks';
 import { appContext, reader } from '../services';
 import { useLiveQuery } from '../useLiveQuery';
 
@@ -69,7 +70,7 @@ function TaskRow({
           <Linkified text={task.text || '(tarefa sem texto)'} />
         </button>
         <span className="list-meta">
-          {project && <ProjectChip name={project.name} />}
+          {project && <ProjectChip name={project.name} href={selection ? undefined : routeHash({ name: 'project', id: project.id })} />}
           {meta && <span className="muted">{meta}</span>}
         </span>
         {extra}
