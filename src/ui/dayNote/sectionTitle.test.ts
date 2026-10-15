@@ -40,16 +40,29 @@ describe('titleOptions', () => {
     expect(kinds(titleOptions('data studios', all, null))).toEqual(['project:Data Studios', 'titleOnly']);
   });
 
-  it('on a linked section, offers to keep the project first, then the others, never the current one', () => {
-    expect(kinds(titleOptions('Ref', all, kitchen))).toEqual(['keepProject', 'project:Reforma da cosinha', 'create', 'titleOnly']);
+  it('on a linked section, clicking the title lists going back to a whiteboard, renaming and every other active project', () => {
+    const options = titleOptions('Reforma da cozinha', all, kitchen, false);
+    expect(kinds(options)).toEqual(['titleOnly', 'rename', 'project:Data Studios', 'project:Reforma da cosinha']);
+    expect(options[0]).toEqual({ type: 'titleOnly', name: 'Reforma da cozinha' });
+    expect(options[1]).toEqual({ type: 'rename', name: 'Reforma da cozinha', project: kitchen });
   });
 
-  it('on a linked section with its project name, offers the other projects and going back to a whiteboard', () => {
-    expect(kinds(titleOptions('Reforma da cozinha', all, kitchen))).toEqual(['titleOnly']);
-    expect(kinds(titleOptions('Reforma', all, kitchen))).toEqual(['keepProject', 'project:Reforma da cosinha', 'create', 'titleOnly']);
+  it('on a linked section, typing the project name back shows the same list', () => {
+    expect(kinds(titleOptions('reforma da cozinha', all, kitchen))).toEqual(['titleOnly', 'rename', 'project:Data Studios', 'project:Reforma da cosinha']);
+  });
+
+  it('on a linked section, typing offers renaming first, then filters the other projects', () => {
+    const options = titleOptions('Ref', all, kitchen);
+    expect(kinds(options)).toEqual(['rename', 'titleOnly', 'project:Reforma da cosinha', 'create']);
+    expect(options[0]).toEqual({ type: 'rename', name: 'Ref', project: kitchen });
+  });
+
+  it('on a linked section, offers no creation when a project already has the typed name', () => {
+    expect(kinds(titleOptions('Data Studios', all, kitchen))).toEqual(['rename', 'titleOnly', 'project:Data Studios']);
   });
 
   it('suggests nothing for an empty title', () => {
+    expect(titleOptions('  ', all, null)).toEqual([]);
     expect(titleOptions('  ', all, kitchen)).toEqual([]);
   });
 });

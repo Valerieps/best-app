@@ -284,9 +284,11 @@ input[type='checkbox'] {
   margin-bottom: var(--space-2);
 }
 
-.section__time {
-  color: var(--color-text-muted);
-  font-variant-numeric: tabular-nums;
+/* A section linked to a project shows a link icon after its title */
+.section__link {
+  display: inline-flex;
+  align-items: center;
+  color: var(--color-project-text);
 }
 
 .title-field {
@@ -379,8 +381,10 @@ input[type='checkbox'] {
   color: var(--color-text-muted);
 }
 
-/* The hint of an empty line only shows on the line being written; the ghost line always shows it. */
-.line:not(.line--ghost) .line__text:not(:focus)::placeholder {
+/* The hint of an empty line only shows on the line being written; the ghost line of an empty
+   section shows it on hover too. */
+.line:not(.line--ghost) .line__text:not(:focus)::placeholder,
+.section:not(:hover) .line--ghost .line__text:not(:focus)::placeholder {
   color: transparent;
 }
 
@@ -642,33 +646,11 @@ button.priorities__pin[aria-pressed='true'] {
   flex: 1;
 }
 
-/* Meeting details (1b) */
-.meeting-details {
-  display: flex;
-  flex-wrap: wrap;
+/* An automatic priority whose deadline is today: a red icon at the end of the task */
+.priorities__due-today {
+  display: inline-flex;
   align-items: center;
-  gap: var(--space-2);
-  margin-bottom: var(--space-2);
-}
-
-.meeting-details__field {
-  font: inherit;
-  font-size: var(--font-size-sm);
-  border: var(--border-width) solid transparent;
-  border-bottom-color: var(--color-border);
-  background: transparent;
-  color: var(--color-text);
-  padding: 0 var(--space-1);
-  min-width: 18ch;
-}
-
-.meeting-details__field:focus {
-  outline: none;
-  border-bottom-color: var(--color-focus);
-}
-
-.meeting-details__open {
-  font-size: var(--font-size-sm);
+  color: var(--color-danger);
 }
 
 .topbar__date {
@@ -3523,6 +3505,17 @@ button.part-focus[aria-pressed='true'] {
 
 button.part-focus:hover {
   color: var(--color-text);
+}
+
+/* The focus mode button sits at the right end of its part's header */
+.section__header > button.part-focus,
+.priorities__header > button.part-focus {
+  margin-left: auto;
+}
+
+/* After the pin, which already takes the free space */
+.priorities__header > button.priorities__pin + button.part-focus {
+  margin-left: 0;
 }
 
 .page--focus {

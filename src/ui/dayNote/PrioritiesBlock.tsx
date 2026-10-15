@@ -43,8 +43,8 @@ interface Props {
   /** Moves the task to another intended date, out of today's priorities; called after the countdown. */
   onMoveDate(taskId: string, date: DayKey | null): void;
   onSetDeadline(taskId: string, date: DayKey | null): void;
-  /** Shown at the left of the title, like the focus mode button. */
-  leading?: ReactNode;
+  /** Shown at the right of the header, like the focus mode button. */
+  trailing?: ReactNode;
 }
 
 /** Where a moving priority goes, for the countdown's text. */
@@ -56,7 +56,7 @@ function destination(date: DayKey | null, today: DayKey): string {
  * "Prioridades do dia": up to 3 tasks, highlighted. Their dates change here too: a new intended
  * date waits a short countdown, which I can cancel, before the task goes to that day.
  */
-export function PrioritiesBlock({ priorities, today, pinned, onTogglePin, onToggleDone, onDemote, onMoveDate, onSetDeadline, leading }: Props) {
+export function PrioritiesBlock({ priorities, today, pinned, onTogglePin, onToggleDone, onDemote, onMoveDate, onSetDeadline, trailing }: Props) {
   const [waiting, setWaiting] = useState<PendingMove[]>([]);
   const commit = useRef(onMoveDate);
   commit.current = onMoveDate;
@@ -75,7 +75,6 @@ export function PrioritiesBlock({ priorities, today, pinned, onTogglePin, onTogg
   return (
     <section className={`priorities ${pinned ? 'priorities--pinned' : ''}`} aria-label="Prioridades do dia">
       <div className="priorities__header">
-        {leading}
         <h2 className="priorities__title">Prioridades do dia</h2>
         {onTogglePin && (
           <button
@@ -89,6 +88,7 @@ export function PrioritiesBlock({ priorities, today, pinned, onTogglePin, onTogg
             <Icon name="pin" size="sm" filled={pinned} />
           </button>
         )}
+        {trailing}
       </div>
       {priorities.length === 0 ? (
         <p className="muted priorities__empty">Nenhuma prioridade agora. Promova uma tarefa com ★.</p>
@@ -144,11 +144,9 @@ export function PrioritiesBlock({ priorities, today, pinned, onTogglePin, onTogg
                 <>
                   <span className="line__meta">
                     {showDate && datePicker('Mudar a data de intenção', 'line__chip', relativeDay(task.intendedDate!, today), 'Tirar a data de intenção')}
-                    {automatic && deadline === today ? (
-                      <span className="chip chip--whiteboard">prazo máximo hoje</span>
-                    ) : (
-                      deadline && deadlinePicker('Mudar o prazo máximo', 'line__chip', `prazo ${relativeDay(deadline, today)}`, 'Tirar o prazo máximo')
-                    )}
+                    {!(automatic && deadline === today) &&
+                      deadline &&
+                      deadlinePicker('Mudar o prazo máximo', 'line__chip', `prazo ${relativeDay(deadline, today)}`, 'Tirar o prazo máximo')}
                   </span>
                   <span className="line__actions">
                     {!showDate && datePicker('Mudar a data de intenção', 'line__action', 'Data')}
@@ -158,6 +156,11 @@ export function PrioritiesBlock({ priorities, today, pinned, onTogglePin, onTogg
                     <button type="button" className="line__action" onClick={() => onDemote(task.id)} aria-label="Tirar das prioridades">
                       ✕
                     </button>
+                  )}
+                  {automatic && deadline === today && (
+                    <span className="priorities__due-today" role="img" title="Prazo máximo hoje" aria-label="Prazo máximo hoje">
+                      <Icon name="alertCircle" size="sm" />
+                    </span>
                   )}
                 </>
               )}

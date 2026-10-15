@@ -7,6 +7,7 @@ import {
   deleteBlock,
   titleSectionWithProject,
   unlinkSection,
+  renameSectionProject,
   mergeIntoPrevious,
   reorderCarriedTasks,
   reorderDayParts,
@@ -18,7 +19,7 @@ import {
   updateBlockText,
   type NewBlockTarget,
 } from '../../application/notebook';
-import { moveDayPriority, setDayPriority, setDeadline, setIntendedDate, setSectionDetails } from '../../application/dayTools';
+import { moveDayPriority, setDayPriority, setDeadline, setIntendedDate } from '../../application/dayTools';
 import { setDayNoteFocus } from '../../application/settings';
 import { loadDayNote, loadDayPriorities } from '../../application/queries';
 import { detectKind } from '../../domain/blockKind';
@@ -35,7 +36,6 @@ import { BlockLine, GhostLine, NOTE_HINT, type LineDragProps, type LineHandlers 
 import { requestFocus } from './focus';
 import { FOCUS_SHORTCUT, isFocusToggleKey } from './focusMode';
 import { isSamePlace, partMoveKey, useLineDrag } from './lineDrag';
-import { MeetingDetails } from './MeetingDetails';
 import { PendingDaysBanner } from './PendingDaysBanner';
 import { PrioritiesBlock, usePinnedPriorities } from './PrioritiesBlock';
 import { Icon } from '../components/Icon';
@@ -541,7 +541,7 @@ export function DayNoteScreen({
       onDemote={(taskId) => write(() => setDayPriority(ctx, taskId, false))}
       onMoveDate={(taskId, date) => write(() => moveDayPriority(ctx, taskId, date))}
       onSetDeadline={(taskId, date) => write(() => setDeadline(ctx, taskId, date))}
-      leading={focusButton(PRIORITIES_PART, 'nas prioridades do dia')}
+      trailing={focusButton(PRIORITIES_PART, 'nas prioridades do dia')}
     />
   );
 
@@ -566,8 +566,8 @@ export function DayNoteScreen({
       return (
         <section className="section section--general section--carried" aria-label="Tarefas de outros dias">
           <div className="section__header">
-            {focusButton(part.key, 'nas tarefas de outros dias')}
             <span className="section__carried-title">De outros dias</span>
+            {focusButton(part.key, 'nas tarefas de outros dias')}
           </div>
           {entry.carried.map((block, index) => (
             <BlockLine
@@ -598,11 +598,9 @@ export function DayNoteScreen({
           onLinkProject={(project) => section && write(() => titleSectionWithProject(ctx, section.id, project.id))}
           onCreateProject={(name) => section && write(() => convertSectionToProject(ctx, section.id, name))}
           onUnlink={(title) => section && write(() => unlinkSection(ctx, section.id, title))}
-          leading={focusButton(part.key, section?.title ? `na seção "${section.title}"` : 'nesta seção', entry.key)}
+          onRenameProject={(name) => section && write(() => renameSectionProject(ctx, section.id, name))}
+          trailing={focusButton(part.key, section?.title ? `na seção "${section.title}"` : 'nesta seção', entry.key)}
         />
-        {section?.kind === 'meeting' && (
-          <MeetingDetails section={section} onSave={(details) => write(() => setSectionDetails(ctx, section.id, details))} />
-        )}
         {entry.blocks.map((block, index) => (
           <BlockLine
             key={block.id}

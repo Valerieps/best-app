@@ -95,7 +95,7 @@ Cada entidade é um registro separado. Um bloco existe uma vez só: notas, proje
 | `projectId` | Projeto vinculado; `null` quer dizer quadro branco |
 | `notesDestination` | Destino de todas as notas da seção: `pending`, `wiki`, `discarded` ou `weeklyReflection` |
 | `whiteboardDecision` | `pending`, `leftUnlinked` (checkout) ou `keptUnlinked` (assistente de seções soltas) |
-| `participants`, `docLink` | Só reuniões (1b) |
+| `participants`, `docLink` | Só reuniões (1b); guardados, mas sem campo na nota do dia desde 15/10/2026 |
 | `projectPage` | Seção escondida que guarda as tarefas escritas na página do projeto; não aparece em nenhuma nota do dia (ADR-031) |
 
 **`projects`**: `name`, `status` (`active`, `finished` ou `merged`), `finishedAt`, `mergedInto` e `keepSeparateFrom` (assistente de projetos repetidos), `objectiveId` (4) e `icon` (2).

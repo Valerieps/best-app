@@ -9,7 +9,7 @@
 - A nota do dia é um agrupamento de blocos que só existe enquanto houver blocos vinculados a ela. Depois do fechamento completo, ela desaparece.
 - A nota do dia é dividida em seções, como um notebook do Colab. Há dois tipos de seção: geral e reunião.
 - Ao longo do dia, se eu entrar em reunião, abro uma seção de reunião para deixar separadas as notas que tomei naquela reunião.
-- Toda seção guarda o horário de criação como metadado e pode ter um título opcional. Na nota do dia, o tipo da seção aparece como um ícone, e não como texto: um bloco de notas para a seção geral e duas pessoas para a de reunião *(1b)*. Ao digitar o título, o app sugere os projetos que já existem, como "Data Studios"; escolher um deles vincula a seção ao projeto, e o nome do projeto vira o título da seção, no lugar do que eu digitei para achá-lo. Numa seção já vinculada, mexer no título também abre as sugestões: posso manter o projeto e só mudar o título (a primeira opção, para o Enter nunca mudar a seção de projeto sem eu querer), trocar para outro projeto ou criar um novo, e as tarefas da seção vão junto, ou usar o texto só como título, e a seção volta a ser quadro branco. Por baixo dos panos, os projetos existem desde o 1a, ainda sem funcionalidades próprias: eles só agrupam as seções, tarefas e notas vinculadas.
+- Toda seção guarda o horário de criação como metadado e pode ter um título opcional. Na nota do dia, o tipo da seção aparece como um ícone, e não como texto: um bloco de notas para a seção geral e duas pessoas para a de reunião *(1b)*. Ao digitar o título, o app sugere os projetos que já existem, como "Data Studios"; escolher um deles vincula a seção ao projeto, e o nome do projeto vira o título da seção, no lugar do que eu digitei para achá-lo. Numa seção já vinculada, que mostra um ícone de vínculo ao lado do título, clicar no título abre as opções: "Reverter para quadro branco", que mantém o título; "Renomear projeto"; e a lista de todos os outros projetos ativos, para eu vincular a seção a outro, e as tarefas da seção vão junto. Enquanto nada é escolhido, o Enter não muda nada. Se eu digito no título, a lista de projetos é filtrada pelo texto, aparece "Criar o projeto…" e a primeira opção passa a ser renomear o projeto para o texto digitado. Renomear muda o nome do projeto no app todo e o título de todas as seções vinculadas a ele que ainda têm o nome antigo; uma seção a que eu dei outro título fica com ele. Por baixo dos panos, os projetos existem desde o 1a, ainda sem funcionalidades próprias: eles só agrupam as seções, tarefas e notas vinculadas.
 - Toda seção nasce como quadro branco, ou seja, sem vínculo com projeto, a menos que eu escolha um projeto ao dar o título. O quadro branco é um estado, não um tipo: uma seção geral ou de reunião pode estar em quadro branco. A qualquer momento, ele pode ser convertido em um projeto novo ou vinculado a um projeto existente.
 - É possível abrir mais de uma seção geral. Separar o conteúdo em seções ao longo do dia funciona como uma pré-triagem.
 - Há dois tipos de bloco: tarefa e nota geral. Uma linha que começa com `[]` seguido de um espaço é tarefa, em qualquer tipo de seção; todo o resto é nota geral. A partir da seção 5, entra o compromisso (`compromissos.md`).
@@ -29,7 +29,7 @@
 
 ## Seções e atalhos *(1b)*
 
-- A seção de reunião ganha dois campos opcionais: participantes e link para documentos.
+- A seção de reunião não tem campos próprios: os campos de participantes e de link para documentos saíram da nota do dia (15/10/2026). O que já estava preenchido continua guardado.
 - Eu posso interagir com cada tipo de bloco com atalhos que aparecem com mouse hover. Na tarefa: finalizar, definir a data de intenção e o prazo máximo, e promover a prioridade. Na nota geral: converter em tarefa.
 - No topo da nota do dia, onde aparece a data, um botão de setinha pagina entre os dias. Ele passa somente pelas notas que ainda têm itens pendentes.
 
@@ -47,7 +47,7 @@
 Quando a nota do dia acumula muitas seções, eu posso focar numa só, para escrever sem distração.
 
 - Dá para focar qualquer parte da nota: uma seção geral ou de reunião, a seção "De outros dias" ou o bloco de prioridades, mesmo fixado no topo.
-- Eu entro no foco pelo ícone de seta dupla na diagonal, à esquerda do cabeçalho da parte, ou com Ctrl + Shift + Enter (⌘ + Shift + Enter no Mac) com o cursor em qualquer lugar dela.
+- Eu entro no foco pelo ícone de seta dupla na diagonal, à direita do cabeçalho da parte, ou com Ctrl + Shift + Enter (⌘ + Shift + Enter no Mac) com o cursor em qualquer lugar dela.
 - No foco, a tela mostra só a parte ampliada e a barra lateral. Somem o título do dia, as setas entre os dias, o "Fechar o dia", os avisos do topo e os lembretes que voltaram. Por isso não há como trocar de dia com o foco aberto.
 - Eu saio do foco pelo ícone de reduzir, que fica no lugar do ícone de ampliar, ou pelo mesmo atalho. Escrever, criar linhas e editar funcionam como na nota inteira.
 - O foco sobrevive a recarregar a página e a passar por outras telas: "Hoje" volta para a parte em foco.

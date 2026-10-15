@@ -5,7 +5,7 @@ import { adoptFirstPart, carriedPosition, placeInOrder, type Ordered } from '../
 import { canEditFreely, lastTriagedDayAfterReopen } from '../domain/tasks';
 import { record } from './events';
 import type { AppContext, StoreTransaction } from './ports';
-import { addProject } from './projects';
+import { addProject, renameProjectIn } from './projects';
 
 /** Use cases of the day note: sections, blocks and checking tasks off. */
 
@@ -98,6 +98,27 @@ export async function titleSectionWithProject(ctx: AppContext, sectionId: string
       await record(ctx, tx, 'section.titleChanged', 'section', section.id, section.day, { from: section.title, to: project.name });
     }
     await linkSection(ctx, tx, titled, project.id, today(ctx));
+  });
+}
+
+/**
+ * Renames the project a section is linked to, from the section's title. Every section linked to
+ * it that still carries the old name, this one included, takes the new name as its title.
+ */
+export async function renameSectionProject(ctx: AppContext, sectionId: string, name: string): Promise<void> {
+  await ctx.store.transaction(async (tx) => {
+    const section = await getOrThrow(tx.sections.get(sectionId), 'Section');
+    if (section.projectId === null) return;
+    const oldName = await renameProjectIn(ctx, tx, section.projectId, name);
+    if (oldName === null) return;
+    const next = name.trim();
+    const at = nowIso(ctx);
+    for (const linked of await tx.sectionsOfProject(section.projectId)) {
+      if (linked.id !== section.id && linked.title !== oldName) continue;
+      if (linked.title === next) continue;
+      await tx.sections.put({ ...linked, title: next, updatedAt: at });
+      await record(ctx, tx, 'section.titleChanged', 'section', linked.id, linked.day, { from: linked.title, to: next });
+    }
   });
 }
 
