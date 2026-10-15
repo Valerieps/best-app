@@ -235,18 +235,25 @@ input[type='checkbox'] {
   color: var(--color-text-muted);
 }
 
-/* Day note */
+/* Day note: fills the whole main area, like a note in Obsidian; each part is a subtle card of its own */
+.page--note {
+  max-width: none;
+  /* Room on the left for the parts' drag handles */
+  padding: var(--space-5) var(--space-6) var(--space-7) var(--space-7);
+}
+
 .note {
-  background: var(--color-surface);
-  border: var(--border-width) solid var(--color-border);
-  border-radius: var(--radius-lg);
-  padding: var(--space-4) var(--space-5);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
 }
 
 .section {
+  background: var(--color-surface);
+  border: var(--border-width) solid var(--color-border);
   border-left: var(--section-bar-width) solid var(--color-general-bar);
-  padding: var(--space-1) 0 var(--space-2) var(--space-4);
-  margin: var(--space-3) 0 var(--space-5);
+  border-radius: var(--radius-md);
+  padding: var(--space-3) var(--space-4) var(--space-3) var(--space-4);
 }
 
 .section--project {
@@ -1079,9 +1086,6 @@ input[type='checkbox'] {
   display: flex;
   flex-wrap: wrap;
   gap: var(--space-2);
-  margin-top: var(--space-3);
-  padding-top: var(--space-3);
-  border-top: var(--border-width) solid var(--color-border);
 }
 
 .note__actions button {
@@ -1907,8 +1911,9 @@ button.plan-row--on:hover {
     font-size: var(--font-size-md);
   }
 
-  .note {
-    padding: var(--space-3);
+  .page--note {
+    /* Still room on the left for the drag handles */
+    padding: var(--space-4) var(--space-3) var(--space-6) var(--space-5);
   }
 
   .triage-row {
@@ -3301,12 +3306,10 @@ button.project-actions {
 
 /* Unpinned, the priorities sit among the sections and look like one */
 .day-part--priorities .priorities {
-  margin: var(--space-3) 0 var(--space-5);
-  padding: var(--space-1) 0 var(--space-2) var(--space-4);
-  border: none;
+  margin: 0;
+  padding: var(--space-3) var(--space-4);
   border-left: var(--section-bar-width) solid var(--color-firework-1);
-  border-radius: 0;
-  background: none;
+  border-radius: var(--radius-md);
 }
 
 .section__carried-title {
@@ -3393,19 +3396,14 @@ button.part-focus:hover {
 }
 
 .page--focus {
-  max-width: var(--content-width-wide);
   padding-top: var(--space-6);
 }
 
-.note--focus {
-  min-height: 60vh;
-  padding: var(--space-5) var(--space-6);
-}
-
+/* Focused, the one part takes the whole height of the main area */
+.note--focus .section,
 .note--focus .priorities {
-  margin-bottom: 0;
-  border: none;
-  padding: 0;
+  min-height: calc(100vh - var(--space-6) - var(--space-7));
+  padding: var(--space-5) var(--space-6);
 }
 
 .note__focus-gone {

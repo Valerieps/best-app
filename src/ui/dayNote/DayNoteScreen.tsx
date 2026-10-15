@@ -313,7 +313,7 @@ export function DayNoteScreen({
 
   if (!view) {
     return (
-      <main className={`page ${focus ? 'page--focus' : ''}`} aria-busy="true">
+      <main className={`page page--note ${focus ? 'page--focus' : ''}`} aria-busy="true">
         {!focus && header}
         <SkeletonLines />
       </main>
@@ -647,7 +647,7 @@ export function DayNoteScreen({
         ? { key: PRIORITIES_PART, kind: 'priorities' }
         : parts.find((item) => isFocused(item.key, item.kind === 'section' ? item.entry.key : undefined));
     return (
-      <main className="page page--focus">
+      <main className="page page--note page--focus">
         <div className="note note--focus" onMouseDown={openLineBelow}>
           {part ? (
             <div className={`day-part day-part--${part.kind}`} data-drag-id={part.key} onKeyDown={(event) => partKeyDown(event, part.key)}>
@@ -667,7 +667,7 @@ export function DayNoteScreen({
 
   return (
     <>
-      <main className="page">
+      <main className="page page--note">
         {header}
         {isToday && (showPendingNotice || reviewNotice || reminders.length > 0) && (
           <div className="screen-notices">
