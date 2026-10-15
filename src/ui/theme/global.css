@@ -1137,6 +1137,7 @@ input[type='checkbox'] {
   .skeleton {
     animation-duration: 0s;
   }
+
 }
 
 /* Cards (checkout, dialogs) */
@@ -1950,6 +1951,16 @@ button.plan-row--on:hover {
   padding: var(--space-4) var(--space-3);
   background: var(--color-surface-soft);
   border-right: var(--border-width) solid var(--color-border);
+  /* Collapsing and opening slide smoothly; the main area follows */
+  overflow-x: hidden;
+  transition:
+    width 200ms ease,
+    padding 200ms ease;
+}
+
+/* While the sidebar opens, its content keeps the open width and is revealed, without wrapping */
+.sidebar:not(.sidebar--collapsed) > :not(.sidebar__resize) {
+  min-width: calc(var(--sidebar-width) - 2 * var(--space-3) - var(--border-width));
 }
 
 /* The sidebar's right edge can be dragged to change its width; the main area shrinks along */
@@ -1973,6 +1984,17 @@ button.plan-row--on:hover {
 .resizing-sidebar {
   cursor: col-resize;
   user-select: none;
+}
+
+/* Dragging the edge follows the mouse at once */
+.resizing-sidebar .sidebar {
+  transition: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sidebar {
+    transition: none;
+  }
 }
 
 .sidebar--collapsed {
