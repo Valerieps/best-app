@@ -507,7 +507,6 @@ input[type='checkbox'] {
 }
 
 .line:hover .line__handle,
-.line:focus-within .line__handle,
 .line--dragging .line__handle {
   visibility: visible;
 }
@@ -646,11 +645,25 @@ button.priorities__pin[aria-pressed='true'] {
   flex: 1;
 }
 
-/* An automatic priority whose deadline is today: a red icon at the end of the task */
+/* An automatic priority whose deadline is today: a red icon at the left of the task, outside
+   the block (in the page's left padding, like the drag handles). With no top, it keeps the
+   height of its row. */
+.priorities:not(.priorities--pinned) {
+  position: relative;
+}
+
 .priorities__due-today {
+  position: absolute;
+  left: calc(-1 * var(--space-5) - var(--border-width));
+  width: var(--space-5);
   display: inline-flex;
   align-items: center;
+  justify-content: center;
   color: var(--color-danger);
+}
+
+.day-part--priorities .priorities__due-today {
+  left: calc(-1 * var(--space-5) - var(--section-bar-width));
 }
 
 .topbar__date {
@@ -3377,9 +3390,18 @@ button.project-actions {
 }
 
 .day-part:hover > .day-part__handle,
-.day-part:focus-within > .day-part__handle,
+.day-part__handle:focus-visible,
 .day-part--dragging > .day-part__handle {
   opacity: 1;
+}
+
+/* The handles show only under the mouse, and hide while I type until the mouse moves again */
+.note--typing .line:not(.line--dragging) .line__handle {
+  visibility: hidden;
+}
+
+.note--typing .day-part:not(.day-part--dragging) > .day-part__handle {
+  opacity: 0;
 }
 
 .day-part__handle:hover {
@@ -3412,6 +3434,60 @@ button.project-actions {
 
 .day-part--drop-after::after {
   bottom: 0;
+}
+
+/* Between two parts, under the mouse: new sections in that place. The strip covers the gap
+   between the parts (.note's gap), above the next part's top edge. */
+.part-insert {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: calc(-1 * var(--space-4) - var(--space-1));
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  height: calc(var(--space-4) + 2 * var(--space-1));
+  opacity: 0;
+  transition: opacity 120ms ease-out;
+}
+
+.part-insert::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 50%;
+  height: 1px;
+  background: var(--color-focus);
+  opacity: 0.4;
+  pointer-events: none;
+}
+
+.part-insert:hover,
+.part-insert:focus-within {
+  opacity: 1;
+}
+
+.part-insert button {
+  position: relative;
+  padding: 0 var(--space-2);
+  background: var(--color-surface);
+  border: var(--border-width) solid var(--color-border);
+  border-radius: var(--radius-pill);
+  color: var(--color-text-muted);
+  font-size: var(--font-size-xs);
+  line-height: 1.6;
+}
+
+.part-insert button:hover {
+  color: var(--color-text);
+  border-color: var(--color-border-strong);
+}
+
+.day-part--dragging > .part-insert {
+  display: none;
 }
 
 /* Unpinned, the priorities sit among the sections and look like one */
@@ -3520,6 +3596,44 @@ button.part-focus:hover {
 
 .page--focus {
   padding-top: var(--space-6);
+}
+
+/* Entering and leaving focus mode: the part fades and settles in place, instead of a cut */
+.note--focus {
+  animation: focus-enter 320ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.page--from-focus .note {
+  animation: focus-leave 280ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@keyframes focus-enter {
+  from {
+    opacity: 0;
+    transform: scale(0.985) translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes focus-leave {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .note--focus,
+  .page--from-focus .note {
+    animation-duration: 0s;
+  }
 }
 
 /* Focused, the one part takes the whole height of the main area */

@@ -117,6 +117,12 @@ export function PrioritiesBlock({ priorities, today, pinned, onTogglePin, onTogg
             );
             return (
             <li key={task.id} className={`priorities__item ${moving ? 'priorities__item--moving' : ''}`}>
+              {automatic && deadline === today && (
+                // Outside the block, at the left of the task, so it is seen before the text.
+                <span className="priorities__due-today" role="img" title="Prazo máximo hoje" aria-label="Prazo máximo hoje">
+                  <Icon name="alertCircle" size="sm" />
+                </span>
+              )}
               <input
                 type="checkbox"
                 checked={task.status === 'done'}
@@ -153,14 +159,16 @@ export function PrioritiesBlock({ priorities, today, pinned, onTogglePin, onTogg
                     {!deadline && deadlinePicker('Prazo máximo', 'line__action', 'Prazo')}
                   </span>
                   {!automatic && (
-                    <button type="button" className="line__action" onClick={() => onDemote(task.id)} aria-label="Tirar das prioridades">
-                      ✕
+                    <button
+                      type="button"
+                      className="line__star line__star--on"
+                      onClick={() => onDemote(task.id)}
+                      title="Tirar das prioridades"
+                      aria-label="Tirar das prioridades"
+                      aria-pressed={true}
+                    >
+                      ★
                     </button>
-                  )}
-                  {automatic && deadline === today && (
-                    <span className="priorities__due-today" role="img" title="Prazo máximo hoje" aria-label="Prazo máximo hoje">
-                      <Icon name="alertCircle" size="sm" />
-                    </span>
                   )}
                 </>
               )}

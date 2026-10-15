@@ -35,9 +35,9 @@
 
 ## Ordem das linhas e das seções *(1b)*
 
-- Eu posso mudar a ordem das linhas (tarefas e notas) dentro de uma seção: arrastando pela alça que aparece à esquerda da linha no hover, ou com Alt + ↑/↓ com o cursor na linha. Vale para todas as linhas da seção, mesmo as já triadas ou finalizadas, porque a ordem não muda data, status nem triagem. Uma linha não muda de seção assim.
+- Eu posso mudar a ordem das linhas (tarefas e notas) dentro de uma seção: arrastando pela alça que aparece à esquerda da linha só no hover do mouse (ela some enquanto eu digito e volta quando eu mexo o mouse), ou com Alt + ↑/↓ com o cursor na linha. Vale para todas as linhas da seção, mesmo as já triadas ou finalizadas, porque a ordem não muda data, status nem triagem. Uma linha não muda de seção assim.
 - As tarefas de outros dias mudam de ordem só entre elas, dentro da seção "De outros dias". A ordem vale para aquele dia: uma tarefa que chega depois, ou que vai para outro dia, entra no fim das tarefas de outros dias.
-- Eu também posso mudar a ordem das seções da nota do dia: as seções gerais e de reunião, a seção "De outros dias" e o bloco de prioridades, quando ele não está fixado no topo. Arrasto pela alça à esquerda da seção, ou uso Ctrl + Shift + ↑/↓ (⌘ + Shift no Mac) com o cursor em qualquer linha, no título da seção ou na alça.
+- Eu também posso mudar a ordem das seções da nota do dia: as seções gerais e de reunião, a seção "De outros dias" e o bloco de prioridades, quando ele não está fixado no topo. Arrasto pela alça à esquerda da seção, que também só aparece no hover do mouse e some enquanto eu digito, ou uso Ctrl + Shift + ↑/↓ (⌘ + Shift no Mac) com o cursor em qualquer linha, no título da seção ou na alça.
 - Cada dia tem a sua ordem. Um dia novo começa no padrão: prioridades, tarefas de outros dias e depois as seções na ordem em que foram criadas. Uma seção nova entra no fim.
 - Eu posso reordenar linhas e seções em qualquer dia, inclusive nos dias passados com itens pendentes: mudar a ordem não cria linhas.
 - O "Fechar o dia" segue a ordem da nota do dia (`checkout.md`, "Fechar o dia").
@@ -49,6 +49,7 @@ Quando a nota do dia acumula muitas seções, eu posso focar numa só, para escr
 - Dá para focar qualquer parte da nota: uma seção geral ou de reunião, a seção "De outros dias" ou o bloco de prioridades, mesmo fixado no topo.
 - Eu entro no foco pelo ícone de seta dupla na diagonal, à direita do cabeçalho da parte, ou com Ctrl + Shift + Enter (⌘ + Shift + Enter no Mac) com o cursor em qualquer lugar dela.
 - No foco, a tela mostra só a parte ampliada e a barra lateral. Somem o título do dia, as setas entre os dias, o "Fechar o dia", os avisos do topo e os lembretes que voltaram. Por isso não há como trocar de dia com o foco aberto.
+- Entrar e sair do foco é uma transição suave: a parte aparece aos poucos, sem um corte seco.
 - Eu saio do foco pelo ícone de reduzir, que fica no lugar do ícone de ampliar, ou pelo mesmo atalho. Escrever, criar linhas e editar funcionam como na nota inteira.
 - O foco sobrevive a recarregar a página e a passar por outras telas: "Hoje" volta para a parte em foco.
 - O app nunca sai do foco sozinho, para não interromper um fluxo de pensamento. Se virar meia-noite, eu continuo escrevendo na mesma parte, e nem o "Iniciar Dia" nem o "Fechar o dia" começam sozinhos. Se a parte em foco deixar de existir, a tela avisa e espera eu sair.

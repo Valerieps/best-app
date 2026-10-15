@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { CARRIED_PART, FIRST_PART } from '../domain/order';
 import { setIntendedDate } from './dayTools';
 import { completeCheckout } from './checkout';
-import { createBlock, createSection, reorderCarriedTasks, reorderDayParts, reorderSectionLines } from './notebook';
+import { createBlock, createSection, createSectionAfter, reorderCarriedTasks, reorderDayParts, reorderSectionLines } from './notebook';
 import { loadDayNote, loadDayTriage } from './queries';
 import { section, task } from '../test/builders';
 import { createTestContext } from '../test/fixtures';
@@ -112,5 +112,26 @@ describe('reordering the parts of a day', () => {
     await completeCheckout(ctx, TODAY);
 
     expect(await db.days.get(TODAY)).toMatchObject({ sectionOrder: [meeting.id, FIRST_PART] });
+  });
+
+  it('creates a section between two parts, in the place chosen', async () => {
+    const { ctx, reader } = createTestContext();
+    const first = await createSection(ctx, 'general');
+    const last = await createSection(ctx, 'general');
+
+    const meeting = await createSectionAfter(ctx, 'meeting', [first.id, last.id], 0);
+
+    expect(meeting).toMatchObject({ kind: 'meeting', day: TODAY });
+    expect((await loadDayNote(reader, TODAY)).sectionOrder).toEqual([first.id, meeting.id, last.id]);
+  });
+
+  it('keeps the first section that exists only on screen in its place', async () => {
+    const { ctx, db } = createTestContext();
+    const meeting = await createSection(ctx, 'meeting');
+
+    const general = await createSectionAfter(ctx, 'general', [FIRST_PART, meeting.id], 0);
+    await createBlock(ctx, { sectionId: null, position: 'a', newSectionId: 'first-section' }, 'oi');
+
+    expect((await db.days.get(TODAY))?.sectionOrder).toEqual(['first-section', general.id, meeting.id]);
   });
 });

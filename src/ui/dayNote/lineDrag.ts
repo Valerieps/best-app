@@ -93,3 +93,9 @@ export function useLineDrag(onDrop: (group: string, id: string, toIndex: number)
 
   return { drag, start };
 }
+
+/** A key that writes or erases text, so the drag handles hide while I type. */
+export function isTypingKey(event: { key: string; ctrlKey: boolean; metaKey: boolean; altKey: boolean }): boolean {
+  if (event.ctrlKey || event.metaKey || event.altKey) return false;
+  return event.key.length === 1 || event.key === 'Backspace' || event.key === 'Delete' || event.key === 'Enter';
+}
