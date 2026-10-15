@@ -18,6 +18,11 @@ export interface TaskGroup<T extends TaskListEntry> {
   items: T[];
 }
 
+/** Keeps only the tasks of the projects in focus. */
+export function inFocusProjects<T extends TaskListEntry>(items: readonly T[], focusIds: readonly string[]): T[] {
+  return items.filter((item) => item.task.projectId !== null && focusIds.includes(item.task.projectId));
+}
+
 /** The local day a task was created on. */
 export function creationDay(task: Block): DayKey {
   return toDayKey(new Date(task.createdAt));

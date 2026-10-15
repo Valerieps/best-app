@@ -1,11 +1,11 @@
 import { useEffect, useState, type MouseEvent } from 'react';
-import { setDeadline, setDeadlines, setIntendedDate, setIntendedDates } from '../../application/dayTools';
+import { setDeadline, setDeadlines, setIntendedDate, setIntendedDates, setTaskProject } from '../../application/dayTools';
 import { abandonTask, abandonTasks, reactivateTask, setTaskDone } from '../../application/notebook';
-import { loadActiveTasks, loadArchivedTasks, type TaskListItem } from '../../application/queries';
+import { loadActiveTasks, loadArchivedTasks, loadTaskListContext, type TaskListItem } from '../../application/queries';
 import { rangeBetween } from '../../domain/checkoutSteps';
 import { addDays, type DayKey } from '../../domain/day';
-import type { Section } from '../../domain/entities';
-import { TASK_LIST_KEYS, groupTasks, type TaskGroupBy, type TaskListKey } from '../../domain/taskList';
+import type { Project, Section } from '../../domain/entities';
+import { TASK_LIST_KEYS, groupTasks, inFocusProjects, type TaskGroupBy, type TaskListKey } from '../../domain/taskList';
 import { ProjectChip } from '../components/Chips';
 import { Icon } from '../components/Icon';
 import { DatePicker } from '../dayNote/BlockLine';
@@ -37,12 +37,15 @@ function TaskRow({
   today,
   action,
   extra,
+  selection,
 }: {
   item: TaskListItem;
   today: DayKey;
-  action: React.ReactNode;
+  action?: React.ReactNode;
   /** Shown on hover, after the meta. */
   extra?: React.ReactNode;
+  /** In a batch selection, a click anywhere on the row picks it, highlighted, as in the planning. */
+  selection?: { on: boolean; onPick(event: MouseEvent): void };
 }) {
   const [open, setOpen] = useState(false);
   const { task, project, origin } = item;
@@ -51,10 +54,19 @@ function TaskRow({
   const deadline = active && task.deadline ? `prazo ${relativeDay(task.deadline, today)}` : null;
   const meta = [active ? when : null, deadline, postponedLabel(task.postponeCount)].filter(Boolean).join(' · ');
   return (
-    <li className="card-list__item card-list__item--stacked">
+    <li
+      className={`card-list__item card-list__item--stacked ${selection ? 'active-tasks__row--select' : ''} ${selection?.on ? 'active-tasks__row--on' : ''}`}
+      onClick={selection?.onPick}
+    >
       <div className="task-row">
         {action}
-        <button type="button" className="task-row__text" onClick={() => setOpen(!open)} aria-expanded={open}>
+        <button
+          type="button"
+          className="task-row__text"
+          onClick={selection ? undefined : () => setOpen(!open)}
+          aria-expanded={selection ? undefined : open}
+          aria-pressed={selection?.on}
+        >
           <Linkified text={task.text || '(tarefa sem texto)'} />
         </button>
         <span className="list-meta">
@@ -63,7 +75,7 @@ function TaskRow({
         </span>
         {extra}
       </div>
-      {open && (
+      {open && !selection && (
         <p className="muted task-row__origin">
           {originLabel(origin)}
           {origin?.notesDestination === 'wiki' && (
@@ -90,9 +102,11 @@ const VIEW_KEY = 'best-app:activeTasksView';
 interface TaskListView {
   groupBy: TaskGroupBy;
   sortBy: TaskListKey;
+  /** Only the tasks of the projects in focus. */
+  focusOnly: boolean;
 }
 
-const DEFAULT_VIEW: TaskListView = { groupBy: 'none', sortBy: 'intendedDate' };
+const DEFAULT_VIEW: TaskListView = { groupBy: 'none', sortBy: 'intendedDate', focusOnly: false };
 
 function isKey(value: unknown): value is TaskListKey {
   return TASK_LIST_KEYS.includes(value as TaskListKey);
@@ -105,6 +119,7 @@ function readView(): TaskListView {
     return {
       groupBy: saved.groupBy === 'none' || isKey(saved.groupBy) ? saved.groupBy : DEFAULT_VIEW.groupBy,
       sortBy: isKey(saved.sortBy) ? saved.sortBy : DEFAULT_VIEW.sortBy,
+      focusOnly: saved.focusOnly === true,
     };
   } catch {
     return DEFAULT_VIEW;
@@ -241,11 +256,27 @@ function BatchBar({ selected, today, onDone }: { selected: Set<string>; today: D
 }
 
 /** On hover: change the two dates, or abandon the task, with a second click to confirm. */
-function ActiveTaskActions({ item, today }: { item: TaskListItem; today: DayKey }) {
+function ActiveTaskActions({ item, today, projects }: { item: TaskListItem; today: DayKey; projects: Project[] }) {
   const [confirming, setConfirming] = useState(false);
   const { task } = item;
   return (
     <span className="active-tasks__actions">
+      {!item.project && projects.length > 0 && (
+        <select
+          className="line__action active-tasks__project"
+          value=""
+          onChange={(event) => event.target.value && void setTaskProject(appContext, task.id, event.target.value)}
+          aria-label={`Vincular "${task.text}" a um projeto`}
+          title="Vincular a um projeto"
+        >
+          <option value="">Projeto</option>
+          {projects.map((project) => (
+            <option key={project.id} value={project.id}>
+              {project.name}
+            </option>
+          ))}
+        </select>
+      )}
       <DatePicker
         label="Mudar a data de intenção"
         className="line__action"
@@ -319,13 +350,22 @@ function TaskListControls({
           ))}
         </select>
       </label>
+      <label>
+        <input
+          type="checkbox"
+          checked={view.focusOnly}
+          onChange={(event) => onChange({ ...view, focusOnly: event.target.checked })}
+        />
+        Só projetos em foco
+      </label>
       <span className="active-tasks__controls-end">{children}</span>
     </div>
   );
 }
 
 export function ActiveTasksScreen({ today }: { today: DayKey }) {
-  const items = useLiveQuery(() => loadActiveTasks(reader));
+  const allItems = useLiveQuery(() => loadActiveTasks(reader));
+  const context = useLiveQuery(() => loadTaskListContext(reader));
   const [view, setView] = useTaskListView();
   // Keys as `${groupBy}:${key}`, so switching the grouping never carries a collapse over.
   const [collapsed, setCollapsed] = useState<Set<string>>(new Set());
@@ -350,8 +390,9 @@ export function ActiveTasksScreen({ today }: { today: DayKey }) {
     return () => window.removeEventListener('keydown', onKey);
   }, [selecting]);
 
-  if (!items) return <LoadingPage title="Tarefas ativas" />;
-  const { groupBy, sortBy } = view;
+  if (!allItems || !context) return <LoadingPage title="Tarefas ativas" />;
+  const { groupBy, sortBy, focusOnly } = view;
+  const items = focusOnly ? inFocusProjects(allItems, context.focusIds) : allItems;
   const groups = groupTasks(items, groupBy, sortBy);
   const groupId = (key: string | null) => `${groupBy}:${key ?? ''}`;
   const shownIds = groups.flatMap((group) => group.items.map((item) => item.task.id));
@@ -413,15 +454,7 @@ export function ActiveTasksScreen({ today }: { today: DayKey }) {
             item={item}
             today={today}
             action={
-              selecting ? (
-                <input
-                  type="checkbox"
-                  checked={selected.has(id)}
-                  onChange={() => undefined}
-                  onClick={(event) => pick(id, event)}
-                  aria-label={`Selecionar "${item.task.text}"`}
-                />
-              ) : (
+              selecting ? undefined : (
                 <input
                   type="checkbox"
                   checked={false}
@@ -430,7 +463,8 @@ export function ActiveTasksScreen({ today }: { today: DayKey }) {
                 />
               )
             }
-            extra={selecting ? undefined : <ActiveTaskActions item={item} today={today} />}
+            selection={selecting ? { on: selected.has(id), onPick: (event) => pick(id, event) } : undefined}
+            extra={selecting ? undefined : <ActiveTaskActions item={item} today={today} projects={context.activeProjects} />}
           />
         );
       })}
@@ -438,7 +472,7 @@ export function ActiveTasksScreen({ today }: { today: DayKey }) {
   );
   return (
     <ListPage title="Tarefas ativas" className="page--active-tasks">
-      {items.length === 0 ? (
+      {allItems.length === 0 ? (
         <p className="muted">Nenhuma tarefa ativa.</p>
       ) : (
         <>
@@ -459,7 +493,12 @@ export function ActiveTasksScreen({ today }: { today: DayKey }) {
           </TaskListControls>
           {selecting && (
             <p className="muted">
-              {flash || 'Marque as tarefas e escolha o que fazer na barra de baixo. Shift + clique seleciona um intervalo.'}
+              {flash || 'Clique nas tarefas para selecionar e escolha o que fazer na barra de baixo. Shift + clique seleciona um intervalo.'}
+            </p>
+          )}
+          {items.length === 0 && (
+            <p className="muted">
+              {context.focusIds.length === 0 ? 'Nenhum projeto em foco.' : 'Nenhuma tarefa ativa nos projetos em foco.'}
             </p>
           )}
           {groupBy === 'none'

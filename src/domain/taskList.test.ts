@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import type { Block, Project } from './entities';
-import { creationDay, groupTasks, sortTasks, type TaskListEntry } from './taskList';
+import { creationDay, groupTasks, inFocusProjects, sortTasks, type TaskListEntry } from './taskList';
 
 function project(id: string, name: string): Project {
   return { id, name, status: 'active', createdAt: '', updatedAt: '', finishedAt: null };
@@ -86,6 +86,13 @@ describe('grouping the active tasks', () => {
   it('can group and sort by the same key', () => {
     const groups = groupTasks(all, 'intendedDate', 'intendedDate');
     expect(ids(groups[0]!.items)).toEqual(['d', 'c']);
+  });
+});
+
+describe('projects in focus', () => {
+  it('keeps only tasks of the projects in focus', () => {
+    expect(ids(inFocusProjects(all, ['p1']))).toEqual(['a', 'd']);
+    expect(inFocusProjects(all, [])).toEqual([]);
   });
 });
 

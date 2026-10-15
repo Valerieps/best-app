@@ -1,8 +1,9 @@
 import { describe, expect, it } from 'vitest';
 import { positionBetween } from '../domain/position';
 import { createTestContext } from '../test/fixtures';
-import { moveDayPriority, setDayPriority, setDeadline, setDeadlines, setIntendedDate, setIntendedDates, setSectionDetails } from './dayTools';
+import { moveDayPriority, setDayPriority, setDeadline, setDeadlines, setIntendedDate, setIntendedDates, setSectionDetails, setTaskProject } from './dayTools';
 import { abandonTask, abandonTasks, createBlock, createSection, setTaskDone } from './notebook';
+import { createProject, setProjectFinished } from './projects';
 import { loadActiveTasks, loadDayPriorities, loadDayTriage } from './queries';
 
 const TODAY = '2026-10-11';
@@ -12,6 +13,21 @@ async function newTask(ctx: Parameters<typeof createBlock>[0], text: string) {
 }
 
 describe('1b day tools', () => {
+  it('links a task to an active project, and only to an active one', async () => {
+    const { ctx, db } = createTestContext();
+    const task = await newTask(ctx, 'Sem projeto');
+    const project = await createProject(ctx, 'Casa');
+    const finished = await createProject(ctx, 'Antigo');
+    await setProjectFinished(ctx, finished.id, true);
+
+    await setTaskProject(ctx, task.id, finished.id);
+    expect((await db.blocks.get(task.id))?.projectId).toBeNull();
+
+    await setTaskProject(ctx, task.id, project.id);
+    expect((await db.blocks.get(task.id))?.projectId).toBe(project.id);
+    expect((await db.events.toArray()).filter((event) => event.type === 'block.linkedToProject')).toHaveLength(1);
+  });
+
   it('changes dates and abandons several tasks at once', async () => {
     const { ctx, reader, db } = createTestContext();
     const a = await newTask(ctx, 'A');

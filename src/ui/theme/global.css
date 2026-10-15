@@ -3828,8 +3828,39 @@ button.active-tasks__toggle {
 }
 
 .active-tasks__group-title {
-  font-size: var(--font-size-sm);
+  font-size: var(--font-size-md);
   font-weight: 600;
+}
+
+.active-tasks__group-head button.link {
+  font-size: var(--font-size-xs);
+}
+
+.active-tasks__controls label {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+}
+
+select.line__action.active-tasks__project {
+  padding: 0 var(--space-1);
+  max-width: 160px;
+}
+
+/* Batch selection: the row is the target and lights up, as in the planning of the checkout. */
+.active-tasks__row--select {
+  cursor: pointer;
+  user-select: none;
+  border-left: var(--section-bar-width) solid transparent;
+}
+
+.active-tasks__row--select .task-row__text {
+  cursor: pointer;
+}
+
+.active-tasks__row--select.active-tasks__row--on {
+  background: var(--color-select-bg);
+  border-left-color: var(--color-accent);
 }
 
 .active-tasks__actions {

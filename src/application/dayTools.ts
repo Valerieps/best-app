@@ -45,6 +45,17 @@ export async function setDeadlines(ctx: AppContext, taskIds: readonly string[], 
   });
 }
 
+/** Links an active task to a project, or unlinks it with null, outside the checkout. */
+export async function setTaskProject(ctx: AppContext, taskId: string, projectId: string | null): Promise<void> {
+  await ctx.store.transaction(async (tx) => {
+    const task = await tx.blocks.get(taskId);
+    if (!task || task.kind !== 'task' || task.status !== 'active' || task.projectId === projectId) return;
+    if (projectId !== null && (await tx.projects.get(projectId))?.status !== 'active') return;
+    await tx.blocks.put({ ...task, projectId, updatedAt: ctx.clock.now().toISOString() });
+    await record(ctx, tx, 'block.linkedToProject', 'block', task.id, today(ctx), { projectId });
+  });
+}
+
 /** Promotes a task to a priority of today, or removes it. */
 export async function setDayPriority(ctx: AppContext, taskId: string, on: boolean): Promise<void> {
   await ctx.store.transaction(async (tx) => {

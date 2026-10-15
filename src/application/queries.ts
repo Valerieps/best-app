@@ -274,6 +274,22 @@ export async function loadFocusProjectIds(reader: Reader, projects: readonly Pro
   return focusProjectIds(list, projects);
 }
 
+/** What the active tasks screen needs besides the tasks: projects to link to and the ones in focus. */
+export interface TaskListContext {
+  activeProjects: Project[];
+  focusIds: string[];
+}
+
+export async function loadTaskListContext(reader: Reader): Promise<TaskListContext> {
+  const projects = await reader.projects();
+  return {
+    activeProjects: projects
+      .filter((project) => project.status === 'active')
+      .sort((a, b) => a.name.localeCompare(b.name, 'pt-BR', { sensitivity: 'base' })),
+    focusIds: await loadFocusProjectIds(reader, projects),
+  };
+}
+
 /** What the "⋯" of a project offers, in the list and on its page. */
 export interface ProjectActions {
   isPriority: boolean;
