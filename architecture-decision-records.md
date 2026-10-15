@@ -56,3 +56,4 @@ Read only the ADRs your task touches: find them in this table or by grepping `ad
 | [ADR-045](adr/045-cleanup-colors-measure-the-age-of-the-oldest-item.md) | Cleanup colors measure the age of the oldest item | 2026-10-14 | Accepted |
 | [ADR-046](adr/046-day-note-focus-lives-in-the-settings.md) | Day note focus lives in the settings | 2026-10-14 | Accepted |
 | [ADR-047](adr/047-backup-folder-with-dated-copies.md) | Backup folder with dated copies | 2026-10-14 | Accepted |
+| [ADR-048](adr/048-markdown-per-line-kept-as-plain-text.md) | Markdown per line, kept as plain text and parsed in the app | 2026-10-15 | Accepted |

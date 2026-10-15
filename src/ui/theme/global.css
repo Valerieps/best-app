@@ -3600,6 +3600,111 @@ button.part-focus:hover {
   margin-left: auto;
 }
 
+/* Markdown formatting toolbar (spec/nota-do-dia.md, "Formatação"): discreet, at the right of a
+   section's header, before the focus mode button; it shows on hover or while writing in the section */
+.format-toolbar {
+  display: inline-flex;
+  align-items: center;
+  gap: 1px;
+  margin-left: auto;
+  opacity: 0;
+  transition: opacity 120ms ease;
+}
+
+.day-part:hover .format-toolbar,
+.day-part:focus-within .format-toolbar {
+  opacity: 0.55;
+}
+
+.format-toolbar:hover,
+.format-toolbar:focus-within {
+  opacity: 1;
+}
+
+.section__header > .format-toolbar + button.part-focus {
+  margin-left: 0;
+}
+
+button.format-toolbar__button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 20px;
+  height: 20px;
+  padding: 0 2px;
+  border: none;
+  background: none;
+  color: var(--color-text-muted);
+  font-size: var(--font-size-xs);
+  font-weight: 600;
+  line-height: 1;
+}
+
+button.format-toolbar__button:hover,
+button.format-toolbar__button:focus-visible {
+  color: var(--color-text);
+  background: var(--color-surface-soft);
+}
+
+/* Markdown on the lines: headings size the text field too, so writing one already looks like it */
+.line--h1 { font-size: var(--font-size-2xl); font-weight: 700; }
+.line--h2 { font-size: var(--font-size-xl); font-weight: 700; }
+.line--h3 { font-size: var(--font-size-lg); font-weight: 600; }
+.line--h4 { font-size: var(--font-size-md); font-weight: 600; }
+
+.line--h1 .line__meta,
+.line--h2 .line__meta,
+.line--h3 .line__meta,
+.line--h1 .line__actions,
+.line--h2 .line__actions,
+.line--h3 .line__actions {
+  font-size: var(--font-size-md);
+  font-weight: 400;
+}
+
+/* Away from the cursor, the line shows formatted; the text field stays, unseen, to take the focus */
+.line--preview .line__text {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  min-height: 0;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.line__rendered {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: baseline;
+  line-height: var(--line-height);
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  cursor: text;
+}
+
+.line--done .line__rendered {
+  text-decoration: line-through;
+  color: var(--color-text-muted);
+}
+
+.md-list-marker {
+  flex-shrink: 0;
+  min-width: 1.5em;
+  color: var(--color-text-muted);
+}
+
+.md-content {
+  flex: 1;
+  min-width: 0;
+}
+
+.line__rendered a {
+  color: var(--color-link);
+  text-decoration: underline;
+  cursor: pointer;
+}
+
 /* After the pin, which already takes the free space */
 .priorities__header > button.priorities__pin + button.part-focus {
   margin-left: 0;

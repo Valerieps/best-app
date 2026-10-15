@@ -33,6 +33,18 @@
 - Eu posso interagir com cada tipo de bloco com atalhos que aparecem com mouse hover. Na tarefa: finalizar, definir a data de intenção e o prazo máximo, e promover a prioridade. Na nota geral: converter em tarefa.
 - No topo da nota do dia, onde aparece a data, um botão de setinha pagina entre os dias. Ele passa somente pelas notas que ainda têm itens pendentes.
 
+## Formatação *(1b)*
+
+Eu posso formatar o que escrevo na nota do dia com Markdown, como no Obsidian. O texto continua sendo o Markdown que eu digitei; o app só mostra a formatação.
+
+- Cada linha pode ser um cabeçalho, de quatro níveis (`#` a `####` seguido de espaço), ou um item de lista com marcador (`- `) ou numerada (`1. `). Dentro da linha, posso usar negrito (`**texto**`), itálico (`_texto_` ou `*texto*`) e link (`[texto](endereço)`). Um endereço que começa com `http://` ou `https://` já vira link sozinho.
+- Enquanto o cursor está na linha, eu vejo o Markdown cru, já no tamanho do cabeçalho; fora dela, a linha aparece formatada. Clicar num link abre o endereço numa aba nova; clicar no resto da linha volta a editar.
+- No canto direito do cabeçalho de cada seção geral ou de reunião, ao lado do ícone do modo foco, ficam ícones discretos, que aparecem quando passo o mouse na seção ou estou escrevendo nela: negrito, itálico, cabeçalhos 1 a 4, lista, lista numerada, diminuir e aumentar o recuo, e link. Eles formatam a linha em que estou ou, se nenhuma linha da seção está com o cursor, a última linha da seção. Clicar de novo no mesmo formato tira o formato.
+- Atalhos (⌘ no lugar de Ctrl no Mac): Ctrl + B para negrito, Ctrl + I para itálico, Ctrl + K para link, Ctrl + Shift + 1 a 4 para os cabeçalhos, Ctrl + Shift + 8 para lista e Ctrl + Shift + 7 para lista numerada. Num item de lista, Tab aumenta o recuo e Shift + Tab diminui, até 4 níveis; fora de lista, o Tab continua como sempre.
+- O link sem nada selecionado entra como `[link](https://)`, com "link" selecionado para eu escrever o texto; com um texto selecionado, ele vira o texto do link e o endereço fica selecionado para eu digitar; com um endereço selecionado, ele vira o destino.
+- Enter num item de lista começa a linha seguinte com o mesmo marcador e o mesmo recuo, e a lista numerada continua a contagem. Enter num item vazio tira o marcador e sai da lista, sem criar linha.
+- A formatação vale para notas e tarefas, e não muda o tipo do bloco. Fora da nota do dia (wiki, checkout, listas), o texto ainda aparece com o Markdown cru.
+
 ## Ordem das linhas e das seções *(1b)*
 
 - Eu posso mudar a ordem das linhas (tarefas e notas) dentro de uma seção: arrastando pela alça que aparece à esquerda da linha só no hover do mouse (ela some enquanto eu digito e volta quando eu mexo o mouse), ou com Alt + ↑/↓ com o cursor na linha. Vale para todas as linhas da seção, mesmo as já triadas ou finalizadas, porque a ordem não muda data, status nem triagem. Uma linha não muda de seção assim.

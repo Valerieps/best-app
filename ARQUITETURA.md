@@ -188,7 +188,8 @@ Reativar uma tarefa arquivada limpa a data sem contar adiamento (ADR-015).
 - **Modo foco** (ADR-046): a parte em foco fica nas configurações (`dayNoteFocus`), com a chave que a nota já usa para ordenar as partes. Com ela, `App` mostra a nota daquele dia só com a parte, sem as telas de abertura e sem avisos, mesmo depois da meia-noite.
 - **Digitação rápida** (ADR-014): uma linha nova aparece na tela antes de ser gravada, e as gravações do editor rodam uma depois da outra numa fila (`ui/writeQueue.ts`), para que salvar o texto nunca procure um bloco que ainda está sendo criado.
 - O texto é salvo 400 ms depois da última tecla, ao perder o foco e ao sair da tela, sem gerar evento. A criação, a exclusão e a mudança de tipo geram evento.
-- Fora do editor (wiki, listas, checkout), links no texto viram `<a target="_blank" rel="noopener noreferrer">`, só para `http` e `https`, e o texto nunca é inserido como HTML (`google-safe.md`). No editor, o texto continua editável e os links não são clicáveis.
+- Fora do editor (wiki, listas, checkout), links no texto viram `<a target="_blank" rel="noopener noreferrer">`, só para `http` e `https`, e o texto nunca é inserido como HTML (`google-safe.md`).
+- **Markdown** (ADR-048): o texto do bloco guarda o Markdown cru, sem campo novo no banco. `ui/dayNote/markdown.ts` tem funções puras que leem a linha (cabeçalho, item de lista, negrito, itálico, links) e que a editam (`applyFormat`, com texto e seleção). Fora do cursor, `BlockLine` mostra a linha formatada (`MarkdownText`, só elementos React) e esconde o campo de texto, que continua lá para receber o foco. A barra de formatação no cabeçalho da seção manda um evento DOM (`line-format`) para a linha com o cursor, que aplica o formato como se fosse digitação. Links formatados só abrem `http`, `https` e `mailto`.
 
 ## 8. Checkout e auto-triagem (implementado)
 

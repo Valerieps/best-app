@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState, type KeyboardEvent, type PointerEvent, type ReactNode } from 'react';
+import { useCallback, useEffect, useLayoutEffect, useRef, useState, type KeyboardEvent, type MouseEvent, type PointerEvent, type ReactNode } from 'react';
 import { detectKind } from '../../domain/blockKind';
 import type { DayKey } from '../../domain/day';
 import type { Block } from '../../domain/entities';
@@ -7,13 +7,16 @@ import { useSaveOnPageLeave } from '../pageLeave';
 import { rememberUnsavedLine } from '../unsavedLines';
 import { useFocusTarget } from './focus';
 import { partMoveKey } from './lineDrag';
+import { applyFormat, FORMAT_EVENT, formatShortcut, hasMarkdown, listOnEnter, parseLine, type FormatCommand, type LineEdit } from './markdown';
+import { MarkdownText } from './MarkdownText';
 
 /** Wait after the last keystroke before saving the text. */
 const SAVE_DELAY_MS = 400;
 
 export interface LineHandlers {
   onSaveText(block: Block, text: string): void;
-  onEnter(block: Block, text: string, caret: number): void;
+  /** Splits the line at `caret`; the new line takes the focus at `newCaret` (0 by default). */
+  onEnter(block: Block, text: string, caret: number, newCaret?: number): void;
   onBackspaceAtStart(block: Block, text: string): void;
   onMakeTask(block: Block, text: string): void;
   onToggleDone(block: Block, done: boolean): void;
@@ -120,6 +123,10 @@ export function BlockLine({ block, free, day, today, isPriority, allowNewLines, 
   const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const latest = useRef({ block, text, handlers });
   latest.current = { block, text, handlers };
+  // While the line is not being edited, its Markdown shows formatted.
+  const [editing, setEditing] = useState(false);
+  // The selection to restore once a formatted text renders.
+  const selectionAfter = useRef<[number, number] | null>(null);
 
   useFocusTarget(block.id, ref);
 
@@ -149,6 +156,37 @@ export function BlockLine({ block, free, day, today, isPriority, allowNewLines, 
   }, [flush]);
   useSaveOnPageLeave(keepAndFlush);
 
+  // Formatting from the toolbar or a shortcut: the new text is saved like typing.
+  const format = useCallback(
+    (command: FormatCommand) => {
+      const element = ref.current;
+      if (!element) return;
+      const edit: LineEdit = { text: element.value, start: element.selectionStart, end: element.selectionEnd };
+      const next = applyFormat(command, edit);
+      if (next.text === edit.text && next.start === edit.start && next.end === edit.end) return;
+      setText(next.text);
+      latest.current.text = next.text;
+      selectionAfter.current = [next.start, next.end];
+      if (saveTimer.current) clearTimeout(saveTimer.current);
+      saveTimer.current = setTimeout(flush, SAVE_DELAY_MS);
+    },
+    [flush],
+  );
+  useLayoutEffect(() => {
+    const element = ref.current;
+    const selection = selectionAfter.current;
+    if (!element || !selection) return;
+    selectionAfter.current = null;
+    element.setSelectionRange(selection[0], selection[1]);
+  }, [text]);
+  useEffect(() => {
+    const element = ref.current;
+    if (!element) return;
+    const listener = (event: Event) => format((event as CustomEvent<FormatCommand>).detail);
+    element.addEventListener(FORMAT_EVENT, listener);
+    return () => element.removeEventListener(FORMAT_EVENT, listener);
+  }, [format]);
+
   function onChange(value: string) {
     if (block.kind === 'note' && free) {
       const detected = detectKind(value);
@@ -170,6 +208,13 @@ export function BlockLine({ block, free, day, today, isPriority, allowNewLines, 
     const atEnd = element.selectionStart === element.value.length;
     // Moving the whole section is handled by the section around the line.
     if (partMoveKey(event)) return;
+    const command = event.nativeEvent.isComposing ? null : formatShortcut(event);
+    // Tab only indents a list item; elsewhere it still moves the focus.
+    if (command && (event.key !== 'Tab' || parseLine(element.value).list)) {
+      event.preventDefault();
+      format(command);
+      return;
+    }
     if (event.altKey && (event.key === 'ArrowUp' || event.key === 'ArrowDown') && handlers.onMove) {
       event.preventDefault();
       handlers.onMove(block, event.key === 'ArrowUp' ? 'up' : 'down');
@@ -178,11 +223,20 @@ export function BlockLine({ block, free, day, today, isPriority, allowNewLines, 
       if (!allowNewLines) return;
       if (saveTimer.current) clearTimeout(saveTimer.current);
       const caret = element.selectionStart;
-      const value = element.value;
+      let value = element.value;
+      // In a list, the new line continues it; Enter on an empty item leaves the list instead.
+      const list = element.selectionEnd === caret ? listOnEnter(value, caret) : null;
+      if (list?.type === 'exit') {
+        setText(list.text);
+        latest.current.text = list.text;
+        flush();
+        return;
+      }
+      if (list?.type === 'continue') value = value.slice(0, caret) + list.prefix + value.slice(caret);
       // The rest of the line moves to the new line right away; the split is saved after.
       setText(value.slice(0, caret));
       latest.current.text = value.slice(0, caret);
-      handlers.onEnter(block, value, caret);
+      handlers.onEnter(block, value, caret, list?.type === 'continue' ? list.prefix.length : 0);
     } else if (event.key === 'Backspace' && atStart && free) {
       event.preventDefault();
       if (saveTimer.current) clearTimeout(saveTimer.current);
@@ -224,11 +278,25 @@ export function BlockLine({ block, free, day, today, isPriority, allowNewLines, 
   );
   const priorityLabel = isPriority ? 'Tirar das prioridades do dia' : 'Promover a prioridade do dia';
 
+  const structure = parseLine(text);
+  const headingClass = structure.heading ? `line--h${structure.heading}` : '';
+  const preview = !editing && hasMarkdown(text);
+
+  /** A click on the formatted text edits the line, unless it lands on a link, which opens. */
+  function editFromPreview(event: MouseEvent<HTMLElement>) {
+    if (event.button !== 0 || (event.target as HTMLElement).closest('a')) return;
+    event.preventDefault();
+    const element = ref.current;
+    if (!element) return;
+    element.focus();
+    element.setSelectionRange(element.value.length, element.value.length);
+  }
+
   const dragClasses = drag ? `${drag.dragging ? 'line--dragging' : ''} ${drag.mark ? `line--drop-${drag.mark}` : ''}` : '';
 
   return (
     <div
-      className={`line line--${block.kind} ${done ? 'line--done' : ''} ${dragClasses}`}
+      className={`line line--${block.kind} ${done ? 'line--done' : ''} ${headingClass} ${preview ? 'line--preview' : ''} ${dragClasses}`}
       data-drag-group={drag?.group}
       data-drag-id={block.id}
     >
@@ -254,10 +322,19 @@ export function BlockLine({ block, free, day, today, isPriority, allowNewLines, 
         spellCheck
         onChange={(event) => onChange(event.target.value)}
         onKeyDown={onKeyDown}
-        onBlur={flush}
+        onFocus={() => setEditing(true)}
+        onBlur={() => {
+          setEditing(false);
+          flush();
+        }}
         placeholder={block.kind === 'note' && free && allowNewLines ? NOTE_HINT : undefined}
         aria-label={isTask ? 'Tarefa' : 'Nota'}
       />
+      {preview && (
+        <div className="line__rendered" onMouseDown={editFromPreview} aria-hidden="true">
+          <MarkdownText text={text} />
+        </div>
+      )}
       {/* Dates already set are chips; an active task's chip changes the date. */}
       <span className="line__meta">
         {extraMeta}
@@ -295,8 +372,11 @@ export function BlockLine({ block, free, day, today, isPriority, allowNewLines, 
 interface GhostProps {
   id: string;
   placeholder: string;
-  /** Called on the first keystroke; the new line replaces this one right away and takes the focus. */
-  onCreate(text: string): void;
+  /**
+   * Called on the first keystroke, or on formatting the empty line; the new line replaces this one
+   * right away and takes the focus, at `caret` when given.
+   */
+  onCreate(text: string, caret?: number): void;
   /** Called when the focus leaves the line before anything was typed. */
   onLeave?(): void;
 }
@@ -308,6 +388,20 @@ interface GhostProps {
 export function GhostLine({ id, placeholder, onCreate, onLeave }: GhostProps) {
   const ref = useRef<HTMLTextAreaElement>(null);
   useFocusTarget(id, ref);
+  const latestCreate = useRef(onCreate);
+  latestCreate.current = onCreate;
+  function formatEmpty(command: FormatCommand) {
+    const next = applyFormat(command, { text: '', start: 0, end: 0 });
+    if (next.text) latestCreate.current(next.text, next.end);
+  }
+  // Formatting the empty line, like choosing a heading before writing, creates it already formatted.
+  useEffect(() => {
+    const element = ref.current;
+    if (!element) return;
+    const listener = (event: Event) => formatEmpty((event as CustomEvent<FormatCommand>).detail);
+    element.addEventListener(FORMAT_EVENT, listener);
+    return () => element.removeEventListener(FORMAT_EVENT, listener);
+  }, []);
   return (
     <div className="line line--ghost">
       <textarea
@@ -318,6 +412,12 @@ export function GhostLine({ id, placeholder, onCreate, onLeave }: GhostProps) {
         placeholder={placeholder}
         onChange={(event) => {
           if (event.target.value) onCreate(event.target.value);
+        }}
+        onKeyDown={(event) => {
+          const command = event.nativeEvent.isComposing ? null : formatShortcut(event);
+          if (!command || event.key === 'Tab') return;
+          event.preventDefault();
+          formatEmpty(command);
         }}
         onBlur={onLeave}
         aria-label="Nova linha"
