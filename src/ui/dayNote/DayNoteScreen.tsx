@@ -303,11 +303,6 @@ export function DayNoteScreen({
         </span>
       }
       primary={{ label: 'Fechar o dia', onSelect: () => navigate({ name: 'checkout', day }) }}
-      more={
-        isToday
-          ? [{ label: pinned ? 'Desafixar prioridades' : 'Fixar prioridades no topo', onSelect: () => setPinned(!pinned) }]
-          : []
-      }
     />
   );
 
@@ -540,6 +535,7 @@ export function DayNoteScreen({
       priorities={priorities}
       today={prioritiesDay}
       pinned={pinned}
+      onTogglePin={isToday && !focus ? () => setPinned(!pinned) : undefined}
       onToggleDone={(taskId, done) => write(() => setTaskDone(ctx, taskId, done))}
       onDemote={(taskId) => write(() => setDayPriority(ctx, taskId, false))}
       onMoveDate={(taskId, date) => write(() => moveDayPriority(ctx, taskId, date))}

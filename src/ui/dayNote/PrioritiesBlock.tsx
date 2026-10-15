@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState, type ReactNode } from 'react';
 import type { DayKey } from '../../domain/day';
 import type { DayPriority } from '../../domain/priorities';
+import { Icon } from '../components/Icon';
 import { Linkified } from '../components/Linkified';
 import { relativeDay } from '../format';
 import { DatePicker } from './BlockLine';
@@ -33,8 +34,10 @@ export function usePinnedPriorities(): [boolean, (pinned: boolean) => void] {
 interface Props {
   priorities: DayPriority[];
   today: DayKey;
-  /** Pinned from the "⋯" of the day note's header. */
+  /** Pinned to the top by the pin in the block's own header. */
   pinned: boolean;
+  /** Pins or unpins the block; absent where pinning means nothing (another day, focus mode). */
+  onTogglePin?(): void;
   onToggleDone(taskId: string, done: boolean): void;
   onDemote(taskId: string): void;
   /** Moves the task to another intended date, out of today's priorities; called after the countdown. */
@@ -53,7 +56,7 @@ function destination(date: DayKey | null, today: DayKey): string {
  * "Prioridades do dia": up to 3 tasks, highlighted. Their dates change here too: a new intended
  * date waits a short countdown, which I can cancel, before the task goes to that day.
  */
-export function PrioritiesBlock({ priorities, today, pinned, onToggleDone, onDemote, onMoveDate, onSetDeadline, leading }: Props) {
+export function PrioritiesBlock({ priorities, today, pinned, onTogglePin, onToggleDone, onDemote, onMoveDate, onSetDeadline, leading }: Props) {
   const [waiting, setWaiting] = useState<PendingMove[]>([]);
   const commit = useRef(onMoveDate);
   commit.current = onMoveDate;
@@ -74,6 +77,18 @@ export function PrioritiesBlock({ priorities, today, pinned, onToggleDone, onDem
       <div className="priorities__header">
         {leading}
         <h2 className="priorities__title">Prioridades do dia</h2>
+        {onTogglePin && (
+          <button
+            type="button"
+            className="icon-button priorities__pin"
+            title={pinned ? 'Desafixar as prioridades' : 'Fixar as prioridades no topo'}
+            aria-label={pinned ? 'Desafixar as prioridades' : 'Fixar as prioridades no topo'}
+            aria-pressed={pinned}
+            onClick={onTogglePin}
+          >
+            <Icon name="pin" size="sm" filled={pinned} />
+          </button>
+        )}
       </div>
       {priorities.length === 0 ? (
         <p className="muted priorities__empty">Nenhuma prioridade agora. Promova uma tarefa com ★.</p>

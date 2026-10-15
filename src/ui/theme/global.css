@@ -546,6 +546,25 @@ input[type='checkbox'] {
   gap: var(--space-2);
 }
 
+/* Pins the block to the top; shows on hover, and always while pinned */
+button.priorities__pin {
+  margin-left: auto;
+  padding: 2px;
+  color: var(--color-text-muted);
+  opacity: 0;
+}
+
+.priorities:hover button.priorities__pin,
+.priorities:focus-within button.priorities__pin,
+button.priorities__pin[aria-pressed='true'] {
+  opacity: 1;
+}
+
+button.priorities__pin:hover,
+button.priorities__pin[aria-pressed='true'] {
+  color: var(--color-text);
+}
+
 .priorities__title {
   margin: 0;
   font-size: var(--font-size-md);
