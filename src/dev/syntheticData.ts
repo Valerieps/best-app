@@ -24,8 +24,9 @@ import { Simulation } from './simulation';
  *   ano" / "Festa de fim-de-ano" (punctuation), and "Sprint 41" / "Sprint 42", a false
  *   positive for "Manter separados". The finished "Sprint 40" stays out.
  * - Revisão de Foco: available, since there was none and dozens of checkouts were done; a task
- *   left for it and the notes of a retrospective; archived tasks from 31, 10 and 5 days ago.
- * - Active tasks without a date for weeks, for the future stale tasks assistant.
+ *   left for it and the notes of a retrospective.
+ * - Active tasks without a date for weeks, for the future stale tasks assistant, among them
+ *   ideas left for some day 31, 10 and 5 days ago.
  * - Today: a task planned for today as a priority, and a task whose deadline is today.
  */
 
@@ -143,7 +144,7 @@ export async function buildSyntheticData(now: Date, ids: IdGenerator): Promise<S
   );
   await sim.checkout({ tasks: [[barbecue, { kind: 'schedule', date: sim.day(-24) }]] });
 
-  // Day -31: first daily, a grocery list on a whiteboard, an idea archived.
+  // Day -31: first daily, a grocery list on a whiteboard, an idea left for some day.
   sim.on(-31);
   await sim.done(dataModel, competitors, carpenters);
   const daily = await sim.section('meeting', 'Daily', devs);
@@ -159,7 +160,7 @@ export async function buildSyntheticData(now: Date, ids: IdGenerator): Promise<S
   await sim.write(groceries, 'café, pão, ovos, tomate', 'detergente e esponja');
   await englishClass('Inglês: conversação', 'Conversação: contar o fim de semana sem travar.');
   await sim.checkout({
-    tasks: [[firebase, { kind: 'archive' }]],
+    tasks: [[firebase, { kind: 'undate' }]],
     notes: [[groceries, 'discarded']],
   });
 
@@ -337,7 +338,7 @@ export async function buildSyntheticData(now: Date, ids: IdGenerator): Promise<S
   );
   await sim.checkout();
 
-  // Day -10: accessibility reading; an idea for later is archived.
+  // Day -10: accessibility reading; an idea is left for some day.
   sim.on(-10);
   await sim.done(pageTexts, tables);
   const reading = await sim.section('general', 'Leituras sobre acessibilidade');
@@ -354,7 +355,7 @@ export async function buildSyntheticData(now: Date, ids: IdGenerator): Promise<S
     '[] Prototipar a integração com o Google Agenda',
   );
   await englishClass('Inglês: small talk', 'Small talk antes de reunião: clima, viagem, fim de semana.');
-  await sim.checkout({ tasks: [[calendarSync, { kind: 'archive' }]] });
+  await sim.checkout({ tasks: [[calendarSync, { kind: 'undate' }]] });
 
   // Day -8: the retrospective goes to the Revisão de Foco; a review is planned for today.
   sim.on(-8);
@@ -417,7 +418,7 @@ export async function buildSyntheticData(now: Date, ids: IdGenerator): Promise<S
   await sim.intend(secondPayment, 1);
   await sim.deadline(secondPayment, 0);
   await englishClass('Inglês: revisão', 'Revisão do mês: conditionals e phrasal verbs.');
-  await sim.checkout({ tasks: [[statusPage, { kind: 'archive' }]] });
+  await sim.checkout({ tasks: [[statusPage, { kind: 'undate' }]] });
 
   // Day -4: the last day with a checkout. The API docs reach 3 postponements.
   sim.on(-4);

@@ -4,14 +4,14 @@ import type { ReviewCadence } from './reviews';
 
 /**
  * Entities stored by the app. Each block, section and project is its own record:
- * blocks exist only once, and notes, projects and the wiki point at them instead of copying.
+ * blocks exist only once, and the day note, projects and resources point at them instead of copying.
  * Timestamps are ISO 8601 strings.
  */
 
 export type BlockKind = 'task' | 'note';
 
 /** converted (section 6): the task became a habit at checkout and left circulation. */
-export type TaskStatus = 'active' | 'done' | 'archived' | 'abandoned' | 'converted';
+export type TaskStatus = 'active' | 'done' | 'abandoned' | 'converted';
 
 export interface Block {
   id: string;
@@ -31,7 +31,7 @@ export interface Block {
   /** First intended date ever set, kept to measure the distance to the final action. */
   firstIntendedDate: DayKey | null;
   postponeCount: number;
-  /** When the task was finished, archived or abandoned. */
+  /** When the task was finished or abandoned. */
   closedAt: string | null;
   /**
    * Latest day whose checkout decided this task. A task is pending on a day it shows up in
@@ -52,6 +52,10 @@ export interface Block {
 export type SectionKind = 'general' | 'meeting';
 
 /** Where a section's notes go at checkout. All notes of a section are triaged together. */
+/**
+ * `wiki` means the day closed and the notes are kept: the name is historical, there is no wiki
+ * (ADR-050). `discarded` only shows up in older data.
+ */
 export type NotesDestination = 'pending' | 'wiki' | 'discarded' | 'weeklyReflection';
 
 /**

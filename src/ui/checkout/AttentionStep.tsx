@@ -20,7 +20,7 @@ import {
   type StepProps,
 } from './StepParts';
 
-type Choice = 'reflection' | 'next' | 'other' | 'archive' | 'abandon' | 'habit' | 'finish';
+type Choice = 'reflection' | 'next' | 'other' | 'undate' | 'abandon' | 'habit' | 'finish';
 
 function choiceOf(decision: TaskDecision, nextDay: string): Choice {
   if (decision.kind === 'schedule') return decision.date === nextDay ? 'next' : 'other';
@@ -29,7 +29,7 @@ function choiceOf(decision: TaskDecision, nextDay: string): Choice {
 
 /**
  * Step "Pedem atenção": one card per task postponed too often or with a deadline before
- * "dia seguinte". Archiving and abandoning are offered, never suggested.
+ * "dia seguinte". Removing the date and abandoning are offered, never suggested.
  */
 export function AttentionStep({ day, today, triage, projects, busy, onBack, onNext }: StepProps) {
   const rows = triage.rows;
@@ -49,7 +49,7 @@ export function AttentionStep({ day, today, triage, projects, busy, onBack, onNe
       { value: 'reflection', label: 'Revisão de Foco' },
       { value: 'next', label: nextLabel.charAt(0).toUpperCase() + nextLabel.slice(1) },
       { value: 'other', label: 'Outra data' },
-      { value: 'archive', label: 'Arquivar' },
+      { value: 'undate', label: 'Sem data' },
       { value: 'abandon', label: 'Abandonar' },
       ...(FEATURES.habits ? [{ value: 'habit' as const, label: 'Virar hábito' }] : []),
     ] as ChoiceOption<Choice>[]
@@ -120,7 +120,7 @@ export function AttentionStep({ day, today, triage, projects, busy, onBack, onNe
               />
             </>
           )}
-          {choice === 'archive' && <span>Sai das tarefas que podem ser escolhidas para um dia. Dá para reativar depois.</span>}
+          {choice === 'undate' && <span>Volta para a lista de tarefas, sem data, para algum dia.</span>}
           {choice === 'abandon' && <span>Sai de circulação sem ser feita. O histórico guarda o abandono.</span>}
           {choice === 'habit' && <span>Cria um hábito com o nome desta tarefa.</span>}
         </ChoiceDetail>

@@ -352,6 +352,19 @@ export async function deleteBlock(ctx: AppContext, blockId: string): Promise<voi
   });
 }
 
+/**
+ * Deletes a note from a project page (spec/projetos.md), whatever its day. The event keeps what
+ * it said. Tasks are never deleted this way: they are abandoned.
+ */
+export async function deleteKeptNote(ctx: AppContext, blockId: string): Promise<void> {
+  await ctx.store.transaction(async (tx) => {
+    const block = await tx.blocks.get(blockId);
+    if (!block || block.kind !== 'note') return;
+    await tx.blocks.delete(block.id);
+    await record(ctx, tx, 'block.deleted', 'block', block.id, today(ctx), { kind: block.kind, text: block.text });
+  });
+}
+
 /** Backspace at the start of a line: appends its text to the previous block and deletes it. */
 export async function mergeIntoPrevious(ctx: AppContext, blockId: string, fullText: string, previousId: string): Promise<void> {
   await ctx.store.transaction(async (tx) => {
@@ -412,16 +425,6 @@ export async function abandonTasks(ctx: AppContext, taskIds: readonly string[]):
       await tx.blocks.put({ ...task, status: 'abandoned', closedAt: nowIso(ctx), updatedAt: nowIso(ctx) });
       await record(ctx, tx, 'task.abandoned', 'block', task.id, today(ctx));
     }
-  });
-}
-
-/** Brings an archived task back to the active list, without a date. */
-export async function reactivateTask(ctx: AppContext, taskId: string): Promise<void> {
-  await ctx.store.transaction(async (tx) => {
-    const task = await getOrThrow(tx.blocks.get(taskId), 'Task');
-    if (task.status !== 'archived') return;
-    await tx.blocks.put({ ...task, status: 'active', closedAt: null, intendedDate: null, updatedAt: nowIso(ctx) });
-    await record(ctx, tx, 'task.reactivated', 'block', task.id, today(ctx), { previousIntendedDate: task.intendedDate });
   });
 }
 

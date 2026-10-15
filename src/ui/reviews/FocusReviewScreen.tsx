@@ -1,6 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
 import { setFocusProjectInReview } from '../../application/focusProjects';
-import { reactivateTask } from '../../application/notebook';
 import { setProjectFinished } from '../../application/projects';
 import { loadFocusReview, type FocusReviewView } from '../../application/reviewQueries';
 import { closeReview, resolveDeferred, saveFocusTexts, type DeferredDecisions } from '../../application/reviews';
@@ -8,7 +7,6 @@ import { addDays, type DayKey } from '../../domain/day';
 import { FOCUS_PROJECT_LIMIT } from '../../domain/focusProjects';
 import type { NotesDecision, TaskDecision, TriageRow } from '../../domain/triage';
 import { NotesRowView, rowKey, TaskRowView, GroupHeader, type Decision } from '../checkout/TriageRows';
-import { Linkified } from '../components/Linkified';
 import { LoadingPage } from '../components/Skeleton';
 import { formatShortDate } from '../format';
 import { navigate, routeHash } from '../hooks';
@@ -38,35 +36,18 @@ export function FocusReviewScreen({ today }: { today: DayKey }) {
         <DeferredTriage rows={view.deferred} projects={view.projects} today={today} />
       </Step>
 
-      <Step number={2} title="Tarefas arquivadas">
-        {view.archived.length === 0 ? (
-          <p className="muted">Nenhuma tarefa arquivada.</p>
-        ) : (
-          <ul className="card-list">
-            {view.archived.map(({ task }) => (
-              <li className="card-list__item" key={task.id}>
-                <Linkified text={task.text || '(tarefa sem texto)'} />
-                <button type="button" className="small" onClick={() => void reactivateTask(appContext, task.id)}>
-                  Reativar
-                </button>
-              </li>
-            ))}
-          </ul>
-        )}
-      </Step>
-
-      <Step number={3} title="Projetos ativos">
+      <Step number={2} title="Projetos ativos">
         <ActiveProjectsStep view={view} />
       </Step>
 
-      <Step number={4} title="Agregar tarefas em projetos">
+      <Step number={3} title="Agregar tarefas em projetos">
         <p className="muted">
           Esta etapa espera uma decisão em aberto na spec: se o app propõe os grupos ou se você agrupa à mão. Enquanto
           isso, vincule tarefas a projetos ao fechar o dia ou na triagem acima.
         </p>
       </Step>
 
-      <Step number={5} title="Métricas do período">
+      <Step number={4} title="Métricas do período">
         <div className="metrics">
           <Metric value={view.metrics.finishedTasks} label="tarefas executadas" />
           <Metric
@@ -90,15 +71,15 @@ export function FocusReviewScreen({ today }: { today: DayKey }) {
         )}
       </Step>
 
-      <Step number={6} title="Melhores momentos e o que pode melhorar">
+      <Step number={5} title="Melhores momentos e o que pode melhorar">
         <FocusTexts bestMoments={view.review?.bestMoments ?? ''} improvements={view.review?.improvements ?? ''} />
       </Step>
 
-      <Step number={7} title="Projetos em foco">
+      <Step number={6} title="Projetos em foco">
         <FocusProjectsStep view={view} />
       </Step>
 
-      <Step number={8} title="Fechar a revisão">
+      <Step number={7} title="Fechar a revisão">
         <button
           type="button"
           className="primary"

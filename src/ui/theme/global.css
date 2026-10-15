@@ -237,6 +237,15 @@ input[type='checkbox'] {
   color: var(--color-project-text);
 }
 
+a.chip--link {
+  text-decoration: none;
+}
+
+a.chip--link:hover,
+a.chip--link:focus-visible {
+  text-decoration: underline;
+}
+
 .chip--whiteboard {
   background: var(--color-whiteboard-bg);
   color: var(--color-whiteboard-text);
@@ -389,6 +398,11 @@ input[type='checkbox'] {
 }
 
 .line--done .line__text {
+  text-decoration: line-through;
+  color: var(--color-text-muted);
+}
+
+.active-tasks__row--done .task-row__text {
   text-decoration: line-through;
   color: var(--color-text-muted);
 }
@@ -1890,16 +1904,16 @@ button.plan-row--on:hover {
   gap: var(--space-3);
 }
 
+.task-row > .chip {
+  flex-shrink: 0;
+}
+
 .task-row__text {
   flex: 1;
   text-align: left;
   border: none;
   background: none;
   padding: 0;
-}
-
-.task-row__origin {
-  margin: 0 0 0 calc(18px + var(--space-3));
 }
 
 .wiki__meta {
@@ -3936,4 +3950,40 @@ select.line__action.active-tasks__project {
 .active-tasks__batch .active-tasks__abandon--confirm {
   color: var(--color-warning-text);
   border-color: var(--color-warning-text);
+}
+
+/* A note on a project page: edit and delete on hover */
+.timeline__note-row {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-2);
+}
+
+.timeline__note-row .timeline__note {
+  flex: 1;
+}
+
+.timeline__note-actions {
+  display: none;
+  align-items: center;
+  gap: var(--space-1);
+  flex-shrink: 0;
+}
+
+.timeline__note-row:hover .timeline__note-actions,
+.timeline__note-row:focus-within .timeline__note-actions {
+  display: flex;
+}
+
+.timeline__edit {
+  display: block;
+  width: 100%;
+  resize: vertical;
+}
+
+.timeline__resource {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin-top: var(--space-2);
 }

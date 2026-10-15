@@ -58,7 +58,7 @@ describe('planning group', () => {
     expect(planningGroup(target, target)).toBe('target');
     expect(planningGroup('2026-10-15', target)).toBe('soon');
     expect(planningGroup('2026-10-17', target)).toBe('soon');
-    expect(planningGroup(null, target)).toBe('other');
+    expect(planningGroup(null, target)).toBeNull();
     expect(planningGroup('2026-10-10', target)).toBe('other');
   });
 

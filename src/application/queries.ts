@@ -136,22 +136,27 @@ export async function loadActiveTasks(reader: Reader): Promise<TaskListItem[]> {
   return withOrigins(reader, tasks.sort(byIntendedDateThenCreation));
 }
 
-export async function loadArchivedTasks(reader: Reader): Promise<TaskListItem[]> {
-  const tasks = await reader.tasksWithStatus('archived');
+/** The finished tasks, the last finished first, for "Mostrar concluídas" in the task list. */
+export async function loadFinishedTasks(reader: Reader): Promise<TaskListItem[]> {
+  const tasks = await reader.tasksWithStatus('done');
   return withOrigins(
     reader,
     tasks.sort((a, b) => ((a.closedAt ?? '') < (b.closedAt ?? '') ? 1 : -1)),
   );
 }
 
-export interface WikiEntry {
+/** The notes of one section whose day is closed. */
+export interface SectionNotes {
   section: Section;
   notes: Block[];
   project: Project | null;
 }
 
-/** The personal wiki: each entry gathers the notes of one section, newest first. */
-export async function loadWiki(reader: Reader): Promise<WikiEntry[]> {
+/**
+ * The notes kept when their day closed, one entry per section, newest first. There is no wiki
+ * any more (ADR-050): a project page shows the entries of its sections.
+ */
+export async function loadSectionNotes(reader: Reader): Promise<SectionNotes[]> {
   const sections = await reader.wikiSections();
   const blocks = await reader.blocksInSections(sections.map((section) => section.id));
   const projects = await reader.projects();
@@ -179,8 +184,8 @@ export interface PlanningView {
 }
 
 /**
- * The planning step of the checkout: active tasks, split into the target day's note, the next
- * few days, and the others. The
+ * The planning step of the checkout: active tasks with a date, split into the target day's note,
+ * the next few days, and the ones whose date already passed. Tasks without a date stay out. The
  * tasks of the projects in focus come first in each group, in the order of the projects
  * (spec/prioridades.md, "Projetos em foco").
  */
@@ -256,16 +261,12 @@ export async function loadCleanupDashboard(reader: Reader, today: DayKey): Promi
 export interface MenuCounts {
   projects: number;
   active: number;
-  archived: number;
-  wiki: number;
 }
 
 export async function loadMenuCounts(reader: Reader): Promise<MenuCounts> {
   const active = (await reader.tasksWithStatus('active')).length;
-  const archived = (await reader.tasksWithStatus('archived')).length;
-  const wiki = (await loadWiki(reader)).length;
   const projects = (await reader.projects()).filter((project) => project.status === 'active').length;
-  return { projects, active, archived, wiki };
+  return { projects, active };
 }
 
 /** The projects in focus, active ones only, in the order chosen. */
@@ -402,8 +403,8 @@ export interface ProjectView extends ProjectActions {
   activeTasks: TaskListItem[];
   /** Most recently finished first. */
   doneTasks: TaskListItem[];
-  /** Wiki entries linked to the project, newest first. */
-  notes: WikiEntry[];
+  /** Notes of the project's sections, newest first. */
+  notes: SectionNotes[];
   /** Day-note sections linked to the project. */
   sections: number;
 }
@@ -414,14 +415,14 @@ export async function loadProject(reader: Reader, projectId: string): Promise<Pr
   if (!project) return null;
   const tasks = (await reader.blocksOfProject(projectId)).filter((block) => block.kind === 'task');
   const sections = (await reader.sectionsOfProject(projectId)).filter(isDaySection);
-  const wiki = await loadWiki(reader);
+  const kept = await loadSectionNotes(reader);
   const done = tasks.filter((task) => task.status === 'done').sort((a, b) => ((a.closedAt ?? '') < (b.closedAt ?? '') ? 1 : -1));
   const priorityIds = await loadFocusProjectIds(reader, projects);
   return {
     project,
     activeTasks: await withOrigins(reader, tasks.filter((task) => task.status === 'active').sort(byIntendedDateThenCreation)),
     doneTasks: await withOrigins(reader, done),
-    notes: wiki.filter((entry) => entry.section.projectId === projectId),
+    notes: kept.filter((entry) => entry.section.projectId === projectId),
     sections: sections.length,
     ...projectActions(project, priorityIds),
   };

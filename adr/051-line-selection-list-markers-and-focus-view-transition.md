@@ -1,4 +1,4 @@
-# ADR-049: Selecting whole lines, list markers outside the field, and focus mode as a view transition
+# ADR-051: Selecting whole lines, list markers outside the field, and focus mode as a view transition
 
 **Date:** 2026-10-15
 **Decision:** Three changes to the day note editor, all in `ui/dayNote`, with no schema, event or backup change.

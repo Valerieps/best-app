@@ -14,7 +14,7 @@ interface Props {
   more?: ScreenAction[];
   /** Small link above the title, e.g. "← Projetos". */
   back?: ScreenAction;
-  /** A second row for tools that belong to the screen, like the wiki search. */
+  /** A second row for tools that belong to the screen, like a search field. */
   children?: ReactNode;
 }
 

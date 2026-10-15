@@ -8,8 +8,15 @@ export function WhiteboardChip() {
   return <span className="chip chip--whiteboard">quadro branco</span>;
 }
 
-/** Without a name: the "projeto" tag. With a name: the project itself. */
-export function ProjectChip({ name }: { name?: string }) {
+/** Without a name: the "projeto" tag. With a name: the project itself, a link to its page when given `href`. */
+export function ProjectChip({ name, href }: { name?: string; href?: string }) {
+  if (href) {
+    return (
+      <a className="chip chip--project chip--link" href={href} title="Abrir a página do projeto">
+        {name ?? 'projeto'}
+      </a>
+    );
+  }
   return <span className="chip chip--project">{name ?? 'projeto'}</span>;
 }
 

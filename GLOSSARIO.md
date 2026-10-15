@@ -14,7 +14,6 @@ Os termos marcados com ⚠ ainda têm mais de um sentido nos documentos; o item 
 - **Quadro branco:** o estado de uma seção sem vínculo com projeto. Não é um tipo de seção. (`spec/nota-do-dia.md`)
 - **De outros dias:** a seção da nota do dia com as tarefas que vieram de outros dias para aquele dia. Muda de lugar como as outras seções, mas não é gravada como uma. (`spec/nota-do-dia.md`)
 - **Bloco:** uma linha da nota, gravada como um registro próprio. É **tarefa** (começa com `[] `), **nota geral** (todo o resto) ou, a partir da seção 5, **compromisso**. (`spec/nota-do-dia.md`; `spec/compromissos.md`)
-- **Wiki pessoal:** a lista das notas que foram para a wiki no fim do dia, uma entrada por seção. (`spec/nota-do-dia.md`)
 
 ## Tarefas e datas
 
@@ -22,7 +21,7 @@ Os termos marcados com ⚠ ainda têm mais de um sentido nos documentos; o item 
 - **Prazo máximo:** a segunda data, opcional. No dia do prazo, a tarefa vira prioridade do dia. (`spec/tarefas.md`)
 - **Adiamento:** mudar a data de intenção para depois, tirar a data, ou passar pelo fechamento do dia sem fazer a tarefa no dia da intenção, inclusive quando ela vai sozinha para o dia seguinte. (`spec/tarefas.md`)
 - **Precisão da data de intenção:** a parte das tarefas finalizadas com data de intenção que foram feitas no dia da intenção. (`spec/rituais.md`)
-- **Tarefas ativas:** as tarefas não finalizadas, arquivadas nem abandonadas. (`spec/tarefas.md`)
+- **Tarefas:** a lista das tarefas abertas, ou seja, nem finalizadas nem abandonadas, que também mostra as finalizadas quando eu peço. Antes se chamava "tarefas ativas". (`spec/tarefas.md`)
 - **Tarefa travada:** tarefa de projeto adiada 3 vezes ou mais, ou com a data de intenção vencida. ⚠ Não confundir com o assistente "Prioridades travadas" (`INCOERENCIAS.md`, 2.10). (`spec/projetos.md`)
 - **Dia seguinte:** num fechamento do dia, o próximo dia ativo depois do dia triado, nunca antes de hoje. (`spec/checkout.md`)
 - **Dias ativos:** os dias da semana em que o app espera uso; os outros não contam como pulados. (`spec/rituais.md`)
@@ -30,16 +29,15 @@ Os termos marcados com ⚠ ainda têm mais de um sentido nos documentos; o item 
 ## Destinos
 
 - **Finalizar:** a tarefa foi feita (eu engajei com ela). Gera log de execução. (`spec/checkout.md`)
-- **Arquivar:** a tarefa sai das escolhas do dia, mas pode ser **reativada** depois. (`spec/checkout.md`)
-- **Abandonar:** a tarefa sai de circulação sem ter sido feita. Só para tarefas. (`spec/checkout.md`)
-- **Descartar:** as notas de uma seção saem de circulação e não vão para a wiki. Só para notas (e, na seção 5, compromissos). (`spec/checkout.md`)
+- **Abandonar:** a tarefa sai de circulação sem ter sido feita, como se fosse apagada: some de todas as telas. Só para tarefas. Não existe mais **arquivar**. (`spec/checkout.md`)
+- **Descartar:** só para compromissos (seção 5). Notas não são mais descartadas: eu apago a nota. Não existe mais **wiki**. (`spec/checkout.md`; `spec/nota-do-dia.md`)
 - **Largar:** um lembrete sai de circulação. (`spec/abertura-do-dia.md`)
 - **Migrar:** marcar que um compromisso foi criado no Google Agenda. Conta como concluído. (`spec/compromissos.md`)
 - **Decidir na Revisão de Foco:** deixar uma tarefa para ser triado na Revisão de Foco. (`spec/checkout.md`)
 
 ## Fechar o dia e triagem
 
-- **Fechar o dia:** o ritual diário e curto que dá destino ao que perece de um dia para o outro: as tarefas do dia, os lembretes ignorados e o planejamento do dia seguinte. As notas vão sozinhas para a wiki. Em texto corrido, "o fechamento do dia". Antes se chamava checkout, nome que o código ainda usa. ⚠ "Fechamento completo" tem três definições (`INCOERENCIAS.md`, 2.4). (`spec/checkout.md`)
+- **Fechar o dia:** o ritual diário e curto que dá destino ao que perece de um dia para o outro: as tarefas do dia, os lembretes ignorados e o planejamento do dia seguinte. As notas ficam onde foram escritas. Em texto corrido, "o fechamento do dia". Antes se chamava checkout, nome que o código ainda usa. ⚠ "Fechamento completo" tem três definições (`INCOERENCIAS.md`, 2.4). (`spec/checkout.md`)
 - **Fechamento pendente:** um dia com algum item ainda sem destino. (`spec/checkout.md`)
 - **Auto-triagem:** as regras que decidem sozinhas (**automático**), pré-selecionam (**sugerido**) ou deixam para mim (**sempre manual**). (`spec/checkout.md`)
 - **Fechar dias pendentes:** aplica a auto-triagem a vários dias pendentes de uma vez; as tarefas não feitas voltam sem data. (`spec/checkout.md`)

@@ -218,7 +218,7 @@ export function PlanningStep({ day, target, today, onBack }: Props) {
           <p className="muted">
             {selecting
               ? 'Clique nas tarefas para selecionar e escolha a data na barra de baixo. Shift + clique seleciona um intervalo.'
-              : 'Ajuste a data de qualquer tarefa. Nada é concluído aqui, e as tarefas sem data continuam na lista de tarefas ativas.'}
+              : 'Ajuste a data de qualquer tarefa. Nada é concluído aqui. As tarefas sem data ficam na lista de tarefas, para algum dia.'}
           </p>
           <button type="button" className={selecting ? 'primary' : ''} aria-pressed={selecting} onClick={selecting ? leaveSelection : () => setSelecting(true)}>
             {selecting ? 'Pronto' : 'Selecionar várias'}
@@ -226,8 +226,8 @@ export function PlanningStep({ day, target, today, onBack }: Props) {
         </div>
         {group(`Já na nota de ${label}`, view.planned)}
         {group('Agendadas para os próximos dias', view.soon)}
-        {group('Na lista de tarefas ativas', view.others)}
-        {items.length === 0 && <p className="muted">Nenhuma tarefa ativa.</p>}
+        {group('Com data que já passou', view.others)}
+        {items.length === 0 && <p className="muted">Nenhuma tarefa com data.</p>}
         <p className="plan-total">
           {Label} começa com <b>{plural(targetCount, 'tarefa', 'tarefas')}</b>.
         </p>

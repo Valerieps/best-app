@@ -12,8 +12,7 @@ import { ScreenHeader } from './components/ScreenHeader';
 import { DayNoteScreen } from './dayNote/DayNoteScreen';
 import { HabitsScreen } from './habits/HabitsScreen';
 import { navigate, routeHash, useRoute, useToday } from './hooks';
-import { ActiveTasksScreen, ArchivedTasksScreen } from './lists/ListScreens';
-import { WikiScreen } from './lists/WikiScreen';
+import { ActiveTasksScreen } from './lists/ListScreens';
 import { ObjectiveScreen, ObjectivesScreen } from './objectives/ObjectiveScreens';
 import { DashboardScreen, StartDayScreen, WarmupScreen } from './opening/OpeningScreens';
 import { useDueReminders, useReminderSignals } from './opening/Reminders';
@@ -135,8 +134,6 @@ export function App() {
           )}
           {route.name === 'checkout' && <CheckoutScreen key={route.day} day={route.day} today={today} />}
           {route.name === 'active' && <ActiveTasksScreen today={today} />}
-          {route.name === 'archived' && <ArchivedTasksScreen today={today} />}
-          {route.name === 'wiki' && <WikiScreen focus={route.section} />}
           {route.name === 'cleanup' && <CleanupScreen today={today} assistant={route.assistant} />}
           {route.name === 'focusReview' && <FocusReviewScreen today={today} />}
           {route.name === 'projects' && <ProjectsScreen today={today} />}

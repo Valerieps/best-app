@@ -21,7 +21,7 @@ import {
 import type { TriageRow } from '../domain/triage';
 import { dayOfTimestamp } from '../domain/week';
 import type { Reader } from './ports';
-import { loadActivities, loadArchivedTasks, loadFocusProjectIds, loadObjectives, type ObjectiveSummary, type TaskListItem } from './queries';
+import { loadActivities, loadFocusProjectIds, loadObjectives, type ObjectiveSummary } from './queries';
 import { OPEN_REVIEW_ID } from './reviews';
 
 /** Read models of the Revisão de Foco and the Revisão de Rumo (spec/rituais.md). */
@@ -142,16 +142,14 @@ export interface FocusReviewView {
   review: Reflection | null;
   /** Step 1: tasks and notes left for the review, as triage rows. */
   deferred: TriageRow[];
-  /** Step 2: archived tasks, which can be reactivated. */
-  archived: TaskListItem[];
-  /** Step 3: active projects, the stalled ones first. */
+  /** Step 2: active projects, the stalled ones first. */
   activeProjects: { project: Project; stalledDays: number | null }[];
-  /** Step 5. */
+  /** Step 4. */
   metrics: WeeklyMetrics;
-  /** Step 5, section 6: longest streak and completion of each active habit in the period. */
+  /** Step 4, section 6: longest streak and completion of each active habit in the period. */
   habits: { habit: Habit; stats: HabitStats }[];
   projects: Project[];
-  /** Step 7: the projects in focus, which the review can change freely. */
+  /** Step 6: the projects in focus, which the review can change freely. */
   focusIds: string[];
 }
 
@@ -171,7 +169,6 @@ export async function loadFocusReview(reader: Reader, today: DayKey): Promise<Fo
     since,
     review: reflections.find((reflection) => reflection.id === OPEN_REVIEW_ID.focus) ?? null,
     deferred: await deferredRows(reader, today),
-    archived: await loadArchivedTasks(reader),
     activeProjects,
     metrics: periodMetrics(events, since),
     habits: (await reader.habits()).filter((habit) => habit.status === 'active').map((habit) => ({ habit, stats: habitStats(habit, logs, start, today) })),

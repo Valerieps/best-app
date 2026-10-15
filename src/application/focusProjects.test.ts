@@ -3,6 +3,7 @@ import { createTestContext } from '../test/fixtures';
 import { addFocusProject, setFocusProjectInReview } from './focusProjects';
 import { createProject, setProjectFinished } from './projects';
 import { createBlock, linkSectionToProject } from './notebook';
+import { setIntendedDates } from './dayTools';
 import { loadDayOpening, loadPlanning, loadProject, loadProjectList } from './queries';
 import { positionBetween } from '../domain/position';
 import { loadFocusReview } from './reviewQueries';
@@ -95,10 +96,14 @@ describe('projects in focus in the day to day', () => {
     const inFocus = await createBlock(ctx, { sectionId: null, position: positionBetween(null, null) }, '[] Do projeto em foco');
     await linkSectionToProject(ctx, inFocus.sectionId, projects[1].id);
     await addFocusProject(ctx, projects[1].id);
+    await setIntendedDates(ctx, [loose.id, outside.id, inFocus.id], '2026-10-12');
+    const undated = await createBlock(ctx, { sectionId: null, position: positionBetween(null, null) }, '[] Algum dia');
 
     const view = await loadPlanning(reader, '2026-10-12');
-    expect(view.others.map((item) => item.task.text)[0]).toBe('Do projeto em foco');
-    expect(view.others.map((item) => item.task.id)).toEqual(expect.arrayContaining([loose.id, outside.id]));
+    expect(view.planned.map((item) => item.task.text)[0]).toBe('Do projeto em foco');
+    expect(view.planned.map((item) => item.task.id)).toEqual(expect.arrayContaining([loose.id, outside.id]));
+    // Tasks without a date are the "algum dia": they stay out of the planning.
+    expect([...view.planned, ...view.soon, ...view.others].map((item) => item.task.id)).not.toContain(undated.id);
   });
 
   it('lists them for the dashboard, but without a warm up the day still opens on the day note', async () => {

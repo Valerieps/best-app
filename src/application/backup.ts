@@ -15,6 +15,7 @@ import type {
 import type { DomainEvent, EntityType, EventType } from '../domain/events';
 import { toDayKey } from '../domain/day';
 import { migrateMonthPriorityLists, migrateToFocusList } from '../domain/focusProjects';
+import { undateArchivedTask } from '../domain/tasks';
 
 /**
  * Backup file format. A backup holds every user table; importing one replaces all data.
@@ -23,7 +24,7 @@ import { migrateMonthPriorityLists, migrateToFocusList } from '../domain/focusPr
  */
 
 export const BACKUP_FORMAT = 'best-app-backup';
-export const BACKUP_SCHEMA_VERSION = 7;
+export const BACKUP_SCHEMA_VERSION = 8;
 
 export interface BackupTables {
   blocks: Block[];
@@ -124,6 +125,10 @@ function upgradeTables(tables: Record<string, unknown>, version: number, exporte
   // The reviews replaced the week lists with the single list in focus, as it was when exported.
   if (version < 7 && Array.isArray(upgraded.priorities)) {
     upgraded.priorities = migrateToFocusList(upgraded.priorities, toDayKey(new Date(exportedAt)));
+  }
+  // Archiving was removed: archived tasks become active tasks without a date (ADR-049).
+  if (version < 8 && Array.isArray(upgraded.blocks)) {
+    upgraded.blocks = upgraded.blocks.map((row: unknown) => (isRecord(row) ? undateArchivedTask(row) : row));
   }
   return upgraded;
 }

@@ -63,7 +63,7 @@ Alguns pontos ainda não seguem essas regras: o fluxo de backup é chamado pela 
 
 ## 4. Modelo de dados
 
-Cada entidade é um registro separado. Um bloco existe uma vez só: notas, projetos, a wiki e a nota do dia apontam para ele, sem cópias. Datas de calendário são `AAAA-MM-DD` no fuso local, e o dia vira à meia-noite (ADR-005). Semanas são semanas ISO, como `2026-W42` (ADR-020). Os ids são UUIDs, e todo registro tem `createdAt` e `updatedAt`. Os tipos estão em `src/domain/entities.ts`.
+Cada entidade é um registro separado. Um bloco existe uma vez só: a nota do dia, os projetos e os recursos apontam para ele, sem cópias. Datas de calendário são `AAAA-MM-DD` no fuso local, e o dia vira à meia-noite (ADR-005). Semanas são semanas ISO, como `2026-W42` (ADR-020). Os ids são UUIDs, e todo registro tem `createdAt` e `updatedAt`. Os tipos estão em `src/domain/entities.ts`.
 
 ### Tabelas implementadas (versão 7 do banco)
 
@@ -76,7 +76,7 @@ Cada entidade é um registro separado. Um bloco existe uma vez só: notas, proje
 | `sectionId` | Seção onde o bloco foi escrito, com o título e o horário dela |
 | `position` | Índice fracionário: ordena os blocos dentro da seção sem reescrever os vizinhos |
 | `projectId` | Projeto vinculado, herdado da seção ou escolhido no checkout |
-| `status` | Só tarefas: `active`, `done`, `archived`, `abandoned` ou `converted` (virou hábito). Abandonar esconde, não apaga |
+| `status` | Só tarefas: `active`, `done`, `abandoned` ou `converted` (virou hábito). Abandonar esconde, não apaga. `archived` deixou de existir: a versão 8 do banco e do backup transforma as arquivadas em `active` sem data (ADR-049) |
 | `intendedDate` | Dia em que a tarefa aparece na nota do dia |
 | `firstIntendedDate` | Primeira data de intenção, para medir a distância até a ação final |
 | `postponeCount` | Atalho de leitura; dá para recalcular a partir dos eventos |
@@ -93,7 +93,7 @@ Cada entidade é um registro separado. Um bloco existe uma vez só: notas, proje
 | `kind` | `general` ou `meeting` |
 | `day`, `createdAt`, `title` | Dia, horário de criação e título opcional |
 | `projectId` | Projeto vinculado; `null` quer dizer quadro branco |
-| `notesDestination` | Destino de todas as notas da seção: `pending`, `wiki`, `discarded` ou `weeklyReflection` |
+| `notesDestination` | Estado das notas da seção: `pending` (dia aberto), `wiki` (dia fechado: as notas ficam guardadas; o nome é histórico, ADR-050), `discarded` (só em dados antigos) ou `weeklyReflection` |
 | `whiteboardDecision` | `pending`, `leftUnlinked` (checkout) ou `keptUnlinked` (assistente de seções soltas) |
 | `participants`, `docLink` | Só reuniões (1b); guardados, mas sem campo na nota do dia desde 15/10/2026 |
 | `projectPage` | Seção escondida que guarda as tarefas escritas na página do projeto; não aparece em nenhuma nota do dia (ADR-031) |
@@ -137,8 +137,8 @@ Nada disso é guardado: é calculado a partir das tabelas, por funções de `app
 | --- | --- |
 | Nota do dia | Seções com `day` igual ao dia, mais as tarefas `active` com `intendedDate` igual ao dia, na seção "De outros dias", que só existe na tela. A tarefa não é copiada; ela só aparece ali. As partes (seções, "De outros dias" e prioridades) seguem `days.sectionOrder` por `orderDayParts` (`domain/order.ts`, ADR-040) |
 | Dia pendente | Tem tarefa com `lastTriagedDay` anterior ao dia, ou seção sem destino |
-| Tarefas ativas e arquivadas | Blocos `task` por `status` |
-| Wiki | Seções com `notesDestination = 'wiki'`, cada entrada com as notas da seção, em ordem cronológica |
+| Tarefas (não concluídas, concluídas ou todas) | Blocos `task` por `status` (`active` e `done`) |
+| Notas de um projeto | Seções do projeto com `notesDestination = 'wiki'`, cada entrada com as notas da seção, da mais recente para a mais antiga (`loadSectionNotes`) |
 | Projeto | Seções, tarefas e notas com o `projectId` dele, agrupadas em travadas, próximos dias, sem data e feitas |
 | Lista de projetos | Projetos por status, projetos em foco e mapa de atividade calculado dos eventos (ADR-034) |
 | "Colocar ordem na casa" | Contagens de cada assistente e a cor pela idade do item mais antigo, com os limites das configurações (ADR-045) |
@@ -157,8 +157,8 @@ Nada disso é guardado: é calculado a partir das tabelas, por funções de `app
 
 | Área | Eventos |
 | --- | --- |
-| Blocos e tarefas | criado, apagado, tipo trocado, vinculado a projeto; data de intenção e prazo trocados, adiada, feita, reaberta, arquivada, reativada, abandonada, deixada para a Revisão de Foco, convertida em hábito |
-| Seções | criada, título e detalhes trocados, vinculada a projeto, deixada ou mantida sem vínculo, notas para a wiki, descartadas, reabertas ou deixadas para a Revisão de Foco |
+| Blocos e tarefas | criado, apagado, tipo trocado, vinculado a projeto; data de intenção e prazo trocados, adiada, feita, reaberta, abandonada (arquivada e reativada só no histórico antigo, ADR-049), deixada para a Revisão de Foco, convertida em hábito |
+| Seções | criada, título e detalhes trocados, vinculada a projeto, deixada ou mantida sem vínculo, notas guardadas no fim do dia, descartadas (só no histórico antigo), reabertas ou deixadas para a Revisão de Foco |
 | Projetos | criado, renomeado, ícone trocado, finalizado, reaberto, juntado, vinculado a objetivo |
 | Dia e rituais | dia iniciado, execução iniciada, item do warm up respondido, checkout concluído, prioridade adicionada e retirada (com o motivo, nos projetos em foco), revisão fechada, configuração trocada |
 | Lembretes | criado, respondido, adiado |
@@ -185,21 +185,21 @@ Reativar uma tarefa arquivada limpa a data sem contar adiamento (ADR-015).
 - A primeira seção do dia existe só na tela até alguém escrever nela (ADR-013).
 - O tipo do bloco é detectado por uma lista de detectores no domínio (`domain/blockKind.ts`), testados em ordem. O primeiro que reconhece o texto decide o tipo, e o que nenhum reconhece vira nota. Hoje há um detector só (`[] ` vira tarefa). A seção 5 acrescenta o de compromisso, sem mexer no editor. Uma correção manual do tipo, que é pergunta em aberto da seção 5, vira um campo que tem prioridade sobre os detectores.
 - **Reordenar** (ADR-040): a alça de cada linha e de cada parte usa eventos de ponteiro (`ui/dayNote/lineDrag.ts`), para funcionar também com o dedo. Alt + ↑/↓ move a linha e Ctrl + Shift + ↑/↓ move a parte. Mover uma linha grava só a `position` dela entre as vizinhas; mover uma parte grava a lista do dia em `days.sectionOrder`. A nova ordem aparece antes de ser gravada e sai da fila de escrita depois das gravações já pedidas.
-- **Modo foco** (ADR-046): a parte em foco fica nas configurações (`dayNoteFocus`), com a chave que a nota já usa para ordenar as partes. Com ela, `App` mostra a nota daquele dia só com a parte, sem as telas de abertura e sem avisos, mesmo depois da meia-noite. Entrar e sair é uma View Transition (`ui/dayNote/focusTransition.ts`, ADR-049): a parte leva o mesmo `view-transition-name` nas duas telas, e a troca espera a tela mostrar o foco novo, até 800 ms. Sem View Transitions, fica o fade em CSS.
-- **Seleção de linhas** (ADR-049): como cada linha é um campo de texto, a seleção do navegador não passa de uma linha para outra. `ui/dayNote/useLineSelection.ts` seleciona as linhas inteiras: arrastar o ponteiro até outra linha, Shift + clique ou o segundo Ctrl + A. Enquanto há linhas selecionadas, a nota (`.note`, com `tabIndex=-1`) fica com o foco e recebe as teclas. A ordem das linhas vem do DOM, para valer também no modo foco. Apagar usa `deleteBlock`, só nas linhas livres.
+- **Modo foco** (ADR-046): a parte em foco fica nas configurações (`dayNoteFocus`), com a chave que a nota já usa para ordenar as partes. Com ela, `App` mostra a nota daquele dia só com a parte, sem as telas de abertura e sem avisos, mesmo depois da meia-noite. Entrar e sair é uma View Transition (`ui/dayNote/focusTransition.ts`, ADR-051): a parte leva o mesmo `view-transition-name` nas duas telas, e a troca espera a tela mostrar o foco novo, até 800 ms. Sem View Transitions, fica o fade em CSS.
+- **Seleção de linhas** (ADR-051): como cada linha é um campo de texto, a seleção do navegador não passa de uma linha para outra. `ui/dayNote/useLineSelection.ts` seleciona as linhas inteiras: arrastar o ponteiro até outra linha, Shift + clique ou o segundo Ctrl + A. Enquanto há linhas selecionadas, a nota (`.note`, com `tabIndex=-1`) fica com o foco e recebe as teclas. A ordem das linhas vem do DOM, para valer também no modo foco. Apagar usa `deleteBlock`, só nas linhas livres.
 - **Digitação rápida** (ADR-014): uma linha nova aparece na tela antes de ser gravada, e as gravações do editor rodam uma depois da outra numa fila (`ui/writeQueue.ts`), para que salvar o texto nunca procure um bloco que ainda está sendo criado.
 - O texto é salvo 400 ms depois da última tecla, ao perder o foco e ao sair da tela, sem gerar evento. A criação, a exclusão e a mudança de tipo geram evento.
-- Fora do editor (wiki, listas, checkout), links no texto viram `<a target="_blank" rel="noopener noreferrer">`, só para `http` e `https`, e o texto nunca é inserido como HTML (`google-safe.md`).
-- **Markdown** (ADR-048): o texto do bloco guarda o Markdown cru, sem campo novo no banco. `ui/dayNote/markdown.ts` tem funções puras que leem a linha (cabeçalho, item de lista, negrito, itálico, links) e que a editam (`applyFormat`, com texto e seleção). Fora do cursor, `BlockLine` mostra a linha formatada (`MarkdownText`, só elementos React) e esconde o campo de texto, que continua lá para receber o foco. Num item de lista, o campo guarda só o texto depois do marcador, que é desenhado ao lado mesmo com o cursor na linha (ADR-049); cursores e seleções continuam contados na linha inteira, e `BlockLine` e `useFocusTarget` descontam o marcador. A barra de formatação no cabeçalho da seção manda um evento DOM (`line-format`) para a linha com o cursor, que aplica o formato como se fosse digitação. Links formatados só abrem `http`, `https` e `mailto`.
+- Fora do editor (página do projeto, listas, checkout), links no texto viram `<a target="_blank" rel="noopener noreferrer">`, só para `http` e `https`, e o texto nunca é inserido como HTML (`google-safe.md`).
+- **Markdown** (ADR-048): o texto do bloco guarda o Markdown cru, sem campo novo no banco. `ui/dayNote/markdown.ts` tem funções puras que leem a linha (cabeçalho, item de lista, negrito, itálico, links) e que a editam (`applyFormat`, com texto e seleção). Fora do cursor, `BlockLine` mostra a linha formatada (`MarkdownText`, só elementos React) e esconde o campo de texto, que continua lá para receber o foco. Num item de lista, o campo guarda só o texto depois do marcador, que é desenhado ao lado mesmo com o cursor na linha (ADR-051); cursores e seleções continuam contados na linha inteira, e `BlockLine` e `useFocusTarget` descontam o marcador. A barra de formatação no cabeçalho da seção manda um evento DOM (`line-format`) para a linha com o cursor, que aplica o formato como se fosse digitação. Links formatados só abrem `http`, `https` e `mailto`.
 
 ## 8. Checkout e auto-triagem (implementado)
 
-- A auto-triagem é uma função pura no domínio (`domain/triage.ts`). Ela recebe um dia (seções, blocos e projetos) e devolve as decisões automáticas (notas para a wiki, quadros brancos sem vínculo, tarefas que vão sozinhas para o dia seguinte, tarefas resolvidas durante o dia), as tarefas que pedem decisão e a lista das tarefas abertas na ordem da nota, seguindo `spec/checkout.md`. `defaultClosingDecisions` (`application/checkout.ts`) transforma isso nas decisões que o fechamento grava quando nada é mudado.
+- A auto-triagem é uma função pura no domínio (`domain/triage.ts`). Ela recebe um dia (seções, blocos e projetos) e devolve as decisões automáticas (notas guardadas, quadros brancos sem vínculo, tarefas que vão sozinhas para o dia seguinte, tarefas resolvidas durante o dia), as tarefas que pedem decisão e a lista das tarefas abertas na ordem da nota, seguindo `spec/checkout.md`. `defaultClosingDecisions` (`application/checkout.ts`) transforma isso nas decisões que o fechamento grava quando nada é mudado.
 - A tela do "Fechar o dia" (no código, ainda `checkout`) é feita de etapas (`domain/checkoutSteps.ts` decide quais existem e a ordem; cada etapa é um componente em `ui/checkout/`). Ela carrega a triagem como uma foto, para que nada mude enquanto a pessoa escolhe, e cada etapa grava só as suas decisões com `applyTriage`, numa transação, ao avançar. Depois de gravar, a tela relê a triagem e pula as etapas que ficaram vazias (ADR-044). As decisões automáticas e as sugestões que sobram são gravadas na confirmação, numa transação só (ADR-012).
 - O planejamento grava a data de cada tarefa mudada (`applyPlanning`), inclusive das já agendadas; a seleção em lote só existe na tela, até "Finalizar meu dia".
 - "Fechar dias pendentes" usa a mesma função para vários dias. A diferença é que as tarefas não feitas voltam sem data.
 - O mesmo mecanismo de lote serve aos assistentes de limpeza (`spec/assistentes.md`): cada assistente só fornece a busca (`domain/assistants.ts`) e as ações (`application/assistants.ts`). A sugestão de vincular uma seção solta a um projeto citado no texto dela mora em "Seções soltas", que recebe o texto das seções.
-- Descartar e vincular como recurso acontecem na wiki (`discardWikiNotes` e `linkWikiNotesAsResource`), porque as notas não passam mais pelo fechamento.
+- Editar, apagar e vincular como recurso as notas de um dia fechado acontecem na aba "Notas" da página do projeto (`updateBlockText`, `deleteKeptNote` e `linkSectionNotesAsResource`), porque as notas não passam mais pelo fechamento. Não existe wiki (ADR-050).
 - "Dia seguinte" num checkout atrasado é o próximo dia ativo depois do dia triado, mas nunca antes de hoje.
 - A triagem segue a ordem da nota do dia: as partes por `days.sectionOrder` e as tarefas de outros dias por `carriedOrder` (ADR-040).
 
