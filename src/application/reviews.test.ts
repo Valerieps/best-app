@@ -49,10 +49,10 @@ describe('section 2: Revisão de Foco', () => {
     expect((await loadFocusReview(reader, SUNDAY)).deferred.map((row) => row.type)).toEqual(['task', 'notes']);
 
     await resolveDeferred(ctx, {
-      tasks: new Map([[task.id, { kind: 'archive' } as const]]),
+      tasks: new Map([[task.id, { kind: 'undate' } as const]]),
       notes: new Map([[task.sectionId, 'wiki' as const]]),
     });
-    expect(await db.blocks.get(task.id)).toMatchObject({ status: 'archived', awaitingReflection: undefined });
+    expect(await db.blocks.get(task.id)).toMatchObject({ status: 'active', intendedDate: null, awaitingReflection: undefined });
     expect((await db.sections.get(task.sectionId))?.notesDestination).toBe('wiki');
     expect((await loadFocusReview(reader, SUNDAY)).deferred).toEqual([]);
   });

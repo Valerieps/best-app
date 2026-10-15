@@ -6,7 +6,7 @@ import { isTaskPendingOn, isTaskShownOn, nextPlanningDay, POSTPONE_ATTENTION_THR
 
 /**
  * "Fechar o dia" in batch (spec/checkout.md). For one day, decides what is automatic and what
- * needs a decision. Notes go to the wiki, whiteboards stay unlinked and unfinished tasks roll
+ * needs a decision. Notes are kept where they were written, whiteboards stay unlinked and unfinished tasks roll
  * over to "dia seguinte" on their own; only tasks postponed too often, or past their deadline,
  * ask for a decision. The app never takes things out of circulation on its own.
  */
@@ -14,7 +14,8 @@ import { isTaskPendingOn, isTaskShownOn, nextPlanningDay, POSTPONE_ATTENTION_THR
 export type TaskDecision =
   | { kind: 'finish' }
   | { kind: 'schedule'; date: DayKey }
-  | { kind: 'archive' }
+  /** "Sem data": the task goes back to the task list, for some day. */
+  | { kind: 'undate' }
   | { kind: 'abandon' }
   /** Section 2: "decidir na reflexão semanal". */
   | { kind: 'reflection' }
@@ -51,7 +52,7 @@ export type TriageRow = TaskRow | NotesRow;
 
 /**
  * Decisions the app applies on its own. The ones about tasks can be undone back into a regular
- * row; notes and whiteboards no longer pass through the closing (the wiki and the "Seções
+ * row; notes and whiteboards no longer pass through the closing (the project page and the "Seções
  * soltas" assistant take care of them).
  */
 export type AutomaticItem =

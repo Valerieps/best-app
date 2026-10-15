@@ -38,7 +38,7 @@ describe('isStuckTask', () => {
 
   it('ignores tasks that left the active list', () => {
     expect(isStuckTask(task('a', { status: 'done', postponeCount: 5 }), TODAY)).toBe(false);
-    expect(isStuckTask(task('a', { status: 'archived', intendedDate: '2026-10-01' }), TODAY)).toBe(false);
+    expect(isStuckTask(task('a', { status: 'abandoned', intendedDate: '2026-10-01' }), TODAY)).toBe(false);
   });
 });
 

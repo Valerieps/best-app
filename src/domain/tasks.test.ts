@@ -6,6 +6,7 @@ import {
   isTaskPendingOn,
   lastTriagedDayAfterReopen,
   nextPlanningDay,
+  undateArchivedTask,
 } from './tasks';
 
 describe('isPostponement', () => {
@@ -43,8 +44,8 @@ describe('isTaskPendingOn', () => {
     expect(isTaskPendingOn(t, '2026-10-10', '2026-10-10')).toBe(false);
   });
 
-  it('is never pending once finished, archived or abandoned', () => {
-    for (const status of ['done', 'archived', 'abandoned'] as const) {
+  it('is never pending once finished or abandoned', () => {
+    for (const status of ['done', 'abandoned'] as const) {
       expect(isTaskPendingOn(task(s.id, 'x', { status }), '2026-10-10', '2026-10-10')).toBe(false);
     }
   });
@@ -81,5 +82,19 @@ describe('lastTriagedDayAfterReopen', () => {
     expect(lastTriagedDayAfterReopen(null, '2026-10-11')).toBeNull();
     expect(lastTriagedDayAfterReopen('2026-10-09', '2026-10-11')).toBe('2026-10-09');
     expect(lastTriagedDayAfterReopen('2026-10-11', '2026-10-11')).toBe('2026-10-10');
+  });
+});
+
+describe('undateArchivedTask', () => {
+  it('turns an archived task into an active task without a date, keeping its postponements', () => {
+    const row = { kind: 'task', status: 'archived', intendedDate: '2026-10-05', closedAt: '2026-10-06T10:00:00.000Z', postponeCount: 3 };
+    expect(undateArchivedTask(row)).toEqual({ kind: 'task', status: 'active', intendedDate: null, closedAt: null, postponeCount: 3 });
+  });
+
+  it('leaves other tasks and notes alone', () => {
+    const done = { kind: 'task', status: 'done', intendedDate: '2026-10-05' };
+    const noteRow = { kind: 'note', status: null };
+    expect(undateArchivedTask(done)).toBe(done);
+    expect(undateArchivedTask(noteRow)).toBe(noteRow);
   });
 });

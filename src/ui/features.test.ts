@@ -23,11 +23,6 @@ describe('hidden features', () => {
     expect(enabledRoute({ name: 'projects' })).toEqual({ name: 'projects' });
   });
 
-  it('keeps the wiki screen reachable while it is out of the sidebar', () => {
-    Object.assign(FEATURES, { wikiInSidebar: false });
-    expect(enabledRoute({ name: 'wiki', section: 's1' })).toEqual({ name: 'wiki', section: 's1' });
-  });
-
   it('keeps the screens when the features are on', () => {
     Object.assign(FEATURES, { objectives: true, habits: true });
     expect(enabledRoute({ name: 'habits' })).toEqual({ name: 'habits' });

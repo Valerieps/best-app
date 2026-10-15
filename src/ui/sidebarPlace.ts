@@ -11,8 +11,6 @@ export type SidebarPlace =
   | 'objectives'
   | 'habits'
   | 'active'
-  | 'archived'
-  | 'wiki'
   | 'data'
   | 'settings';
 

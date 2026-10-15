@@ -42,17 +42,16 @@ Eu posso fazer qualquer revisão na mão, a qualquer hora, pelo menu "Rituais". 
 ## Flow da Revisão de Foco *(2)*
 
 1. Triagem do que foi movido para cá, com a mesma rotina do "Fechar o dia"
-2. Revisita das tarefas arquivadas, que podem ser reativadas
-3. Passada pelos projetos ativos, com os parados primeiro: cada um continua ou é finalizado
-4. Sugestão de agregar tarefas em projetos, apresentada pela primeira vez na primeira Revisão de Foco
-5. Report de métricas do período:
+2. Passada pelos projetos ativos, com os parados primeiro: cada um continua ou é finalizado
+3. Sugestão de agregar tarefas em projetos, apresentada pela primeira vez na primeira Revisão de Foco
+4. Report de métricas do período:
    - quantas tarefas adiadas: cada tarefa conta uma vez, mesmo que tenha sido adiada várias vezes no período
    - precisão da data de intenção de execução: realizar a tarefa no dia da intenção, independente de quantos adiamentos. O objetivo é estimular adiamentos e abandonos intencionais. Entram na conta só as tarefas finalizadas que tinham data de intenção
    - tarefas executadas
    - a partir da seção 6, as métricas de hábitos (`habitos.md`, "Onde entram nos flows")
-6. Melhores momentos e o que pode melhorar: textos livres vinculados ao período avaliado
-7. Escolha dos projetos em foco (`prioridades.md`)
-8. Clicar em "Fechar revisão"
+5. Melhores momentos e o que pode melhorar: textos livres vinculados ao período avaliado
+6. Escolha dos projetos em foco (`prioridades.md`)
+7. Clicar em "Fechar revisão"
 
 ## Flow da Revisão de Rumo *(4)*
 

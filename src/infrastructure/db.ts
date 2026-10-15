@@ -17,6 +17,7 @@ import type {
 import type { DomainEvent } from '../domain/events';
 import { toDayKey } from '../domain/day';
 import { migrateMonthPriorityLists, migrateToFocusList } from '../domain/focusProjects';
+import { undateArchivedTask } from '../domain/tasks';
 
 /** App settings and bookkeeping that never go into a backup (e.g. file handles). */
 export interface MetaEntry {
@@ -103,6 +104,18 @@ export class AppDatabase extends Dexie {
         const rows = await table.toArray();
         const migrated = migrateToFocusList(rows, toDayKey(new Date()));
         if (migrated.length > rows.length) await table.put(migrated[migrated.length - 1]);
+      });
+    // Archiving was removed: archived tasks become active tasks without a date (ADR-049).
+    this.version(8)
+      .stores({ blocks: 'id, sectionId, status, intendedDate, projectId, deadline' })
+      .upgrade(async (tx) => {
+        await tx
+          .table('blocks')
+          .where('status')
+          .equals('archived')
+          .modify((row: Record<string, unknown>) => {
+            Object.assign(row, undateArchivedTask(row));
+          });
       });
   }
 }

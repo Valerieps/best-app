@@ -201,19 +201,9 @@ export function Sidebar({ route, today, pendingDays, reviews, backupState }: Pro
           key: 'active',
           place: 'active',
           route: { name: 'active' },
-          label: 'Tarefas ativas',
+          label: 'Tarefas',
           count: counts?.active,
         },
-        {
-          key: 'archived',
-          place: 'archived',
-          route: { name: 'archived' },
-          label: 'Tarefas arquivadas',
-          count: counts?.archived,
-        },
-        ...(FEATURES.wikiInSidebar
-          ? [{ key: 'wiki', place: 'wiki' as const, route: { name: 'wiki' as const }, label: 'Wiki pessoal', count: counts?.wiki }]
-          : []),
       ],
     },
   ];

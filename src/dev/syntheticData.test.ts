@@ -2,16 +2,15 @@ import { beforeAll, describe, expect, it } from 'vitest';
 import { parseBackup, type BackupFile } from '../application/backup';
 import {
   loadActiveTasks,
-  loadArchivedTasks,
   loadCleanup,
   loadDayPriorities,
   loadPendingDays,
   loadPendingTriages,
   loadProjectList,
-  loadWiki,
+  loadSectionNotes,
 } from '../application/queries';
 import { loadFocusReview, loadReviewAvailability } from '../application/reviewQueries';
-import { addDays, toDayKey } from '../domain/day';
+import { addDays } from '../domain/day';
 import { activityGrid, CARD_MAP_WEEKS } from '../domain/projectActivity';
 import type { TaskRow } from '../domain/triage';
 import { importBackup } from '../infrastructure/backupRepository';
@@ -94,12 +93,10 @@ describe('synthetic data', () => {
     ]);
   });
 
-  it('leaves a task and notes for the Revisão de Foco, and archived tasks to revisit', async () => {
+  it('leaves a task and notes for the Revisão de Foco', async () => {
     const view = await loadFocusReview(reader, TODAY);
     const deferred = view.deferred.map((row) => (row.type === 'task' ? row.task.text : row.section.title));
     expect(deferred).toEqual(['Pedir orçamento de bancada de granito', 'Retrospectiva da sprint 40']);
-    const archived = await loadArchivedTasks(reader);
-    expect(archived.map((item) => toDayKey(new Date(item.task.closedAt!)))).toEqual([day(-5), day(-10), day(-31)]);
   });
 
   it('has the Revisão de Foco available by the cadence', async () => {
@@ -114,6 +111,9 @@ describe('synthetic data', () => {
         'Pesquisar uma tenda, caso chova',
         'Alugar uma caixa de som',
         'Comprar uma trena a laser',
+        'Avaliar Firebase no lugar do Postgres',
+        'Prototipar a integração com o Google Agenda',
+        'Página de status do sistema',
       ]),
     );
     expect(taskNamed('Alugar uma caixa de som').postponeCount).toBe(1);
@@ -128,8 +128,8 @@ describe('synthetic data', () => {
     ]);
   });
 
-  it('fills the wiki with notes of the three projects', async () => {
-    const wiki = await loadWiki(reader);
+  it('keeps notes of the three projects', async () => {
+    const wiki = await loadSectionNotes(reader);
     const projects = new Set(wiki.flatMap((entry) => (entry.project ? [entry.project.name] : [])));
     expect(projects).toEqual(
       new Set(['App de agendamento', 'Festa de fim de ano', 'Reforma da cozinha', 'Sprint 40', 'Sprint 41', 'Sprint 42', 'Festa de fim-de-ano', 'Reforma da cosinha', 'Curso de inglês']),

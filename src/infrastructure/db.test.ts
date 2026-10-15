@@ -2,7 +2,7 @@ import Dexie from 'dexie';
 import { describe, expect, it } from 'vitest';
 import { AppDatabase } from './db';
 
-describe('database versions 6 and 7', () => {
+describe('database versions 6 to 8', () => {
   it('turns the month priority projects of a version 5 database into week lists, and then the list in focus', async () => {
     const name = 'best-app-upgrade-test';
     // A version 5 database, as the app left it before the priority projects moved to the week.
@@ -37,6 +37,24 @@ describe('database versions 6 and 7', () => {
     const db = new AppDatabase(name);
     expect(await db.priorities.get('focusProjects')).toEqual({ id: 'focusProjects', scope: 'focusProjects', period: '', itemIds: ['p1'], updatedAt: '' });
     expect(await db.priorities.count()).toBe(2);
+    db.close();
+    await Dexie.delete(name);
+  });
+
+  it('turns the archived tasks of a version 7 database into active tasks without a date', async () => {
+    const name = 'best-app-upgrade-test-8';
+    const old = new Dexie(name);
+    old.version(7).stores({ blocks: 'id, sectionId, status, intendedDate, projectId, deadline' });
+    await old.open();
+    await old.table('blocks').bulkPut([
+      { id: 't1', kind: 'task', status: 'archived', intendedDate: '2026-10-05', closedAt: '2026-10-06T10:00:00.000Z', postponeCount: 2 },
+      { id: 't2', kind: 'task', status: 'abandoned', intendedDate: null, closedAt: '2026-10-06T10:00:00.000Z', postponeCount: 0 },
+    ]);
+    old.close();
+
+    const db = new AppDatabase(name);
+    expect(await db.blocks.get('t1')).toMatchObject({ status: 'active', intendedDate: null, closedAt: null, postponeCount: 2 });
+    expect(await db.blocks.get('t2')).toMatchObject({ status: 'abandoned' });
     db.close();
     await Dexie.delete(name);
   });

@@ -25,6 +25,8 @@
 
 - Uma tarefa de projeto está travada quando foi adiada 3 vezes ou mais, ou quando a data de intenção já passou e ela continua ativa.
 - Na página do projeto, as tarefas aparecem em quatro grupos, do mais para o menos destacado: travadas, com o motivo e a ação de dar uma nova data à vista; próximos dias, como uma pequena agenda; sem data, mais discretas e num grupo que eu posso recolher; e feitas, recolhidas.
+- A aba "Notas" da página do projeto mostra as notas das seções vinculadas a ele, da seção mais recente para a mais antiga, depois que o dia é fechado. Ali eu posso editar o texto de uma nota e apagar uma nota, com um segundo clique para confirmar. O histórico de eventos guarda a nota apagada.
+- Na aba "Notas", as notas de uma seção podem virar recurso de um objetivo ou projeto (`objetivos.md`). *(4)*
 - Na página do projeto, o objetivo, o status, o número de seções e os recursos ficam numa coluna lateral, que eu posso deixar recolhida ou fixada. A escolha vale para todos os projetos.
 - Posso vincular o objetivo, adicionar o projeto aos projetos em foco (enquanto houver vaga) e finalizar o projeto tanto pela lista quanto pela página do projeto.
 - Para dar uma data de intenção a uma tarefa do projeto, uso o calendário, como em qualquer tarefa. Não há arrastar e soltar.

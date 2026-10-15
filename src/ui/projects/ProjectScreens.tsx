@@ -10,9 +10,8 @@ import { agendaDays, groupProjectTasks, stuckReason } from '../../domain/project
 import { BlockLine, DatePicker, type LineHandlers } from '../dayNote/BlockLine';
 import { requestFocus } from '../dayNote/focus';
 import { Icon } from '../components/Icon';
-import { Linkified } from '../components/Linkified';
 import { LoadingPage } from '../components/Skeleton';
-import { agendaDate, formatLongDate, formatShortDate, formatTime, plural, stuckReasonLabel } from '../format';
+import { agendaDate, formatLongDate, plural, stuckReasonLabel } from '../format';
 import { navigate, routeHash } from '../hooks';
 import { appContext, reader } from '../services';
 import { useLiveQuery } from '../useLiveQuery';
@@ -20,6 +19,7 @@ import { enqueue } from '../writeQueue';
 import { ProjectActionsMenu } from './ProjectActions';
 import { ProjectIconPicker } from './ProjectIcon';
 import { panelOnOpen } from './panelState';
+import { ProjectNotes } from './ProjectNotes';
 import { ProjectSidePanel } from './ProjectSidePanel';
 
 function write(work: () => Promise<unknown>) {
@@ -305,31 +305,7 @@ export function ProjectScreen({ id, tab, today }: { id: string; tab: 'tasks' | '
             </div>
           ) : (
             <div role="tabpanel" aria-label="Notas">
-              {view.notes.length === 0 ? (
-                <p className="muted project-tasks__empty">As notas das seções deste projeto aparecem aqui depois que você fecha o dia.</p>
-              ) : (
-                <ol className="timeline">
-                  {view.notes.map(({ section, notes }) => (
-                    <li key={section.id} className={`timeline__entry ${section.kind === 'meeting' ? 'timeline__entry--meeting' : ''}`}>
-                      <span className="timeline__dot" aria-hidden="true" />
-                      <p className="timeline__when">
-                        {formatShortDate(section.day)} · {formatTime(section.createdAt)} ·{' '}
-                        {section.kind === 'meeting' ? (
-                          <span className="timeline__kind">Reunião{section.participants ? ` com ${section.participants}` : ''}</span>
-                        ) : (
-                          'Geral'
-                        )}
-                        {section.title && section.title !== project.name ? ` · ${section.title}` : ''}
-                      </p>
-                      {notes.map((note) => (
-                        <p className="timeline__note" key={note.id}>
-                          <Linkified text={note.text} />
-                        </p>
-                      ))}
-                    </li>
-                  ))}
-                </ol>
-              )}
+              <ProjectNotes entries={view.notes} projectName={project.name} />
             </div>
           )}
         </div>

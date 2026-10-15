@@ -16,5 +16,5 @@
 - Um projeto pode existir sem objetivo e se vincula a no máximo um objetivo.
 - Projetos sem objetivo não são proibidos: viram métrica na Revisão de Rumo.
 - Objetivos só são finalizados manualmente: eu abro o objetivo e finalizo, dizendo se atingi a meta ou não. Um objetivo finalizado pode ser reaberto.
-- Na wiki, as notas de uma seção podem virar recurso de um objetivo ou projeto (`nota-do-dia.md`, "Wiki pessoal").
+- Na aba "Notas" da página do projeto, as notas de uma seção podem virar recurso de um objetivo ou projeto (`projetos.md`, "Página do projeto").
 - Links entram como recurso direto na página do objetivo ou do projeto.
