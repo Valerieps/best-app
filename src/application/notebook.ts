@@ -84,8 +84,9 @@ export async function linkSectionToProject(ctx: AppContext, sectionId: string, p
 }
 
 /**
- * Choosing an existing project in a section's title field: the section is linked to it and
- * takes its name as the title, replacing the text typed to find it (spec/nota-do-dia.md).
+ * Choosing an existing project in a section's title field: the section is linked to it, or
+ * moves to it from another project, and takes its name as the title, replacing the text typed
+ * to find it. Its tasks go along (spec/nota-do-dia.md).
  */
 export async function titleSectionWithProject(ctx: AppContext, sectionId: string, projectId: string): Promise<void> {
   await ctx.store.transaction(async (tx) => {
@@ -100,17 +101,45 @@ export async function titleSectionWithProject(ctx: AppContext, sectionId: string
   });
 }
 
-/** Turns a whiteboard section into a new project named `name`. */
+/**
+ * Turns a section into a new project named `name`, which also becomes its title. A section
+ * already linked moves to the new project, with its tasks.
+ */
 export async function convertSectionToProject(ctx: AppContext, sectionId: string, name: string): Promise<void> {
   await ctx.store.transaction(async (tx) => {
     const section = await getOrThrow(tx.sections.get(sectionId), 'Section');
     const project = await addProject(ctx, tx, name);
     let titled = section;
-    if (!section.title) {
+    if (section.title !== project.name) {
       titled = { ...section, title: project.name };
-      await record(ctx, tx, 'section.titleChanged', 'section', section.id, section.day, { from: null, to: project.name });
+      await record(ctx, tx, 'section.titleChanged', 'section', section.id, section.day, { from: section.title, to: project.name });
     }
     await linkSection(ctx, tx, titled, project.id, today(ctx));
+  });
+}
+
+/**
+ * A linked section goes back to being a whiteboard, with `title` as its title. Its tasks that
+ * were in the project leave it too, as they came with the section (spec/nota-do-dia.md).
+ */
+export async function unlinkSection(ctx: AppContext, sectionId: string, title: string): Promise<void> {
+  await ctx.store.transaction(async (tx) => {
+    const section = await getOrThrow(tx.sections.get(sectionId), 'Section');
+    const projectId = section.projectId;
+    if (projectId === null) return;
+    const at = nowIso(ctx);
+    const day = today(ctx);
+    const next = title.trim() || null;
+    if (section.title !== next) {
+      await record(ctx, tx, 'section.titleChanged', 'section', section.id, section.day, { from: section.title, to: next });
+    }
+    await tx.sections.put({ ...section, title: next, projectId: null, updatedAt: at });
+    await record(ctx, tx, 'section.unlinkedFromProject', 'section', section.id, day, { projectId });
+    for (const block of await tx.blocksInSection(section.id)) {
+      if (block.kind !== 'task' || block.projectId !== projectId) continue;
+      await tx.blocks.put({ ...block, projectId: null, updatedAt: at });
+      await record(ctx, tx, 'block.linkedToProject', 'block', block.id, day, { projectId: null });
+    }
   });
 }
 

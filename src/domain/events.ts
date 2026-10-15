@@ -65,6 +65,8 @@ export interface EventData {
   'section.created': { kind: SectionKind; projectPage?: true; projectId?: string };
   'section.titleChanged': { from: string | null; to: string | null };
   'section.linkedToProject': { projectId: string; mergedFrom?: string };
+  /** The section went back to being a whiteboard; `projectId` is the project it left. */
+  'section.unlinkedFromProject': { projectId: string };
   'section.leftUnlinked': NoData;
   'section.keptUnlinked': NoData;
   'section.notesMovedToWiki': { projectId: string | null };

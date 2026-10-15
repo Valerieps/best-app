@@ -6,6 +6,7 @@ import {
   createSection,
   deleteBlock,
   titleSectionWithProject,
+  unlinkSection,
   mergeIntoPrevious,
   reorderCarriedTasks,
   reorderDayParts,
@@ -596,6 +597,7 @@ export function DayNoteScreen({
           onSaveTitle={(title) => section && write(() => setSectionTitle(ctx, section.id, title))}
           onLinkProject={(project) => section && write(() => titleSectionWithProject(ctx, section.id, project.id))}
           onCreateProject={(name) => section && write(() => convertSectionToProject(ctx, section.id, name))}
+          onUnlink={(title) => section && write(() => unlinkSection(ctx, section.id, title))}
           leading={focusButton(part.key, section?.title ? `na seção "${section.title}"` : 'nesta seção', entry.key)}
         />
         {section?.kind === 'meeting' && (
