@@ -1,7 +1,6 @@
 import { useEffect, useRef, useState, type KeyboardEvent, type ReactNode } from 'react';
 import type { Project, Section } from '../../domain/entities';
-import { formatTime } from '../format';
-import { ProjectChip, WhiteboardChip } from '../components/Chips';
+import { ProjectChip } from '../components/Chips';
 import { Icon } from '../components/Icon';
 import { titleOptions, titleToSaveOnBlur, type TitleOption } from './sectionTitle';
 import { isFocusToggleKey } from './focusMode';
@@ -16,39 +15,55 @@ interface Props {
   onCreateProject(name: string): void;
   /** Turns a linked section back into a whiteboard, with this title. */
   onUnlink(title: string): void;
-  /** Shown at the left of the header, like the focus mode button. */
-  leading?: ReactNode;
+  /** Renames the project of a linked section. */
+  onRenameProject(name: string): void;
+  /** Shown at the right of the header, like the focus mode button. */
+  trailing?: ReactNode;
 }
 
 
 /**
- * Section header: kind, time and an optional title. While typing the title, existing projects
- * are suggested; choosing one links the section to it, or moves it there from another project.
+ * Section header: kind, an optional title and, when linked to a project, a link icon. While
+ * typing the title, existing projects are suggested; choosing one links the section to it. On a
+ * linked section, clicking the title opens its options: back to a whiteboard, renaming the
+ * project, or moving the section to another project.
  */
-export function SectionHeader({ section, kind, projects, onSaveTitle, onLinkProject, onCreateProject, onUnlink, leading }: Props) {
+export function SectionHeader({ section, kind, projects, onSaveTitle, onLinkProject, onCreateProject, onUnlink, onRenameProject, trailing }: Props) {
   const [title, setTitle] = useState(section?.title ?? '');
   const [open, setOpen] = useState(false);
+  // Whether I typed since the field got the focus: until then, a linked section lists its options.
+  const [edited, setEdited] = useState(false);
+  // -1 for none: a linked section opens its options with none chosen, so Enter changes nothing.
   const [highlight, setHighlight] = useState(0);
   const inputRef = useRef<HTMLInputElement>(null);
   // Set by choosing a suggestion, which then leaves the field: that blur must not save the typed text.
   const chose = useRef(false);
+  // Set by "Renomear projeto": leaving the field then renames the project instead of the title.
+  const renaming = useRef(false);
   const project = section?.projectId ? projects.find((p) => p.id === section.projectId) ?? null : null;
-  const whiteboard = section !== null && section.projectId === null;
 
   useEffect(() => {
     if (document.activeElement !== inputRef.current) setTitle(section?.title ?? '');
   }, [section?.title]);
 
-  const options: TitleOption[] = section !== null && open ? titleOptions(title, projects, project) : [];
+  const options: TitleOption[] = section !== null && open ? titleOptions(title, projects, project, edited) : [];
 
   function choose(option: TitleOption) {
     setOpen(false);
+    if (option.type === 'rename' && option.name === option.project.name) {
+      // Only starts the renaming: I type the new name over the selected one.
+      renaming.current = true;
+      inputRef.current?.select();
+      return;
+    }
     chose.current = true;
     if (option.type === 'project') {
       setTitle(option.project.name);
       onLinkProject(option.project);
     } else if (option.type === 'create') {
       onCreateProject(option.name);
+    } else if (option.type === 'rename') {
+      onRenameProject(option.name);
     } else if (option.type === 'titleOnly' && project) {
       onUnlink(option.name);
     } else {
@@ -66,9 +81,10 @@ export function SectionHeader({ section, kind, projects, onSaveTitle, onLinkProj
     }
     if (event.key === 'Enter') {
       event.preventDefault();
-      if (options.length > 0) choose(options[Math.min(highlight, options.length - 1)]);
+      if (options.length > 0 && highlight >= 0) choose(options[Math.min(highlight, options.length - 1)]);
       else {
-        onSaveTitle(title);
+        const save = titleToSaveOnBlur(title, section?.title ?? null, false);
+        if (save !== null) onSaveTitle(save);
         chose.current = true;
         inputRef.current?.blur();
       }
@@ -80,13 +96,33 @@ export function SectionHeader({ section, kind, projects, onSaveTitle, onLinkProj
       setHighlight((highlight + 1) % options.length);
     } else if (event.key === 'ArrowUp') {
       event.preventDefault();
-      setHighlight((highlight - 1 + options.length) % options.length);
+      setHighlight(highlight <= 0 ? options.length - 1 : highlight - 1);
+    }
+  }
+
+  function optionLabel(option: TitleOption): ReactNode {
+    switch (option.type) {
+      case 'project':
+        return (
+          <>
+            {option.project.name} <ProjectChip />
+          </>
+        );
+      case 'create':
+        return <>Criar o projeto “{option.name}”</>;
+      case 'rename':
+        return option.name === option.project.name ? <>Renomear projeto</> : <>Renomear o projeto para “{option.name}”</>;
+      case 'titleOnly':
+        return project ? (
+          <>Reverter para quadro branco</>
+        ) : (
+          <span className="muted">Usar “{option.name}” só como título (quadro branco)</span>
+        );
     }
   }
 
   return (
     <div className="section__header">
-      {leading}
       {/* The kind as an icon: a notepad for a general section, two people for a meeting. */}
       <span
         className={`section__kind section__kind--${kind}`}
@@ -96,7 +132,6 @@ export function SectionHeader({ section, kind, projects, onSaveTitle, onLinkProj
       >
         <Icon name={kind === 'meeting' ? 'users' : 'notes'} size="sm" />
       </span>
-      {section && <span className="section__time">{formatTime(section.createdAt)}</span>}
       <div className="title-field">
         <input
           ref={inputRef}
@@ -106,11 +141,15 @@ export function SectionHeader({ section, kind, projects, onSaveTitle, onLinkProj
           disabled={!section}
           onChange={(event) => {
             setTitle(event.target.value);
+            setEdited(true);
             setOpen(true);
             setHighlight(0);
           }}
           onFocus={() => {
             chose.current = false;
+            renaming.current = false;
+            setEdited(false);
+            setHighlight(project ? -1 : 0);
             setOpen(true);
           }}
           onBlur={() => {
@@ -118,7 +157,9 @@ export function SectionHeader({ section, kind, projects, onSaveTitle, onLinkProj
             setTimeout(() => setOpen(false), 150);
             const save = titleToSaveOnBlur(title, section?.title ?? null, chose.current);
             chose.current = false;
-            if (save !== null) onSaveTitle(save);
+            if (save === null) return;
+            if (renaming.current && project) onRenameProject(save);
+            else onSaveTitle(save);
           }}
           onKeyDown={onKeyDown}
           aria-label="Título da seção"
@@ -139,23 +180,18 @@ export function SectionHeader({ section, kind, projects, onSaveTitle, onLinkProj
                   choose(option);
                 }}
               >
-                {option.type === 'project' && (
-                  <>
-                    {option.project.name} <ProjectChip />
-                  </>
-                )}
-                {option.type === 'keepProject' && <>Manter em “{option.project.name}”, só mudar o título</>}
-                {option.type === 'create' && <>Criar o projeto “{option.name}”</>}
-                {option.type === 'titleOnly' && (
-                  <span className="muted">Usar “{option.name}” só como título (quadro branco)</span>
-                )}
+                {optionLabel(option)}
               </li>
             ))}
           </ul>
         )}
       </div>
-      {whiteboard && <WhiteboardChip />}
-      {project && <ProjectChip />}
+      {project && (
+        <span className="section__link" role="img" title={`Vinculada ao projeto “${project.name}”`} aria-label={`Vinculada ao projeto “${project.name}”`}>
+          <Icon name="link" size="sm" />
+        </span>
+      )}
+      {trailing}
     </div>
   );
 }

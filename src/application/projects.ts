@@ -31,17 +31,21 @@ export async function createProject(ctx: AppContext, name: string): Promise<Proj
 }
 
 export async function renameProject(ctx: AppContext, projectId: string, name: string): Promise<void> {
+  await ctx.store.transaction((tx) => renameProjectIn(ctx, tx, projectId, name));
+}
+
+/** Renames a project inside a transaction; returns the old name, or null when nothing changed. */
+export async function renameProjectIn(ctx: AppContext, tx: StoreTransaction, projectId: string, name: string): Promise<string | null> {
   const trimmed = name.trim();
-  if (!trimmed) return;
-  await ctx.store.transaction(async (tx) => {
-    const project = await tx.projects.get(projectId);
-    if (!project || project.name === trimmed) return;
-    await tx.projects.put({ ...project, name: trimmed, updatedAt: ctx.clock.now().toISOString() });
-    await record(ctx, tx, 'project.renamed', 'project', project.id, toDayKey(ctx.clock.now()), {
-      from: project.name,
-      to: trimmed,
-    });
+  if (!trimmed) return null;
+  const project = await tx.projects.get(projectId);
+  if (!project || project.name === trimmed) return null;
+  await tx.projects.put({ ...project, name: trimmed, updatedAt: ctx.clock.now().toISOString() });
+  await record(ctx, tx, 'project.renamed', 'project', project.id, toDayKey(ctx.clock.now()), {
+    from: project.name,
+    to: trimmed,
   });
+  return project.name;
 }
 
 /** Projects are only finished by hand: "eu abro o projeto e finalizo". */

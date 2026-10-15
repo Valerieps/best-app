@@ -9,10 +9,12 @@ import {
   convertSectionToProject,
   titleSectionWithProject,
   unlinkSection,
+  renameSectionProject,
   createBlock,
   createSection,
   deleteBlock,
   linkSectionToProject,
+  setSectionTitle,
   setTaskDone,
   splitBlock,
 } from './notebook';
@@ -305,6 +307,38 @@ describe('day cycle', () => {
 
     expect(await db.sections.get(section.id)).toMatchObject({ title: 'Ideias de casa', projectId: null });
     expect((await db.blocks.get(task.id))?.projectId).toBeNull();
+  });
+
+  it('renaming the project of a section retitles every linked section that still has the old name', async () => {
+    const { ctx, db } = createTestContext();
+    const kitchen = await createProject(ctx, 'Reforma da cozinha');
+    const first = await createSection(ctx, 'general');
+    const second = await createSection(ctx, 'general');
+    const renamed = await createSection(ctx, 'general');
+    for (const section of [first, second, renamed]) await titleSectionWithProject(ctx, section.id, kitchen.id);
+    await setSectionTitle(ctx, renamed.id, 'Orçamentos');
+
+    await renameSectionProject(ctx, first.id, ' Cozinha nova ');
+
+    expect((await db.projects.get(kitchen.id))?.name).toBe('Cozinha nova');
+    expect((await db.sections.get(first.id))?.title).toBe('Cozinha nova');
+    expect((await db.sections.get(second.id))?.title).toBe('Cozinha nova');
+    expect((await db.sections.get(renamed.id))?.title).toBe('Orçamentos');
+  });
+
+  it('renaming leaves a whiteboard, and an empty name, untouched', async () => {
+    const { ctx, db } = createTestContext();
+    const kitchen = await createProject(ctx, 'Reforma da cozinha');
+    const linked = await createSection(ctx, 'general');
+    await titleSectionWithProject(ctx, linked.id, kitchen.id);
+    const whiteboard = await createSection(ctx, 'general');
+
+    await renameSectionProject(ctx, linked.id, '  ');
+    await renameSectionProject(ctx, whiteboard.id, 'Outro');
+
+    expect((await db.projects.get(kitchen.id))?.name).toBe('Reforma da cozinha');
+    expect((await db.sections.get(linked.id))?.title).toBe('Reforma da cozinha');
+    expect((await db.sections.get(whiteboard.id))?.title).toBeNull();
   });
 
   it('a whiteboard can become a project at any time, named after the section', async () => {
