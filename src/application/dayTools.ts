@@ -51,6 +51,27 @@ export async function setDayPriority(ctx: AppContext, taskId: string, on: boolea
   });
 }
 
+/**
+ * Moves a priority of today to another intended date, from the priorities block, once its
+ * countdown ends: the task gets the new date and leaves today's chosen priorities. A task that
+ * is due today stays an automatic priority (spec/prioridades.md, "Prioridades do dia").
+ */
+export async function moveDayPriority(ctx: AppContext, taskId: string, date: DayKey | null): Promise<void> {
+  await ctx.store.transaction(async (tx) => {
+    const task = await tx.blocks.get(taskId);
+    if (!task || task.kind !== 'task' || task.status !== 'active') return;
+    const day = today(ctx);
+    await tx.blocks.put(await moveIntendedDate(ctx, tx, task, date, day, 'dayNote'));
+    if (date === day) return;
+    const id = dayPriorityListId(day);
+    const list = await tx.priorities.get(id);
+    if (!list?.itemIds.includes(taskId)) return;
+    const itemIds = demote(list.itemIds, taskId);
+    await tx.priorities.put({ ...list, itemIds, updatedAt: ctx.clock.now().toISOString() });
+    await record(ctx, tx, 'priority.removed', 'priorities', id, day, { taskId, itemIds });
+  });
+}
+
 export interface SectionDetails {
   participants: string;
   docLink: string;

@@ -17,7 +17,7 @@ import {
   updateBlockText,
   type NewBlockTarget,
 } from '../../application/notebook';
-import { setDayPriority, setDeadline, setIntendedDate, setSectionDetails } from '../../application/dayTools';
+import { moveDayPriority, setDayPriority, setDeadline, setIntendedDate, setSectionDetails } from '../../application/dayTools';
 import { setDayNoteFocus } from '../../application/settings';
 import { loadDayNote, loadDayPriorities } from '../../application/queries';
 import { detectKind } from '../../domain/blockKind';
@@ -542,6 +542,8 @@ export function DayNoteScreen({
       pinned={pinned}
       onToggleDone={(taskId, done) => write(() => setTaskDone(ctx, taskId, done))}
       onDemote={(taskId) => write(() => setDayPriority(ctx, taskId, false))}
+      onMoveDate={(taskId, date) => write(() => moveDayPriority(ctx, taskId, date))}
+      onSetDeadline={(taskId, date) => write(() => setDeadline(ctx, taskId, date))}
       leading={focusButton(PRIORITIES_PART, 'nas prioridades do dia')}
     />
   );

@@ -13,6 +13,7 @@ A Revisão de Foco escolhe projetos, e o fechamento do dia escolhe tarefas. Não
 - A lista pode estar vazia: no primeiro uso, quando o dia anterior não foi fechado, ou quando as 3 prioridades já foram completadas. Prioridades finalizadas saem da lista.
 - Promover uma tarefa quando as 3 prioridades já estão definidas não é bloqueado: a nova ocupa o lugar da terceira.
 - Se mais de uma tarefa tiver o prazo máximo no mesmo dia, cada uma ocupa o lugar da última prioridade escolhida à mão, sem tirar outra que entrou pelo prazo.
+- No bloco de prioridades eu também mudo as duas datas da tarefa, como na seção: a data de intenção e o prazo máximo. O prazo muda na hora. Mudar a data de intenção para outro dia, ou tirá-la, mostra uma barrinha que vai se esvaziando por 5 segundos, com a opção de cancelar. Se eu não cancelar, a tarefa vai para a data nova e sai das prioridades de hoje; na seção em que ela está, continua aparecendo com a data nova. Uma tarefa que é prioridade porque o prazo máximo é hoje continua prioridade, já que o prazo não mudou. Nas seções, mudar a data continua imediato, sem contagem.
 
 ## Projetos em foco *(2)*
 

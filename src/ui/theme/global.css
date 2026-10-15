@@ -436,12 +436,16 @@ input[type='checkbox'] {
 }
 
 .line:hover .line__actions,
-.line:focus-within .line__actions {
+.line:focus-within .line__actions,
+.priorities__item:hover .line__actions,
+.priorities__item:focus-within .line__actions {
   display: flex;
 }
 
 .line:hover .line__reveal,
-.line:focus-within .line__reveal {
+.line:focus-within .line__reveal,
+.priorities__item:hover .line__reveal,
+.priorities__item:focus-within .line__reveal {
   display: inline-block;
 }
 
@@ -563,6 +567,45 @@ input[type='checkbox'] {
   align-items: center;
   gap: var(--space-3);
   padding: 2px 0;
+}
+
+/* A priority going to another date: a short countdown, which I can cancel, before it leaves */
+.priorities__item--moving .priorities__text {
+  color: var(--color-text-muted);
+}
+
+.priorities__moving {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin-left: auto;
+  font-size: var(--font-size-sm);
+  color: var(--color-text-muted);
+}
+
+.countdown {
+  width: 80px;
+  height: 3px;
+  overflow: hidden;
+  border-radius: var(--radius-pill);
+  background: var(--color-border);
+}
+
+.countdown__fill {
+  display: block;
+  height: 100%;
+  background: var(--color-focus);
+  transform-origin: left;
+  animation: countdown-shrink linear forwards;
+}
+
+@keyframes countdown-shrink {
+  from {
+    transform: scaleX(1);
+  }
+  to {
+    transform: scaleX(0);
+  }
 }
 
 .priorities__text {

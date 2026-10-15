@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { positionBetween } from '../domain/position';
 import { createTestContext } from '../test/fixtures';
-import { setDayPriority, setDeadline, setIntendedDate, setSectionDetails } from './dayTools';
+import { moveDayPriority, setDayPriority, setDeadline, setIntendedDate, setSectionDetails } from './dayTools';
 import { createBlock, createSection, setTaskDone } from './notebook';
 import { loadDayPriorities, loadDayTriage } from './queries';
 
@@ -50,6 +50,40 @@ describe('1b day tools', () => {
     await setDayPriority(ctx, b.id, false);
 
     expect(await loadDayPriorities(reader, TODAY)).toEqual([]);
+  });
+
+  it('moving a priority to another day sets the date and takes it out of the priorities', async () => {
+    const { ctx, reader, db } = createTestContext();
+    const task = await newTask(ctx, 'Mover');
+    const kept = await newTask(ctx, 'Fica');
+    await setDayPriority(ctx, task.id, true);
+    await setDayPriority(ctx, kept.id, true);
+
+    await moveDayPriority(ctx, task.id, '2026-10-13');
+
+    expect((await db.blocks.get(task.id))?.intendedDate).toBe('2026-10-13');
+    expect((await loadDayPriorities(reader, TODAY)).map((p) => p.task.text)).toEqual(['Fica']);
+  });
+
+  it('a priority moved without a date also leaves the priorities', async () => {
+    const { ctx, reader, db } = createTestContext();
+    const task = await newTask(ctx, 'Sem data');
+    await setDayPriority(ctx, task.id, true);
+
+    await moveDayPriority(ctx, task.id, null);
+
+    expect((await db.blocks.get(task.id))?.intendedDate).toBeNull();
+    expect(await loadDayPriorities(reader, TODAY)).toEqual([]);
+  });
+
+  it('a priority due today stays an automatic one after moving its intended date', async () => {
+    const { ctx, reader } = createTestContext();
+    const due = await newTask(ctx, 'Vence hoje');
+    await setDeadline(ctx, due.id, TODAY);
+
+    await moveDayPriority(ctx, due.id, '2026-10-13');
+
+    expect((await loadDayPriorities(reader, TODAY)).map((p) => [p.task.text, p.automatic])).toEqual([['Vence hoje', true]]);
   });
 
   it('saves meeting participants and document link', async () => {
