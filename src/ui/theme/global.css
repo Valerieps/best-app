@@ -3643,15 +3643,21 @@ button.format-toolbar__button {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  min-width: 20px;
-  height: 20px;
+  min-width: 24px;
+  height: 24px;
   padding: 0 2px;
   border: none;
   background: none;
   color: var(--color-text-muted);
-  font-size: var(--font-size-xs);
+  font-size: var(--font-size-sm);
   font-weight: 600;
   line-height: 1;
+}
+
+button.format-toolbar__button .icon--sm {
+  width: 17px;
+  height: 17px;
+  vertical-align: -3px;
 }
 
 button.format-toolbar__button:hover,

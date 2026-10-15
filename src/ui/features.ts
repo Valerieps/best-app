@@ -5,9 +5,11 @@ import type { Route } from './hooks';
  * Features hidden from the interface while their spec is unfinished (decision of 13/10/2026).
  * Their data, use cases and backups stay untouched; turning a flag on brings everything back.
  */
-export const FEATURES: { objectives: boolean; habits: boolean } = {
+export const FEATURES: { objectives: boolean; habits: boolean; wikiInSidebar: boolean } = {
   objectives: false,
   habits: false,
+  // Only the sidebar entry is hidden (15/10/2026); the wiki screen still opens at #/wiki.
+  wikiInSidebar: false,
 };
 
 /** The Revisão de Rumo revolves around the objectives, so it is shown only with them. */
