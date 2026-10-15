@@ -7,7 +7,7 @@ import {
   loadPendingDays,
   loadPendingTriages,
   loadProjectList,
-  loadWiki,
+  loadSectionNotes,
 } from '../application/queries';
 import { loadFocusReview, loadReviewAvailability } from '../application/reviewQueries';
 import { addDays } from '../domain/day';
@@ -128,8 +128,8 @@ describe('synthetic data', () => {
     ]);
   });
 
-  it('fills the wiki with notes of the three projects', async () => {
-    const wiki = await loadWiki(reader);
+  it('keeps notes of the three projects', async () => {
+    const wiki = await loadSectionNotes(reader);
     const projects = new Set(wiki.flatMap((entry) => (entry.project ? [entry.project.name] : [])));
     expect(projects).toEqual(
       new Set(['App de agendamento', 'Festa de fim de ano', 'Reforma da cozinha', 'Sprint 40', 'Sprint 41', 'Sprint 42', 'Festa de fim-de-ano', 'Reforma da cosinha', 'Curso de inglês']),

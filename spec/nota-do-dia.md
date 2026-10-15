@@ -1,6 +1,6 @@
-# Nota do dia e wiki
+# Nota do dia
 
-- **Entra aqui:** a captura ao longo do dia: nota do dia, seções, blocos, o editor, a paginação entre dias e a wiki pessoal.
+- **Entra aqui:** a captura ao longo do dia: nota do dia, seções, blocos, o editor, a paginação entre dias e onde as notas ficam depois do dia.
 - **Não entra aqui:** as regras das tarefas e das datas (`tarefas.md`), das prioridades (`prioridades.md`), do "Fechar o dia" (`checkout.md`) e dos compromissos (`compromissos.md`).
 
 ## Blocos e notas *(1a)*
@@ -24,7 +24,7 @@
 - Clicar no espaço vazio abaixo das linhas de uma seção, até a próxima seção, abre uma linha nova no fim dela, já com o cursor, para eu escrever sem ir até o fim da última linha e apertar Enter. A linha só é gravada quando eu digito; se eu sair dela vazia, ela some. Numa seção ainda sem linhas, clicar em qualquer lugar dela, fora do título e dos botões, já me põe na primeira linha. Só a nota de hoje ganha linhas novas.
 - Enquanto escrevo, posso apagar uma linha ou tirar o `[]` do começo para mudar o tipo, como num editor de texto, mas só em blocos criados no dia e ainda não triados. Uma tarefa que veio de outro dia não some quando eu apago o texto: para tirá-la de circulação, eu tiro a data dela ou abandono.
 - Se eu abrir o app sem ter fechado o dia anterior, a nota de hoje abre normalmente, com um aviso no topo e um botão para fechar o dia pendente.
-- A barra lateral dá acesso à lista de tarefas. A wiki pessoal saiu da barra por enquanto (15/10/2026) (`navegacao.md`, "Navegação").
+- A barra lateral dá acesso à lista de tarefas (`navegacao.md`, "Navegação").
 - No final do dia, ou na manhã seguinte, eu clico em "Fechar o dia".
 
 ## Seções e atalhos *(1b)*
@@ -43,7 +43,7 @@ Eu posso formatar o que escrevo na nota do dia com Markdown, como no Obsidian. O
 - Atalhos (⌘ no lugar de Ctrl no Mac): Ctrl + B para negrito, Ctrl + I para itálico, Ctrl + K para link, Ctrl + Shift + 1 a 4 para os cabeçalhos, Ctrl + Shift + 8 para lista e Ctrl + Shift + 7 para lista numerada. Num item de lista, Tab aumenta o recuo e Shift + Tab diminui, até 4 níveis; fora de lista, o Tab continua como sempre.
 - O link sem nada selecionado entra como `[link](https://)`, com "link" selecionado para eu escrever o texto; com um texto selecionado, ele vira o texto do link e o endereço fica selecionado para eu digitar; com um endereço selecionado, ele vira o destino.
 - Enter num item de lista começa a linha seguinte com o mesmo marcador e o mesmo recuo, e a lista numerada continua a contagem. Enter num item vazio tira o marcador e sai da lista, sem criar linha.
-- A formatação vale para notas e tarefas, e não muda o tipo do bloco. Fora da nota do dia (wiki, checkout, listas), o texto ainda aparece com o Markdown cru.
+- A formatação vale para notas e tarefas, e não muda o tipo do bloco. Fora da nota do dia (página do projeto, checkout, listas), o texto ainda aparece com o Markdown cru.
 
 ## Ordem das linhas e das seções *(1b)*
 
@@ -66,8 +66,9 @@ Quando a nota do dia acumula muitas seções, eu posso focar numa só, para escr
 - O foco sobrevive a recarregar a página e a passar por outras telas: "Hoje" volta para a parte em foco.
 - O app nunca sai do foco sozinho, para não interromper um fluxo de pensamento. Se virar meia-noite, eu continuo escrevendo na mesma parte, e nem o "Iniciar Dia" nem o "Fechar o dia" começam sozinhos. Se a parte em foco deixar de existir, a tela avisa e espera eu sair.
 
-## Wiki pessoal
+## Notas depois do dia
 
-- A wiki pessoal, para onde vão sozinhas as notas gerais no fim do dia, é interna ao app. No núcleo, ela é uma lista em ordem cronológica, em que cada entrada reúne as notas de uma seção, com o título e o horário dela. As notas não moram num lugar só: cada nota também fica ligada ao projeto da seção de onde veio, quando a seção tem um. *(1a)*
-- Em cada entrada da wiki, posso descartar as notas daquela seção. *(1a)* A partir da seção 4, também posso vinculá-las como recurso de um objetivo ou projeto (`objetivos.md`).
-- A wiki pessoal pode ser ordenada por linha temporal ou por ordem alfabética e tem um campo de busca textual. As notas também podem ser vistas por tipo ou por projeto vinculado. *(1b)*
+- Não existe wiki: não há motivo para centralizar notas sem conexão com projetos. As notas ficam onde foram escritas, na nota do dia, e eu as encontro pela paginação entre dias. *(1a)*
+- As notas de uma seção vinculada a um projeto também aparecem na página do projeto, na aba "Notas", depois que o dia é fechado (`projetos.md`, "Página do projeto"). As notas não moram num lugar só: é o mesmo bloco nos dois lugares. *(2)*
+- As notas de uma seção sem vínculo também aparecem no assistente "Seções soltas", até eu converter a seção em projeto, vincular a um existente ou deixar como está (`assistentes.md`). *(1b)*
+- Não existe mais descartar notas. Para tirar uma nota de circulação, eu apago a linha: na nota do dia, enquanto ela pode ser editada, ou na página do projeto. *(2)*

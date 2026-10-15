@@ -247,7 +247,7 @@ export function ProjectSidePanel({ view, objectives, resources, pinned, floating
 
       <h2 className="project-panel__heading">Recursos</h2>
       {resources.length === 0 ? (
-        <p className="muted project-panel__empty">Notas viram recurso na wiki; links entram aqui.</p>
+        <p className="muted project-panel__empty">Notas viram recurso na aba "Notas"; links entram aqui.</p>
       ) : (
         <ul className="resource-list">
           {resources.map((item) => (

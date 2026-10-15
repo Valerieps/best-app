@@ -23,7 +23,7 @@ export interface TriageDecisions {
 
 /**
  * What the closing writes when nothing is changed: the suggestion of every task that needs a
- * decision, and every automatic decision (notes to the wiki, whiteboards left unlinked, tasks
+ * decision, and every automatic decision (notes kept, whiteboards left unlinked, tasks
  * rolling over to "dia seguinte").
  */
 export function defaultClosingDecisions(triage: DayTriage) {
@@ -104,21 +104,8 @@ const NOTES_EVENTS = {
   weeklyReflection: 'section.notesDeferredToReflection',
 } as const;
 
-/**
- * Discards the notes of a wiki entry: they leave the wiki, and the event history keeps the
- * discard (spec/nota-do-dia.md, "Wiki pessoal"). Since the closing shrank, this is the only place
- * where notes are discarded.
- */
-export async function discardWikiNotes(ctx: AppContext, sectionId: string): Promise<void> {
-  await ctx.store.transaction(async (tx) => {
-    const section = await tx.sections.get(sectionId);
-    if (!section || section.notesDestination !== 'wiki') return;
-    await applyNotesDecision(ctx, tx, section, 'discarded', toDayKey(ctx.clock.now()));
-  });
-}
-
-/** Section 4: links the notes of a wiki entry as a resource of an objective or project. */
-export async function linkWikiNotesAsResource(
+/** Section 4: links the notes of a section as a resource of an objective or project. */
+export async function linkSectionNotesAsResource(
   ctx: AppContext,
   sectionId: string,
   owner: { ownerType: 'objective' | 'project'; ownerId: string },
@@ -224,7 +211,7 @@ export interface ClosePendingDaysSummary {
   days: DayKey[];
   /** Tasks that go back to the active list without a date. */
   tasks: number;
-  /** Sections whose notes go to the wiki. */
+  /** Sections whose notes are kept as they are. */
   notesToWiki: number;
   /** Whiteboard sections left unlinked. */
   whiteboards: number;
@@ -255,7 +242,7 @@ export function summarizeClosePendingDays(triages: readonly DayTriage[]): CloseP
 }
 
 /**
- * "Fechar dias pendentes" (spec/checkout.md): notes go to the wiki, whiteboards stay unlinked,
+ * "Fechar dias pendentes" (spec/checkout.md): notes are kept, whiteboards stay unlinked,
  * and tasks not done go back to the active list without a date, counting as postponed.
  * Nothing is deleted or abandoned.
  */

@@ -157,8 +157,7 @@ export function NotesRowView({
         label="Destino das notas desta seção"
         value={decision}
         options={[
-          { value: 'wiki', label: 'Wiki' },
-          { value: 'discarded', label: 'Descartar' },
+          { value: 'wiki', label: 'Guardar' },
           ...(allowReflection ? [{ value: 'weeklyReflection' as const, label: 'Revisão de Foco' }] : []),
         ]}
         onChange={onChange}

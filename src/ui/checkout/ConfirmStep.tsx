@@ -31,7 +31,6 @@ export function ConfirmStep({ day, today, triage, projects, resolved, busy, onBa
   );
   const reopened = settledDuringDay.filter((item) => undone.has(item.task.id)).map((item) => automaticToRow(item, nextDay));
   const kept = settledDuringDay.filter((item) => !undone.has(item.task.id));
-  const notes = triage.automatic.filter((item) => item.type === 'notesToWiki').length;
   const whiteboards = triage.automatic.filter((item) => item.type === 'whiteboardUnlinked').length;
   // Rows left from the attention step, if any, and the automatic decisions reopened here.
   const rows: TaskRow[] = [...triage.rows, ...reopened];
@@ -115,7 +114,6 @@ export function ConfirmStep({ day, today, triage, projects, resolved, busy, onBa
     resolved.doneNow > 0 && `${plural(resolved.doneNow, 'tarefa marcada como feita', 'tarefas marcadas como feitas')} agora`,
     resolved.attention > 0 && plural(resolved.attention, 'tarefa que pedia decisão decidida', 'tarefas que pediam decisão decididas'),
     resolved.reminders > 0 && plural(resolved.reminders, 'lembrete respondido', 'lembretes respondidos'),
-    notes > 0 && `As notas de ${plural(notes, 'seção vão', 'seções vão')} sozinhas para a wiki`,
     whiteboards > 0 &&
       `${plural(whiteboards, 'seção em quadro branco fica', 'seções em quadro branco ficam')} sem projeto; o assistente “Seções soltas” cuida delas depois`,
   ].filter((line): line is string => Boolean(line));

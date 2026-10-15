@@ -4,7 +4,7 @@ import type { ReviewCadence } from './reviews';
 
 /**
  * Entities stored by the app. Each block, section and project is its own record:
- * blocks exist only once, and notes, projects and the wiki point at them instead of copying.
+ * blocks exist only once, and the day note, projects and resources point at them instead of copying.
  * Timestamps are ISO 8601 strings.
  */
 
@@ -52,6 +52,10 @@ export interface Block {
 export type SectionKind = 'general' | 'meeting';
 
 /** Where a section's notes go at checkout. All notes of a section are triaged together. */
+/**
+ * `wiki` means the day closed and the notes are kept: the name is historical, there is no wiki
+ * (ADR-050). `discarded` only shows up in older data.
+ */
 export type NotesDestination = 'pending' | 'wiki' | 'discarded' | 'weeklyReflection';
 
 /**

@@ -14,7 +14,6 @@ Os termos marcados com ⚠ ainda têm mais de um sentido nos documentos; o item 
 - **Quadro branco:** o estado de uma seção sem vínculo com projeto. Não é um tipo de seção. (`spec/nota-do-dia.md`)
 - **De outros dias:** a seção da nota do dia com as tarefas que vieram de outros dias para aquele dia. Muda de lugar como as outras seções, mas não é gravada como uma. (`spec/nota-do-dia.md`)
 - **Bloco:** uma linha da nota, gravada como um registro próprio. É **tarefa** (começa com `[] `), **nota geral** (todo o resto) ou, a partir da seção 5, **compromisso**. (`spec/nota-do-dia.md`; `spec/compromissos.md`)
-- **Wiki pessoal:** a lista das notas que foram para a wiki no fim do dia, uma entrada por seção. (`spec/nota-do-dia.md`)
 
 ## Tarefas e datas
 
@@ -31,14 +30,14 @@ Os termos marcados com ⚠ ainda têm mais de um sentido nos documentos; o item 
 
 - **Finalizar:** a tarefa foi feita (eu engajei com ela). Gera log de execução. (`spec/checkout.md`)
 - **Abandonar:** a tarefa sai de circulação sem ter sido feita, como se fosse apagada: some de todas as telas. Só para tarefas. Não existe mais **arquivar**. (`spec/checkout.md`)
-- **Descartar:** as notas de uma seção saem de circulação e não vão para a wiki. Só para notas (e, na seção 5, compromissos). (`spec/checkout.md`)
+- **Descartar:** só para compromissos (seção 5). Notas não são mais descartadas: eu apago a nota. Não existe mais **wiki**. (`spec/checkout.md`; `spec/nota-do-dia.md`)
 - **Largar:** um lembrete sai de circulação. (`spec/abertura-do-dia.md`)
 - **Migrar:** marcar que um compromisso foi criado no Google Agenda. Conta como concluído. (`spec/compromissos.md`)
 - **Decidir na Revisão de Foco:** deixar uma tarefa para ser triado na Revisão de Foco. (`spec/checkout.md`)
 
 ## Fechar o dia e triagem
 
-- **Fechar o dia:** o ritual diário e curto que dá destino ao que perece de um dia para o outro: as tarefas do dia, os lembretes ignorados e o planejamento do dia seguinte. As notas vão sozinhas para a wiki. Em texto corrido, "o fechamento do dia". Antes se chamava checkout, nome que o código ainda usa. ⚠ "Fechamento completo" tem três definições (`INCOERENCIAS.md`, 2.4). (`spec/checkout.md`)
+- **Fechar o dia:** o ritual diário e curto que dá destino ao que perece de um dia para o outro: as tarefas do dia, os lembretes ignorados e o planejamento do dia seguinte. As notas ficam onde foram escritas. Em texto corrido, "o fechamento do dia". Antes se chamava checkout, nome que o código ainda usa. ⚠ "Fechamento completo" tem três definições (`INCOERENCIAS.md`, 2.4). (`spec/checkout.md`)
 - **Fechamento pendente:** um dia com algum item ainda sem destino. (`spec/checkout.md`)
 - **Auto-triagem:** as regras que decidem sozinhas (**automático**), pré-selecionam (**sugerido**) ou deixam para mim (**sempre manual**). (`spec/checkout.md`)
 - **Fechar dias pendentes:** aplica a auto-triagem a vários dias pendentes de uma vez; as tarefas não feitas voltam sem data. (`spec/checkout.md`)

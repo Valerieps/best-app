@@ -29,7 +29,7 @@ Não há onboarding: no primeiro uso eu já saio usando o ciclo diário, e os ri
 - O app não tem compartilhamento: quem usa o app só vê os próprios dados, guardados no próprio navegador.
 - O app guarda um histórico de eventos: cada mudança (criação, adiamento, finalização, vínculo) com data e hora, e não só o estado atual. Todas as métricas, inclusive as que ainda não existem, saem desse histórico.
 - Cada bloco é um registro separado no banco, para evitar conflitos entre abas abertas e para permitir juntar os dados de aparelhos diferentes no futuro.
-- Cada bloco existe uma vez só. Notas, projetos e wiki apontam para ele por vínculos, sem cópias.
+- Cada bloco existe uma vez só. A nota do dia, os projetos e os recursos apontam para ele por vínculos, sem cópias.
 - A arquitetura é desenhada para o escopo completo da spec, e a implementação segue as partes em ordem.
 
 ## Backup

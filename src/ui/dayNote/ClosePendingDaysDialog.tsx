@@ -48,15 +48,10 @@ export function ClosePendingDaysDialog({ today, onClose }: Props) {
               <li className="card-list__item">
                 <span>
                   {summary.tasks === 1
-                    ? '1 tarefa não feita volta para a lista de ativas, sem data'
-                    : `${summary.tasks} tarefas não feitas voltam para a lista de ativas, sem data`}
+                    ? '1 tarefa não feita volta para a lista de tarefas, sem data'
+                    : `${summary.tasks} tarefas não feitas voltam para a lista de tarefas, sem data`}
                 </span>
                 <span className="muted">contam como adiamento</span>
-              </li>
-            )}
-            {summary.notesToWiki > 0 && (
-              <li className="card-list__item">
-                Notas de {plural(summary.notesToWiki, 'seção vão', 'seções vão')} para a wiki
               </li>
             )}
             {summary.whiteboards > 0 && (

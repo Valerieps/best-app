@@ -58,3 +58,4 @@ Read only the ADRs your task touches: find them in this table or by grepping `ad
 | [ADR-047](adr/047-backup-folder-with-dated-copies.md) | Backup folder with dated copies | 2026-10-14 | Accepted |
 | [ADR-048](adr/048-markdown-per-line-kept-as-plain-text.md) | Markdown per line, kept as plain text and parsed in the app | 2026-10-15 | Accepted |
 | [ADR-049](adr/049-archived-tasks-become-undated.md) | Archiving removed; archived tasks become active tasks without a date | 2026-10-15 | Accepted |
+| [ADR-050](adr/050-no-wiki-notes-stay-in-their-sections.md) | No wiki; kept notes stay in their sections, edited and deleted on the project page | 2026-10-15 | Accepted |
