@@ -3,7 +3,9 @@ import { reactivateTask, setTaskDone } from '../../application/notebook';
 import { loadActiveTasks, loadArchivedTasks, type TaskListItem } from '../../application/queries';
 import type { DayKey } from '../../domain/day';
 import type { Section } from '../../domain/entities';
+import { TASK_LIST_KEYS, groupTasks, type TaskGroupBy, type TaskListKey } from '../../domain/taskList';
 import { ProjectChip } from '../components/Chips';
+import { Icon } from '../components/Icon';
 import { Linkified } from '../components/Linkified';
 import { LoadingPage } from '../components/Skeleton';
 import { formatShortDate, formatTime, postponedLabel, relativeDay } from '../format';
@@ -59,32 +61,152 @@ function TaskRow({ item, today, action }: { item: TaskListItem; today: DayKey; a
   );
 }
 
+const KEY_LABELS: Record<TaskListKey, string> = {
+  project: 'projeto',
+  intendedDate: 'data de intenção',
+  createdDate: 'data de criação',
+};
+
+const VIEW_KEY = 'best-app:activeTasksView';
+
+interface TaskListView {
+  groupBy: TaskGroupBy;
+  sortBy: TaskListKey;
+}
+
+const DEFAULT_VIEW: TaskListView = { groupBy: 'none', sortBy: 'intendedDate' };
+
+function isKey(value: unknown): value is TaskListKey {
+  return TASK_LIST_KEYS.includes(value as TaskListKey);
+}
+
+function readView(): TaskListView {
+  try {
+    const parsed: unknown = JSON.parse(localStorage.getItem(VIEW_KEY) ?? '{}');
+    const saved = (parsed ?? {}) as Partial<Record<keyof TaskListView, unknown>>;
+    return {
+      groupBy: saved.groupBy === 'none' || isKey(saved.groupBy) ? saved.groupBy : DEFAULT_VIEW.groupBy,
+      sortBy: isKey(saved.sortBy) ? saved.sortBy : DEFAULT_VIEW.sortBy,
+    };
+  } catch {
+    return DEFAULT_VIEW;
+  }
+}
+
+/** How the active tasks are grouped and sorted. A convenience of this browser only. */
+function useTaskListView(): [TaskListView, (view: TaskListView) => void] {
+  const [view, setView] = useState(readView);
+  const update = (next: TaskListView) => {
+    try {
+      localStorage.setItem(VIEW_KEY, JSON.stringify(next));
+    } catch {
+      // Nothing to do: the choice just won't be remembered.
+    }
+    setView(next);
+  };
+  return [view, update];
+}
+
+function groupTitle(groupBy: TaskListKey, key: string | null, items: TaskListItem[], today: DayKey): string {
+  if (groupBy === 'project') return items[0]?.project?.name ?? 'Sem projeto';
+  if (key === null) return 'Sem data';
+  const day = relativeDay(key, today);
+  return day.charAt(0).toUpperCase() + day.slice(1);
+}
+
+function TaskGroupSection({ title, count, children }: { title: string; count: number; children: React.ReactNode }) {
+  const [open, setOpen] = useState(true);
+  return (
+    <section className="task-group">
+      <button type="button" className="task-group__toggle" aria-expanded={open} onClick={() => setOpen(!open)}>
+        <Icon name={open ? 'chevronDown' : 'chevronRight'} size="sm" />
+        <span className="task-group__title">{title}</span>
+        <span className="muted">{count}</span>
+      </button>
+      {open && children}
+    </section>
+  );
+}
+
+function TaskListControls({ view, onChange }: { view: TaskListView; onChange(view: TaskListView): void }) {
+  return (
+    <div className="task-list-controls">
+      <label>
+        Agrupar por{' '}
+        <select
+          className="text-input"
+          value={view.groupBy}
+          onChange={(event) => onChange({ ...view, groupBy: event.target.value as TaskGroupBy })}
+        >
+          <option value="none">nada</option>
+          {TASK_LIST_KEYS.map((key) => (
+            <option key={key} value={key}>
+              {KEY_LABELS[key]}
+            </option>
+          ))}
+        </select>
+      </label>
+      <label>
+        Ordenar por{' '}
+        <select
+          className="text-input"
+          value={view.sortBy}
+          onChange={(event) => onChange({ ...view, sortBy: event.target.value as TaskListKey })}
+        >
+          {TASK_LIST_KEYS.map((key) => (
+            <option key={key} value={key}>
+              {KEY_LABELS[key]}
+            </option>
+          ))}
+        </select>
+      </label>
+    </div>
+  );
+}
+
 export function ActiveTasksScreen({ today }: { today: DayKey }) {
   const items = useLiveQuery(() => loadActiveTasks(reader));
+  const [view, setView] = useTaskListView();
   if (!items) return <LoadingPage title="Tarefas ativas" />;
+  const { groupBy, sortBy } = view;
+  const groups = groupTasks(items, groupBy, sortBy);
+  const list = (groupItems: TaskListItem[]) => (
+    <ul className="card-list">
+      {groupItems.map((item) => (
+        <TaskRow
+          key={item.task.id}
+          item={item}
+          today={today}
+          action={
+            <input
+              type="checkbox"
+              checked={false}
+              onChange={() => void setTaskDone(appContext, item.task.id, true)}
+              aria-label={`Finalizar "${item.task.text}"`}
+            />
+          }
+        />
+      ))}
+    </ul>
+  );
   return (
     <ListPage title="Tarefas ativas">
       {items.length === 0 ? (
         <p className="muted">Nenhuma tarefa ativa.</p>
       ) : (
         <>
-          <ul className="card-list">
-            {items.map((item) => (
-              <TaskRow
-                key={item.task.id}
-                item={item}
-                today={today}
-                action={
-                  <input
-                    type="checkbox"
-                    checked={false}
-                    onChange={() => void setTaskDone(appContext, item.task.id, true)}
-                    aria-label={`Finalizar "${item.task.text}"`}
-                  />
-                }
-              />
-            ))}
-          </ul>
+          <TaskListControls view={view} onChange={setView} />
+          {groupBy === 'none'
+            ? list(groups[0]?.items ?? [])
+            : groups.map((group) => (
+                <TaskGroupSection
+                  key={`${groupBy}:${group.key ?? ''}`}
+                  title={groupTitle(groupBy, group.key, group.items, today)}
+                  count={group.items.length}
+                >
+                  {list(group.items)}
+                </TaskGroupSection>
+              ))}
           <p className="muted">Toque numa tarefa para ver de onde ela veio.</p>
         </>
       )}

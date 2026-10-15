@@ -1,6 +1,6 @@
 # Tarefas e datas
 
-- **Entra aqui:** a tarefa, a lista de tarefas ativas, a data de intenção, o prazo máximo, o adiamento e a tela "Próximos dias".
+- **Entra aqui:** a tarefa, a lista de tarefas ativas (com agrupar e ordenar), a data de intenção, o prazo máximo, o adiamento e a tela "Próximos dias".
 - **Não entra aqui:** os destinos da tarefa no fechamento do dia (`checkout.md`), as prioridades (`prioridades.md`) e as tarefas de projeto (`projetos.md`).
 
 ## Tarefas *(1a)*
@@ -10,6 +10,15 @@
 - A tarefa tem uma data de intenção de execução, definida no fechamento do dia. Definir essa data é escolher o dia em que a tarefa aparece na nota do dia. Quando a data chega, a tarefa aparece sozinha na nota daquele dia.
 - Conta como adiamento toda mudança da data de intenção para depois, e também a tarefa que passa pelo fechamento do dia sem ter sido feita no dia da intenção, inclusive quando ela vai sozinha para o dia seguinte. Tirar a data de intenção, deixando a tarefa sem data, também conta como adiamento.
 - O app guarda stats de quantos adiamentos e da distância entre a primeira intenção de execução e a ação final (finalizar, arquivar, abandonar).
+
+## Agrupar e ordenar as tarefas ativas *(1b)*
+
+- Na tela de tarefas ativas, eu posso agrupar e ordenar as tarefas por projeto, por data de intenção ou por data de criação. Dá para usar as duas coisas ao mesmo tempo: agrupar por uma e ordenar por outra (ou pela mesma).
+- Sem nada escolhido, a lista não tem grupos e segue ordenada pela data de intenção, como antes.
+- Ordenar por projeto segue o nome do projeto, em ordem alfabética; por data de intenção, do dia mais próximo para o mais distante; por data de criação, da mais antiga para a mais nova. As tarefas sem projeto ou sem data vão para o fim. Quando empata, vale a data de intenção e depois a de criação.
+- Agrupado, cada grupo é uma sublista com título e quantidade de tarefas, e eu posso recolher e abrir cada uma. Os grupos seguem a mesma ordem: projetos por nome, dias do mais cedo para o mais tarde, e "Sem projeto" ou "Sem data" por último. Na data de criação, o grupo é o dia em que a tarefa foi criada.
+- O título do grupo de um dia usa "Hoje", "Amanhã" e "Ontem" quando é o caso, e a data curta nos outros dias.
+- A escolha de agrupar e ordenar fica guardada neste navegador. Os grupos sempre abrem abertos.
 
 ## Prazo máximo e origem *(1b)*
 
