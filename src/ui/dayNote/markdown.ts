@@ -55,6 +55,22 @@ export function parseLine(text: string): LineStructure {
   return { heading: null, list: null, prefixLength: 0, content: text };
 }
 
+/**
+ * Length of a list item's prefix (indentation and marker), which the editor hides behind the
+ * drawn marker while the line is edited; 0 outside a list.
+ */
+export function listPrefixLength(text: string): number {
+  const line = parseLine(text);
+  return line.list ? line.prefixLength : 0;
+}
+
+/** `* ` and `+ ` at the start of a line become the bullet the app writes, `- `. */
+export function normalizeBullet(text: string): string {
+  const list = LIST.exec(text);
+  if (!list || (list[2] !== '*' && list[2] !== '+')) return text;
+  return `${list[1]}- ${text.slice(list[0].length)}`;
+}
+
 // ---------------------------------------------------------------------------------------------
 // Inline syntax
 

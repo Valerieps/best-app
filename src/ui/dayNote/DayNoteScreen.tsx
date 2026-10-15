@@ -1,4 +1,5 @@
-import { useEffect, useMemo, useRef, useState, type KeyboardEvent, type MouseEvent } from 'react';
+import { useEffect, useLayoutEffect, useMemo, useRef, useState, type KeyboardEvent, type MouseEvent } from 'react';
+import { flushSync } from 'react-dom';
 import {
   changeBlockKind,
   convertSectionToProject,
@@ -36,6 +37,7 @@ import { enqueue } from '../writeQueue';
 import { BlockLine, GhostLine, NOTE_HINT, type LineDragProps, type LineHandlers } from './BlockLine';
 import { requestFocus } from './focus';
 import { FOCUS_SHORTCUT, isFocusToggleKey } from './focusMode';
+import { FOCUS_PART_TRANSITION, hasFocusTransition, runFocusTransition } from './focusTransition';
 import { isSamePlace, isTypingKey, partMoveKey, useLineDrag } from './lineDrag';
 import { PendingDaysBanner } from './PendingDaysBanner';
 import { PrioritiesBlock, usePinnedPriorities } from './PrioritiesBlock';
@@ -50,6 +52,7 @@ import type { ReviewNotice } from '../reviews/reviewNotice';
 import { opensLineBelow } from './lineBelow';
 import { SectionHeader } from './SectionHeader';
 import { FormatToolbar } from './FormatToolbar';
+import { useLineSelection } from './useLineSelection';
 
 interface Props {
   /** The day shown: today, or a past day with pending items (1b). */
@@ -191,13 +194,24 @@ export function DayNoteScreen({
   const adoptedRef = useRef<string | null>(null);
   // Typing hides the drag handles until the mouse moves again.
   const [typing, setTyping] = useState(false);
-  // Leaving focus mode fades the whole note in, like entering it fades the part in.
+  // Entering and leaving focus mode is a view transition: the part glides between its place and
+  // the whole screen (`focusTransition.ts`). Without one, leaving fades the whole note in, like
+  // entering fades the part in.
+  const glides = hasFocusTransition();
   const wasFocused = useRef(focus !== null);
   const [fromFocus, setFromFocus] = useState(false);
   useEffect(() => {
-    if (wasFocused.current && !focus) setFromFocus(true);
+    if (wasFocused.current && !focus && !glides) setFromFocus(true);
     if (focus) setFromFocus(false);
     wasFocused.current = focus !== null;
+  }, [focus, glides]);
+  // The part entering or leaving focus mode, named for the transition while it runs.
+  const [morphPart, setMorphPart] = useState<string | null>(null);
+  // Resolves the transition's wait once the screen shows the new focus.
+  const focusShown = useRef<(() => void) | null>(null);
+  useLayoutEffect(() => {
+    focusShown.current?.();
+    focusShown.current = null;
   }, [focus]);
   // A new day starts with a new empty first section.
   useEffect(() => {
@@ -281,6 +295,36 @@ export function DayNoteScreen({
       }),
     [parts],
   );
+
+  // Several lines selected at once (spec/nota-do-dia.md, "Selecionar várias linhas").
+  const noteRef = useRef<HTMLDivElement>(null);
+  const lineIds = useMemo(() => new Map(lines.map((line) => [line.block.id, line.block])), [lines]);
+  const lineSelection = useLineSelection({
+    container: noteRef,
+    isLine: (id) => lineIds.has(id),
+    textOf: (id) => lineIds.get(id)?.text ?? '',
+    onDelete: (ids) => {
+      if (!view) return;
+      const drafts = new Set(optimistic.map((item) => item.block.id));
+      const doomed = new Set(
+        ids.filter((id) => {
+          const block = lineIds.get(id);
+          return block && (drafts.has(id) || canEditFreely(block, view.sectionsById.get(block.sectionId), today));
+        }),
+      );
+      if (doomed.size === 0) return;
+      // The cursor goes to the line above the first one deleted, or below, when there is one.
+      const order = lines.map((line) => line.block.id);
+      const first = order.findIndex((id) => doomed.has(id));
+      const above = order.slice(0, first).reverse().find((id) => !doomed.has(id));
+      const below = order.slice(first).find((id) => !doomed.has(id));
+      if (above) requestFocus(above, 'end');
+      else if (below) requestFocus(below, 0);
+      for (const id of doomed) write(() => deleteBlock(ctx, id));
+    },
+    onLeave: (id, direction) => requestFocus(id, direction === 'up' ? 0 : 'end'),
+  });
+  const selectedIds = new Set(lineSelection.selection?.ids ?? []);
 
   // Focusing the day's empty first section: once it is saved, the focus follows its id.
   useEffect(() => {
@@ -469,6 +513,7 @@ export function DayNoteScreen({
       const slot = slotOf(block);
       if (slot) reorder(slot, moveByOne(groupOf(slot).ids, block.id, direction));
     },
+    onSelectAll: () => lineSelection.selectAllLines(),
   };
 
   const priorityIds = new Set(priorities.map((priority) => priority.task.id));
@@ -533,7 +578,17 @@ export function DayNoteScreen({
   const isFocused = (key: string, entryKey?: string) =>
     focus !== null && (focus.part === key || (focus.part === FIRST_PART && entryKey === DAY_ENTRY));
   function toggleFocus(key: string) {
-    write(() => setDayNoteFocus(ctx, focus ? null : { day, part: key, writable: isToday }));
+    const next = focus ? null : { day, part: key, writable: isToday };
+    // Named before the transition takes its picture of the screen as it is now.
+    flushSync(() => setMorphPart(key));
+    runFocusTransition(
+      () =>
+        new Promise<void>((shown) => {
+          focusShown.current = shown;
+          write(() => setDayNoteFocus(ctx, next));
+        }),
+      () => setMorphPart(null),
+    );
   }
   function focusButton(key: string, label: string, entryKey?: string) {
     const on = isFocused(key, entryKey);
@@ -596,6 +651,7 @@ export function DayNoteScreen({
               free={false}
               isPriority={priorityIds.has(block.id)}
               drag={dragProps(entry, true, block, index)}
+              selected={selectedIds.has(block.id)}
               {...lineProps}
             />
           ))}
@@ -633,6 +689,7 @@ export function DayNoteScreen({
             free={isFree(block)}
             isPriority={priorityIds.has(block.id)}
             drag={dragProps(entry, false, block, index)}
+            selected={selectedIds.has(block.id)}
             {...lineProps}
           />
         ))}
@@ -669,6 +726,17 @@ export function DayNoteScreen({
     moveParts(moveByOne(partKeys, key, direction));
   }
 
+  // The note holds the focus while lines are selected, and takes their keys.
+  const noteProps = {
+    ref: noteRef,
+    tabIndex: -1,
+    onPointerDown: lineSelection.onPointerDown,
+    onMouseDown: (event: MouseEvent<HTMLElement>) => {
+      if (!lineSelection.onMouseDown(event)) openLineBelow(event);
+    },
+    onBlur: lineSelection.onBlur,
+  };
+
   if (focus) {
     // Only the part shows, with the sidebar. The priorities can be focused even when pinned.
     const part: Part | undefined =
@@ -677,9 +745,14 @@ export function DayNoteScreen({
         : parts.find((item) => isFocused(item.key, item.kind === 'section' ? item.entry.key : undefined));
     return (
       <main className="page page--note page--focus">
-        <div className="note note--focus" onMouseDown={openLineBelow}>
+        <div className={`note note--focus ${glides ? '' : 'note--focus-fade'}`} {...noteProps} onKeyDown={lineSelection.onKeyDown}>
           {part ? (
-            <div className={`day-part day-part--${part.kind}`} data-drag-id={part.key} onKeyDown={(event) => partKeyDown(event, part.key)}>
+            <div
+              className={`day-part day-part--${part.kind}`}
+              data-drag-id={part.key}
+              style={{ viewTransitionName: FOCUS_PART_TRANSITION }}
+              onKeyDown={(event) => partKeyDown(event, part.key)}
+            >
               {renderPart(part)}
             </div>
           ) : (
@@ -696,6 +769,7 @@ export function DayNoteScreen({
 
   const typingProps = {
     onKeyDown: (event: KeyboardEvent<HTMLElement>) => {
+      lineSelection.onKeyDown(event);
       if (!typing && isTypingKey(event)) setTyping(true);
     },
     onMouseMove: () => {
@@ -716,7 +790,7 @@ export function DayNoteScreen({
         )}
         {/* Pinned, the priorities stay at the top and do not move with the other parts. */}
         {isToday && pinned && prioritiesBlock}
-        <div className={`note ${typing ? 'note--typing' : ''}`} onMouseDown={openLineBelow} {...typingProps}>
+        <div className={`note ${typing ? 'note--typing' : ''}`} {...noteProps} {...typingProps}>
           {onlyPriorities && !isToday && <p className="muted">Nada pendente neste dia.</p>}
           {parts.map((part, index) => (
             <div
@@ -724,6 +798,7 @@ export function DayNoteScreen({
               className={`day-part day-part--${part.kind} ${dragClasses(part.key, index)}`}
               data-drag-group={PARTS_GROUP}
               data-drag-id={part.key}
+              style={morphPart === part.key ? { viewTransitionName: FOCUS_PART_TRANSITION } : undefined}
               onKeyDown={(event) => partKeyDown(event, part.key)}
             >
               {parts.length > 1 && (
