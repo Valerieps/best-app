@@ -1,11 +1,36 @@
 import { useEffect, useRef, useState, type FocusEvent, type KeyboardEvent, type MouseEvent, type PointerEvent, type RefObject } from 'react';
-import { extendSelection, isSelectAllKey, selectAll, selectionText, selectRange, type LineSelection } from './blockSelection';
+import { extendSelection, isSelectAllKey, selectAll, selectionText, selectRange, shortcutLetter, type LineSelection } from './blockSelection';
 
 /** Lines that can be selected together: the note's own lines, never the ghost line or the priorities. */
 const LINE = '.line[data-drag-id]';
 
 /** Places in a line where a press does something else than selecting text. */
 const NOT_TEXT = '.line__handle, .line__check, button, input, a, select';
+
+/**
+ * Puts plain text on the clipboard. The browser's own copy command fills it through the `copy`
+ * event, which needs no permission; the Clipboard API is the fallback, since it can be denied.
+ */
+function copyText(text: string) {
+  const fill = (event: ClipboardEvent) => {
+    event.clipboardData?.setData('text/plain', text);
+    event.preventDefault();
+  };
+  document.addEventListener('copy', fill);
+  let copied = false;
+  try {
+    copied = document.execCommand('copy');
+  } catch {
+    copied = false;
+  } finally {
+    document.removeEventListener('copy', fill);
+  }
+  if (!copied) {
+    void navigator.clipboard?.writeText(text).catch(() => {
+      // Nothing to undo: the lines stay as they are.
+    });
+  }
+}
 
 interface Options {
   /** The note: it holds the lines and keeps the focus while lines are selected. */
@@ -117,13 +142,10 @@ export function useLineSelection({ container, isLine, textOf, onDelete, onLeave 
     if (isSelectAllKey(event)) {
       event.preventDefault();
       selectAllLines();
-    } else if (modifier && !event.altKey && (event.code === 'KeyC' || event.code === 'KeyX')) {
+    } else if (modifier && !event.altKey && (shortcutLetter(event) === 'c' || shortcutLetter(event) === 'x')) {
       event.preventDefault();
-      const text = selectionText(current.ids.map(textOf));
-      void navigator.clipboard?.writeText(text).catch(() => {
-        // Nothing to undo: the lines stay as they are.
-      });
-      if (event.code === 'KeyX') {
+      copyText(selectionText(current.ids.map(textOf)));
+      if (shortcutLetter(event) === 'x') {
         setSelection(null);
         onDelete(current.ids);
       }

@@ -43,14 +43,16 @@ describe('extendSelection', () => {
 });
 
 describe('Ctrl + A', () => {
-  const keys = { code: 'KeyA', ctrlKey: true, metaKey: false, shiftKey: false, altKey: false };
+  const keys = { code: 'KeyA', key: 'a', ctrlKey: true, metaKey: false, shiftKey: false, altKey: false };
 
   it('is Ctrl + A or ⌘ + A, on any layout', () => {
     expect(isSelectAllKey(keys)).toBe(true);
+    expect(isSelectAllKey({ ...keys, key: 'ф' })).toBe(true);
+    expect(isSelectAllKey({ ...keys, code: '' })).toBe(true);
     expect(isSelectAllKey({ ...keys, ctrlKey: false, metaKey: true })).toBe(true);
     expect(isSelectAllKey({ ...keys, ctrlKey: false })).toBe(false);
     expect(isSelectAllKey({ ...keys, shiftKey: true })).toBe(false);
-    expect(isSelectAllKey({ ...keys, code: 'KeyB' })).toBe(false);
+    expect(isSelectAllKey({ ...keys, code: 'KeyB', key: 'b' })).toBe(false);
   });
 
   it('selects every line only once the line text is all selected, or empty', () => {

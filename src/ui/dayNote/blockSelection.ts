@@ -36,8 +36,14 @@ export function extendSelection(order: readonly string[], selection: LineSelecti
 }
 
 /** Ctrl + A (⌘ + A on the Mac), without other modifiers. */
-export function isSelectAllKey(event: { code: string; ctrlKey: boolean; metaKey: boolean; shiftKey: boolean; altKey: boolean }): boolean {
-  return event.code === 'KeyA' && (event.ctrlKey || event.metaKey) && !event.shiftKey && !event.altKey;
+export function isSelectAllKey(event: { code: string; key: string; ctrlKey: boolean; metaKey: boolean; shiftKey: boolean; altKey: boolean }): boolean {
+  return shortcutLetter(event) === 'a' && (event.ctrlKey || event.metaKey) && !event.shiftKey && !event.altKey;
+}
+
+/** The letter of a shortcut: by the key's position, so it works on any layout, or by the key when the position is missing. */
+export function shortcutLetter(event: { code: string; key: string }): string {
+  const position = /^Key([A-Z])$/.exec(event.code);
+  return position ? position[1].toLowerCase() : event.key.toLowerCase();
 }
 
 /**
