@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { dropIndex, isSamePlace, partMoveKey } from './lineDrag';
+import { dropIndex, isSamePlace, isTypingKey, partMoveKey } from './lineDrag';
 
 describe('dropIndex', () => {
   const middles = [10, 30, 50];
@@ -44,5 +44,26 @@ describe('partMoveKey', () => {
     expect(partMoveKey(key('ArrowUp', { shiftKey: true }))).toBeNull();
     expect(partMoveKey(key('ArrowUp', { ctrlKey: true, shiftKey: true, altKey: true }))).toBeNull();
     expect(partMoveKey(key('a', { ctrlKey: true, shiftKey: true }))).toBeNull();
+  });
+});
+
+describe('isTypingKey', () => {
+  const press = (key: string, mods: Partial<{ ctrlKey: boolean; metaKey: boolean; altKey: boolean }> = {}) => ({
+    key,
+    ctrlKey: false,
+    metaKey: false,
+    altKey: false,
+    ...mods,
+  });
+
+  it('is a key that writes or erases text', () => {
+    for (const key of ['a', 'Z', ' ', '1', 'Backspace', 'Delete', 'Enter']) expect(isTypingKey(press(key))).toBe(true);
+  });
+
+  it('leaves out shortcuts and keys that only move', () => {
+    expect(isTypingKey(press('a', { ctrlKey: true }))).toBe(false);
+    expect(isTypingKey(press('a', { metaKey: true }))).toBe(false);
+    expect(isTypingKey(press('ArrowUp', { altKey: true }))).toBe(false);
+    for (const key of ['ArrowDown', 'Shift', 'Tab', 'Escape']) expect(isTypingKey(press(key))).toBe(false);
   });
 });

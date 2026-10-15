@@ -85,7 +85,7 @@ function iconWithDot(): string {
  */
 export function useReminderSignals(count: number): void {
   useEffect(() => {
-    const baseTitle = 'Best App';
+    const baseTitle = 'Vesper Tasks';
     document.title = count > 0 ? `(${count}) ${baseTitle}` : baseTitle;
     const link = document.querySelector<HTMLLinkElement>(ICON_LINK_SELECTOR);
     if (link) {

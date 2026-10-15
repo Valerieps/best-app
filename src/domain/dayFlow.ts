@@ -3,8 +3,8 @@ import type { DayRecord, Reminder, WarmupItem } from './entities';
 
 /**
  * Section 3: how the day opens. With a warm-up checklist, the app opens on "Iniciar Dia",
- * goes through the warm up and the dashboard, and then to the day note. Without a checklist
- * (the first weeks of use), it opens straight on the day note.
+ * goes through the warm up and the dashboard, and then to the day note. Without a checklist,
+ * it opens straight on the day note.
  */
 
 export const ALL_DAYS: readonly number[] = [0, 1, 2, 3, 4, 5, 6];
@@ -12,12 +12,12 @@ export const ALL_DAYS: readonly number[] = [0, 1, 2, 3, 4, 5, 6];
 export type DayStage = 'start' | 'warmup' | 'dashboard' | 'execution';
 
 /**
- * Where the day stands. "Iniciar Dia" and the warm up only exist with a checklist. The dashboard
- * shows after the warm up, or, without a checklist, when it has something else to show
- * (`dashboardContent`, such as the projects in focus), until "Iniciar o Flow de Execução".
+ * Where the day stands. "Iniciar Dia", the warm up and the dashboard only exist with a checklist:
+ * without one, the app opens straight on the day note, even with projects in focus. The dashboard
+ * shows after the warm up, until "Iniciar o Flow de Execução".
  */
-export function dayStage(record: DayRecord | undefined, warmupItems: readonly WarmupItem[], dashboardContent = false): DayStage {
-  if (warmupItems.length === 0) return dashboardContent && !record?.executionStartedAt ? 'dashboard' : 'execution';
+export function dayStage(record: DayRecord | undefined, warmupItems: readonly WarmupItem[]): DayStage {
+  if (warmupItems.length === 0) return 'execution';
   if (!record?.startedAt) return 'start';
   if (record.executionStartedAt) return 'execution';
   const answered = record.warmup ?? {};

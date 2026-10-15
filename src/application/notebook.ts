@@ -45,6 +45,27 @@ export function createSection(ctx: AppContext, kind: SectionKind): Promise<Secti
   return ctx.store.transaction((tx) => addSection(ctx, tx, kind));
 }
 
+/**
+ * Creates a section between two parts of today's note: `orderedKeys` is the order shown, and the
+ * new section goes right after the part at `afterIndex` (-1 for the top).
+ */
+export function createSectionAfter(
+  ctx: AppContext,
+  kind: SectionKind,
+  orderedKeys: readonly string[],
+  afterIndex: number,
+): Promise<Section> {
+  return ctx.store.transaction(async (tx) => {
+    const section = await addSection(ctx, tx, kind);
+    const at = nowIso(ctx);
+    const record = (await tx.days.get(section.day)) ?? { day: section.day, lastCheckoutAt: null, updatedAt: at };
+    const sectionOrder = [...orderedKeys];
+    sectionOrder.splice(afterIndex + 1, 0, section.id);
+    await tx.days.put({ ...record, sectionOrder, updatedAt: at });
+    return section;
+  });
+}
+
 export async function setSectionTitle(ctx: AppContext, sectionId: string, title: string): Promise<void> {
   const next = title.trim() || null;
   await ctx.store.transaction(async (tx) => {

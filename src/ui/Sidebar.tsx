@@ -261,7 +261,7 @@ export function Sidebar({ route, today, pendingDays, reviews, backupState }: Pro
       />
       <div className="sidebar__header">
         <button type="button" className="sidebar__name" onClick={() => navigate({ name: 'day' })}>
-          Best App
+          Vesper Tasks
         </button>
         <button
           type="button"

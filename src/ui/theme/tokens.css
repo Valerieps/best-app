@@ -54,6 +54,12 @@
   --color-dot-problem: #b42318;
   --color-dot-off: #a8a39a;
 
+  /* Small marks: the rituals counter, the meeting icon and the linked-project icon, in the brown
+     of the "Sem backup" dot; the counter's text stays dark on a tint of it */
+  --color-mark: var(--color-dot-attention);
+  --color-mark-bg: #f3e8c4;
+  --color-mark-text: #6b4210;
+
   /* Loading skeleton */
   --color-skeleton: #ebe8e1;
 

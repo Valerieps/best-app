@@ -4,6 +4,7 @@ import {
   convertSectionToProject,
   createBlock,
   createSection,
+  createSectionAfter,
   deleteBlock,
   titleSectionWithProject,
   unlinkSection,
@@ -35,7 +36,7 @@ import { enqueue } from '../writeQueue';
 import { BlockLine, GhostLine, NOTE_HINT, type LineDragProps, type LineHandlers } from './BlockLine';
 import { requestFocus } from './focus';
 import { FOCUS_SHORTCUT, isFocusToggleKey } from './focusMode';
-import { isSamePlace, partMoveKey, useLineDrag } from './lineDrag';
+import { isSamePlace, isTypingKey, partMoveKey, useLineDrag } from './lineDrag';
 import { PendingDaysBanner } from './PendingDaysBanner';
 import { PrioritiesBlock, usePinnedPriorities } from './PrioritiesBlock';
 import { Icon } from '../components/Icon';
@@ -187,6 +188,16 @@ export function DayNoteScreen({
   // being typed in is not rebuilt (and does not lose focus) when the section is saved.
   const [adoptedSectionId, setAdoptedSectionId] = useState<string | null>(null);
   const adoptedRef = useRef<string | null>(null);
+  // Typing hides the drag handles until the mouse moves again.
+  const [typing, setTyping] = useState(false);
+  // Leaving focus mode fades the whole note in, like entering it fades the part in.
+  const wasFocused = useRef(focus !== null);
+  const [fromFocus, setFromFocus] = useState(false);
+  useEffect(() => {
+    if (wasFocused.current && !focus) setFromFocus(true);
+    if (focus) setFromFocus(false);
+    wasFocused.current = focus !== null;
+  }, [focus]);
   // A new day starts with a new empty first section.
   useEffect(() => {
     adoptedRef.current = null;
@@ -493,7 +504,9 @@ export function DayNoteScreen({
     const lastLine = row.querySelectorAll('.line:not(.line--ghost)');
     const lastLineBottom = empty ? null : lastLine[lastLine.length - 1]?.getBoundingClientRect().bottom;
     if (lastLineBottom === undefined) return;
-    const onControl = (event.target as HTMLElement).closest('textarea, input, button, a, select, .section__header, .note__actions');
+    const onControl = (event.target as HTMLElement).closest(
+      'textarea, input, button, a, select, .section__header, .note__actions, .part-insert',
+    );
     if (!opensLineBelow({ y, lastLineBottom, onControl: onControl !== null })) return;
     // Keeps the browser from moving the focus; the empty line takes it once it shows.
     event.preventDefault();
@@ -507,6 +520,12 @@ export function DayNoteScreen({
 
   function addSection(kind: SectionKind) {
     write(() => createSection(ctx, kind).then((section) => requestFocus(`ghost:${section.id}`)));
+  }
+
+  /** A new section right after the part at `index`, from the options between two parts. */
+  function insertSection(kind: SectionKind, index: number) {
+    const keys = partKeys;
+    write(() => createSectionAfter(ctx, kind, keys, index).then((section) => requestFocus(`ghost:${section.id}`)));
   }
 
   /** Focus mode is the same for every part: on, it shows only that part; off, the whole note. */
@@ -669,9 +688,18 @@ export function DayNoteScreen({
     );
   }
 
+  const typingProps = {
+    onKeyDown: (event: KeyboardEvent<HTMLElement>) => {
+      if (!typing && isTypingKey(event)) setTyping(true);
+    },
+    onMouseMove: () => {
+      if (typing) setTyping(false);
+    },
+  };
+
   return (
     <>
-      <main className="page page--note">
+      <main className={`page page--note ${fromFocus ? 'page--from-focus' : ''}`}>
         {header}
         {isToday && (showPendingNotice || reviewNotice || reminders.length > 0) && (
           <div className="screen-notices">
@@ -682,7 +710,7 @@ export function DayNoteScreen({
         )}
         {/* Pinned, the priorities stay at the top and do not move with the other parts. */}
         {isToday && pinned && prioritiesBlock}
-        <div className="note" onMouseDown={openLineBelow}>
+        <div className={`note ${typing ? 'note--typing' : ''}`} onMouseDown={openLineBelow} {...typingProps}>
           {onlyPriorities && !isToday && <p className="muted">Nada pendente neste dia.</p>}
           {parts.map((part, index) => (
             <div
@@ -704,6 +732,16 @@ export function DayNoteScreen({
                 </button>
               )}
               {renderPart(part)}
+              {isToday && index < parts.length - 1 && (
+                <div className="part-insert">
+                  <button type="button" className="tertiary" onClick={() => insertSection('general', index)}>
+                    + Seção geral
+                  </button>
+                  <button type="button" className="tertiary" onClick={() => insertSection('meeting', index)}>
+                    + Seção de reunião
+                  </button>
+                </div>
+              )}
             </div>
           ))}
           {isToday && (
