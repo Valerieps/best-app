@@ -22,7 +22,7 @@ Os termos marcados com ⚠ ainda têm mais de um sentido nos documentos; o item 
 - **Prazo máximo:** a segunda data, opcional. No dia do prazo, a tarefa vira prioridade do dia. (`spec/tarefas.md`)
 - **Adiamento:** mudar a data de intenção para depois, tirar a data, ou passar pelo fechamento do dia sem fazer a tarefa no dia da intenção, inclusive quando ela vai sozinha para o dia seguinte. (`spec/tarefas.md`)
 - **Precisão da data de intenção:** a parte das tarefas finalizadas com data de intenção que foram feitas no dia da intenção. (`spec/rituais.md`)
-- **Tarefas ativas:** as tarefas não finalizadas, arquivadas nem abandonadas. (`spec/tarefas.md`)
+- **Tarefas:** a lista das tarefas abertas, ou seja, nem finalizadas nem abandonadas, que também mostra as finalizadas quando eu peço. Antes se chamava "tarefas ativas". (`spec/tarefas.md`)
 - **Tarefa travada:** tarefa de projeto adiada 3 vezes ou mais, ou com a data de intenção vencida. ⚠ Não confundir com o assistente "Prioridades travadas" (`INCOERENCIAS.md`, 2.10). (`spec/projetos.md`)
 - **Dia seguinte:** num fechamento do dia, o próximo dia ativo depois do dia triado, nunca antes de hoje. (`spec/checkout.md`)
 - **Dias ativos:** os dias da semana em que o app espera uso; os outros não contam como pulados. (`spec/rituais.md`)
@@ -30,8 +30,7 @@ Os termos marcados com ⚠ ainda têm mais de um sentido nos documentos; o item 
 ## Destinos
 
 - **Finalizar:** a tarefa foi feita (eu engajei com ela). Gera log de execução. (`spec/checkout.md`)
-- **Arquivar:** a tarefa sai das escolhas do dia, mas pode ser **reativada** depois. (`spec/checkout.md`)
-- **Abandonar:** a tarefa sai de circulação sem ter sido feita. Só para tarefas. (`spec/checkout.md`)
+- **Abandonar:** a tarefa sai de circulação sem ter sido feita, como se fosse apagada: some de todas as telas. Só para tarefas. Não existe mais **arquivar**. (`spec/checkout.md`)
 - **Descartar:** as notas de uma seção saem de circulação e não vão para a wiki. Só para notas (e, na seção 5, compromissos). (`spec/checkout.md`)
 - **Largar:** um lembrete sai de circulação. (`spec/abertura-do-dia.md`)
 - **Migrar:** marcar que um compromisso foi criado no Google Agenda. Conta como concluído. (`spec/compromissos.md`)

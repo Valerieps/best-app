@@ -68,12 +68,13 @@ export type PlanningGroup = 'target' | 'soon' | 'other';
 
 /**
  * Where a task goes in the planning: in the target day's note, scheduled for the next few days,
- * or among the other active tasks (no date, or a date already past). Tasks scheduled further
- * ahead stay out (null).
+ * or among the other tasks whose date already passed. Tasks without a date are the "algum dia"
+ * and stay out (null), as do tasks scheduled further ahead.
  */
 export function planningGroup(intendedDate: DayKey | null, target: DayKey): PlanningGroup | null {
+  if (intendedDate === null) return null;
   if (intendedDate === target) return 'target';
-  if (intendedDate !== null && intendedDate > target) {
+  if (intendedDate > target) {
     return intendedDate <= addDays(target, PLANNING_HORIZON_DAYS) ? 'soon' : null;
   }
   return 'other';

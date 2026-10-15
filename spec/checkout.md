@@ -24,7 +24,7 @@ O "Fechar o dia" é curto, de cerca de um minuto: ele cuida só do que perece de
 
 | Tipo de bloco | Destino no "Fechar o dia" | A partir de |
 | --- | --- | --- |
-| Tarefa | Finalizar; arquivar; abandonar; alterar data de intenção de execução (atalho para mover para o dia seguinte) | 1a |
+| Tarefa | Finalizar; abandonar; alterar data de intenção de execução (atalho para mover para o dia seguinte) | 1a |
 | Tarefa | Vincular a um projeto (opcional) | 2 |
 | Tarefa | Decidir na Revisão de Foco | 2 |
 | Tarefa | Converter em hábito (`habitos.md`) | 6 |
@@ -33,8 +33,8 @@ O "Fechar o dia" é curto, de cerca de um minuto: ele cuida só do que perece de
 | Lembrete ignorado | Manter; mudar; largar | 3 |
 
 - Finalizar significa que eu engajei com a tarefa, e gera um log de execução histórica, com os dados necessários para calcular métricas de qualquer período. Tarefas podem ser finalizadas a qualquer momento e, depois disso, não passam mais por triagens.
-- Arquivar move a tarefa para uma lista de tarefas que podem ser reativadas depois; ela deixa de aparecer entre as tarefas que podem ser escolhidas para um dia.
-- Abandonar tira a tarefa de circulação sem que ela tenha sido realizada: ela some de todas as listas e não gera log de execução, mas o histórico de eventos guarda o abandono.
+- Abandonar tira a tarefa de circulação sem que ela tenha sido realizada, como se eu a apagasse: ela some de todas as telas e não gera log de execução, mas o histórico de eventos guarda o abandono.
+- Não existe mais arquivar: para deixar uma tarefa para algum dia, eu tiro a data dela.
 - Descartar tira as notas de circulação da mesma forma: elas saem da wiki, e o histórico de eventos guarda o descarte.
 - Num fechamento atrasado, "dia seguinte" é o dia depois do dia triado, mas nunca antes de hoje.
 - O vínculo da tarefa com um projeto serve de cold start para os projetos e objetivos da Revisão de Rumo. *(2)*
@@ -44,7 +44,7 @@ O "Fechar o dia" é curto, de cerca de um minuto: ele cuida só do que perece de
 
 ## Planejamento do dia seguinte e fim do dia
 
-- Depois da triagem, eu faço o planejamento do dia seguinte: cada tarefa tem uma data, e eu posso mudar a de qualquer uma, para o dia seguinte, para outra data ou para "sem data". A tela mostra as tarefas que já estão na nota do dia seguinte (entre elas, as que foram sozinhas para lá), as agendadas para os 3 dias depois dele e as da lista de tarefas ativas (sem data ou com data que já passou). Nada é finalizado ali, e a tarefa que eu não mudo fica como estava: com a data dela, ou sem data na lista de tarefas ativas. *(1a)*
+- Depois da triagem, eu faço o planejamento do dia seguinte: cada tarefa tem uma data, e eu posso mudar a de qualquer uma, para o dia seguinte, para outra data ou para "sem data". A tela mostra as tarefas que já estão na nota do dia seguinte (entre elas, as que foram sozinhas para lá), as agendadas para os 3 dias depois dele e as da lista de tarefas com data que já passou. As tarefas sem data não aparecem no planejamento: elas são o "algum dia" e ficam na lista de tarefas. Nada é finalizado ali, e a tarefa que eu não mudo fica como estava: com a data dela, ou sem data na lista de tarefas. *(1a)*
 - No planejamento, eu posso mudar a data de várias tarefas de uma vez: entro no modo de seleção, seleciono as linhas (Shift + clique seleciona um intervalo, e cada grupo tem "selecionar grupo") e escolho a data numa barra no rodapé. Selecionar uma linha só destaca a linha, sem caixinha, para nunca parecer que finaliza a tarefa. *(1a)*
 - No planejamento do dia seguinte, as tarefas dos projetos em foco aparecem primeiro (`prioridades.md`, "Projetos em foco"). *(2)*
 - Quando tudo for triado, aparece o botão "finalizar meu dia" com sonzinho de "plim" e uma rápida animação de fogos de artifício. *(1a)*
@@ -61,7 +61,7 @@ O fechamento é em lote: o app chega com os destinos já aplicados ou pré-selec
 Mostrar tudo numa tela só pesava, porque misturava tipos de decisão diferentes. O fechamento é uma sequência de etapas, cada uma com um tipo só de decisão, e a etapa sem nada para decidir é pulada. Num dia tranquilo, sobram a confirmação e o planejamento.
 
 1. **Fez e não marcou?:** uma lista só com as tarefas ainda abertas, agrupadas por seção, inclusive as que vão sozinhas para o dia seguinte. Eu marco as que fiz. Vem primeiro para eu não decidir o destino de algo que já fiz.
-2. **Pedem atenção:** um card por tarefa adiada 3 vezes ou mais, ou com prazo antes do dia seguinte. O título é a pergunta, e a tarefa aparece como na nota do dia. Arquivar e abandonar aparecem como opção, nunca como sugestão.
+2. **Pedem atenção:** um card por tarefa adiada 3 vezes ou mais, ou com prazo antes do dia seguinte. O título é a pergunta, e a tarefa aparece como na nota do dia. Abandonar e tirar a data aparecem como opção, nunca como sugestão.
 3. **Lembretes:** um card por lembrete ignorado: manter, mudar ou largar. *(3)*
 4. **Confirmação:** o que vai acontecer quando eu confirmar. As tarefas que vão sozinhas para o dia seguinte ficam num grupo recolhido, com o número delas, e eu posso abrir o grupo para finalizar ou mudar qualquer uma. Uma linha lembra que as notas foram para a wiki e que as seções em quadro branco ficaram para o assistente "Seções soltas".
 5. **Planejamento do dia seguinte** (veja "Planejamento do dia seguinte e fim do dia").
@@ -83,12 +83,12 @@ Cada regra vale a partir da parte da spec em que a funcionalidade dela aparece.
 | Sugerido | Tarefa não feita, adiada 3 vezes ou mais: pede decisão, com destaque e "dia seguinte" pré-selecionado; a partir da seção 2, a sugestão passa a ser "decidir na Revisão de Foco" | 1a |
 | Sugerido | Tarefa com prazo máximo: uma data de intenção antes do prazo, no lugar do "dia seguinte" | 1b |
 | Sempre manual | Finalizar uma tarefa, porque só eu sei se fiz | 1a |
-| Sempre manual | Abandonar ou arquivar uma tarefa, ou descartar notas, porque tiram coisas de circulação | 1a |
+| Sempre manual | Abandonar uma tarefa, ou descartar notas, porque tiram coisas de circulação | 1a |
 
 ## Fechar dias pendentes
 
 - Quando há mais de um dia com fechamento pendente, por exemplo depois de vários dias úteis sem abrir o app, o aviso da nota do dia sugere "Fechar dias pendentes". Com um dia só, o aviso oferece apenas "Fechar o dia".
 - Ele aplica as decisões automáticas e as sugestões a todos os dias pendentes de uma vez.
-- As tarefas não feitas desses dias voltam para a lista de tarefas ativas, sem data de intenção, para não criar uma pilha no dia de hoje. Elas contam como adiamento.
+- As tarefas não feitas desses dias voltam para a lista de tarefas, sem data de intenção, para não criar uma pilha no dia de hoje. Elas contam como adiamento.
 - Seções em quadro branco ficam sem vínculo, como no fim de um dia comum.
-- Nada é apagado: abandonar, arquivar e descartar nunca acontecem sozinhos.
+- Nada é apagado: abandonar e descartar nunca acontecem sozinhos.

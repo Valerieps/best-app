@@ -377,6 +377,11 @@ input[type='checkbox'] {
   color: var(--color-text-muted);
 }
 
+.active-tasks__row--done .task-row__text {
+  text-decoration: line-through;
+  color: var(--color-text-muted);
+}
+
 .line__text::placeholder {
   color: var(--color-text-muted);
 }

@@ -64,8 +64,9 @@ export async function applyTaskDecision(
     // Undoing "finished during the day" and choosing something else reopens the task first.
     if (task.status === 'done') task = await reopenTaskIn(ctx, tx, task);
     if (task.status !== 'active') return;
-    if (decision.kind === 'schedule') {
-      task = await moveIntendedDate(ctx, tx, task, decision.date, day, 'checkout');
+    if (decision.kind === 'schedule' || decision.kind === 'undate') {
+      const to = decision.kind === 'schedule' ? decision.date : null;
+      task = await moveIntendedDate(ctx, tx, task, to, day, 'checkout');
     } else if (decision.kind === 'reflection') {
       task = { ...task, awaitingReflection: true, updatedAt: nowIso(ctx) };
       await record(ctx, tx, 'task.deferredToReflection', 'block', task.id, day);
@@ -74,9 +75,8 @@ export async function applyTaskDecision(
       task = { ...task, status: 'converted', closedAt: nowIso(ctx), updatedAt: nowIso(ctx) };
       await record(ctx, tx, 'task.convertedToHabit', 'block', task.id, day, { habitId: habit.id });
     } else {
-      const status = decision.kind === 'archive' ? 'archived' : 'abandoned';
-      task = { ...task, status, closedAt: nowIso(ctx), updatedAt: nowIso(ctx) };
-      await record(ctx, tx, decision.kind === 'archive' ? 'task.archived' : 'task.abandoned', 'block', task.id, day);
+      task = { ...task, status: 'abandoned', closedAt: nowIso(ctx), updatedAt: nowIso(ctx) };
+      await record(ctx, tx, 'task.abandoned', 'block', task.id, day);
     }
   }
   // Any decision other than leaving it for the reflection settles a deferred task.
@@ -257,7 +257,7 @@ export function summarizeClosePendingDays(triages: readonly DayTriage[]): CloseP
 /**
  * "Fechar dias pendentes" (spec/checkout.md): notes go to the wiki, whiteboards stay unlinked,
  * and tasks not done go back to the active list without a date, counting as postponed.
- * Nothing is deleted, archived or abandoned.
+ * Nothing is deleted or abandoned.
  */
 export async function closePendingDays(ctx: AppContext, triages: readonly DayTriage[]): Promise<void> {
   await ctx.store.transaction(async (tx) => {

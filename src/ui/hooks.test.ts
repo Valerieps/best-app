@@ -7,7 +7,6 @@ describe('routes', () => {
     { name: 'day', day: '2026-10-09' },
     { name: 'checkout', day: '2026-10-11' },
     { name: 'active' },
-    { name: 'archived' },
     { name: 'wiki' },
     { name: 'wiki', section: 'abc-123' },
     { name: 'cleanup' },

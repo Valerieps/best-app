@@ -58,8 +58,8 @@ export function ConfirmStep({ day, today, triage, projects, resolved, busy, onBa
         return relativeDay(decision.date, today);
       case 'finish':
         return 'finalizar';
-      case 'archive':
-        return 'arquivar';
+      case 'undate':
+        return 'sem data';
       case 'abandon':
         return 'abandonar';
       case 'reflection':

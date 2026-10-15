@@ -19,7 +19,7 @@ interface RowProps<D> {
   onChange(decision: D): void;
 }
 
-type TaskChoice = 'finish' | 'next' | 'other' | 'archive' | 'abandon' | 'reflection' | 'habit';
+type TaskChoice = 'finish' | 'next' | 'other' | 'undate' | 'abandon' | 'reflection' | 'habit';
 
 interface TaskRowExtras {
   nextDay: DayKey;
@@ -84,7 +84,7 @@ export function TaskRowView({
             { value: 'finish', label: 'Finalizar' },
             { value: 'next', label: nextLabel.charAt(0).toUpperCase() + nextLabel.slice(1) },
             { value: 'other', label: 'Outra data' },
-            { value: 'archive', label: 'Arquivar' },
+            { value: 'undate', label: 'Sem data' },
             { value: 'abandon', label: 'Abandonar' },
             ...(allowReflection ? [{ value: 'reflection' as const, label: 'Revisão de Foco' }] : []),
             ...(FEATURES.habits ? [{ value: 'habit' as const, label: 'Virar hábito' }] : []),

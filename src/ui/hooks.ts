@@ -24,7 +24,6 @@ export type Route =
   | { name: 'day'; day?: DayKey }
   | { name: 'checkout'; day: DayKey }
   | { name: 'active' }
-  | { name: 'archived' }
   /** `section` highlights one wiki entry, e.g. when coming from a task's origin. */
   | { name: 'wiki'; section?: string }
   /** `assistant` opens one assistant's details; omitted shows the dashboard. */
@@ -59,8 +58,9 @@ export function parseRoute(hash: string): Route {
       return isDayKey(parts[1]) ? { name: 'checkout', day: parts[1] } : { name: 'day' };
     case 'tarefas':
       return { name: 'active' };
+    // The archived tasks list is gone (ADR-049); its old address opens the task list.
     case 'arquivadas':
-      return { name: 'archived' };
+      return { name: 'active' };
     case 'wiki':
       return parts[1] ? { name: 'wiki', section: decodeURIComponent(parts[1]) } : { name: 'wiki' };
     case 'ordem': {
@@ -103,8 +103,6 @@ export function routeHash(route: Route): string {
       return `#/checkout/${route.day}`;
     case 'active':
       return '#/tarefas';
-    case 'archived':
-      return '#/arquivadas';
     case 'wiki':
       return route.section ? `#/wiki/${encodeURIComponent(route.section)}` : '#/wiki';
     case 'cleanup':

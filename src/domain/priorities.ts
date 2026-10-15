@@ -17,7 +17,7 @@ export interface DayPriority {
 /**
  * The day's priorities: the ones chosen by hand, plus tasks whose deadline is the day. A
  * deadline task takes the place of the last chosen priority instead of making a fourth one.
- * Finished, archived and abandoned tasks leave the list, so it can be empty once all 3 are done.
+ * Finished and abandoned tasks leave the list, so it can be empty once all 3 are done.
  */
 export function buildDayPriorities(chosenIds: readonly string[], tasks: readonly Block[], deadlineTasks: readonly Block[]): DayPriority[] {
   const byId = new Map(tasks.map((task) => [task.id, task]));

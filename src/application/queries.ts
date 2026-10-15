@@ -136,8 +136,9 @@ export async function loadActiveTasks(reader: Reader): Promise<TaskListItem[]> {
   return withOrigins(reader, tasks.sort(byIntendedDateThenCreation));
 }
 
-export async function loadArchivedTasks(reader: Reader): Promise<TaskListItem[]> {
-  const tasks = await reader.tasksWithStatus('archived');
+/** The finished tasks, the last finished first, for "Mostrar concluídas" in the task list. */
+export async function loadFinishedTasks(reader: Reader): Promise<TaskListItem[]> {
+  const tasks = await reader.tasksWithStatus('done');
   return withOrigins(
     reader,
     tasks.sort((a, b) => ((a.closedAt ?? '') < (b.closedAt ?? '') ? 1 : -1)),
@@ -179,8 +180,8 @@ export interface PlanningView {
 }
 
 /**
- * The planning step of the checkout: active tasks, split into the target day's note, the next
- * few days, and the others. The
+ * The planning step of the checkout: active tasks with a date, split into the target day's note,
+ * the next few days, and the ones whose date already passed. Tasks without a date stay out. The
  * tasks of the projects in focus come first in each group, in the order of the projects
  * (spec/prioridades.md, "Projetos em foco").
  */
@@ -256,16 +257,14 @@ export async function loadCleanupDashboard(reader: Reader, today: DayKey): Promi
 export interface MenuCounts {
   projects: number;
   active: number;
-  archived: number;
   wiki: number;
 }
 
 export async function loadMenuCounts(reader: Reader): Promise<MenuCounts> {
   const active = (await reader.tasksWithStatus('active')).length;
-  const archived = (await reader.tasksWithStatus('archived')).length;
   const wiki = (await loadWiki(reader)).length;
   const projects = (await reader.projects()).filter((project) => project.status === 'active').length;
-  return { projects, active, archived, wiki };
+  return { projects, active, wiki };
 }
 
 /** The projects in focus, active ones only, in the order chosen. */

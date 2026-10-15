@@ -195,22 +195,22 @@ describe('day cycle', () => {
     expect(await db.blocks.get(a.id)).toMatchObject({ intendedDate: MONDAY, status: 'active' });
   });
 
-  it('archive and abandon take tasks out of the active list without deleting them', async () => {
+  it('"sem data" keeps the task in the list without a date; abandon takes it out without deleting it', async () => {
     const { ctx, reader, db } = createTestContext();
-    const a = await createBlock(ctx, { sectionId: null, position: nextPosition() }, '[] Arquivar');
+    const a = await createBlock(ctx, { sectionId: null, position: nextPosition() }, '[] Algum dia');
     const b = await createBlock(ctx, { sectionId: a.sectionId, position: nextPosition() }, '[] Abandonar');
 
     await applyTriage(ctx, SUNDAY, {
       ...noDecisions(),
       tasks: new Map<string, TaskDecision>([
-        [a.id, { kind: 'archive' }],
+        [a.id, { kind: 'undate' }],
         [b.id, { kind: 'abandon' }],
       ]),
     });
 
-    expect(await loadActiveTasks(reader)).toEqual([]);
+    expect((await loadActiveTasks(reader)).map((item) => [item.task.id, item.task.intendedDate])).toEqual([[a.id, null]]);
     expect((await db.blocks.get(b.id))?.status).toBe('abandoned');
-    expect((await loadDayNote(reader, SUNDAY)).entries[0].blocks).toEqual([]);
+    expect((await loadDayNote(reader, SUNDAY)).entries[0].blocks.map((block) => block.id)).toEqual([a.id]);
   });
 
   it('closes pending days: tasks lose their date and count as postponed, notes go to the wiki', async () => {

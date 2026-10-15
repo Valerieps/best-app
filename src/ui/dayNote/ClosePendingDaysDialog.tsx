@@ -66,7 +66,7 @@ export function ClosePendingDaysDialog({ today, onClose }: Props) {
                   : `${summary.whiteboards} seções em quadro branco ficam sem vínculo`}
               </li>
             )}
-            <li className="card-list__item muted">Nada é apagado, arquivado ou abandonado</li>
+            <li className="card-list__item muted">Nada é apagado nem abandonado</li>
           </ul>
           <div className="dialog__actions">
             <button

@@ -415,16 +415,6 @@ export async function abandonTasks(ctx: AppContext, taskIds: readonly string[]):
   });
 }
 
-/** Brings an archived task back to the active list, without a date. */
-export async function reactivateTask(ctx: AppContext, taskId: string): Promise<void> {
-  await ctx.store.transaction(async (tx) => {
-    const task = await getOrThrow(tx.blocks.get(taskId), 'Task');
-    if (task.status !== 'archived') return;
-    await tx.blocks.put({ ...task, status: 'active', closedAt: null, intendedDate: null, updatedAt: nowIso(ctx) });
-    await record(ctx, tx, 'task.reactivated', 'block', task.id, today(ctx), { previousIntendedDate: task.intendedDate });
-  });
-}
-
 /**
  * Request 2: puts the lines of a section in the order given, the order shown after `movedId`
  * moved. Usually only the moved line is written. No event: the order is not history (ADR-040).

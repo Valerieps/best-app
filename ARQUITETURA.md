@@ -76,7 +76,7 @@ Cada entidade é um registro separado. Um bloco existe uma vez só: notas, proje
 | `sectionId` | Seção onde o bloco foi escrito, com o título e o horário dela |
 | `position` | Índice fracionário: ordena os blocos dentro da seção sem reescrever os vizinhos |
 | `projectId` | Projeto vinculado, herdado da seção ou escolhido no checkout |
-| `status` | Só tarefas: `active`, `done`, `archived`, `abandoned` ou `converted` (virou hábito). Abandonar esconde, não apaga |
+| `status` | Só tarefas: `active`, `done`, `abandoned` ou `converted` (virou hábito). Abandonar esconde, não apaga. `archived` deixou de existir: a versão 8 do banco e do backup transforma as arquivadas em `active` sem data (ADR-049) |
 | `intendedDate` | Dia em que a tarefa aparece na nota do dia |
 | `firstIntendedDate` | Primeira data de intenção, para medir a distância até a ação final |
 | `postponeCount` | Atalho de leitura; dá para recalcular a partir dos eventos |
@@ -137,7 +137,7 @@ Nada disso é guardado: é calculado a partir das tabelas, por funções de `app
 | --- | --- |
 | Nota do dia | Seções com `day` igual ao dia, mais as tarefas `active` com `intendedDate` igual ao dia, na seção "De outros dias", que só existe na tela. A tarefa não é copiada; ela só aparece ali. As partes (seções, "De outros dias" e prioridades) seguem `days.sectionOrder` por `orderDayParts` (`domain/order.ts`, ADR-040) |
 | Dia pendente | Tem tarefa com `lastTriagedDay` anterior ao dia, ou seção sem destino |
-| Tarefas ativas e arquivadas | Blocos `task` por `status` |
+| Tarefas (não concluídas, concluídas ou todas) | Blocos `task` por `status` (`active` e `done`) |
 | Wiki | Seções com `notesDestination = 'wiki'`, cada entrada com as notas da seção, em ordem cronológica |
 | Projeto | Seções, tarefas e notas com o `projectId` dele, agrupadas em travadas, próximos dias, sem data e feitas |
 | Lista de projetos | Projetos por status, projetos em foco e mapa de atividade calculado dos eventos (ADR-034) |
@@ -157,7 +157,7 @@ Nada disso é guardado: é calculado a partir das tabelas, por funções de `app
 
 | Área | Eventos |
 | --- | --- |
-| Blocos e tarefas | criado, apagado, tipo trocado, vinculado a projeto; data de intenção e prazo trocados, adiada, feita, reaberta, arquivada, reativada, abandonada, deixada para a Revisão de Foco, convertida em hábito |
+| Blocos e tarefas | criado, apagado, tipo trocado, vinculado a projeto; data de intenção e prazo trocados, adiada, feita, reaberta, abandonada (arquivada e reativada só no histórico antigo, ADR-049), deixada para a Revisão de Foco, convertida em hábito |
 | Seções | criada, título e detalhes trocados, vinculada a projeto, deixada ou mantida sem vínculo, notas para a wiki, descartadas, reabertas ou deixadas para a Revisão de Foco |
 | Projetos | criado, renomeado, ícone trocado, finalizado, reaberto, juntado, vinculado a objetivo |
 | Dia e rituais | dia iniciado, execução iniciada, item do warm up respondido, checkout concluído, prioridade adicionada e retirada (com o motivo, nos projetos em foco), revisão fechada, configuração trocada |

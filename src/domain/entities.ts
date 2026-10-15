@@ -11,7 +11,7 @@ import type { ReviewCadence } from './reviews';
 export type BlockKind = 'task' | 'note';
 
 /** converted (section 6): the task became a habit at checkout and left circulation. */
-export type TaskStatus = 'active' | 'done' | 'archived' | 'abandoned' | 'converted';
+export type TaskStatus = 'active' | 'done' | 'abandoned' | 'converted';
 
 export interface Block {
   id: string;
@@ -31,7 +31,7 @@ export interface Block {
   /** First intended date ever set, kept to measure the distance to the final action. */
   firstIntendedDate: DayKey | null;
   postponeCount: number;
-  /** When the task was finished, archived or abandoned. */
+  /** When the task was finished or abandoned. */
   closedAt: string | null;
   /**
    * Latest day whose checkout decided this task. A task is pending on a day it shows up in

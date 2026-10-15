@@ -14,7 +14,8 @@ import { isTaskPendingOn, isTaskShownOn, nextPlanningDay, POSTPONE_ATTENTION_THR
 export type TaskDecision =
   | { kind: 'finish' }
   | { kind: 'schedule'; date: DayKey }
-  | { kind: 'archive' }
+  /** "Sem data": the task goes back to the task list, for some day. */
+  | { kind: 'undate' }
   | { kind: 'abandon' }
   /** Section 2: "decidir na reflexão semanal". */
   | { kind: 'reflection' }
