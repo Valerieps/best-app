@@ -3782,8 +3782,34 @@ button.format-toolbar__button:focus-visible {
   color: var(--color-text-muted);
 }
 
+.active-tasks__controls-end {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin-left: auto;
+}
+
+.page.page--active-tasks {
+  max-width: 80%;
+}
+
+/* Inside the page, so it stays clear of the sidebar and never covers the last tasks. */
+.batch-bar.active-tasks__batch {
+  position: sticky;
+  margin-top: var(--space-4);
+  border: var(--border-width) solid var(--color-border-strong);
+  border-radius: var(--radius-md);
+}
+
 .active-tasks__group + .active-tasks__group {
   margin-top: var(--space-3);
+}
+
+.active-tasks__group-head {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  margin-bottom: var(--space-1);
 }
 
 button.active-tasks__toggle {
@@ -3793,7 +3819,6 @@ button.active-tasks__toggle {
   border: none;
   background: none;
   padding: 0;
-  margin-bottom: var(--space-1);
   color: var(--color-text);
   line-height: 1.4;
 }
@@ -3819,7 +3844,8 @@ button.active-tasks__toggle {
   display: flex;
 }
 
-.line__action.active-tasks__abandon--confirm {
+.line__action.active-tasks__abandon--confirm,
+.active-tasks__batch .active-tasks__abandon--confirm {
   color: var(--color-warning-text);
   border-color: var(--color-warning-text);
 }

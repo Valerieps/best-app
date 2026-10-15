@@ -1,8 +1,9 @@
-import { useState } from 'react';
-import { setDeadline, setIntendedDate } from '../../application/dayTools';
-import { abandonTask, reactivateTask, setTaskDone } from '../../application/notebook';
+import { useEffect, useState, type MouseEvent } from 'react';
+import { setDeadline, setDeadlines, setIntendedDate, setIntendedDates } from '../../application/dayTools';
+import { abandonTask, abandonTasks, reactivateTask, setTaskDone } from '../../application/notebook';
 import { loadActiveTasks, loadArchivedTasks, type TaskListItem } from '../../application/queries';
-import type { DayKey } from '../../domain/day';
+import { rangeBetween } from '../../domain/checkoutSteps';
+import { addDays, type DayKey } from '../../domain/day';
 import type { Section } from '../../domain/entities';
 import { TASK_LIST_KEYS, groupTasks, type TaskGroupBy, type TaskListKey } from '../../domain/taskList';
 import { ProjectChip } from '../components/Chips';
@@ -10,7 +11,7 @@ import { Icon } from '../components/Icon';
 import { DatePicker } from '../dayNote/BlockLine';
 import { Linkified } from '../components/Linkified';
 import { LoadingPage } from '../components/Skeleton';
-import { formatShortDate, formatTime, postponedLabel, relativeDay } from '../format';
+import { formatShortDate, formatTime, plural, postponedLabel, relativeDay } from '../format';
 import { routeHash } from '../hooks';
 import { appContext, reader } from '../services';
 import { useLiveQuery } from '../useLiveQuery';
@@ -22,9 +23,9 @@ function originLabel(section: Section | null): string {
   return `Veio de: ${kind} · ${formatTime(section.createdAt)} · ${section.title ?? 'sem título'} · ${formatShortDate(section.day)}`;
 }
 
-function ListPage({ title, children }: { title: string; children: React.ReactNode }) {
+function ListPage({ title, className = '', children }: { title: string; className?: string; children: React.ReactNode }) {
   return (
-    <main className="page">
+    <main className={`page ${className}`}>
       <h1 className="page__title">{title}</h1>
       {children}
     </main>
@@ -135,19 +136,107 @@ function groupTitle(groupBy: TaskListKey, key: string | null, items: TaskListIte
   return day.charAt(0).toUpperCase() + day.slice(1);
 }
 
-function TaskGroupSection({ title, count, children }: { title: string; count: number; children: React.ReactNode }) {
-  const [open, setOpen] = useState(true);
+function TaskGroupSection({
+  title,
+  count,
+  open,
+  onToggle,
+  extra,
+  children,
+}: {
+  title: string;
+  count: number;
+  open: boolean;
+  onToggle(): void;
+  /** After the toggle, such as "selecionar grupo". */
+  extra?: React.ReactNode;
+  children: React.ReactNode;
+}) {
   return (
     <section className="active-tasks__group">
-      <button type="button" className="active-tasks__toggle" aria-expanded={open} onClick={() => setOpen(!open)}>
-        <Icon name={open ? 'chevronDown' : 'chevronRight'} size="sm" />
-        <span className="active-tasks__group-title">{title}</span>
-        <span className="badge" aria-label={`${count} ${count === 1 ? 'tarefa' : 'tarefas'}`}>
-          {count}
-        </span>
-      </button>
+      <div className="active-tasks__group-head">
+        <button type="button" className="active-tasks__toggle" aria-expanded={open} onClick={onToggle}>
+          <Icon name={open ? 'chevronDown' : 'chevronRight'} size="sm" />
+          <span className="active-tasks__group-title">{title}</span>
+          <span className="badge" aria-label={plural(count, 'tarefa', 'tarefas')}>
+            {count}
+          </span>
+        </button>
+        {extra}
+      </div>
       {open && children}
     </section>
+  );
+}
+
+/** Bottom bar of the selection: the same intended date or deadline for all, or abandon them all. */
+function BatchBar({ selected, today, onDone }: { selected: Set<string>; today: DayKey; onDone(message: string): void }) {
+  const [intended, setIntended] = useState<DayKey>(addDays(today, 1));
+  const [deadline, setDeadlineDate] = useState<DayKey>(addDays(today, 7));
+  const [confirming, setConfirming] = useState(false);
+  const ids = [...selected];
+  const none = ids.length === 0;
+  const count = plural(ids.length, 'tarefa', 'tarefas');
+  const run = (work: Promise<void>, message: string) => {
+    setConfirming(false);
+    void work.then(() => onDone(message));
+  };
+  return (
+    <div className="batch-bar active-tasks__batch" role="region" aria-label="Edição em lote">
+      <span className="batch-bar__count">
+        <b>{none ? 'Nenhuma tarefa selecionada' : plural(ids.length, 'tarefa selecionada', 'tarefas selecionadas')}</b>
+      </span>
+      <span className="batch-bar__actions">
+        <span className="muted">Data de intenção</span>
+        <input
+          type="date"
+          className="date-input"
+          min={today}
+          value={intended}
+          onChange={(event) => event.target.value && setIntended(event.target.value)}
+          aria-label="Data de intenção para as tarefas selecionadas"
+        />
+        <button
+          type="button"
+          disabled={none}
+          onClick={() => run(setIntendedDates(appContext, ids, intended), `${count} → ${relativeDay(intended, today)}`)}
+        >
+          Aplicar
+        </button>
+        <button type="button" disabled={none} onClick={() => run(setIntendedDates(appContext, ids, null), `${count} sem data`)}>
+          Sem data
+        </button>
+      </span>
+      <span className="batch-bar__actions">
+        <span className="muted">Prazo</span>
+        <input
+          type="date"
+          className="date-input"
+          value={deadline}
+          onChange={(event) => event.target.value && setDeadlineDate(event.target.value)}
+          aria-label="Prazo máximo para as tarefas selecionadas"
+        />
+        <button
+          type="button"
+          disabled={none}
+          onClick={() => run(setDeadlines(appContext, ids, deadline), `${count} com prazo ${relativeDay(deadline, today)}`)}
+        >
+          Aplicar
+        </button>
+        <button type="button" disabled={none} onClick={() => run(setDeadlines(appContext, ids, null), `${count} sem prazo`)}>
+          Tirar prazo
+        </button>
+      </span>
+      <button
+        type="button"
+        disabled={none}
+        className={confirming ? 'active-tasks__abandon--confirm' : ''}
+        onClick={() => (confirming ? run(abandonTasks(appContext, ids), `${count} abandonada${ids.length === 1 ? '' : 's'}`) : setConfirming(true))}
+        onBlur={() => setConfirming(false)}
+      >
+        {confirming ? `Confirmar abandono de ${count}` : 'Abandonar'}
+      </button>
+    </div>
   );
 }
 
@@ -189,7 +278,16 @@ function ActiveTaskActions({ item, today }: { item: TaskListItem; today: DayKey 
   );
 }
 
-function TaskListControls({ view, onChange }: { view: TaskListView; onChange(view: TaskListView): void }) {
+function TaskListControls({
+  view,
+  onChange,
+  children,
+}: {
+  view: TaskListView;
+  onChange(view: TaskListView): void;
+  /** Buttons on the right: collapse all, select several. */
+  children?: React.ReactNode;
+}) {
   return (
     <div className="active-tasks__controls">
       <label>
@@ -221,6 +319,7 @@ function TaskListControls({ view, onChange }: { view: TaskListView; onChange(vie
           ))}
         </select>
       </label>
+      <span className="active-tasks__controls-end">{children}</span>
     </div>
   );
 }
@@ -228,49 +327,177 @@ function TaskListControls({ view, onChange }: { view: TaskListView; onChange(vie
 export function ActiveTasksScreen({ today }: { today: DayKey }) {
   const items = useLiveQuery(() => loadActiveTasks(reader));
   const [view, setView] = useTaskListView();
+  // Keys as `${groupBy}:${key}`, so switching the grouping never carries a collapse over.
+  const [collapsed, setCollapsed] = useState<Set<string>>(new Set());
+  const [selecting, setSelecting] = useState(false);
+  const [selected, setSelected] = useState<Set<string>>(new Set());
+  const [anchor, setAnchor] = useState<string | null>(null);
+  const [flash, setFlash] = useState('');
+
+  function leaveSelection() {
+    setSelecting(false);
+    setSelected(new Set());
+    setAnchor(null);
+    setFlash('');
+  }
+
+  useEffect(() => {
+    if (!selecting) return;
+    const onKey = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') leaveSelection();
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [selecting]);
+
   if (!items) return <LoadingPage title="Tarefas ativas" />;
   const { groupBy, sortBy } = view;
   const groups = groupTasks(items, groupBy, sortBy);
+  const groupId = (key: string | null) => `${groupBy}:${key ?? ''}`;
+  const shownIds = groups.flatMap((group) => group.items.map((item) => item.task.id));
+  // A task that left the list (finished, abandoned) drops out of the selection.
+  const stillSelected = new Set(shownIds.filter((id) => selected.has(id)));
+  const allCollapsed = groups.length > 0 && groups.every((group) => collapsed.has(groupId(group.key)));
+
+  function toggleGroup(key: string | null) {
+    const id = groupId(key);
+    setCollapsed((previous) => {
+      const updated = new Set(previous);
+      if (updated.has(id)) updated.delete(id);
+      else updated.add(id);
+      return updated;
+    });
+  }
+
+  function toggleAll() {
+    setCollapsed(allCollapsed ? new Set() : new Set(groups.map((group) => groupId(group.key))));
+  }
+
+  function pick(id: string, event: MouseEvent) {
+    setFlash('');
+    if (event.shiftKey && anchor) {
+      const range = rangeBetween(shownIds, anchor, id);
+      setSelected((previous) => new Set([...previous, ...range]));
+    } else {
+      setSelected((previous) => {
+        const updated = new Set(previous);
+        if (updated.has(id)) updated.delete(id);
+        else updated.add(id);
+        return updated;
+      });
+    }
+    setAnchor(id);
+  }
+
+  function pickGroup(groupItems: TaskListItem[]) {
+    const ids = groupItems.map((item) => item.task.id);
+    const all = ids.every((id) => selected.has(id));
+    setSelected((previous) => {
+      const updated = new Set(previous);
+      for (const id of ids) {
+        if (all) updated.delete(id);
+        else updated.add(id);
+      }
+      return updated;
+    });
+    setFlash('');
+  }
+
   const list = (groupItems: TaskListItem[]) => (
     <ul className="card-list">
-      {groupItems.map((item) => (
-        <TaskRow
-          key={item.task.id}
-          item={item}
-          today={today}
-          action={
-            <input
-              type="checkbox"
-              checked={false}
-              onChange={() => void setTaskDone(appContext, item.task.id, true)}
-              aria-label={`Finalizar "${item.task.text}"`}
-            />
-          }
-          extra={<ActiveTaskActions item={item} today={today} />}
-        />
-      ))}
+      {groupItems.map((item) => {
+        const id = item.task.id;
+        return (
+          <TaskRow
+            key={id}
+            item={item}
+            today={today}
+            action={
+              selecting ? (
+                <input
+                  type="checkbox"
+                  checked={selected.has(id)}
+                  onChange={() => undefined}
+                  onClick={(event) => pick(id, event)}
+                  aria-label={`Selecionar "${item.task.text}"`}
+                />
+              ) : (
+                <input
+                  type="checkbox"
+                  checked={false}
+                  onChange={() => void setTaskDone(appContext, id, true)}
+                  aria-label={`Finalizar "${item.task.text}"`}
+                />
+              )
+            }
+            extra={selecting ? undefined : <ActiveTaskActions item={item} today={today} />}
+          />
+        );
+      })}
     </ul>
   );
   return (
-    <ListPage title="Tarefas ativas">
+    <ListPage title="Tarefas ativas" className="page--active-tasks">
       {items.length === 0 ? (
         <p className="muted">Nenhuma tarefa ativa.</p>
       ) : (
         <>
-          <TaskListControls view={view} onChange={setView} />
+          <TaskListControls view={view} onChange={setView}>
+            {groupBy !== 'none' && (
+              <button type="button" className="small" onClick={toggleAll}>
+                {allCollapsed ? 'Abrir todos' : 'Recolher todos'}
+              </button>
+            )}
+            <button
+              type="button"
+              className={`small ${selecting ? 'primary' : ''}`}
+              aria-pressed={selecting}
+              onClick={selecting ? leaveSelection : () => setSelecting(true)}
+            >
+              {selecting ? 'Pronto' : 'Selecionar várias'}
+            </button>
+          </TaskListControls>
+          {selecting && (
+            <p className="muted">
+              {flash || 'Marque as tarefas e escolha o que fazer na barra de baixo. Shift + clique seleciona um intervalo.'}
+            </p>
+          )}
           {groupBy === 'none'
             ? list(groups[0]?.items ?? [])
-            : groups.map((group) => (
-                <TaskGroupSection
-                  key={`${groupBy}:${group.key ?? ''}`}
-                  title={groupTitle(groupBy, group.key, group.items, today)}
-                  count={group.items.length}
-                >
-                  {list(group.items)}
-                </TaskGroupSection>
-              ))}
-          <p className="muted">Toque numa tarefa para ver de onde ela veio.</p>
+            : groups.map((group) => {
+                const all = group.items.every((item) => selected.has(item.task.id));
+                return (
+                  <TaskGroupSection
+                    key={groupId(group.key)}
+                    title={groupTitle(groupBy, group.key, group.items, today)}
+                    count={group.items.length}
+                    open={!collapsed.has(groupId(group.key))}
+                    onToggle={() => toggleGroup(group.key)}
+                    extra={
+                      selecting && (
+                        <button type="button" className="link" onClick={() => pickGroup(group.items)}>
+                          {all ? 'tirar seleção do grupo' : 'selecionar grupo'}
+                        </button>
+                      )
+                    }
+                  >
+                    {list(group.items)}
+                  </TaskGroupSection>
+                );
+              })}
+          {!selecting && <p className="muted">Toque numa tarefa para ver de onde ela veio.</p>}
         </>
+      )}
+      {selecting && (
+        <BatchBar
+          selected={stillSelected}
+          today={today}
+          onDone={(message) => {
+            setSelected(new Set());
+            setAnchor(null);
+            setFlash(message);
+          }}
+        />
       )}
     </ListPage>
   );

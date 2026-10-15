@@ -18,8 +18,9 @@
 - Ordenar por projeto segue o nome do projeto, em ordem alfabética; por data de intenção, do dia mais próximo para o mais distante; por data de criação, da mais antiga para a mais nova; por adiamentos, da mais adiada para a menos adiada. As tarefas sem projeto ou sem data vão para o fim. Quando empata, vale a data de intenção e depois a de criação.
 - Agrupado, cada grupo é uma sublista com título e quantidade de tarefas, e eu posso recolher e abrir cada uma. Os grupos seguem a mesma ordem: projetos por nome, dias do mais cedo para o mais tarde, adiamentos da mais adiada ("Adiada 3 vezes") até "Nunca adiada", e "Sem projeto" ou "Sem data" por último. Na data de criação, o grupo é o dia em que a tarefa foi criada.
 - O título do grupo de um dia usa "Hoje", "Amanhã" e "Ontem" quando é o caso, e a data curta nos outros dias.
-- A escolha de agrupar e ordenar fica guardada neste navegador. Os grupos sempre abrem abertos.
+- A escolha de agrupar e ordenar fica guardada neste navegador. Os grupos sempre abrem abertos, e um botão recolhe ou abre todos de uma vez.
 - No hover de uma tarefa, eu posso mudar a data de intenção e o prazo máximo, como na nota do dia, e abandonar a tarefa. Abandonar pede um segundo clique para confirmar, e a tarefa sai da lista. A linha mostra o prazo, quando tem.
+- Em "Selecionar várias", eu marco tarefas (Shift + clique pega um intervalo, e cada grupo tem "selecionar grupo") e, na barra de baixo, dou a todas a mesma data de intenção ou o mesmo prazo, tiro a data ou o prazo de todas, ou abandono todas, também com um segundo clique para confirmar. Esc ou "Pronto" sai da seleção.
 
 ## Prazo máximo e origem *(1b)*
 
