@@ -12,22 +12,47 @@ function today(ctx: AppContext): DayKey {
 
 /** Sets the intended date during the day. A future date takes the task out of today's triage. */
 export async function setIntendedDate(ctx: AppContext, taskId: string, date: DayKey | null): Promise<void> {
+  await setIntendedDates(ctx, [taskId], date);
+}
+
+/** Sets the same intended date on several tasks at once, in one transaction. */
+export async function setIntendedDates(ctx: AppContext, taskIds: readonly string[], date: DayKey | null): Promise<void> {
   await ctx.store.transaction(async (tx) => {
-    const task = await tx.blocks.get(taskId);
-    if (!task || task.kind !== 'task' || task.status !== 'active') return;
-    await tx.blocks.put(await moveIntendedDate(ctx, tx, task, date, today(ctx), 'dayNote'));
+    for (const taskId of taskIds) {
+      const task = await tx.blocks.get(taskId);
+      if (!task || task.kind !== 'task' || task.status !== 'active') continue;
+      await tx.blocks.put(await moveIntendedDate(ctx, tx, task, date, today(ctx), 'dayNote'));
+    }
   });
 }
 
 /** Sets or clears the optional deadline (prazo máximo). */
 export async function setDeadline(ctx: AppContext, taskId: string, deadline: DayKey | null): Promise<void> {
+  await setDeadlines(ctx, [taskId], deadline);
+}
+
+/** Sets or clears the same deadline on several tasks at once, in one transaction. */
+export async function setDeadlines(ctx: AppContext, taskIds: readonly string[], deadline: DayKey | null): Promise<void> {
+  await ctx.store.transaction(async (tx) => {
+    for (const taskId of taskIds) {
+      const task = await tx.blocks.get(taskId);
+      if (!task || task.kind !== 'task') continue;
+      const from = task.deadline ?? null;
+      if (from === deadline) continue;
+      await tx.blocks.put({ ...task, deadline, updatedAt: ctx.clock.now().toISOString() });
+      await record(ctx, tx, 'task.deadlineChanged', 'block', task.id, today(ctx), { from, to: deadline });
+    }
+  });
+}
+
+/** Links an active task to a project, or unlinks it with null, outside the checkout. */
+export async function setTaskProject(ctx: AppContext, taskId: string, projectId: string | null): Promise<void> {
   await ctx.store.transaction(async (tx) => {
     const task = await tx.blocks.get(taskId);
-    if (!task || task.kind !== 'task') return;
-    const from = task.deadline ?? null;
-    if (from === deadline) return;
-    await tx.blocks.put({ ...task, deadline, updatedAt: ctx.clock.now().toISOString() });
-    await record(ctx, tx, 'task.deadlineChanged', 'block', task.id, today(ctx), { from, to: deadline });
+    if (!task || task.kind !== 'task' || task.status !== 'active' || task.projectId === projectId) return;
+    if (projectId !== null && (await tx.projects.get(projectId))?.status !== 'active') return;
+    await tx.blocks.put({ ...task, projectId, updatedAt: ctx.clock.now().toISOString() });
+    await record(ctx, tx, 'block.linkedToProject', 'block', task.id, today(ctx), { projectId });
   });
 }
 

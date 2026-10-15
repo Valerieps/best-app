@@ -3771,3 +3771,112 @@ button.format-toolbar__button:focus-visible {
   font-size: var(--font-size-md);
   font-weight: 600;
 }
+
+/* Active tasks: group, sort and hover actions */
+.active-tasks__controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-4);
+  margin-bottom: var(--space-3);
+  font-size: var(--font-size-sm);
+  color: var(--color-text-muted);
+}
+
+.active-tasks__controls-end {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin-left: auto;
+}
+
+.page.page--active-tasks {
+  max-width: 80%;
+}
+
+/* Inside the page, so it stays clear of the sidebar and never covers the last tasks. */
+.batch-bar.active-tasks__batch {
+  position: sticky;
+  margin-top: var(--space-4);
+  border: var(--border-width) solid var(--color-border-strong);
+  border-radius: var(--radius-md);
+}
+
+.active-tasks__group + .active-tasks__group {
+  margin-top: var(--space-3);
+}
+
+.active-tasks__group-head {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  margin-bottom: var(--space-1);
+}
+
+button.active-tasks__toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  border: none;
+  background: none;
+  padding: 0;
+  color: var(--color-text);
+  line-height: 1.4;
+}
+
+.active-tasks__toggle .badge {
+  margin-left: 0;
+}
+
+.active-tasks__group-title {
+  font-size: var(--font-size-md);
+  font-weight: 600;
+}
+
+.active-tasks__group-head button.link {
+  font-size: var(--font-size-xs);
+}
+
+.active-tasks__controls label {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+}
+
+select.line__action.active-tasks__project {
+  padding: 0 var(--space-1);
+  max-width: 160px;
+}
+
+/* Batch selection: the row is the target and lights up, as in the planning of the checkout. */
+.active-tasks__row--select {
+  cursor: pointer;
+  user-select: none;
+  border-left: var(--section-bar-width) solid transparent;
+}
+
+.active-tasks__row--select .task-row__text {
+  cursor: pointer;
+}
+
+.active-tasks__row--select.active-tasks__row--on {
+  background: var(--color-select-bg);
+  border-left-color: var(--color-accent);
+}
+
+.active-tasks__actions {
+  display: none;
+  align-items: center;
+  gap: var(--space-1);
+  flex-shrink: 0;
+}
+
+.card-list__item:hover .active-tasks__actions,
+.card-list__item:focus-within .active-tasks__actions {
+  display: flex;
+}
+
+.line__action.active-tasks__abandon--confirm,
+.active-tasks__batch .active-tasks__abandon--confirm {
+  color: var(--color-warning-text);
+  border-color: var(--color-warning-text);
+}

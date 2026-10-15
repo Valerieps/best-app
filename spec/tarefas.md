@@ -1,6 +1,6 @@
 # Tarefas e datas
 
-- **Entra aqui:** a tarefa, a lista de tarefas ativas, a data de intenção, o prazo máximo, o adiamento e a tela "Próximos dias".
+- **Entra aqui:** a tarefa, a lista de tarefas ativas (com agrupar e ordenar), a data de intenção, o prazo máximo, o adiamento e a tela "Próximos dias".
 - **Não entra aqui:** os destinos da tarefa no fechamento do dia (`checkout.md`), as prioridades (`prioridades.md`) e as tarefas de projeto (`projetos.md`).
 
 ## Tarefas *(1a)*
@@ -10,6 +10,18 @@
 - A tarefa tem uma data de intenção de execução, definida no fechamento do dia. Definir essa data é escolher o dia em que a tarefa aparece na nota do dia. Quando a data chega, a tarefa aparece sozinha na nota daquele dia.
 - Conta como adiamento toda mudança da data de intenção para depois, e também a tarefa que passa pelo fechamento do dia sem ter sido feita no dia da intenção, inclusive quando ela vai sozinha para o dia seguinte. Tirar a data de intenção, deixando a tarefa sem data, também conta como adiamento.
 - O app guarda stats de quantos adiamentos e da distância entre a primeira intenção de execução e a ação final (finalizar, arquivar, abandonar).
+
+## Agrupar e ordenar as tarefas ativas *(1b)*
+
+- Na tela de tarefas ativas, eu posso agrupar e ordenar as tarefas por projeto, por data de intenção, por data de criação ou por quantidade de adiamentos. Dá para usar as duas coisas ao mesmo tempo: agrupar por uma e ordenar por outra (ou pela mesma).
+- Sem nada escolhido, a lista não tem grupos e segue ordenada pela data de intenção, como antes.
+- Ordenar por projeto segue o nome do projeto, em ordem alfabética; por data de intenção, do dia mais próximo para o mais distante; por data de criação, da mais antiga para a mais nova; por adiamentos, da mais adiada para a menos adiada. As tarefas sem projeto ou sem data vão para o fim. Quando empata, vale a data de intenção e depois a de criação.
+- Agrupado, cada grupo é uma sublista com título e quantidade de tarefas, e eu posso recolher e abrir cada uma. Os grupos seguem a mesma ordem: projetos por nome, dias do mais cedo para o mais tarde, adiamentos da mais adiada ("Adiada 3 vezes") até "Nunca adiada", e "Sem projeto" ou "Sem data" por último. Na data de criação, o grupo é o dia em que a tarefa foi criada.
+- O título do grupo de um dia usa "Hoje", "Amanhã" e "Ontem" quando é o caso, e a data curta nos outros dias.
+- Um seletor "Só projetos em foco" deixa na lista só as tarefas dos projetos em foco (`projetos.md`), e combina com agrupar e ordenar.
+- A escolha de agrupar, ordenar e do seletor fica guardada neste navegador. Os grupos sempre abrem abertos, e um botão recolhe ou abre todos de uma vez.
+- No hover de uma tarefa, eu posso mudar a data de intenção e o prazo máximo, como na nota do dia, e abandonar a tarefa. Uma tarefa sem projeto também ganha "Projeto", que a vincula a um dos projetos ativos. Abandonar pede um segundo clique para confirmar, e a tarefa sai da lista. A linha mostra o prazo, quando tem.
+- Em "Selecionar várias", como no planejamento do fechamento do dia, a caixa de seleção some e eu clico na linha para selecionar, que fica destacada (Shift + clique pega um intervalo, e cada grupo tem "selecionar grupo") e, na barra de baixo, dou a todas a mesma data de intenção ou o mesmo prazo, tiro a data ou o prazo de todas, ou abandono todas, também com um segundo clique para confirmar. Esc ou "Pronto" sai da seleção.
 
 ## Prazo máximo e origem *(1b)*
 

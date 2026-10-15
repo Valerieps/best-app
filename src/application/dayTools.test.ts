@@ -1,9 +1,10 @@
 import { describe, expect, it } from 'vitest';
 import { positionBetween } from '../domain/position';
 import { createTestContext } from '../test/fixtures';
-import { moveDayPriority, setDayPriority, setDeadline, setIntendedDate, setSectionDetails } from './dayTools';
-import { createBlock, createSection, setTaskDone } from './notebook';
-import { loadDayPriorities, loadDayTriage } from './queries';
+import { moveDayPriority, setDayPriority, setDeadline, setDeadlines, setIntendedDate, setIntendedDates, setSectionDetails, setTaskProject } from './dayTools';
+import { abandonTask, abandonTasks, createBlock, createSection, setTaskDone } from './notebook';
+import { createProject, setProjectFinished } from './projects';
+import { loadActiveTasks, loadDayPriorities, loadDayTriage } from './queries';
 
 const TODAY = '2026-10-11';
 
@@ -12,6 +13,54 @@ async function newTask(ctx: Parameters<typeof createBlock>[0], text: string) {
 }
 
 describe('1b day tools', () => {
+  it('links a task to an active project, and only to an active one', async () => {
+    const { ctx, db } = createTestContext();
+    const task = await newTask(ctx, 'Sem projeto');
+    const project = await createProject(ctx, 'Casa');
+    const finished = await createProject(ctx, 'Antigo');
+    await setProjectFinished(ctx, finished.id, true);
+
+    await setTaskProject(ctx, task.id, finished.id);
+    expect((await db.blocks.get(task.id))?.projectId).toBeNull();
+
+    await setTaskProject(ctx, task.id, project.id);
+    expect((await db.blocks.get(task.id))?.projectId).toBe(project.id);
+    expect((await db.events.toArray()).filter((event) => event.type === 'block.linkedToProject')).toHaveLength(1);
+  });
+
+  it('changes dates and abandons several tasks at once', async () => {
+    const { ctx, reader, db } = createTestContext();
+    const a = await newTask(ctx, 'A');
+    const b = await newTask(ctx, 'B');
+    const c = await newTask(ctx, 'C');
+
+    await setIntendedDates(ctx, [a.id, b.id], '2026-10-14');
+    await setDeadlines(ctx, [a.id, c.id], '2026-10-20');
+    expect(await db.blocks.get(a.id)).toMatchObject({ intendedDate: '2026-10-14', deadline: '2026-10-20' });
+    expect(await db.blocks.get(b.id)).toMatchObject({ intendedDate: '2026-10-14' });
+    expect((await db.blocks.get(c.id))?.deadline).toBe('2026-10-20');
+
+    await setDeadlines(ctx, [a.id, c.id], null);
+    expect((await db.blocks.get(a.id))?.deadline).toBeNull();
+
+    await abandonTasks(ctx, [a.id, c.id]);
+    expect((await loadActiveTasks(reader)).map((item) => item.task.text)).toEqual(['B']);
+  });
+
+  it('abandoning a task takes it out of the active list and records it', async () => {
+    const { ctx, reader, db } = createTestContext();
+    const task = await newTask(ctx, 'Desistir');
+    await abandonTask(ctx, task.id);
+    expect(await db.blocks.get(task.id)).toMatchObject({ status: 'abandoned' });
+    expect((await db.blocks.get(task.id))?.closedAt).not.toBeNull();
+    expect(await loadActiveTasks(reader)).toEqual([]);
+    expect((await db.events.toArray()).filter((event) => event.type === 'task.abandoned')).toHaveLength(1);
+
+    // A task no longer active is left alone.
+    await abandonTask(ctx, task.id);
+    expect((await db.events.toArray()).filter((event) => event.type === 'task.abandoned')).toHaveLength(1);
+  });
+
   it('a date set during the day takes the task out of the triage, and moving it later counts', async () => {
     const { ctx, reader, db } = createTestContext();
     const task = await newTask(ctx, 'Comprar presente');
