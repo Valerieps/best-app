@@ -4,24 +4,17 @@ import { abandonTask, abandonTasks, setTaskDone } from '../../application/notebo
 import { loadActiveTasks, loadFinishedTasks, loadTaskListContext, type TaskListItem } from '../../application/queries';
 import { rangeBetween } from '../../domain/checkoutSteps';
 import { addDays, type DayKey } from '../../domain/day';
-import type { Project, Section } from '../../domain/entities';
+import type { Project } from '../../domain/entities';
 import { TASK_LIST_KEYS, groupTasks, inFocusProjects, type TaskGroupBy, type TaskListKey } from '../../domain/taskList';
 import { ProjectChip } from '../components/Chips';
 import { Icon } from '../components/Icon';
 import { DatePicker } from '../dayNote/BlockLine';
 import { Linkified } from '../components/Linkified';
 import { LoadingPage } from '../components/Skeleton';
-import { formatShortDate, formatTime, plural, postponedLabel, relativeDay } from '../format';
+import { plural, postponedLabel, relativeDay } from '../format';
 import { routeHash } from '../hooks';
 import { appContext, reader } from '../services';
 import { useLiveQuery } from '../useLiveQuery';
-
-function originLabel(section: Section | null): string {
-  if (!section) return 'Origem desconhecida';
-  if (section.projectPage) return `Veio da página do projeto · ${formatShortDate(section.day)}`;
-  const kind = section.kind === 'meeting' ? 'Reunião' : 'Geral';
-  return `Veio de: ${kind} · ${formatTime(section.createdAt)} · ${section.title ?? 'sem título'} · ${formatShortDate(section.day)}`;
-}
 
 function ListPage({ title, className = '', children }: { title: string; className?: string; children: React.ReactNode }) {
   return (
@@ -47,8 +40,7 @@ function TaskRow({
   /** In a batch selection, a click anywhere on the row picks it, highlighted, as in the planning. */
   selection?: { on: boolean; onPick(event: MouseEvent): void };
 }) {
-  const [open, setOpen] = useState(false);
-  const { task, project, origin } = item;
+  const { task, project } = item;
   const when = task.intendedDate ? relativeDay(task.intendedDate, today) : 'sem data';
   const active = task.status === 'active';
   const deadline = active && task.deadline ? `prazo ${relativeDay(task.deadline, today)}` : null;
@@ -60,24 +52,24 @@ function TaskRow({
     >
       <div className="task-row">
         {action}
-        <button
-          type="button"
-          className="task-row__text"
-          onClick={selection ? undefined : () => setOpen(!open)}
-          aria-expanded={selection ? undefined : open}
-          aria-pressed={selection?.on}
-        >
-          <Linkified text={task.text || '(tarefa sem texto)'} />
-        </button>
-        <span className="list-meta">
-          {project && <ProjectChip name={project.name} href={selection ? undefined : routeHash({ name: 'project', id: project.id })} />}
-          {meta && <span className="muted">{meta}</span>}
-        </span>
+        {selection ? (
+          <button type="button" className="task-row__text" aria-pressed={selection.on}>
+            <Linkified text={task.text || '(tarefa sem texto)'} />
+          </button>
+        ) : (
+          <span className="task-row__text">
+            <Linkified text={task.text || '(tarefa sem texto)'} />
+          </span>
+        )}
+        {meta && (
+          <span className="list-meta">
+            <span className="muted">{meta}</span>
+          </span>
+        )}
         {extra}
+        {/* Always the last item of the row, after the hover actions. */}
+        {project && <ProjectChip name={project.name} href={selection ? undefined : routeHash({ name: 'project', id: project.id })} />}
       </div>
-      {open && !selection && (
-        <p className="muted task-row__origin">{originLabel(origin)}</p>
-      )}
     </li>
   );
 }
@@ -549,7 +541,6 @@ export function ActiveTasksScreen({ today }: { today: DayKey }) {
                   </TaskGroupSection>
                 );
               })}
-          {!selecting && <p className="muted">Toque numa tarefa para ver de onde ela veio.</p>}
         </>
       )}
       {selecting && (

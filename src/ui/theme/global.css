@@ -1888,16 +1888,16 @@ button.plan-row--on:hover {
   gap: var(--space-3);
 }
 
+.task-row > .chip {
+  flex-shrink: 0;
+}
+
 .task-row__text {
   flex: 1;
   text-align: left;
   border: none;
   background: none;
   padding: 0;
-}
-
-.task-row__origin {
-  margin: 0 0 0 calc(18px + var(--space-3));
 }
 
 .wiki__meta {
