@@ -1,0 +1,225 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Rituais — rascunho 1</title>
+<style>
+  /* Values copied from src/ui/theme/tokens.css */
+  :root {
+    --color-bg: #f4f2ed;
+    --color-surface: #ffffff;
+    --color-surface-soft: #faf8f4;
+    --color-text: #1f1f1f;
+    --color-text-muted: #6b675f;
+    --color-border: #e4e0d8;
+    --color-border-strong: #cfcac0;
+    --color-hover: #efece5;
+    --color-accent: #1c1c1c;
+    --color-accent-text: #ffffff;
+    --color-focus: #3b6fd8;
+    --color-mark: #b38900;
+    --color-mark-bg: #f3e8c4;
+    --color-mark-text: #6b4210;
+    --color-dot-ok: #3d7a35;
+    --color-status0-bg: #eef6ec; --color-status0-border: #cfe5ca; --color-status0-strong: #3d7a35;
+    --color-status1-bg: #fbf5dc; --color-status1-border: #eedf9f; --color-status1-strong: #b38900;
+    --color-status2-bg: #fcecdc; --color-status2-border: #f1c9a0; --color-status2-strong: #c4570e;
+    --color-status3-bg: #fdecea; --color-status3-border: #f0a8a0; --color-status3-strong: #b42318;
+    --font-body: system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+    --font-size-xs: 0.75rem; --font-size-sm: 0.8125rem; --font-size-md: 1rem;
+    --font-size-lg: 1.125rem; --font-size-xl: 1.375rem; --font-size-2xl: 1.625rem;
+    --space-1: 4px; --space-2: 8px; --space-3: 12px; --space-4: 16px; --space-5: 24px; --space-6: 32px; --space-7: 48px;
+    --radius-sm: 6px; --radius-md: 10px; --radius-lg: 14px; --radius-pill: 999px;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; font-family: var(--font-body); color: var(--color-text); background: var(--color-surface); line-height: 1.55; }
+  .app { display: grid; grid-template-columns: 260px 1fr; min-height: 100vh; }
+
+  /* Sidebar */
+  .sidebar { background: var(--color-bg); border-right: 1px solid var(--color-border); padding: var(--space-4) var(--space-3); display: flex; flex-direction: column; gap: var(--space-1); font-size: var(--font-size-sm); }
+  .sidebar__brand { font-weight: 700; font-size: var(--font-size-md); padding: var(--space-2) var(--space-2) var(--space-4); }
+  .sidebar__group { color: var(--color-text-muted); font-size: var(--font-size-xs); text-transform: uppercase; letter-spacing: .05em; padding: var(--space-4) var(--space-2) var(--space-1); }
+  .sidebar__item { display: flex; align-items: center; justify-content: space-between; padding: 6px var(--space-2); border-radius: var(--radius-sm); }
+  .sidebar__item--current { background: var(--color-hover); font-weight: 600; }
+  .sidebar__due { background: var(--color-mark-bg); color: var(--color-mark-text); border-radius: var(--radius-pill); font-size: var(--font-size-xs); font-weight: 600; padding: 0 7px; }
+  .sidebar__foot { margin-top: auto; }
+  .dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: var(--color-dot-ok); margin-right: 6px; }
+  .muted { color: var(--color-text-muted); }
+
+  /* Page */
+  .page { padding: var(--space-6) var(--space-7); max-width: 980px; }
+  h1 { font-size: var(--font-size-2xl); margin: 0 0 var(--space-6); }
+  h2 { font-size: var(--font-size-lg); margin: 0; }
+  .section { margin-bottom: var(--space-7); }
+  .section__head { display: flex; align-items: baseline; justify-content: space-between; gap: var(--space-4); margin-bottom: var(--space-4); }
+  .section__sub { font-size: var(--font-size-sm); color: var(--color-text-muted); margin: var(--space-1) 0 0; }
+  button { font: inherit; cursor: pointer; }
+  .primary { background: var(--color-accent); color: var(--color-accent-text); border: 0; border-radius: var(--radius-md); padding: var(--space-2) var(--space-4); font-size: var(--font-size-sm); font-weight: 600; }
+  .tertiary { background: none; border: 0; border-radius: var(--radius-sm); padding: var(--space-1) var(--space-2); color: var(--color-text-muted); }
+
+  /* Calendar */
+  .closing { display: block; }
+  .calendar { width: 280px; border: 1px solid var(--color-border); border-radius: var(--radius-lg); padding: var(--space-3) var(--space-3) var(--space-3); }
+  .calendar__nav { display: flex; align-items: center; justify-content: space-between; margin-bottom: var(--space-2); font-size: var(--font-size-sm); }
+  .calendar__month { font-weight: 600; }
+  .calendar__grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 3px; }
+  .calendar__dow { text-align: center; font-size: 10px; color: var(--color-text-muted); }
+  .day { position: relative; aspect-ratio: 1 / 1; border-radius: var(--radius-sm); border: 1px solid transparent; background: none; display: flex; flex-direction: column; align-items: center; justify-content: center; font-size: var(--font-size-xs); color: var(--color-text); padding: 0; }
+  .day--empty { visibility: hidden; }
+  .day--closed { color: var(--color-text-muted); cursor: default; }
+  .day--closed::after { content: ""; width: 3px; height: 3px; border-radius: 50%; background: var(--color-dot-ok); margin-top: 1px; }
+  .day--nonote { color: var(--color-border-strong); }
+  .day--future { color: var(--color-border-strong); cursor: default; }
+  .day--open { font-weight: 700; background: var(--color-mark-bg); border-color: var(--color-status1-border); color: var(--color-mark-text); }
+  .day--today { border: 1.5px solid var(--color-accent); font-weight: 700; }
+  .day--hover { box-shadow: 0 0 0 2px var(--color-focus); }
+  .tooltip { position: absolute; bottom: calc(100% + 8px); left: 50%; transform: translateX(-50%); white-space: nowrap; background: var(--color-accent); color: var(--color-accent-text); font-size: var(--font-size-xs); font-weight: 400; padding: 4px 8px; border-radius: var(--radius-sm); z-index: 2; }
+
+  .legend { display: flex; flex-wrap: wrap; gap: var(--space-1) var(--space-3); margin-top: var(--space-3); font-size: var(--font-size-xs); color: var(--color-text-muted); }
+  .legend span { display: inline-flex; align-items: center; gap: 6px; }
+  .swatch { width: 14px; height: 14px; border-radius: 4px; border: 1px solid; }
+
+
+
+  /* Assistants: same as .cleanup-grid / .cleanup-card */
+  .cleanup-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: var(--space-3); margin: 0; padding: 0; list-style: none; }
+  .cleanup-card { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: var(--space-3); width: 100%; aspect-ratio: 1 / 0.8; padding: var(--space-4) var(--space-3); border-radius: var(--radius-lg); font-size: var(--font-size-sm); font-weight: 600; color: var(--color-text); text-align: center; }
+  .status-icon { display: grid; place-items: center; width: 52px; height: 52px; border-radius: var(--radius-pill); color: var(--color-accent-text); }
+  .status-icon svg { width: 24px; height: 24px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+  .status--0 { background: var(--color-status0-bg); border: 1px solid var(--color-status0-border); }
+  .status--1 { background: var(--color-status1-bg); border: 1px solid var(--color-status1-border); }
+  .status--2 { background: var(--color-status2-bg); border: 1px solid var(--color-status2-border); }
+  .status--3 { background: var(--color-status3-bg); border: 1px solid var(--color-status3-border); }
+  .status--0 .status-icon { background: var(--color-status0-strong); }
+  .status--1 .status-icon { background: var(--color-status1-strong); }
+  .status--2 .status-icon { background: var(--color-status2-strong); }
+  .status--3 .status-icon { background: var(--color-status3-strong); }
+  .card-new { position: relative; }
+  .card-new__flag { position: absolute; top: 8px; right: 10px; font-size: 10px; font-weight: 600; color: var(--color-status1-strong); text-transform: uppercase; letter-spacing: .04em; }
+
+  /* Annotations for the owner; not part of the screen */
+  .note { margin-top: var(--space-3); border-left: 3px solid var(--color-focus); background: #eef3fd; padding: var(--space-2) var(--space-3); font-size: var(--font-size-xs); color: #24427f; border-radius: 0 var(--radius-sm) var(--radius-sm) 0; }
+  .note b { font-weight: 700; }
+</style>
+</head>
+<body>
+<div class="app">
+  <nav class="sidebar" aria-label="Barra lateral">
+    <div class="sidebar__brand">Vesper Tasks</div>
+    <div class="sidebar__group">Hoje</div>
+    <div class="sidebar__item">Hoje</div>
+    <div class="sidebar__item">Próximos dias</div>
+    <div class="sidebar__item sidebar__item--current">Rituais <span class="sidebar__due" title="6 em Rituais">6</span></div>
+    <div class="sidebar__group">Planejamento</div>
+    <div class="sidebar__item">Projetos</div>
+    <div class="sidebar__item">Objetivos</div>
+    <div class="sidebar__item">Hábitos</div>
+    <div class="sidebar__group">Listas</div>
+    <div class="sidebar__item">Tarefas ativas</div>
+    <div class="sidebar__item">Tarefas arquivadas</div>
+    <div class="sidebar__foot">
+      <div class="sidebar__item"><span>Dados e backup</span><span class="muted"><span class="dot"></span>Backup 14:32</span></div>
+      <div class="sidebar__item">Configurações</div>
+    </div>
+    <div class="note"><b>Muda:</b> "Rituais" deixa de abrir uma lista na barra e vira um lugar, como "Projetos". O contador fica igual: dias pendentes + revisões disponíveis.</div>
+  </nav>
+
+  <main class="page">
+    <h1>Rituais</h1>
+
+    <!-- 1. Days without closing -->
+    <section class="section">
+      <div class="section__head" style="max-width:340px">
+        <h2>Fechar o dia</h2>
+        <button class="tertiary" style="font-size:var(--font-size-sm);color:var(--color-text)">Fechar dias pendentes</button>
+      </div>
+
+      <div class="closing">
+        <div class="calendar">
+          <div class="calendar__nav">
+            <button class="tertiary" aria-label="Mês anterior">‹</button>
+            <span class="calendar__month">outubro de 2026</span>
+            <button class="tertiary" aria-label="Próximo mês" disabled style="opacity:.35">›</button>
+          </div>
+          <div class="calendar__grid">
+            <div class="calendar__dow">dom</div><div class="calendar__dow">seg</div><div class="calendar__dow">ter</div>
+            <div class="calendar__dow">qua</div><div class="calendar__dow">qui</div><div class="calendar__dow">sex</div><div class="calendar__dow">sáb</div>
+
+            <div class="day day--empty"></div><div class="day day--empty"></div><div class="day day--empty"></div><div class="day day--empty"></div>
+            <span class="day day--closed">1</span>
+            <span class="day day--closed">2</span>
+            <button class="day day--nonote" disabled>3</button>
+
+            <button class="day day--nonote" disabled>4</button>
+            <button class="day day--open">5</button>
+            <button class="day day--open day--hover">6<span class="tooltip">ter, 6/10 · 4 linhas sem triagem · Fechar este dia</span></button>
+            <span class="day day--closed">7</span>
+            <span class="day day--closed">8</span>
+            <button class="day day--open">9</button>
+            <button class="day day--nonote" disabled>10</button>
+
+            <button class="day day--nonote" disabled>11</button>
+            <span class="day day--closed">12</span>
+            <button class="day day--open">13</button>
+            <button class="day day--open">14</button>
+            <button class="day day--today">15</button>
+            <button class="day day--future" disabled>16</button>
+            <button class="day day--future" disabled>17</button>
+
+            <button class="day day--future" disabled>18</button><button class="day day--future" disabled>19</button><button class="day day--future" disabled>20</button>
+            <button class="day day--future" disabled>21</button><button class="day day--future" disabled>22</button><button class="day day--future" disabled>23</button><button class="day day--future" disabled>24</button>
+            <button class="day day--future" disabled>25</button><button class="day day--future" disabled>26</button><button class="day day--future" disabled>27</button>
+            <button class="day day--future" disabled>28</button><button class="day day--future" disabled>29</button><button class="day day--future" disabled>30</button><button class="day day--future" disabled>31</button>
+          </div>
+          <div class="legend">
+            <span><span class="swatch" style="background:var(--color-mark-bg);border-color:var(--color-status1-border)"></span>sem fechamento</span>
+            <span><span class="swatch" style="border:1.5px solid var(--color-accent)"></span>hoje</span>
+            <span><span class="dot" style="margin:0"></span>fechado</span>
+            <span><span style="color:var(--color-border-strong)">12</span>sem nota</span>
+          </div>
+        </div>
+      </div>
+      <div class="note"><b>Dias destacados</b> estão sem fechamento, todos com a mesma cor. Clicar num deles, ou em hoje (só contorno), abre o "Fechar o dia" daquele dia. Dias fechados não fazem nada ao clicar. "Fechar dias pendentes" fecha todos de uma vez, com a auto-triagem.</div>
+    </section>
+
+    <!-- 2. Assistants -->
+    <section class="section">
+      <div class="section__head">
+        <div>
+          <h2>Assistentes</h2>
+        </div>
+      </div>
+      <ul class="cleanup-grid">
+        <li>
+          <button class="cleanup-card status--1 card-new" title="atenção, 5 dias fechados desde a última Revisão de Foco">
+            <span class="card-new__flag">disponível</span>
+            <span class="status-icon">
+              <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="4"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/></svg>
+            </span>
+            Revisão de Foco
+          </button>
+        </li>
+        <li>
+          <button class="cleanup-card status--2" title="acumulando, o mais antigo espera há 12 dias">
+            <span class="status-icon">
+              <svg viewBox="0 0 24 24"><path d="M5 3h10l4 4v14H5z"/><path d="M15 3v4h4M8 12h8M8 16h5"/></svg>
+            </span>
+            Seções soltas
+          </button>
+        </li>
+        <li>
+          <button class="cleanup-card status--0" title="em dia">
+            <span class="status-icon">
+              <svg viewBox="0 0 24 24"><rect x="8" y="8" width="13" height="13" rx="2"/><path d="M16 8V5a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h3"/></svg>
+            </span>
+            Projetos repetidos
+          </button>
+        </li>
+      </ul>
+      <div class="note"><b>Muda:</b> "Colocar ordem na casa" vira "Assistentes", com o mesmo layout e a mesma lógica de cor. A Revisão de Foco entra como um assistente: a cor vem dos dias fechados desde a última revisão, e o selo "disponível" aparece quando ela conta no contador de Rituais. O assistente "Dias em aberto" sai da grade, porque o calendário acima faz o papel dele. A Revisão de Rumo fica fora por enquanto.</div>
+    </section>
+  </main>
+</div>
+</body>
+</html>

@@ -106,7 +106,7 @@ Cada entidade é um registro separado. Um bloco existe uma vez só: a nota do di
 
 **`reflections`**: as revisões, `kind` `focus` ou `direction`. A revisão em andamento tem id fixo (`focus:open`, `direction:open`); ao fechar, vira `kind:id` com `start`, `end` e `closedAt`, e não reabre (ADR-039). Textos livres (melhores momentos, o que pode melhorar). Os registros `week:2026-W41` e `month:2026-10`, das reflexões antigas, contam como a última revisão de cada tipo.
 
-**`settings`**: um registro só, id `main`: cadência das revisões (`reviewCadence`, ADR-039), dias ativos, checklist do warm up, limites das cores de "Colocar ordem na casa", em dias de espera (`cleanupAgeLimits`, ADR-045; o antigo `cleanupLimits`, por quantidade, não é mais lido), coluna fixada da página do projeto e grupos abertos da lista de projetos (ADR-036). Entra no backup.
+**`settings`**: um registro só, id `main`: cadência das revisões (`reviewCadence`, ADR-039), dias ativos, checklist do warm up, limites das cores dos "Assistentes", em dias de espera (`cleanupAgeLimits`, ADR-045; o antigo `cleanupLimits`, por quantidade, não é mais lido), coluna fixada da página do projeto e grupos abertos da lista de projetos (ADR-036). Entra no backup.
 
 **`reminders`**: lembretes que voltam dentro do app (3): origem, texto, `dueAt` e `status` (`pending`, `done` ou `dropped`). O app nunca manda notificação (ADR-024).
 
@@ -141,7 +141,8 @@ Nada disso é guardado: é calculado a partir das tabelas, por funções de `app
 | Notas de um projeto | Seções do projeto com `notesDestination = 'wiki'`, cada entrada com as notas da seção, da mais recente para a mais antiga (`loadSectionNotes`) |
 | Projeto | Seções, tarefas e notas com o `projectId` dele, agrupadas em travadas, próximos dias, sem data e feitas |
 | Lista de projetos | Projetos por status, projetos em foco e mapa de atividade calculado dos eventos (ADR-034) |
-| "Colocar ordem na casa" | Contagens de cada assistente e a cor pela idade do item mais antigo, com os limites das configurações (ADR-045) |
+| Tela "Rituais" | Dias pendentes e dias com nota do mês, para o calendário (`domain/ritualsCalendar.ts`, ADR-051) |
+| "Assistentes" (antes "Colocar ordem na casa") | Contagens de cada assistente e a cor pela idade do item mais antigo, com os limites das configurações (ADR-045); o cartão da Revisão de Foco, pela disponibilidade dela (ADR-051) |
 | Abertura do dia | Etapa do dia (iniciar, warm up, dashboard, execução) e lembretes vencidos (ADR-023) |
 | Revisões e métricas | Eventos desde a última revisão de cada tipo passados às funções de métricas (seção 9); disponibilidade de cada revisão por cadência e sinais (`application/reviewQueries.ts`, ADR-039) |
 

@@ -1,12 +1,9 @@
 import type { Route } from './hooks';
 
-/** The places of the sidebar, and the rituals listed under "Rituais". */
+/** The places of the sidebar. */
 export type SidebarPlace =
   | 'day'
-  | 'checkout'
-  | 'focusReview'
-  | 'directionReview'
-  | 'cleanup'
+  | 'rituals'
   | 'projects'
   | 'objectives'
   | 'habits'
@@ -14,21 +11,21 @@ export type SidebarPlace =
   | 'data'
   | 'settings';
 
-/** Which place of the sidebar is marked as current. A project page belongs to "Projetos", and so on. */
+/**
+ * Which place of the sidebar is marked as current. A project page belongs to "Projetos", and the
+ * rituals opened from the "Rituais" screen (a closing, a review, an assistant) belong to it.
+ */
 export function sidebarPlace(route: Route): SidebarPlace {
   switch (route.name) {
     case 'project':
       return 'projects';
     case 'objective':
       return 'objectives';
+    case 'checkout':
+    case 'focusReview':
+    case 'directionReview':
+      return 'rituals';
     default:
       return route.name;
   }
-}
-
-const RITUALS: readonly SidebarPlace[] = ['checkout', 'focusReview', 'directionReview', 'cleanup'];
-
-/** Whether the current place is one of the rituals, so the "Rituais" list starts open. */
-export function isRitual(place: SidebarPlace): boolean {
-  return RITUALS.includes(place);
 }

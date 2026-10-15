@@ -49,6 +49,22 @@ export function AssistantIcon({ id }: { id: AssistantId }) {
   );
 }
 
+/** Green while the Revisão de Foco is not available, yellow ("atenção") once it is (spec/assistentes.md). */
+export function focusReviewStatus(available: boolean): CleanupStatus {
+  return available ? 1 : 0;
+}
+
+/** The Revisão de Foco's card on the "Rituais" screen: a target. */
+export function FocusReviewIcon() {
+  return (
+    <svg className="assistant-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+      <circle cx="12" cy="12" r="8" />
+      <circle cx="12" cy="12" r="4" />
+      <path d="M12 2v3M12 19v3M2 12h3M19 12h3" />
+    </svg>
+  );
+}
+
 /** "o mais antigo espera há 3 dias", for the cards and the assistant header. */
 export function ageLabel(ageInDays: number | null): string | null {
   if (ageInDays === null) return null;

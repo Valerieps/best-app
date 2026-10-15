@@ -59,3 +59,4 @@ Read only the ADRs your task touches: find them in this table or by grepping `ad
 | [ADR-048](adr/048-markdown-per-line-kept-as-plain-text.md) | Markdown per line, kept as plain text and parsed in the app | 2026-10-15 | Accepted |
 | [ADR-049](adr/049-archived-tasks-become-undated.md) | Archiving removed; archived tasks become active tasks without a date | 2026-10-15 | Accepted |
 | [ADR-050](adr/050-no-wiki-notes-stay-in-their-sections.md) | No wiki; kept notes stay in their sections, edited and deleted on the project page | 2026-10-15 | Accepted |
+| [ADR-051](adr/051-rituals-screen-replaces-the-sidebar-list.md) | The "Rituais" screen replaces the rituals list in the sidebar | 2026-10-15 | Accepted |

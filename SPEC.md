@@ -22,7 +22,7 @@ A spec é a fonte da verdade do produto. Este arquivo é o índice: as regras fi
 | [`spec/objetivos.md`](spec/objetivos.md) | Objetivos, meta, motivação e recursos |
 | [`spec/compromissos.md`](spec/compromissos.md) | Compromissos e detecção automática do tipo de bloco |
 | [`spec/habitos.md`](spec/habitos.md) | Hábitos e onde eles entram nos flows |
-| [`spec/assistentes.md`](spec/assistentes.md) | "Colocar ordem na casa" e os assistentes de limpeza |
+| [`spec/assistentes.md`](spec/assistentes.md) | A tela "Rituais": calendário dos dias sem fechamento e os "Assistentes" de limpeza |
 
 Os termos estão definidos em `GLOSSARIO.md`, e o porquê das decisões, em `DECISOES.md`.
 
