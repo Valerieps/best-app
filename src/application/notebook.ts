@@ -398,6 +398,16 @@ export async function setTaskDone(ctx: AppContext, taskId: string, done: boolean
   });
 }
 
+/** Takes an active task out of circulation without doing it, outside the checkout. */
+export async function abandonTask(ctx: AppContext, taskId: string): Promise<void> {
+  await ctx.store.transaction(async (tx) => {
+    const task = await getOrThrow(tx.blocks.get(taskId), 'Task');
+    if (task.kind !== 'task' || task.status !== 'active') return;
+    await tx.blocks.put({ ...task, status: 'abandoned', closedAt: nowIso(ctx), updatedAt: nowIso(ctx) });
+    await record(ctx, tx, 'task.abandoned', 'block', task.id, today(ctx));
+  });
+}
+
 /** Brings an archived task back to the active list, without a date. */
 export async function reactivateTask(ctx: AppContext, taskId: string): Promise<void> {
   await ctx.store.transaction(async (tx) => {

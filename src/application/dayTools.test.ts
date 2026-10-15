@@ -2,8 +2,8 @@ import { describe, expect, it } from 'vitest';
 import { positionBetween } from '../domain/position';
 import { createTestContext } from '../test/fixtures';
 import { moveDayPriority, setDayPriority, setDeadline, setIntendedDate, setSectionDetails } from './dayTools';
-import { createBlock, createSection, setTaskDone } from './notebook';
-import { loadDayPriorities, loadDayTriage } from './queries';
+import { abandonTask, createBlock, createSection, setTaskDone } from './notebook';
+import { loadActiveTasks, loadDayPriorities, loadDayTriage } from './queries';
 
 const TODAY = '2026-10-11';
 
@@ -12,6 +12,20 @@ async function newTask(ctx: Parameters<typeof createBlock>[0], text: string) {
 }
 
 describe('1b day tools', () => {
+  it('abandoning a task takes it out of the active list and records it', async () => {
+    const { ctx, reader, db } = createTestContext();
+    const task = await newTask(ctx, 'Desistir');
+    await abandonTask(ctx, task.id);
+    expect(await db.blocks.get(task.id)).toMatchObject({ status: 'abandoned' });
+    expect((await db.blocks.get(task.id))?.closedAt).not.toBeNull();
+    expect(await loadActiveTasks(reader)).toEqual([]);
+    expect((await db.events.toArray()).filter((event) => event.type === 'task.abandoned')).toHaveLength(1);
+
+    // A task no longer active is left alone.
+    await abandonTask(ctx, task.id);
+    expect((await db.events.toArray()).filter((event) => event.type === 'task.abandoned')).toHaveLength(1);
+  });
+
   it('a date set during the day takes the task out of the triage, and moving it later counts', async () => {
     const { ctx, reader, db } = createTestContext();
     const task = await newTask(ctx, 'Comprar presente');

@@ -3772,32 +3772,54 @@ button.format-toolbar__button:focus-visible {
   font-weight: 600;
 }
 
-/* Active tasks: group and sort */
-.task-list-controls {
+/* Active tasks: group, sort and hover actions */
+.active-tasks__controls {
   display: flex;
   flex-wrap: wrap;
   gap: var(--space-4);
-  margin-bottom: var(--space-4);
+  margin-bottom: var(--space-3);
   font-size: var(--font-size-sm);
   color: var(--color-text-muted);
 }
 
-.task-group + .task-group {
-  margin-top: var(--space-4);
+.active-tasks__group + .active-tasks__group {
+  margin-top: var(--space-3);
 }
 
-button.task-group__toggle {
+button.active-tasks__toggle {
   display: inline-flex;
   align-items: center;
   gap: var(--space-2);
   border: none;
   background: none;
   padding: 0;
-  margin-bottom: var(--space-2);
+  margin-bottom: var(--space-1);
   color: var(--color-text);
+  line-height: 1.4;
 }
 
-.task-group__title {
-  font-size: var(--font-size-md);
+.active-tasks__toggle .badge {
+  margin-left: 0;
+}
+
+.active-tasks__group-title {
+  font-size: var(--font-size-sm);
   font-weight: 600;
+}
+
+.active-tasks__actions {
+  display: none;
+  align-items: center;
+  gap: var(--space-1);
+  flex-shrink: 0;
+}
+
+.card-list__item:hover .active-tasks__actions,
+.card-list__item:focus-within .active-tasks__actions {
+  display: flex;
+}
+
+.line__action.active-tasks__abandon--confirm {
+  color: var(--color-warning-text);
+  border-color: var(--color-warning-text);
 }

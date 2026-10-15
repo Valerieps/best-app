@@ -10,15 +10,15 @@ const casa = project('p1', 'Casa');
 const app = project('p2', 'app');
 
 /** createdAt without a zone is read in local time, so the creation day does not depend on it. */
-function entry(id: string, createdAt: string, intendedDate: string | null, proj: Project | null = null): TaskListEntry {
-  const task = { id, kind: 'task', text: id, createdAt, intendedDate, projectId: proj?.id ?? null, status: 'active' } as Block;
+function entry(id: string, createdAt: string, intendedDate: string | null, proj: Project | null = null, postponeCount = 0): TaskListEntry {
+  const task = { id, kind: 'task', text: id, createdAt, intendedDate, projectId: proj?.id ?? null, status: 'active', postponeCount } as Block;
   return { task, project: proj };
 }
 
-const a = entry('a', '2026-10-01T09:00:00', '2026-10-20', casa);
-const b = entry('b', '2026-10-01T15:00:00', null, app);
+const a = entry('a', '2026-10-01T09:00:00', '2026-10-20', casa, 2);
+const b = entry('b', '2026-10-01T15:00:00', null, app, 2);
 const c = entry('c', '2026-10-03T08:00:00', '2026-10-16');
-const d = entry('d', '2026-09-28T10:00:00', '2026-10-16', casa);
+const d = entry('d', '2026-09-28T10:00:00', '2026-10-16', casa, 5);
 const all = [a, b, c, d];
 const ids = (items: TaskListEntry[]) => items.map((item) => item.task.id);
 
@@ -33,6 +33,10 @@ describe('sorting the active tasks', () => {
 
   it('by project sorts by name ignoring case, tasks without a project last', () => {
     expect(ids(sortTasks(all, 'project'))).toEqual(['b', 'd', 'a', 'c']);
+  });
+
+  it('by postponements puts the most postponed first, ties by intended date', () => {
+    expect(ids(sortTasks(all, 'postponeCount'))).toEqual(['d', 'a', 'b', 'c']);
   });
 
   it('does not change the list it was given', () => {
@@ -71,6 +75,12 @@ describe('grouping the active tasks', () => {
     const groups = groupTasks(all, 'createdDate', 'project');
     expect(groups.map((group) => group.key)).toEqual(['2026-09-28', '2026-10-01', '2026-10-03']);
     expect(ids(groups[1]!.items)).toEqual(['b', 'a']);
+  });
+
+  it('by postponements orders the groups from the most postponed', () => {
+    const groups = groupTasks(all, 'postponeCount', 'createdDate');
+    expect(groups.map((group) => group.key)).toEqual(['5', '2', '0']);
+    expect(ids(groups[1]!.items)).toEqual(['a', 'b']);
   });
 
   it('can group and sort by the same key', () => {

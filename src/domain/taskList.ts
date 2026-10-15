@@ -2,10 +2,10 @@ import { toDayKey, type DayKey } from './day';
 import type { Block, Project } from './entities';
 
 /** What the active tasks list can be grouped or sorted by. */
-export type TaskListKey = 'project' | 'intendedDate' | 'createdDate';
+export type TaskListKey = 'project' | 'intendedDate' | 'createdDate' | 'postponeCount';
 export type TaskGroupBy = TaskListKey | 'none';
 
-export const TASK_LIST_KEYS: readonly TaskListKey[] = ['project', 'intendedDate', 'createdDate'];
+export const TASK_LIST_KEYS: readonly TaskListKey[] = ['project', 'intendedDate', 'createdDate', 'postponeCount'];
 
 export interface TaskListEntry {
   task: Block;
@@ -13,7 +13,7 @@ export interface TaskListEntry {
 }
 
 export interface TaskGroup<T extends TaskListEntry> {
-  /** Project id or day; null for "sem projeto" / "sem data". Unused when not grouped. */
+  /** Project id, day or number of postponements; null for "sem projeto" / "sem data". Unused when not grouped. */
   key: string | null;
   items: T[];
 }
@@ -27,6 +27,7 @@ export function creationDay(task: Block): DayKey {
 function groupKey(entry: TaskListEntry, by: TaskListKey): string | null {
   if (by === 'project') return entry.project?.id ?? null;
   if (by === 'intendedDate') return entry.task.intendedDate;
+  if (by === 'postponeCount') return String(entry.task.postponeCount);
   return creationDay(entry.task);
 }
 
@@ -51,6 +52,7 @@ function compareBy(by: TaskListKey, a: TaskListEntry, b: TaskListEntry): number 
   if (by === 'intendedDate') {
     return compareMissingLast(a.task.intendedDate, b.task.intendedDate, compareText);
   }
+  if (by === 'postponeCount') return b.task.postponeCount - a.task.postponeCount;
   return compareCreation(a, b);
 }
 
@@ -67,7 +69,8 @@ export function sortTasks<T extends TaskListEntry>(items: readonly T[], by: Task
 
 /**
  * Groups the active tasks and sorts each group. Groups follow the order of their key: projects
- * by name, days from the earliest; the group without a project or a date comes last.
+ * by name, days from the earliest, the most postponed first; the group without a project or a
+ * date comes last.
  * Not grouped, the list is a single group with a null key.
  */
 export function groupTasks<T extends TaskListEntry>(
@@ -90,7 +93,9 @@ export function groupTasks<T extends TaskListEntry>(
       groupBy === 'project'
         ? compareMissingLast(first(a).project?.name ?? null, first(b).project?.name ?? null, compareText) ||
           compareMissingLast(keyA, keyB, compareText)
-        : compareMissingLast(keyA, keyB, compareText),
+        : groupBy === 'postponeCount'
+          ? Number(keyB) - Number(keyA)
+          : compareMissingLast(keyA, keyB, compareText),
     )
     .map(([key, items]) => ({ key, items }));
 }
