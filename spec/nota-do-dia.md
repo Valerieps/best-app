@@ -37,13 +37,23 @@
 
 Eu posso formatar o que escrevo na nota do dia com Markdown, como no Obsidian. O texto continua sendo o Markdown que eu digitei; o app só mostra a formatação.
 
-- Cada linha pode ser um cabeçalho, de quatro níveis (`#` a `####` seguido de espaço), ou um item de lista com marcador (`- `) ou numerada (`1. `). Dentro da linha, posso usar negrito (`**texto**`), itálico (`_texto_` ou `*texto*`) e link (`[texto](endereço)`). Um endereço que começa com `http://` ou `https://` já vira link sozinho.
+- Cada linha pode ser um cabeçalho, de quatro níveis (`#` a `####` seguido de espaço), ou um item de lista com marcador (`- ` ou `* `) ou numerada (`1. `). Dentro da linha, posso usar negrito (`**texto**`), itálico (`_texto_` ou `*texto*`) e link (`[texto](endereço)`). Um endereço que começa com `http://` ou `https://` já vira link sozinho.
 - Enquanto o cursor está na linha, eu vejo o Markdown cru, já no tamanho do cabeçalho; fora dela, a linha aparece formatada. Clicar num link abre o endereço numa aba nova; clicar no resto da linha volta a editar.
+- A lista é a exceção: assim que eu começo a linha com `-` ou `*` e dou espaço, ela já vira item de lista, com o marcador desenhado, mesmo com o cursor nela. O mesmo vale para a lista numerada (`1. `). O `* ` fica guardado como `- `. Backspace logo depois do marcador tira a linha da lista.
 - No canto direito do cabeçalho de cada seção geral ou de reunião, ao lado do ícone do modo foco, ficam ícones discretos, que aparecem quando passo o mouse na seção ou estou escrevendo nela: negrito, itálico, cabeçalhos 1 a 4, lista, lista numerada, diminuir e aumentar o recuo, e link. Eles formatam a linha em que estou ou, se nenhuma linha da seção está com o cursor, a última linha da seção. Clicar de novo no mesmo formato tira o formato.
 - Atalhos (⌘ no lugar de Ctrl no Mac): Ctrl + B para negrito, Ctrl + I para itálico, Ctrl + K para link, Ctrl + Shift + 1 a 4 para os cabeçalhos, Ctrl + Shift + 8 para lista e Ctrl + Shift + 7 para lista numerada. Num item de lista, Tab aumenta o recuo e Shift + Tab diminui, até 4 níveis; fora de lista, o Tab continua como sempre.
 - O link sem nada selecionado entra como `[link](https://)`, com "link" selecionado para eu escrever o texto; com um texto selecionado, ele vira o texto do link e o endereço fica selecionado para eu digitar; com um endereço selecionado, ele vira o destino.
 - Enter num item de lista começa a linha seguinte com o mesmo marcador e o mesmo recuo, e a lista numerada continua a contagem. Enter num item vazio tira o marcador e sai da lista, sem criar linha.
 - A formatação vale para notas e tarefas, e não muda o tipo do bloco. Fora da nota do dia (wiki, checkout, listas), o texto ainda aparece com o Markdown cru.
+
+## Selecionar várias linhas *(1b)*
+
+Cada linha é um bloco, mas eu posso selecionar várias de uma vez, como num editor de texto.
+
+- Eu seleciono várias linhas arrastando o mouse de uma linha até outra, ou com Shift + clique numa linha, a partir da linha em que estou. Dentro de uma linha só, arrastar continua selecionando o texto.
+- Ctrl + A (⌘ + A no Mac) seleciona o texto da linha; apertado de novo, ou numa linha vazia, seleciona todas as linhas da nota. No modo foco, só as da parte em foco.
+- Com linhas selecionadas, Shift + ↑/↓ aumenta ou diminui a seleção, Ctrl + C copia o texto delas (uma linha por linha, com o Markdown cru), Ctrl + X recorta e Delete ou Backspace apagam. Só as linhas livres são apagadas, como no Backspace de uma linha: as tarefas de outros dias e as já triadas ficam.
+- Esc, um clique, uma seta ou começar a digitar soltam a seleção, sem mudar as linhas.
 
 ## Ordem das linhas e das seções *(1b)*
 
@@ -61,7 +71,7 @@ Quando a nota do dia acumula muitas seções, eu posso focar numa só, para escr
 - Dá para focar qualquer parte da nota: uma seção geral ou de reunião, a seção "De outros dias" ou o bloco de prioridades, mesmo fixado no topo.
 - Eu entro no foco pelo ícone de seta dupla na diagonal, à direita do cabeçalho da parte, ou com Ctrl + Shift + Enter (⌘ + Shift + Enter no Mac) com o cursor em qualquer lugar dela.
 - No foco, a tela mostra só a parte ampliada e a barra lateral. Somem o título do dia, as setas entre os dias, o "Fechar o dia", os avisos do topo e os lembretes que voltaram. Por isso não há como trocar de dia com o foco aberto.
-- Entrar e sair do foco é uma transição suave: a parte aparece aos poucos, sem um corte seco.
+- Entrar e sair do foco é uma transição suave, sem um corte seco: a parte desliza do lugar dela na nota até ocupar a tela, e volta para o lugar ao sair, enquanto o resto da nota esmaece. Se o sistema pede menos animação, a troca é direta.
 - Eu saio do foco pelo ícone de reduzir, que fica no lugar do ícone de ampliar, ou pelo mesmo atalho. Escrever, criar linhas e editar funcionam como na nota inteira.
 - O foco sobrevive a recarregar a página e a passar por outras telas: "Hoje" volta para a parte em foco.
 - O app nunca sai do foco sozinho, para não interromper um fluxo de pensamento. Se virar meia-noite, eu continuo escrevendo na mesma parte, e nem o "Iniciar Dia" nem o "Fechar o dia" começam sozinhos. Se a parte em foco deixar de existir, a tela avisa e espera eu sair.

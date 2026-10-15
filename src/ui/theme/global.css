@@ -260,6 +260,22 @@ input[type='checkbox'] {
   gap: var(--space-4);
 }
 
+/* The note takes the focus while lines are selected; it shows no outline of its own */
+.note:focus {
+  outline: none;
+}
+
+/* Dragging across lines selects the lines, not their text */
+.note--selecting,
+.note--selecting .line__text {
+  user-select: none;
+}
+
+.line--selected {
+  background: var(--color-select-bg);
+  border-radius: var(--radius-sm);
+}
+
 .section {
   border-left: var(--section-bar-width) solid var(--color-general-bar);
   border-bottom: var(--border-width) solid var(--color-border);
@@ -3697,7 +3713,23 @@ button.format-toolbar__button:focus-visible {
 .md-list-marker {
   flex-shrink: 0;
   min-width: 1.5em;
+  line-height: var(--line-height);
   color: var(--color-text-muted);
+}
+
+/* The text field, with a list item's marker beside it while the line is edited */
+.line__field {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: flex-start;
+}
+
+/* Away from the cursor the field leaves the row, like the text field in it */
+.line--preview .line__field {
+  position: absolute;
+  width: 1px;
+  height: 1px;
 }
 
 .md-content {
@@ -3720,8 +3752,27 @@ button.format-toolbar__button:focus-visible {
   padding-top: var(--space-6);
 }
 
-/* Entering and leaving focus mode: the part fades and settles in place, instead of a cut */
-.note--focus {
+/* Entering and leaving focus mode glides the part between its place and the whole screen
+   (`focusTransition.ts`), while the rest of the note fades */
+::view-transition-group(focus-part) {
+  animation-duration: 380ms;
+  animation-timing-function: cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+::view-transition-old(focus-part),
+::view-transition-new(focus-part) {
+  animation-duration: 300ms;
+  animation-timing-function: ease-out;
+}
+
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation-duration: 260ms;
+  animation-timing-function: ease-out;
+}
+
+/* Without view transitions, the part fades and settles in place, instead of a cut */
+.note--focus-fade {
   animation: focus-enter 320ms cubic-bezier(0.22, 1, 0.36, 1) both;
 }
 
@@ -3752,7 +3803,7 @@ button.format-toolbar__button:focus-visible {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .note--focus,
+  .note--focus-fade,
   .page--from-focus .note {
     animation-duration: 0s;
   }
