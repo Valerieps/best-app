@@ -55,6 +55,12 @@ in this table. Never copy content between docs: link to the home instead (see `s
 | Screen drafts and implementation briefs | `rascunhos/` | `rascunhos/README.md` gives each draft's status; the spec wins over a draft |
 | UX review of 12/10/2026 | `AVALIACAO-UX.md` | Frozen report; do not update. Open items live in issue [#19](https://github.com/Valerieps/best-app/issues/19) |
 
+Exception for visual-only tweaks (colors, spacing, icons, sizes, layout) that change no behavior:
+do not update `spec/` or `ROADMAP.md` after each one. Record the batch once, when the owner asks
+to commit it or to open the PR: one line in `ROADMAP.md` for the whole batch, and a `spec/` edit
+only where the spec describes the old look. Changes in behavior (what a click does, what is
+saved, where an action lives) still update the docs as usual.
+
 New docs start with what goes in them and what does not ("Entra aqui" / "Não entra aqui"). Product docs are written in Brazilian
 Portuguese; ADRs, code and this file in English.
 
