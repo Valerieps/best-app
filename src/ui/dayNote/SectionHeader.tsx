@@ -1,8 +1,9 @@
 import { useEffect, useRef, useState, type KeyboardEvent, type ReactNode } from 'react';
 import type { Project, Section } from '../../domain/entities';
-import { normalizeForMatch } from '../../domain/text';
 import { formatTime } from '../format';
-import { KindChip, ProjectChip, WhiteboardChip } from '../components/Chips';
+import { ProjectChip, WhiteboardChip } from '../components/Chips';
+import { Icon } from '../components/Icon';
+import { titleOptions, titleToSaveOnBlur, type TitleOption } from './sectionTitle';
 import { isFocusToggleKey } from './focusMode';
 import { partMoveKey } from './lineDrag';
 
@@ -13,26 +14,24 @@ interface Props {
   onSaveTitle(title: string): void;
   onLinkProject(project: Project): void;
   onCreateProject(name: string): void;
+  /** Turns a linked section back into a whiteboard, with this title. */
+  onUnlink(title: string): void;
   /** Shown at the left of the header, like the focus mode button. */
   leading?: ReactNode;
 }
 
-type Option =
-  | { type: 'project'; project: Project }
-  | { type: 'create'; name: string }
-  | { type: 'titleOnly'; name: string };
-
-const MAX_SUGGESTIONS = 5;
 
 /**
- * Section header: kind, time and an optional title. While typing the title of a whiteboard
- * section, existing projects are suggested; choosing one links the section to it.
+ * Section header: kind, time and an optional title. While typing the title, existing projects
+ * are suggested; choosing one links the section to it, or moves it there from another project.
  */
-export function SectionHeader({ section, kind, projects, onSaveTitle, onLinkProject, onCreateProject, leading }: Props) {
+export function SectionHeader({ section, kind, projects, onSaveTitle, onLinkProject, onCreateProject, onUnlink, leading }: Props) {
   const [title, setTitle] = useState(section?.title ?? '');
   const [open, setOpen] = useState(false);
   const [highlight, setHighlight] = useState(0);
   const inputRef = useRef<HTMLInputElement>(null);
+  // Set by choosing a suggestion, which then leaves the field: that blur must not save the typed text.
+  const chose = useRef(false);
   const project = section?.projectId ? projects.find((p) => p.id === section.projectId) ?? null : null;
   const whiteboard = section !== null && section.projectId === null;
 
@@ -40,25 +39,18 @@ export function SectionHeader({ section, kind, projects, onSaveTitle, onLinkProj
     if (document.activeElement !== inputRef.current) setTitle(section?.title ?? '');
   }, [section?.title]);
 
-  const typed = title.trim();
-  const options: Option[] = [];
-  if (whiteboard && open && typed) {
-    const query = normalizeForMatch(typed);
-    projects
-      .filter((p) => p.status === 'active' && normalizeForMatch(p.name).includes(query))
-      .slice(0, MAX_SUGGESTIONS)
-      .forEach((p) => options.push({ type: 'project', project: p }));
-    if (!projects.some((p) => normalizeForMatch(p.name) === query)) options.push({ type: 'create', name: typed });
-    options.push({ type: 'titleOnly', name: typed });
-  }
+  const options: TitleOption[] = section !== null && open ? titleOptions(title, projects, project) : [];
 
-  function choose(option: Option) {
+  function choose(option: TitleOption) {
     setOpen(false);
+    chose.current = true;
     if (option.type === 'project') {
       setTitle(option.project.name);
       onLinkProject(option.project);
     } else if (option.type === 'create') {
       onCreateProject(option.name);
+    } else if (option.type === 'titleOnly' && project) {
+      onUnlink(option.name);
     } else {
       onSaveTitle(option.name);
     }
@@ -77,6 +69,7 @@ export function SectionHeader({ section, kind, projects, onSaveTitle, onLinkProj
       if (options.length > 0) choose(options[Math.min(highlight, options.length - 1)]);
       else {
         onSaveTitle(title);
+        chose.current = true;
         inputRef.current?.blur();
       }
       return;
@@ -94,7 +87,15 @@ export function SectionHeader({ section, kind, projects, onSaveTitle, onLinkProj
   return (
     <div className="section__header">
       {leading}
-      <KindChip kind={kind} />
+      {/* The kind as an icon: a notepad for a general section, two people for a meeting. */}
+      <span
+        className={`section__kind section__kind--${kind}`}
+        role="img"
+        title={kind === 'meeting' ? 'Reunião' : 'Geral'}
+        aria-label={kind === 'meeting' ? 'Reunião' : 'Geral'}
+      >
+        <Icon name={kind === 'meeting' ? 'users' : 'notes'} size="sm" />
+      </span>
       {section && <span className="section__time">{formatTime(section.createdAt)}</span>}
       <div className="title-field">
         <input
@@ -108,11 +109,16 @@ export function SectionHeader({ section, kind, projects, onSaveTitle, onLinkProj
             setOpen(true);
             setHighlight(0);
           }}
-          onFocus={() => setOpen(true)}
+          onFocus={() => {
+            chose.current = false;
+            setOpen(true);
+          }}
           onBlur={() => {
             // Let a click on a suggestion land before closing.
             setTimeout(() => setOpen(false), 150);
-            if (title.trim() !== (section?.title ?? '')) onSaveTitle(title);
+            const save = titleToSaveOnBlur(title, section?.title ?? null, chose.current);
+            chose.current = false;
+            if (save !== null) onSaveTitle(save);
           }}
           onKeyDown={onKeyDown}
           aria-label="Título da seção"
@@ -138,6 +144,7 @@ export function SectionHeader({ section, kind, projects, onSaveTitle, onLinkProj
                     {option.project.name} <ProjectChip />
                   </>
                 )}
+                {option.type === 'keepProject' && <>Manter em “{option.project.name}”, só mudar o título</>}
                 {option.type === 'create' && <>Criar o projeto “{option.name}”</>}
                 {option.type === 'titleOnly' && (
                   <span className="muted">Usar “{option.name}” só como título (quadro branco)</span>

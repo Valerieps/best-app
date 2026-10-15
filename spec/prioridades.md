@@ -8,11 +8,12 @@ A Revisão de Foco escolhe projetos, e o fechamento do dia escolhe tarefas. Não
 ## Prioridades do dia *(1b)*
 
 - Data de intenção é diferente de prioridade: as prioridades são um destaque dentro das tarefas do dia.
-- As 3 prioridades do dia são sempre tarefas, e a qualquer momento uma tarefa pode ser promovida a prioridade do dia. A tarefa priorizada aparece nos dois lugares: no bloco de prioridades e na seção em que está. O bloco de prioridades pode ser fixado no topo, para não sumir quando eu rolar a nota. Quando não está fixado, ele fica entre as seções da nota e muda de lugar como elas (`nota-do-dia.md`, "Ordem das linhas e das seções").
+- As 3 prioridades do dia são sempre tarefas, e a qualquer momento uma tarefa pode ser promovida a prioridade do dia. A tarefa priorizada aparece nos dois lugares: no bloco de prioridades e na seção em que está. O bloco de prioridades pode ser fixado no topo, para não sumir quando eu rolar a nota: um ícone de pin no canto do próprio bloco fixa e desfixa. O pin aparece quando passo o mouse no bloco, e fica sempre à vista enquanto o bloco está fixado. O bloco tem o fundo da mesma cor da barra lateral, para se destacar das seções na área branca. Quando não está fixado, ele fica entre as seções da nota e muda de lugar como elas (`nota-do-dia.md`, "Ordem das linhas e das seções").
 - No dia do prazo máximo, a tarefa se torna prioridade automaticamente. Se as 3 prioridades do dia já estiverem definidas, ela ocupa o lugar da terceira, sem criar uma quarta.
 - A lista pode estar vazia: no primeiro uso, quando o dia anterior não foi fechado, ou quando as 3 prioridades já foram completadas. Prioridades finalizadas saem da lista.
 - Promover uma tarefa quando as 3 prioridades já estão definidas não é bloqueado: a nova ocupa o lugar da terceira.
 - Se mais de uma tarefa tiver o prazo máximo no mesmo dia, cada uma ocupa o lugar da última prioridade escolhida à mão, sem tirar outra que entrou pelo prazo.
+- No bloco de prioridades eu também mudo as duas datas da tarefa, como na seção: a data de intenção e o prazo máximo. O prazo muda na hora. Mudar a data de intenção para outro dia, ou tirá-la, mostra uma barrinha que vai se esvaziando por 5 segundos, com a opção de cancelar. Se eu não cancelar, a tarefa vai para a data nova e sai das prioridades de hoje; na seção em que ela está, continua aparecendo com a data nova. Uma tarefa que é prioridade porque o prazo máximo é hoje continua prioridade, já que o prazo não mudou. Nas seções, mudar a data continua imediato, sem contagem.
 
 ## Projetos em foco *(2)*
 

@@ -7,6 +7,8 @@ import { applyPlanning, applyTriage, closePendingDays, completeCheckout, default
 import {
   changeBlockKind,
   convertSectionToProject,
+  titleSectionWithProject,
+  unlinkSection,
   createBlock,
   createSection,
   deleteBlock,
@@ -255,6 +257,54 @@ describe('day cycle', () => {
     expect(second).toMatchObject({ kind: 'task', text: ' e leite' });
     const [entry] = (await loadDayNote(reader, SUNDAY)).entries;
     expect(entry.blocks.map((block) => block.text)).toEqual(['Comprar pão', ' e leite']);
+  });
+
+  it('choosing a project in the title links the section and takes the project name as title', async () => {
+    const { ctx, db } = createTestContext();
+    const section = await createSection(ctx, 'general');
+    const project = await createProject(ctx, 'Reforma da cozinha');
+    await titleSectionWithProject(ctx, section.id, project.id);
+    expect(await db.sections.get(section.id)).toMatchObject({ title: 'Reforma da cozinha', projectId: project.id });
+  });
+
+  it('choosing another project moves a linked section there, with its tasks', async () => {
+    const { ctx, db } = createTestContext();
+    const section = await createSection(ctx, 'general');
+    const task = await createBlock(ctx, { sectionId: section.id, position: positionBetween(null, null) }, '[] Medir a parede');
+    const kitchen = await createProject(ctx, 'Reforma da cozinha');
+    const bathroom = await createProject(ctx, 'Reforma do banheiro');
+    await titleSectionWithProject(ctx, section.id, kitchen.id);
+
+    await titleSectionWithProject(ctx, section.id, bathroom.id);
+
+    expect(await db.sections.get(section.id)).toMatchObject({ title: 'Reforma do banheiro', projectId: bathroom.id });
+    expect((await db.blocks.get(task.id))?.projectId).toBe(bathroom.id);
+  });
+
+  it('creating a project from a linked section moves it there and renames it', async () => {
+    const { ctx, db } = createTestContext();
+    const section = await createSection(ctx, 'general');
+    const kitchen = await createProject(ctx, 'Reforma da cozinha');
+    await titleSectionWithProject(ctx, section.id, kitchen.id);
+
+    await convertSectionToProject(ctx, section.id, 'Marcenaria');
+
+    const moved = await db.sections.get(section.id);
+    expect(moved?.title).toBe('Marcenaria');
+    expect(moved?.projectId).not.toBe(kitchen.id);
+  });
+
+  it('a linked section can go back to being a whiteboard, and its tasks leave the project', async () => {
+    const { ctx, db } = createTestContext();
+    const section = await createSection(ctx, 'general');
+    const task = await createBlock(ctx, { sectionId: section.id, position: positionBetween(null, null) }, '[] Medir a parede');
+    const kitchen = await createProject(ctx, 'Reforma da cozinha');
+    await titleSectionWithProject(ctx, section.id, kitchen.id);
+
+    await unlinkSection(ctx, section.id, 'Ideias de casa');
+
+    expect(await db.sections.get(section.id)).toMatchObject({ title: 'Ideias de casa', projectId: null });
+    expect((await db.blocks.get(task.id))?.projectId).toBeNull();
   });
 
   it('a whiteboard can become a project at any time, named after the section', async () => {

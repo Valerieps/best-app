@@ -7,9 +7,9 @@ Toda opção do app mora num de três níveis, e cada nível tem um lugar fixo, 
 
 ## 1. Global: a barra lateral, igual em toda tela
 
-- Tudo o que é global fica numa única barra lateral fixa, à esquerda. Não há barra de cima nem gaveta: o centro fica limpo para eu focar no trabalho. O rascunho é o `rascunhos/rascunho-barra-lateral_1.png`, mas dele vale só a barra lateral, e os itens são os desta lista.
+- Tudo o que é global fica numa única barra lateral fixa, à esquerda. Não há barra de cima nem gaveta: o centro fica limpo para eu focar no trabalho. A área central é toda branca em toda tela, como no Obsidian, para dar a sensação de que tudo é área de trabalho *(1b)*. O rascunho é o `rascunhos/rascunho-barra-lateral_1.png`, mas dele vale só a barra lateral, e os itens são os desta lista.
 - O app ainda não tem versão para celular: a barra lateral é pensada para a tela do computador.
-- Eu posso recolher a barra lateral num botão no topo dela. Recolhida, ela vira uma faixa estreita só com o botão de abrir e o contador de "Rituais". O app lembra se deixei a barra aberta ou recolhida.
+- Eu posso recolher a barra lateral num botão no topo dela. Recolhida, ela vira uma faixa estreita só com o botão de abrir e o contador de "Rituais". Recolher e abrir é uma transição suave, e a área central acompanha *(1b)*. O app lembra se deixei a barra aberta ou recolhida. Aberta, eu posso arrastar a borda direita dela com o mouse para deixá-la mais larga ou mais estreita, e a área central encolhe ou cresce junto *(1b)*. A largura vai de 200 a 480 pixels, começa em 260, e um clique duplo na borda volta para ela. O app lembra a largura que escolhi.
 - No topo da barra fica o nome do app, "Best App" por enquanto. Clicar nele abre a nota do dia.
 - A barra lateral tem só lugares, em grupos, nesta ordem: Hoje (Hoje, próximos dias e Rituais); Planejamento (projetos, objetivos, hábitos); Listas (tarefas ativas, tarefas arquivadas, wiki); e, no rodapé, Dados e backup e Configurações.
 - "Hoje" volta para a nota do dia de qualquer tela.
@@ -22,7 +22,7 @@ Toda opção do app mora num de três níveis, e cada nível tem um lugar fixo, 
 ## 2. Da tela: um cabeçalho no topo do centro
 
 - Título à esquerda; à direita, no máximo uma ação principal e um "⋯" com as outras.
-- Na nota do dia, o título é a data com as setas entre dias pendentes, a ação principal é "Fechar o dia" daquele dia, e o "⋯" tem "Fixar prioridades". Os botões "+ Seção geral" e "+ Seção de reunião" ficam sempre visíveis no fim da nota, porque abrir seção é parte da captura. Uma seção nova entra no fim da nota, então não há botão entre as seções; depois eu posso mudá-la de lugar (`nota-do-dia.md`, "Ordem das linhas e das seções"). O "Fechar o dia" fica nos dois lugares: em "Rituais" e na nota do dia.
+- Na nota do dia, o título é a data com as setas entre dias pendentes, a ação principal é "Fechar o dia" daquele dia, e não há "⋯": fixar as prioridades é um ícone de pin no próprio bloco de prioridades (`prioridades.md`). Os botões "+ Seção geral" e "+ Seção de reunião" ficam sempre visíveis no fim da nota, porque abrir seção é parte da captura. Uma seção nova entra no fim da nota, então não há botão entre as seções; depois eu posso mudá-la de lugar (`nota-do-dia.md`, "Ordem das linhas e das seções"). O "Fechar o dia" fica nos dois lugares: em "Rituais" e na nota do dia.
 - No modo foco da nota do dia, o cabeçalho da tela sai: fica só a parte em foco, e o ícone de reduzir dela faz o papel da ação principal (`nota-do-dia.md`, "Modo foco").
 - Os avisos que dizem respeito só àquela tela ficam logo abaixo do cabeçalho dela, como o fechamento pendente, a revisão disponível e os lembretes que voltaram, que aparecem só na nota do dia.
 - Nos fluxos ("Fechar o dia" e revisões), a decisão fica no fim da página, porque eu leio de cima para baixo antes de decidir. O botão de confirmar a triagem se chama "Confirmar decisões".

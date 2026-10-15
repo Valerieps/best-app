@@ -5,7 +5,8 @@ import {
   createBlock,
   createSection,
   deleteBlock,
-  linkSectionToProject,
+  titleSectionWithProject,
+  unlinkSection,
   mergeIntoPrevious,
   reorderCarriedTasks,
   reorderDayParts,
@@ -17,7 +18,7 @@ import {
   updateBlockText,
   type NewBlockTarget,
 } from '../../application/notebook';
-import { setDayPriority, setDeadline, setIntendedDate, setSectionDetails } from '../../application/dayTools';
+import { moveDayPriority, setDayPriority, setDeadline, setIntendedDate, setSectionDetails } from '../../application/dayTools';
 import { setDayNoteFocus } from '../../application/settings';
 import { loadDayNote, loadDayPriorities } from '../../application/queries';
 import { detectKind } from '../../domain/blockKind';
@@ -303,17 +304,12 @@ export function DayNoteScreen({
         </span>
       }
       primary={{ label: 'Fechar o dia', onSelect: () => navigate({ name: 'checkout', day }) }}
-      more={
-        isToday
-          ? [{ label: pinned ? 'Desafixar prioridades' : 'Fixar prioridades no topo', onSelect: () => setPinned(!pinned) }]
-          : []
-      }
     />
   );
 
   if (!view) {
     return (
-      <main className={`page ${focus ? 'page--focus' : ''}`} aria-busy="true">
+      <main className={`page page--note ${focus ? 'page--focus' : ''}`} aria-busy="true">
         {!focus && header}
         <SkeletonLines />
       </main>
@@ -482,7 +478,8 @@ export function DayNoteScreen({
   /**
    * A click in the empty area below a section's lines, down to the next part of the day, means
    * writing something new: it opens an empty line at the end of that section, saved only on the
-   * first keystroke (ADR-013). Only today's note takes new lines (ADR-018).
+   * first keystroke (ADR-013). In a section with no lines yet, a click anywhere in it goes to its
+   * first line. Only today's note takes new lines (ADR-018).
    */
   function openLineBelow(event: MouseEvent<HTMLElement>) {
     if (!writable || event.button !== 0) return;
@@ -490,15 +487,20 @@ export function DayNoteScreen({
     const rows = [...event.currentTarget.querySelectorAll<HTMLElement>(':scope > .day-part')];
     const row = rows.filter((element) => element.getBoundingClientRect().top <= y).at(-1);
     const part = parts.find((item) => item.key === row?.dataset.dragId);
-    if (!row || !part || part.kind !== 'section' || part.entry.blocks.length === 0) return;
+    if (!row || !part || part.kind !== 'section') return;
     const entry = part.entry;
-    const lines = row.querySelectorAll('.line');
-    const lastLine = lines[lines.length - 1];
-    if (!lastLine) return;
-    const onControl = (event.target as HTMLElement).closest('textarea, input, button, a, select, .line, .section__header, .note__actions');
-    if (!opensLineBelow({ y, lastLineBottom: lastLine.getBoundingClientRect().bottom, onControl: onControl !== null })) return;
+    const empty = entry.blocks.length === 0;
+    const lastLine = row.querySelectorAll('.line:not(.line--ghost)');
+    const lastLineBottom = empty ? null : lastLine[lastLine.length - 1]?.getBoundingClientRect().bottom;
+    if (lastLineBottom === undefined) return;
+    const onControl = (event.target as HTMLElement).closest('textarea, input, button, a, select, .section__header, .note__actions');
+    if (!opensLineBelow({ y, lastLineBottom, onControl: onControl !== null })) return;
     // Keeps the browser from moving the focus; the empty line takes it once it shows.
     event.preventDefault();
+    if (empty) {
+      requestFocus(`ghost:${entry.note.section?.id ?? DAY_ENTRY}`);
+      return;
+    }
     setAppendingTo(entry.key);
     requestFocus(`ghost:end:${entry.key}`);
   }
@@ -534,8 +536,11 @@ export function DayNoteScreen({
       priorities={priorities}
       today={prioritiesDay}
       pinned={pinned}
+      onTogglePin={isToday && !focus ? () => setPinned(!pinned) : undefined}
       onToggleDone={(taskId, done) => write(() => setTaskDone(ctx, taskId, done))}
       onDemote={(taskId) => write(() => setDayPriority(ctx, taskId, false))}
+      onMoveDate={(taskId, date) => write(() => moveDayPriority(ctx, taskId, date))}
+      onSetDeadline={(taskId, date) => write(() => setDeadline(ctx, taskId, date))}
       leading={focusButton(PRIORITIES_PART, 'nas prioridades do dia')}
     />
   );
@@ -590,8 +595,9 @@ export function DayNoteScreen({
           kind={kind}
           projects={projects}
           onSaveTitle={(title) => section && write(() => setSectionTitle(ctx, section.id, title))}
-          onLinkProject={(project) => section && write(() => linkSectionToProject(ctx, section.id, project.id))}
+          onLinkProject={(project) => section && write(() => titleSectionWithProject(ctx, section.id, project.id))}
           onCreateProject={(name) => section && write(() => convertSectionToProject(ctx, section.id, name))}
+          onUnlink={(title) => section && write(() => unlinkSection(ctx, section.id, title))}
           leading={focusButton(part.key, section?.title ? `na seção "${section.title}"` : 'nesta seção', entry.key)}
         />
         {section?.kind === 'meeting' && (
@@ -647,7 +653,7 @@ export function DayNoteScreen({
         ? { key: PRIORITIES_PART, kind: 'priorities' }
         : parts.find((item) => isFocused(item.key, item.kind === 'section' ? item.entry.key : undefined));
     return (
-      <main className="page page--focus">
+      <main className="page page--note page--focus">
         <div className="note note--focus" onMouseDown={openLineBelow}>
           {part ? (
             <div className={`day-part day-part--${part.kind}`} data-drag-id={part.key} onKeyDown={(event) => partKeyDown(event, part.key)}>
@@ -667,7 +673,7 @@ export function DayNoteScreen({
 
   return (
     <>
-      <main className="page">
+      <main className="page page--note">
         {header}
         {isToday && (showPendingNotice || reviewNotice || reminders.length > 0) && (
           <div className="screen-notices">
