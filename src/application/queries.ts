@@ -429,7 +429,7 @@ export async function loadDayOpening(reader: Reader, today: DayKey): Promise<Day
   const projects = await reader.projects();
   const focusProjects = (await loadFocusProjectIds(reader, projects)).map((id) => projects.find((project) => project.id === id)!);
   return {
-    stage: dayStage(record ?? undefined, warmupItems, focusProjects.length > 0),
+    stage: dayStage(record ?? undefined, warmupItems),
     warmupItems,
     record,
     pendingDays: await loadPendingDays(reader, today),

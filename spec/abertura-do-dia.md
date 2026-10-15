@@ -13,12 +13,12 @@
 - O app abre em uma tela branca com o botão "Iniciar Dia", que triga a rotina de warm up. Enquanto o checklist de warm up estiver vazio, o app pula essa tela e o warm up.
 - O checklist de warm up é definido manualmente por mim. Isso pode ser feito a qualquer momento ou sugerido na primeira Revisão de Foco.
 - O que eu não quero realizar agora, eu posso "pular hoje" ou "perguntar de novo às XXh".
-- Ao terminar o warm up, o app segue para o dashboard, se ele tiver o que mostrar (veja "Dashboard"); senão, segue para a nota do dia.
+- Ao terminar o warm up, o app segue para o dashboard (veja "Dashboard").
 - Se eu reabrir o app depois de já ter iniciado o dia, caio na nota do dia.
 
 ## Dashboard
 
-O dashboard aparece na abertura do dia quando há pelo menos um destes: checklist de warm up, frases no mural ou projetos em foco. Sem nenhum deles, o app abre direto na nota do dia, como nas primeiras semanas de uso: o dashboard não aparece só para oferecer "registrar pensamentos", "registrar hábitos" ou o fechamento pendente.
+O dashboard só aparece depois do warm up. Sem checklist de warm up, o app abre direto na nota do dia, mesmo com projetos em foco ou frases no mural: o dashboard não aparece só para mostrá-los nem para oferecer "registrar pensamentos", "registrar hábitos" ou o fechamento pendente.
 
 A tela de boas-vindas mostra:
 

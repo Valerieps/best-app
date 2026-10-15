@@ -229,7 +229,7 @@ input[type='checkbox'] {
 }
 
 .section__kind--meeting {
-  color: var(--color-meeting-text);
+  color: var(--color-mark);
 }
 
 .chip--project {
@@ -288,7 +288,7 @@ input[type='checkbox'] {
 .section__link {
   display: inline-flex;
   align-items: center;
-  color: var(--color-project-text);
+  color: var(--color-mark);
 }
 
 .title-field {
@@ -2216,8 +2216,8 @@ button.sidebar__footer-item {
   padding: 0 6px;
   margin-left: var(--space-1);
   border-radius: var(--radius-pill);
-  background: var(--color-project-bg);
-  color: var(--color-project-text);
+  background: var(--color-mark-bg);
+  color: var(--color-mark-text);
   font-size: var(--font-size-xs);
   text-align: center;
 }
@@ -2299,6 +2299,17 @@ button.sidebar__footer-item {
   display: flex;
   align-items: center;
   gap: var(--space-2);
+}
+
+/* "Fechar o dia" in the day note's header, in the sidebar's tones instead of the black accent */
+.page--note .screen-header__actions button.primary {
+  background: var(--color-surface-soft);
+  border-color: var(--color-border-strong);
+  color: var(--color-text);
+}
+
+.page--note .screen-header__actions button.primary:hover {
+  background: var(--color-hover);
 }
 
 .screen-header__tools {
