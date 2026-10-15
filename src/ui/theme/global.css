@@ -221,6 +221,17 @@ input[type='checkbox'] {
   color: var(--color-meeting-text);
 }
 
+/* The kind of a day note section, as an icon */
+.section__kind {
+  display: inline-flex;
+  align-items: center;
+  color: var(--color-text-muted);
+}
+
+.section__kind--meeting {
+  color: var(--color-meeting-text);
+}
+
 .chip--project {
   background: var(--color-project-bg);
   color: var(--color-project-text);

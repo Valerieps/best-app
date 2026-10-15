@@ -2,7 +2,8 @@ import { useEffect, useRef, useState, type KeyboardEvent, type ReactNode } from 
 import type { Project, Section } from '../../domain/entities';
 import { normalizeForMatch } from '../../domain/text';
 import { formatTime } from '../format';
-import { KindChip, ProjectChip, WhiteboardChip } from '../components/Chips';
+import { ProjectChip, WhiteboardChip } from '../components/Chips';
+import { Icon } from '../components/Icon';
 import { isFocusToggleKey } from './focusMode';
 import { partMoveKey } from './lineDrag';
 
@@ -94,7 +95,15 @@ export function SectionHeader({ section, kind, projects, onSaveTitle, onLinkProj
   return (
     <div className="section__header">
       {leading}
-      <KindChip kind={kind} />
+      {/* The kind as an icon: a notepad for a general section, two people for a meeting. */}
+      <span
+        className={`section__kind section__kind--${kind}`}
+        role="img"
+        title={kind === 'meeting' ? 'Reunião' : 'Geral'}
+        aria-label={kind === 'meeting' ? 'Reunião' : 'Geral'}
+      >
+        <Icon name={kind === 'meeting' ? 'users' : 'notes'} size="sm" />
+      </span>
       {section && <span className="section__time">{formatTime(section.createdAt)}</span>}
       <div className="title-field">
         <input
