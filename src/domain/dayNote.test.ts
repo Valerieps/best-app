@@ -33,14 +33,14 @@ describe('buildDayNote', () => {
     expect(note_[0]).toEqual({ section: null, carried: [carried], blocks: [] });
   });
 
-  it('orders blocks by position and hides archived and abandoned tasks', () => {
+  it('orders blocks by position and hides abandoned tasks', () => {
     const s = section({ day });
     const second = note(s.id, 'segunda', { position: 'b' });
     const first = task(s.id, 'primeira', { position: 'a' });
     const done = task(s.id, 'feita', { position: 'c', status: 'done' });
-    const archived = task(s.id, 'arquivada', { position: 'd', status: 'archived' });
+    const abandoned = task(s.id, 'abandonada', { position: 'd', status: 'abandoned' });
 
-    const [entry] = buildDayNote({ day, sections: [s], blocks: [second, archived, done, first], intended: [] });
+    const [entry] = buildDayNote({ day, sections: [s], blocks: [second, abandoned, done, first], intended: [] });
 
     expect(entry.blocks).toEqual([first, second, done]);
   });

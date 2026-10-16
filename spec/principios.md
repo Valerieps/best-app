@@ -29,7 +29,7 @@ Não há onboarding: no primeiro uso eu já saio usando o ciclo diário, e os ri
 - O app não tem compartilhamento: quem usa o app só vê os próprios dados, guardados no próprio navegador.
 - O app guarda um histórico de eventos: cada mudança (criação, adiamento, finalização, vínculo) com data e hora, e não só o estado atual. Todas as métricas, inclusive as que ainda não existem, saem desse histórico.
 - Cada bloco é um registro separado no banco, para evitar conflitos entre abas abertas e para permitir juntar os dados de aparelhos diferentes no futuro.
-- Cada bloco existe uma vez só. Notas, projetos e wiki apontam para ele por vínculos, sem cópias.
+- Cada bloco existe uma vez só. A nota do dia, os projetos e os recursos apontam para ele por vínculos, sem cópias.
 - A arquitetura é desenhada para o escopo completo da spec, e a implementação segue as partes em ordem.
 
 ## Backup
@@ -40,6 +40,6 @@ Não há onboarding: no primeiro uso eu já saio usando o ciclo diário, e os ri
 - Em "Dados e backup", eu vejo as cópias por data e posso restaurar qualquer uma. Restaurar funciona como importar: mostra antes o que se perderia, e dá para desfazer.
 - Quem escolheu um arquivo antes das cópias datadas continua com o backup nele, sem cópias, até escolher a pasta.
 - O backup automático nunca grava por cima de um arquivo que tenha dados que o navegador não tem, como quando o Chrome apagou os dados do site ou outro computador salvou dados mais novos no mesmo arquivo. Nesse caso, ele pausa e sugere importar o arquivo. Vale também ao escolher uma pasta que já tem um backup.
-- O Chrome pode pedir, a cada sessão, autorização para gravar na pasta. Enquanto eu não autorizo, o backup fica pausado, com um aviso discreto e um botão para retomar.
+- O Chrome pode pedir, a cada sessão, autorização para gravar na pasta. Enquanto eu não autorizo, o backup fica pausado, com um aviso discreto e um botão para retomar. Se o backup automático não está gravando (pausado ou sem arquivo) e o último backup foi há mais de 24 horas, o aviso fica forte: vermelho, no topo, "Seu último backup foi há N dias", com o botão "Retomar" (ou "Escolher pasta", quando não há arquivo). Só o tempo conta, não o número de mudanças.
 - Importar um backup substitui todos os dados. Se a importação for apagar alguma coisa, o app mostra um aviso em destaque com o que vai se perder, e eu confirmo. Antes de substituir, o app guarda uma cópia do estado anterior, e eu posso desfazer a importação.
 - Como o status e os avisos de backup aparecem na tela está em `navegacao.md`.

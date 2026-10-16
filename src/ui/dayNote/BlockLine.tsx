@@ -9,8 +9,20 @@ import { useSaveOnPageLeave } from '../pageLeave';
 import { rememberUnsavedLine } from '../unsavedLines';
 import { useFocusTarget } from './focus';
 import { partMoveKey } from './lineDrag';
-import { applyFormat, FORMAT_EVENT, formatShortcut, hasMarkdown, listOnEnter, parseLine, type FormatCommand, type LineEdit } from './markdown';
-import { MarkdownText } from './MarkdownText';
+import { isSelectAllKey, selectsAllLines } from './blockSelection';
+import {
+  applyFormat,
+  FORMAT_EVENT,
+  formatShortcut,
+  hasMarkdown,
+  listOnEnter,
+  listPrefixLength,
+  normalizeBullet,
+  parseLine,
+  type FormatCommand,
+  type LineEdit,
+} from './markdown';
+import { ListMarker, MarkdownText } from './MarkdownText';
 
 /** Wait after the last keystroke before saving the text. */
 const SAVE_DELAY_MS = 400;
@@ -33,6 +45,8 @@ export interface LineHandlers {
   onTogglePriority(block: Block, on: boolean): void;
   /** Alt + ↑/↓: moves the line inside its group (request 2). Absent where lines keep their order. */
   onMove?(block: Block, direction: 'up' | 'down'): void;
+  /** Ctrl + A with the line's whole text already selected: selects every line. Absent where lines are not selectable. */
+  onSelectAll?(block: Block): void;
 }
 
 /** Reordering by dragging the line's handle (request 2). */
@@ -64,6 +78,8 @@ interface Props {
   /** The intended date is shown elsewhere, like the project agenda's date block: no chip, only the hover shortcut. */
   hideDate?: boolean;
   drag?: LineDragProps;
+  /** Part of the lines selected together (spec/nota-do-dia.md, "Selecionar várias linhas"). */
+  selected?: boolean;
 }
 
 /** Hint on an empty line, shown only while the line is being written (P3 in AVALIACAO-UX.md). */
@@ -124,7 +140,7 @@ export function DatePicker({
   );
 }
 
-export function BlockLine({ block, free, day, today, isPriority, allowNewLines, handlers, extraMeta, hideDate = false, drag }: Props) {
+export function BlockLine({ block, free, day, today, isPriority, allowNewLines, handlers, extraMeta, hideDate = false, drag, selected = false }: Props) {
   const ref = useRef<HTMLTextAreaElement>(null);
   const [text, setText] = useState(block.text);
   const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -142,7 +158,16 @@ export function BlockLine({ block, free, day, today, isPriority, allowNewLines, 
   // The text when the line got the focus: leaving it creates only the people cited since then.
   const textAtFocus = useRef(block.text);
 
-  useFocusTarget(block.id, ref);
+  // A list item's marker is drawn beside the field, which holds only the text after it. Carets and
+  // selections handed around are counted on the whole line, so they move by this offset.
+  const prefixOf = () => listPrefixLength(latest.current.text);
+  useFocusTarget(block.id, ref, prefixOf);
+
+  /** The line's whole text and selection, from the field that holds only the text after a list marker. */
+  function readEdit(element: HTMLTextAreaElement): LineEdit {
+    const prefix = latest.current.text.slice(0, prefixOf());
+    return { text: prefix + element.value, start: element.selectionStart + prefix.length, end: element.selectionEnd + prefix.length };
+  }
 
   // Follow changes made elsewhere (another tab, a merge) unless there are unsaved local edits.
   const synced = useRef(block.text);
@@ -175,7 +200,7 @@ export function BlockLine({ block, free, day, today, isPriority, allowNewLines, 
     (command: FormatCommand) => {
       const element = ref.current;
       if (!element) return;
-      const edit: LineEdit = { text: element.value, start: element.selectionStart, end: element.selectionEnd };
+      const edit = readEdit(element);
       const next = applyFormat(command, edit);
       if (next.text === edit.text && next.start === edit.start && next.end === edit.end) return;
       setText(next.text);
@@ -191,7 +216,8 @@ export function BlockLine({ block, free, day, today, isPriority, allowNewLines, 
     const selection = selectionAfter.current;
     if (!element || !selection) return;
     selectionAfter.current = null;
-    element.setSelectionRange(selection[0], selection[1]);
+    const offset = listPrefixLength(text);
+    element.setSelectionRange(Math.max(0, selection[0] - offset), Math.max(0, selection[1] - offset));
   }, [text]);
   useEffect(() => {
     const element = ref.current;
@@ -225,7 +251,14 @@ export function BlockLine({ block, free, day, today, isPriority, allowNewLines, 
     if (names.length > 0) handlers.onEnsurePeople?.(names);
   }
 
-  function onChange(value: string) {
+  function onChange(field: HTMLTextAreaElement) {
+    const before = listPrefixLength(text);
+    // Typing `- ` or `* ` at the start makes a list item right away: the marker moves out of the field.
+    const value = normalizeBullet(text.slice(0, before) + field.value);
+    if (listPrefixLength(value) !== before) {
+      const caret = field.selectionStart + before;
+      selectionAfter.current = [caret, caret];
+    }
     if (block.kind === 'note' && free) {
       const detected = detectKind(value);
       if (detected.kind === 'task') {
@@ -256,6 +289,8 @@ export function BlockLine({ block, free, day, today, isPriority, allowNewLines, 
     const element = event.currentTarget;
     const atStart = element.selectionStart === 0 && element.selectionEnd === 0;
     const atEnd = element.selectionStart === element.value.length;
+    const edit = readEdit(element);
+    const list = parseLine(edit.text).list;
     // Moving the whole section is handled by the section around the line.
     if (partMoveKey(event)) return;
     if (options.length > 0 && !event.nativeEvent.isComposing) {
@@ -276,9 +311,14 @@ export function BlockLine({ block, free, day, today, isPriority, allowNewLines, 
         return;
       }
     }
+    if (isSelectAllKey(event) && handlers.onSelectAll && selectsAllLines(element)) {
+      event.preventDefault();
+      handlers.onSelectAll(block);
+      return;
+    }
     const command = event.nativeEvent.isComposing ? null : formatShortcut(event);
     // Tab only indents a list item; elsewhere it still moves the focus.
-    if (command && (event.key !== 'Tab' || parseLine(element.value).list)) {
+    if (command && (event.key !== 'Tab' || list)) {
       event.preventDefault();
       format(command);
       return;
@@ -290,21 +330,25 @@ export function BlockLine({ block, free, day, today, isPriority, allowNewLines, 
       event.preventDefault();
       if (!allowNewLines) return;
       if (saveTimer.current) clearTimeout(saveTimer.current);
-      const caret = element.selectionStart;
-      let value = element.value;
+      const caret = edit.start;
+      let value = edit.text;
       // In a list, the new line continues it; Enter on an empty item leaves the list instead.
-      const list = element.selectionEnd === caret ? listOnEnter(value, caret) : null;
-      if (list?.type === 'exit') {
-        setText(list.text);
-        latest.current.text = list.text;
+      const next = edit.end === caret ? listOnEnter(value, caret) : null;
+      if (next?.type === 'exit') {
+        setText(next.text);
+        latest.current.text = next.text;
         flush();
         return;
       }
-      if (list?.type === 'continue') value = value.slice(0, caret) + list.prefix + value.slice(caret);
+      if (next?.type === 'continue') value = value.slice(0, caret) + next.prefix + value.slice(caret);
       // The rest of the line moves to the new line right away; the split is saved after.
       setText(value.slice(0, caret));
       latest.current.text = value.slice(0, caret);
-      handlers.onEnter(block, value, caret, list?.type === 'continue' ? list.prefix.length : 0);
+      handlers.onEnter(block, value, caret, next?.type === 'continue' ? next.prefix.length : 0);
+    } else if (event.key === 'Backspace' && atStart && list) {
+      // Backspace right after the marker takes the line out of the list, like a text editor.
+      event.preventDefault();
+      format(list.kind);
     } else if (event.key === 'Backspace' && atStart && free) {
       event.preventDefault();
       if (saveTimer.current) clearTimeout(saveTimer.current);
@@ -349,6 +393,7 @@ export function BlockLine({ block, free, day, today, isPriority, allowNewLines, 
   const priorityLabel = isPriority ? 'Tirar das prioridades do dia' : 'Promover a prioridade do dia';
 
   const structure = parseLine(text);
+  const prefixLength = structure.list ? structure.prefixLength : 0;
   const headingClass = structure.heading ? `line--h${structure.heading}` : '';
   const preview = !editing && hasMarkdown(text);
 
@@ -366,7 +411,7 @@ export function BlockLine({ block, free, day, today, isPriority, allowNewLines, 
 
   return (
     <div
-      className={`line line--${block.kind} ${done ? 'line--done' : ''} ${headingClass} ${preview ? 'line--preview' : ''} ${dragClasses}`}
+      className={`line line--${block.kind} ${done ? 'line--done' : ''} ${headingClass} ${preview ? 'line--preview' : ''} ${selected ? 'line--selected' : ''} ${dragClasses}`}
       data-drag-group={drag?.group}
       data-drag-id={block.id}
     >
@@ -384,35 +429,39 @@ export function BlockLine({ block, free, day, today, isPriority, allowNewLines, 
           aria-label={done ? 'Reabrir tarefa' : 'Finalizar tarefa'}
         />
       )}
-      <textarea
-        ref={ref}
-        className="line__text"
-        rows={1}
-        value={text}
-        spellCheck
-        onChange={(event) => {
-          setCaret(event.target.selectionStart);
-          setHighlight(0);
-          onChange(event.target.value);
-        }}
-        onKeyDown={onKeyDown}
-        onSelect={(event) => setCaret(event.currentTarget.selectionStart)}
-        onFocus={(event) => {
-          setEditing(true);
-          setCaret(event.currentTarget.selectionStart);
-          textAtFocus.current = event.currentTarget.value;
-        }}
-        onBlur={() => {
-          setEditing(false);
-          setDismissedAt(null);
-          flush();
-          createTypedPeople();
-        }}
-        placeholder={block.kind === 'note' && free && allowNewLines ? NOTE_HINT : undefined}
-        aria-label={isTask ? 'Tarefa' : 'Nota'}
-        aria-expanded={options.length > 0}
-        aria-autocomplete="list"
-      />
+      {/* Always wrapped, so the field is never rebuilt (and never loses the focus) when the line becomes a list item. */}
+      <div className="line__field">
+        {structure.list && !preview && <ListMarker list={structure.list} />}
+        <textarea
+          ref={ref}
+          className="line__text"
+          rows={1}
+          value={text.slice(prefixLength)}
+          spellCheck
+          onChange={(event) => {
+            setCaret(event.target.selectionStart + prefixLength);
+            setHighlight(0);
+            onChange(event.target);
+          }}
+          onKeyDown={onKeyDown}
+          onSelect={(event) => setCaret(event.currentTarget.selectionStart + prefixLength)}
+          onFocus={(event) => {
+            setEditing(true);
+            setCaret(event.currentTarget.selectionStart + prefixLength);
+            textAtFocus.current = latest.current.text;
+          }}
+          onBlur={() => {
+            setEditing(false);
+            setDismissedAt(null);
+            flush();
+            createTypedPeople();
+          }}
+          placeholder={block.kind === 'note' && free && allowNewLines && !structure.list ? NOTE_HINT : undefined}
+          aria-label={isTask ? 'Tarefa' : 'Nota'}
+          aria-expanded={options.length > 0}
+          aria-autocomplete="list"
+        />
+      </div>
       {options.length > 0 && (
         <ul className="suggestions line__suggestions" role="listbox" aria-label="Pessoas">
           {options.map((option, index) => (

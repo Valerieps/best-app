@@ -1,27 +1,20 @@
 import { useEffect, useState, type MouseEvent } from 'react';
 import { setDeadline, setDeadlines, setIntendedDate, setIntendedDates, setTaskProject } from '../../application/dayTools';
-import { abandonTask, abandonTasks, reactivateTask, setTaskDone } from '../../application/notebook';
-import { loadActiveTasks, loadArchivedTasks, loadTaskListContext, type TaskListItem } from '../../application/queries';
+import { abandonTask, abandonTasks, setTaskDone } from '../../application/notebook';
+import { loadActiveTasks, loadFinishedTasks, loadTaskListContext, type TaskListItem } from '../../application/queries';
 import { rangeBetween } from '../../domain/checkoutSteps';
 import { addDays, type DayKey } from '../../domain/day';
-import type { Project, Section } from '../../domain/entities';
+import type { Project } from '../../domain/entities';
 import { TASK_LIST_KEYS, groupTasks, inFocusProjects, type TaskGroupBy, type TaskListKey } from '../../domain/taskList';
 import { ProjectChip } from '../components/Chips';
 import { Icon } from '../components/Icon';
 import { DatePicker } from '../dayNote/BlockLine';
 import { Linkified } from '../components/Linkified';
 import { LoadingPage } from '../components/Skeleton';
-import { formatShortDate, formatTime, plural, postponedLabel, relativeDay } from '../format';
+import { plural, postponedLabel, relativeDay } from '../format';
 import { routeHash } from '../hooks';
 import { appContext, reader } from '../services';
 import { useLiveQuery } from '../useLiveQuery';
-
-function originLabel(section: Section | null): string {
-  if (!section) return 'Origem desconhecida';
-  if (section.projectPage) return `Veio da página do projeto · ${formatShortDate(section.day)}`;
-  const kind = section.kind === 'meeting' ? 'Reunião' : 'Geral';
-  return `Veio de: ${kind} · ${formatTime(section.createdAt)} · ${section.title ?? 'sem título'} · ${formatShortDate(section.day)}`;
-}
 
 function ListPage({ title, className = '', children }: { title: string; className?: string; children: React.ReactNode }) {
   return (
@@ -47,45 +40,36 @@ function TaskRow({
   /** In a batch selection, a click anywhere on the row picks it, highlighted, as in the planning. */
   selection?: { on: boolean; onPick(event: MouseEvent): void };
 }) {
-  const [open, setOpen] = useState(false);
-  const { task, project, origin } = item;
+  const { task, project } = item;
   const when = task.intendedDate ? relativeDay(task.intendedDate, today) : 'sem data';
   const active = task.status === 'active';
   const deadline = active && task.deadline ? `prazo ${relativeDay(task.deadline, today)}` : null;
   const meta = [active ? when : null, deadline, postponedLabel(task.postponeCount)].filter(Boolean).join(' · ');
   return (
     <li
-      className={`card-list__item card-list__item--stacked ${selection ? 'active-tasks__row--select' : ''} ${selection?.on ? 'active-tasks__row--on' : ''}`}
+      className={`card-list__item card-list__item--stacked ${task.status === 'done' ? 'active-tasks__row--done' : ''} ${selection ? 'active-tasks__row--select' : ''} ${selection?.on ? 'active-tasks__row--on' : ''}`}
       onClick={selection?.onPick}
     >
       <div className="task-row">
         {action}
-        <button
-          type="button"
-          className="task-row__text"
-          onClick={selection ? undefined : () => setOpen(!open)}
-          aria-expanded={selection ? undefined : open}
-          aria-pressed={selection?.on}
-        >
-          <Linkified text={task.text || '(tarefa sem texto)'} />
-        </button>
-        <span className="list-meta">
-          {project && <ProjectChip name={project.name} />}
-          {meta && <span className="muted">{meta}</span>}
-        </span>
+        {selection ? (
+          <button type="button" className="task-row__text" aria-pressed={selection.on}>
+            <Linkified text={task.text || '(tarefa sem texto)'} />
+          </button>
+        ) : (
+          <span className="task-row__text">
+            <Linkified text={task.text || '(tarefa sem texto)'} />
+          </span>
+        )}
+        {meta && (
+          <span className="list-meta">
+            <span className="muted">{meta}</span>
+          </span>
+        )}
         {extra}
+        {/* Always the last item of the row, after the hover actions. */}
+        {project && <ProjectChip name={project.name} href={selection ? undefined : routeHash({ name: 'project', id: project.id })} />}
       </div>
-      {open && !selection && (
-        <p className="muted task-row__origin">
-          {originLabel(origin)}
-          {origin?.notesDestination === 'wiki' && (
-            <>
-              {' · '}
-              <a href={routeHash({ name: 'wiki', section: origin.id })}>ver na wiki</a>
-            </>
-          )}
-        </p>
-      )}
     </li>
   );
 }
@@ -107,6 +91,11 @@ interface TaskListView {
 }
 
 const DEFAULT_VIEW: TaskListView = { groupBy: 'none', sortBy: 'intendedDate', focusOnly: false };
+
+/** Which tasks the list shows. Not remembered: the screen always opens on the open tasks. */
+type TaskShow = 'open' | 'done' | 'all';
+
+const SHOW_LABELS: Record<TaskShow, string> = { open: 'não concluídas', done: 'concluídas', all: 'todas' };
 
 function isKey(value: unknown): value is TaskListKey {
   return TASK_LIST_KEYS.includes(value as TaskListKey);
@@ -312,15 +301,29 @@ function ActiveTaskActions({ item, today, projects }: { item: TaskListItem; toda
 function TaskListControls({
   view,
   onChange,
+  show,
+  onShow,
   children,
 }: {
   view: TaskListView;
   onChange(view: TaskListView): void;
+  show: TaskShow;
+  onShow(show: TaskShow): void;
   /** Buttons on the right: collapse all, select several. */
   children?: React.ReactNode;
 }) {
   return (
     <div className="active-tasks__controls">
+      <label>
+        Mostrar{' '}
+        <select className="text-input" value={show} onChange={(event) => onShow(event.target.value as TaskShow)}>
+          {(Object.keys(SHOW_LABELS) as TaskShow[]).map((key) => (
+            <option key={key} value={key}>
+              {SHOW_LABELS[key]}
+            </option>
+          ))}
+        </select>
+      </label>
       <label>
         Agrupar por{' '}
         <select
@@ -364,9 +367,11 @@ function TaskListControls({
 }
 
 export function ActiveTasksScreen({ today }: { today: DayKey }) {
-  const allItems = useLiveQuery(() => loadActiveTasks(reader));
+  const openItems = useLiveQuery(() => loadActiveTasks(reader));
+  const doneItems = useLiveQuery(() => loadFinishedTasks(reader));
   const context = useLiveQuery(() => loadTaskListContext(reader));
   const [view, setView] = useTaskListView();
+  const [show, setShow] = useState<TaskShow>('open');
   // Keys as `${groupBy}:${key}`, so switching the grouping never carries a collapse over.
   const [collapsed, setCollapsed] = useState<Set<string>>(new Set());
   const [selecting, setSelecting] = useState(false);
@@ -390,12 +395,15 @@ export function ActiveTasksScreen({ today }: { today: DayKey }) {
     return () => window.removeEventListener('keydown', onKey);
   }, [selecting]);
 
-  if (!allItems || !context) return <LoadingPage title="Tarefas ativas" />;
+  if (!openItems || !doneItems || !context) return <LoadingPage title="Tarefas" />;
   const { groupBy, sortBy, focusOnly } = view;
+  const allItems = show === 'open' ? openItems : show === 'done' ? doneItems : [...openItems, ...doneItems];
   const items = focusOnly ? inFocusProjects(allItems, context.focusIds) : allItems;
   const groups = groupTasks(items, groupBy, sortBy);
   const groupId = (key: string | null) => `${groupBy}:${key ?? ''}`;
-  const shownIds = groups.flatMap((group) => group.items.map((item) => item.task.id));
+  const isOpen = (item: TaskListItem) => item.task.status === 'active';
+  // Only open tasks can be selected: the batch actions are for them.
+  const shownIds = groups.flatMap((group) => group.items.filter(isOpen).map((item) => item.task.id));
   // A task that left the list (finished, abandoned) drops out of the selection.
   const stillSelected = new Set(shownIds.filter((id) => selected.has(id)));
   const allCollapsed = groups.length > 0 && groups.every((group) => collapsed.has(groupId(group.key)));
@@ -431,7 +439,7 @@ export function ActiveTasksScreen({ today }: { today: DayKey }) {
   }
 
   function pickGroup(groupItems: TaskListItem[]) {
-    const ids = groupItems.map((item) => item.task.id);
+    const ids = groupItems.filter(isOpen).map((item) => item.task.id);
     const all = ids.every((id) => selected.has(id));
     setSelected((previous) => {
       const updated = new Set(previous);
@@ -448,35 +456,37 @@ export function ActiveTasksScreen({ today }: { today: DayKey }) {
     <ul className="card-list">
       {groupItems.map((item) => {
         const id = item.task.id;
+        const open = isOpen(item);
         return (
           <TaskRow
             key={id}
             item={item}
             today={today}
             action={
-              selecting ? undefined : (
+              selecting && open ? undefined : (
                 <input
                   type="checkbox"
-                  checked={false}
-                  onChange={() => void setTaskDone(appContext, id, true)}
-                  aria-label={`Finalizar "${item.task.text}"`}
+                  checked={!open}
+                  disabled={selecting}
+                  onChange={() => void setTaskDone(appContext, id, open)}
+                  aria-label={open ? `Finalizar "${item.task.text}"` : `Reabrir "${item.task.text}"`}
                 />
               )
             }
-            selection={selecting ? { on: selected.has(id), onPick: (event) => pick(id, event) } : undefined}
-            extra={selecting ? undefined : <ActiveTaskActions item={item} today={today} projects={context.activeProjects} />}
+            selection={selecting && open ? { on: selected.has(id), onPick: (event) => pick(id, event) } : undefined}
+            extra={selecting || !open ? undefined : <ActiveTaskActions item={item} today={today} projects={context.activeProjects} />}
           />
         );
       })}
     </ul>
   );
   return (
-    <ListPage title="Tarefas ativas" className="page--active-tasks">
-      {allItems.length === 0 ? (
-        <p className="muted">Nenhuma tarefa ativa.</p>
+    <ListPage title="Tarefas" className="page--active-tasks">
+      {openItems.length === 0 && doneItems.length === 0 ? (
+        <p className="muted">Nenhuma tarefa ainda.</p>
       ) : (
         <>
-          <TaskListControls view={view} onChange={setView}>
+          <TaskListControls view={view} onChange={setView} show={show} onShow={setShow}>
             {groupBy !== 'none' && (
               <button type="button" className="small" onClick={toggleAll}>
                 {allCollapsed ? 'Abrir todos' : 'Recolher todos'}
@@ -498,13 +508,19 @@ export function ActiveTasksScreen({ today }: { today: DayKey }) {
           )}
           {items.length === 0 && (
             <p className="muted">
-              {context.focusIds.length === 0 ? 'Nenhum projeto em foco.' : 'Nenhuma tarefa ativa nos projetos em foco.'}
+              {allItems.length === 0
+                ? show === 'done'
+                  ? 'Nenhuma tarefa concluída.'
+                  : 'Nenhuma tarefa por fazer.'
+                : context.focusIds.length === 0
+                  ? 'Nenhum projeto em foco.'
+                  : 'Nenhuma tarefa nos projetos em foco.'}
             </p>
           )}
           {groupBy === 'none'
             ? list(groups[0]?.items ?? [])
             : groups.map((group) => {
-                const all = group.items.every((item) => selected.has(item.task.id));
+                const all = group.items.filter(isOpen).every((item) => selected.has(item.task.id));
                 return (
                   <TaskGroupSection
                     key={groupId(group.key)}
@@ -513,7 +529,8 @@ export function ActiveTasksScreen({ today }: { today: DayKey }) {
                     open={!collapsed.has(groupId(group.key))}
                     onToggle={() => toggleGroup(group.key)}
                     extra={
-                      selecting && (
+                      selecting &&
+                      group.items.some(isOpen) && (
                         <button type="button" className="link" onClick={() => pickGroup(group.items)}>
                           {all ? 'tirar seleção do grupo' : 'selecionar grupo'}
                         </button>
@@ -524,7 +541,6 @@ export function ActiveTasksScreen({ today }: { today: DayKey }) {
                   </TaskGroupSection>
                 );
               })}
-          {!selecting && <p className="muted">Toque numa tarefa para ver de onde ela veio.</p>}
         </>
       )}
       {selecting && (
@@ -537,33 +553,6 @@ export function ActiveTasksScreen({ today }: { today: DayKey }) {
             setFlash(message);
           }}
         />
-      )}
-    </ListPage>
-  );
-}
-
-export function ArchivedTasksScreen({ today }: { today: DayKey }) {
-  const items = useLiveQuery(() => loadArchivedTasks(reader));
-  if (!items) return <LoadingPage title="Tarefas arquivadas" />;
-  return (
-    <ListPage title="Tarefas arquivadas">
-      {items.length === 0 ? (
-        <p className="muted">Nenhuma tarefa arquivada.</p>
-      ) : (
-        <ul className="card-list">
-          {items.map((item) => (
-            <TaskRow
-              key={item.task.id}
-              item={item}
-              today={today}
-              action={
-                <button type="button" className="small" onClick={() => void reactivateTask(appContext, item.task.id)}>
-                  Reativar
-                </button>
-              }
-            />
-          ))}
-        </ul>
       )}
     </ListPage>
   );

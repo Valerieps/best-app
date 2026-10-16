@@ -3,7 +3,7 @@ import type { Person } from '../../domain/entities';
 import { findPerson } from '../../domain/people';
 import { routeHash } from '../hooks';
 import { usePeople } from '../people/PeopleContext';
-import { parseInline, parseLine, type InlineNode } from './markdown';
+import { parseInline, parseLine, type InlineNode, type ListItem } from './markdown';
 
 /** Bullets change with the depth, as in a text editor. */
 const BULLETS = ['•', '◦', '▪'];
@@ -40,6 +40,15 @@ function renderNodes(nodes: InlineNode[], people: readonly Person[]): ReactNode[
   });
 }
 
+/** A list item's bullet or number, indented by its depth: on the formatted line and beside the field being edited. */
+export function ListMarker({ list }: { list: ListItem }) {
+  return (
+    <span className="md-list-marker" style={{ marginLeft: `${list.depth * 1.5}em` }} aria-hidden="true">
+      {list.kind === 'bullet' ? BULLETS[list.depth % BULLETS.length] : `${list.number}.`}
+    </span>
+  );
+}
+
 /**
  * A line's Markdown shown formatted, while the line is not being edited. The text is rendered as
  * React elements, never as HTML (google-safe.md).
@@ -47,14 +56,9 @@ function renderNodes(nodes: InlineNode[], people: readonly Person[]): ReactNode[
 export function MarkdownText({ text }: { text: string }) {
   const people = usePeople();
   const line = parseLine(text);
-  const list = line.list;
   return (
     <>
-      {list && (
-        <span className="md-list-marker" style={{ marginLeft: `${list.depth * 1.5}em` }} aria-hidden="true">
-          {list.kind === 'bullet' ? BULLETS[list.depth % BULLETS.length] : `${list.number}.`}
-        </span>
-      )}
+      {line.list && <ListMarker list={line.list} />}
       <span className="md-content">{renderNodes(parseInline(line.content), people)}</span>
     </>
   );

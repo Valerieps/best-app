@@ -60,3 +60,13 @@ export function lastTriagedDayAfterReopen(lastTriagedDay: DayKey | null, today: 
 export function isVisibleTask(block: Block): boolean {
   return block.kind !== 'task' || block.status === 'active' || block.status === 'done';
 }
+
+/**
+ * Archiving was removed (ADR-049): an archived task becomes an active task without a date, the
+ * "algum dia" of the task list. Not a postponement, and no event: the history keeps the archive.
+ * Rows of other kinds or statuses come back unchanged.
+ */
+export function undateArchivedTask<T extends { kind?: unknown; status?: unknown }>(row: T): T {
+  if (row.kind !== 'task' || row.status !== 'archived') return row;
+  return { ...row, status: 'active', intendedDate: null, closedAt: null };
+}

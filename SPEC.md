@@ -12,7 +12,7 @@ A spec é a fonte da verdade do produto. Este arquivo é o índice: as regras fi
 | --- | --- |
 | [`spec/principios.md`](spec/principios.md) | Princípios, primeiro uso, plataforma, dados e backup |
 | [`spec/navegacao.md`](spec/navegacao.md) | Barra lateral, "Rituais", cabeçalho das telas, ações no hover e fila de avisos |
-| [`spec/nota-do-dia.md`](spec/nota-do-dia.md) | Nota do dia, seções, blocos, editor, paginação entre dias e wiki pessoal |
+| [`spec/nota-do-dia.md`](spec/nota-do-dia.md) | Nota do dia, seções, blocos, editor, paginação entre dias e onde as notas ficam depois do dia |
 | [`spec/tarefas.md`](spec/tarefas.md) | Tarefas ativas, data de intenção, adiamento, prazo máximo e "Próximos dias" |
 | [`spec/prioridades.md`](spec/prioridades.md) | Prioridades do dia e projetos em foco |
 | [`spec/checkout.md`](spec/checkout.md) | "Fechar o dia", destinos de cada item, planejamento do dia seguinte, auto-triagem e "Fechar dias pendentes" |
@@ -41,7 +41,7 @@ A spec é construída em fases, e cada uma acrescenta um ritual ou conceito. O e
 | Fase | O que acrescenta |
 | --- | --- |
 | 1a. Ciclo diário: núcleo | Só o necessário para testar a hipótese do app: capturar sem decidir e triar no fim do dia. São três telas (nota do dia, "Fechar o dia" e listas), e nesta entrega o app roda no Chrome do computador, com os dados no navegador e backup em arquivo. O banco de dados já guarda tudo o que o 1b e as seções seguintes vão usar (datas, adiamentos, seção de origem, log de execução), mesmo sem tela para isso |
-| 1b. Ciclo diário: acabamento | Itens já decididos, que entram depois de uma semana de uso do núcleo: prazo máximo, prioridades do dia, atalhos no hover, reunião com participantes e link, paginação entre dias, busca na wiki, "Próximos dias" |
+| 1b. Ciclo diário: acabamento | Itens já decididos, que entram depois de uma semana de uso do núcleo: prazo máximo, prioridades do dia, atalhos no hover, reunião com participantes e link, paginação entre dias, "Próximos dias" |
 | 2. Projetos e Revisão de Foco | Os projetos, que agrupam tarefas, e a Revisão de Foco, que escolhe os projetos em foco |
 | 3. Abertura do dia e ausências | O warm up e o dashboard, que abrem o dia, e o que acontece quando um ritual é pulado |
 | 4. Objetivos e Revisão de Rumo | Os objetivos e a Revisão de Rumo, onde aparece o raio-x da desconexão entre o dia a dia e os objetivos |

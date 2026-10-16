@@ -5,6 +5,8 @@ import {
   hasMarkdown,
   insertLink,
   listOnEnter,
+  listPrefixLength,
+  normalizeBullet,
   parseInline,
   parseLine,
   safeHref,
@@ -205,5 +207,29 @@ describe('formatShortcut', () => {
     expect(formatShortcut(key('KeyB', { ctrlKey: false }))).toBeNull();
     expect(formatShortcut(key('Digit1', { altKey: true, shiftKey: true }))).toBeNull();
     expect(formatShortcut(key('KeyX'))).toBeNull();
+  });
+});
+
+describe('list markers while editing', () => {
+  it('measures the prefix the editor draws as a marker', () => {
+    expect(listPrefixLength('- item')).toBe(2);
+    expect(listPrefixLength('    - deep')).toBe(6);
+    expect(listPrefixLength('12. item')).toBe(4);
+    expect(listPrefixLength('# Title')).toBe(0);
+    expect(listPrefixLength('-no space')).toBe(0);
+  });
+
+  it('turns `* ` and `+ ` into the bullet the app writes', () => {
+    expect(normalizeBullet('* ')).toBe('- ');
+    expect(normalizeBullet('* item')).toBe('- item');
+    expect(normalizeBullet('  + item')).toBe('  - item');
+  });
+
+  it('leaves dashes, numbers, italics and plain text alone', () => {
+    expect(normalizeBullet('- item')).toBe('- item');
+    expect(normalizeBullet('1. item')).toBe('1. item');
+    expect(normalizeBullet('*italic* text')).toBe('*italic* text');
+    expect(normalizeBullet('*')).toBe('*');
+    expect(normalizeBullet('a * b')).toBe('a * b');
   });
 });

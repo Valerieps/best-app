@@ -6,7 +6,6 @@ describe('sidebar place', () => {
     expect(sidebarPlace({ name: 'day', day: '2026-10-09' })).toBe('day');
     expect(sidebarPlace({ name: 'project', id: 'p-1', tab: 'notes' })).toBe('projects');
     expect(sidebarPlace({ name: 'objective', id: 'o-1' })).toBe('objectives');
-    expect(sidebarPlace({ name: 'wiki', section: 'abc' })).toBe('wiki');
     expect(sidebarPlace({ name: 'checkout', day: '2026-10-11' })).toBe('checkout');
   });
 

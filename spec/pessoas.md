@@ -17,7 +17,7 @@
 - Ela tem uma data para cobrar, que é a data de intenção dela. Na data para cobrar, ela aparece na nota do dia.
 - Sem data para cobrar, ela passa pelo "Fechar o dia" (`checkout.md`). No dia da data para cobrar, se ainda não chegou, ela também passa.
 - Mudar a data para cobrar não conta como adiamento, e ela não entra nas métricas da precisão da data de intenção nem na tarefa travada.
-- Ela não entra em "Tarefas ativas", no planejamento do dia seguinte nem nas prioridades do dia: aparece na página da pessoa, na tela "Pessoas" e na nota do dia da data para cobrar.
+- Ela não entra na lista de tarefas, no planejamento do dia seguinte nem nas prioridades do dia: aparece na página da pessoa, na tela "Pessoas" e na nota do dia da data para cobrar.
 - Quando a pessoa entrega, eu concluo pelo checkbox, e acontece o mesmo que com uma tarefa concluída.
 
 ## Tela "Pessoas"

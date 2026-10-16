@@ -59,7 +59,9 @@ export interface EventData {
     waiting?: true;
   };
   'task.reopened': NoData;
+  /** History only: archiving was removed, and archived tasks became undated active tasks (ADR-049). */
   'task.archived': NoData;
+  /** History only, like `task.archived`. */
   'task.reactivated': { previousIntendedDate: DayKey | null };
   'task.abandoned': NoData;
   'task.deferredToReflection': NoData;

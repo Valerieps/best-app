@@ -12,8 +12,7 @@ import { ScreenHeader } from './components/ScreenHeader';
 import { DayNoteScreen } from './dayNote/DayNoteScreen';
 import { HabitsScreen } from './habits/HabitsScreen';
 import { navigate, routeHash, useRoute, useToday } from './hooks';
-import { ActiveTasksScreen, ArchivedTasksScreen } from './lists/ListScreens';
-import { WikiScreen } from './lists/WikiScreen';
+import { ActiveTasksScreen } from './lists/ListScreens';
 import { ObjectiveScreen, ObjectivesScreen } from './objectives/ObjectiveScreens';
 import { DashboardScreen, StartDayScreen, WarmupScreen } from './opening/OpeningScreens';
 import { useDueReminders, useReminderSignals } from './opening/Reminders';
@@ -45,7 +44,7 @@ export function App() {
   // The shell keeps working when one of its queries fails: the failure is logged, and the screen
   // below still has its own error boundary.
   const hasData = useLiveQueryState(async () => (await db.events.count()) > 0).value ?? false;
-  const everBackedUp = useLiveQueryState(async () => (await getLastBackupAt(db)) !== null).value ?? false;
+  const lastBackupAt = useLiveQueryState(() => getLastBackupAt(db)).value ?? null;
 
   useEffect(() => {
     requestPersistentStorage().then(setStoragePersisted, () => setStoragePersisted(false));
@@ -85,8 +84,9 @@ export function App() {
   const reviews = visibleReviews(useLiveQueryState(() => loadReviewAvailability(reader, today), [today]).value);
   const [reviewSnoozedAt, snoozeReview] = useReviewSnooze();
   const reviewNotice = isReviewSnoozed(reviewSnoozedAt, reviews?.lastCheckoutAt ?? null) ? null : pickReviewNotice(reviews);
+  const backupLevel = backupNoticeLevel(backupState, hasData, lastBackupAt, new Date());
   const notice = pickTopNotice({
-    backup: backupNoticeLevel(backupState, hasData, everBackedUp),
+    backup: backupLevel,
     pendingCheckout: onToday && stage === 'execution' && pendingDays.length > 0,
     onDataScreen: route.name === 'data',
     snoozed,
@@ -104,7 +104,12 @@ export function App() {
       <Sidebar route={route} today={today} pendingDays={pendingDays} reviews={reviews} backupState={backupState} />
       <div className="shell__main">
         {!focus && (notice === 'backupProblem' || notice === 'backupSetup') && (
-          <BackupBanner state={backupState} actions={backup} onSnooze={() => snooze('backupSetup')} />
+          <BackupBanner
+            state={backupState}
+            actions={backup}
+            staleSince={backupLevel === 'stale' ? lastBackupAt : null}
+            onSnooze={() => snooze('backupSetup')}
+          />
         )}
 
         {/* One broken screen shows an error in its place; the sidebar keeps working. */}
@@ -136,8 +141,6 @@ export function App() {
           )}
           {route.name === 'checkout' && <CheckoutScreen key={route.day} day={route.day} today={today} />}
           {route.name === 'active' && <ActiveTasksScreen today={today} />}
-          {route.name === 'archived' && <ArchivedTasksScreen today={today} />}
-          {route.name === 'wiki' && <WikiScreen focus={route.section} />}
           {route.name === 'cleanup' && <CleanupScreen today={today} assistant={route.assistant} />}
           {route.name === 'focusReview' && <FocusReviewScreen today={today} />}
           {route.name === 'projects' && <ProjectsScreen today={today} />}

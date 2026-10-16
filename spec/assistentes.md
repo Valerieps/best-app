@@ -25,7 +25,7 @@ O item "Rituais" da barra lateral abre esta tela, com duas partes, nesta ordem *
 - A grade "Assistentes" lista só os assistentes que têm algo a limpar, cada um com o número de itens.
 - A cor de cada assistente diz há quanto tempo o item mais antigo dele está esperando, e não quantos itens são, porque o custo de limpar cresce com a idade: quanto mais tempo passa, menos eu lembro do contexto. Eu escolho o que limpar olhando as cores.
 - Cada assistente mostra os itens encontrados com uma ação pré-selecionada e o botão "Aceitar sugestões". Eu posso trocar qualquer ação antes.
-- As Revisões de Foco e de Rumo reaproveitam os assistentes como etapas. A revisita das tarefas arquivadas na Revisão de Foco, por exemplo, é o assistente de arquivo.
+- As Revisões de Foco e de Rumo reaproveitam os assistentes como etapas. A passada pelos projetos ativos na Revisão de Foco, por exemplo, é o assistente de projetos parados.
 - No 1a, só o "Fechar dias pendentes" tem tela, pelo aviso de fechamento pendente. A grade de assistentes e os outros assistentes entram a partir do 1b, para manter o núcleo enxuto.
 - O mural não tem assistente, porque os lembretes dele não vencem.
 - Seções soltas: seções sem título ficam de fora, porque não há como agrupá-las nem dar nome a um projeto. "Deixar como está" faz o assistente parar de sugerir aquelas seções.
@@ -37,9 +37,8 @@ O item "Rituais" da barra lateral abre esta tela, com duas partes, nesta ordem *
 | --- | --- | --- | --- |
 | Dias em aberto | Dias sem fechamento. Sem cartão: aparece como o calendário da tela "Rituais" | "Fechar dias pendentes", com as regras da auto-triagem | 1a |
 | Seções soltas | Seções que ficaram sem projeto, agrupando os títulos repetidos. Quando o texto de uma seção cita o nome de um projeto existente, a sugestão é vincular a ele | Converter em projeto, vincular a um existente ou deixar como está | 1b |
-| Tarefas esquecidas | Tarefas ativas sem data há semanas ou adiadas muitas vezes | Agendar, arquivar ou abandonar | 1b |
+| Tarefas esquecidas | Tarefas sem data há semanas ou adiadas muitas vezes | Agendar, tirar a data ou abandonar | 1b |
 | Projetos repetidos | Projetos com nomes parecidos, como "Data Studios" e "DataStudios" | Juntar em um projeto só | 1b |
-| Arquivo antigo | Tarefas arquivadas há meses | Reativar ou abandonar de vez | 2 |
 | Projetos parados | Projetos sem nenhuma atividade há 14 dias ou mais (`projetos.md`, "Lista de projetos") | Finalizar ou manter | 2 |
 | Warm up | Itens do checklist que eu quase sempre pulo | Tirar do checklist | 3 |
 | Objetivos soltos | Objetivos sem projeto ativo, ou com a meta talvez atingida | Finalizar ou vincular projetos | 4 |

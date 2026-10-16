@@ -25,7 +25,7 @@ import {
   loadDayTriage,
   loadPendingDays,
   loadPendingTriages,
-  loadWiki,
+  loadSectionNotes,
 } from './queries';
 
 const SATURDAY = '2026-10-10';
@@ -100,7 +100,7 @@ describe('day cycle', () => {
     expect(triage.automatic.some((item) => item.type === 'rolledOver')).toBe(false);
   });
 
-  it('triages notes per section; project sections go to the wiki on their own', async () => {
+  it('triages notes per section; every section keeps its notes on its own', async () => {
     const { ctx, reader, db } = createTestContext();
     const studio = await createProject(ctx, 'Data Studios');
     const meeting = await createSection(ctx, 'meeting');
@@ -122,7 +122,7 @@ describe('day cycle', () => {
       whiteboards: new Map([[loose.sectionId, { kind: 'leaveUnlinked' } as const]]),
     });
 
-    const wiki = await loadWiki(reader);
+    const wiki = await loadSectionNotes(reader);
     expect(wiki.map((entry) => [entry.project?.name ?? null, entry.notes.map((n) => n.text)])).toEqual(
       expect.arrayContaining([
         ['Data Studios', ['Painel novo sai na próxima sprint']],
@@ -195,25 +195,25 @@ describe('day cycle', () => {
     expect(await db.blocks.get(a.id)).toMatchObject({ intendedDate: MONDAY, status: 'active' });
   });
 
-  it('archive and abandon take tasks out of the active list without deleting them', async () => {
+  it('"sem data" keeps the task in the list without a date; abandon takes it out without deleting it', async () => {
     const { ctx, reader, db } = createTestContext();
-    const a = await createBlock(ctx, { sectionId: null, position: nextPosition() }, '[] Arquivar');
+    const a = await createBlock(ctx, { sectionId: null, position: nextPosition() }, '[] Algum dia');
     const b = await createBlock(ctx, { sectionId: a.sectionId, position: nextPosition() }, '[] Abandonar');
 
     await applyTriage(ctx, SUNDAY, {
       ...noDecisions(),
       tasks: new Map<string, TaskDecision>([
-        [a.id, { kind: 'archive' }],
+        [a.id, { kind: 'undate' }],
         [b.id, { kind: 'abandon' }],
       ]),
     });
 
-    expect(await loadActiveTasks(reader)).toEqual([]);
+    expect((await loadActiveTasks(reader)).map((item) => [item.task.id, item.task.intendedDate])).toEqual([[a.id, null]]);
     expect((await db.blocks.get(b.id))?.status).toBe('abandoned');
-    expect((await loadDayNote(reader, SUNDAY)).entries[0].blocks).toEqual([]);
+    expect((await loadDayNote(reader, SUNDAY)).entries[0].blocks.map((block) => block.id)).toEqual([a.id]);
   });
 
-  it('closes pending days: tasks lose their date and count as postponed, notes go to the wiki', async () => {
+  it('closes pending days: tasks lose their date and count as postponed, notes are kept', async () => {
     const { ctx, reader, clock, db } = createTestContext(undefined, `${SATURDAY}T10:00:00`);
     const task = await createBlock(ctx, { sectionId: null, position: nextPosition() }, '[] Trocar o filtro');
     await createBlock(ctx, { sectionId: task.sectionId, position: nextPosition() }, 'Nota de sábado');
@@ -225,7 +225,7 @@ describe('day cycle', () => {
 
     expect(await loadPendingDays(reader, MONDAY)).toEqual([]);
     expect(await db.blocks.get(task.id)).toMatchObject({ status: 'active', intendedDate: null, postponeCount: 1 });
-    expect((await loadWiki(reader)).map((entry) => entry.notes[0].text)).toEqual(['Nota de sábado']);
+    expect((await loadSectionNotes(reader)).map((entry) => entry.notes[0].text)).toEqual(['Nota de sábado']);
     expect((await db.sections.get(task.sectionId))?.whiteboardDecision).toBe('leftUnlinked');
     expect(await db.days.get(SATURDAY)).toMatchObject({ day: SATURDAY });
   });
