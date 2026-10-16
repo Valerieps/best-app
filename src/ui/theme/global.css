@@ -3748,7 +3748,7 @@ button.project-actions {
   margin: var(--space-2) 0 0;
 }
 
-/* A change that was not saved (issue #66): short, at the bottom, until closed */
+/* A change that was not saved (issue #66): short, at the bottom, gone by itself after 8 s (#121) */
 .save-error {
   position: fixed;
   left: 50%;
