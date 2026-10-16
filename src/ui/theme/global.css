@@ -4755,3 +4755,48 @@ button:not(.link, .day-part__handle):active:not(:disabled) {
 .plan-card__done {
   text-decoration: line-through;
 }
+
+/* "Fechar o dia": the closing uses almost the whole screen, without a frame around the steps. */
+.page--full {
+  max-width: none;
+  padding-left: var(--space-4);
+  padding-right: var(--space-4);
+}
+
+.card--plain {
+  border: none;
+  border-radius: 0;
+  background: transparent;
+}
+
+.checkout-step--board {
+  max-width: none;
+}
+
+/* What does not fit in a card is cut, never spilling out of it. */
+.plan-card,
+.plan-card__row,
+.plan-card__text,
+.plan-card__meta {
+  min-width: 0;
+  max-width: 100%;
+}
+
+.plan-card {
+  overflow: hidden;
+}
+
+.plan-card__row > .plan-card__text {
+  flex: 1;
+}
+
+.plan-card__text > span:first-child {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.plan-card .chip {
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
