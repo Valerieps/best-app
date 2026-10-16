@@ -33,6 +33,7 @@ import { ScreenError } from './components/ErrorScreens';
 import { SaveErrorNotice } from './components/SaveErrorNotice';
 import { reportSaveError } from './saveErrors';
 import { enabledRoute, visibleReviews } from './features';
+import { applyAppearance, parseAppearance } from './theme/appearance';
 
 export function App() {
   // Screens of features hidden until their spec is done open the day note (ui/features.ts).
@@ -62,6 +63,13 @@ export function App() {
       window.removeEventListener('unhandledrejection', onUnhandled);
     };
   }, []);
+
+  // The appearance saved in the settings wins over the copy applied before the first render,
+  // including after importing a backup (ADR-055).
+  const appearance = useLiveQueryState(async () => parseAppearance((await reader.settings())?.appearance)).value;
+  useEffect(() => {
+    if (appearance) applyAppearance(appearance);
+  }, [appearance]);
 
   // Focus mode on a part of the day note survives reloading, and only the user leaves it: no
   // new day, opening screen or notice takes its place (spec/nota-do-dia.md, "Modo foco").
