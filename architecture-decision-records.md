@@ -60,3 +60,4 @@ Read only the ADRs your task touches: find them in this table or by grepping `ad
 | [ADR-049](adr/049-archived-tasks-become-undated.md) | Archiving removed; archived tasks become active tasks without a date | 2026-10-15 | Accepted |
 | [ADR-050](adr/050-no-wiki-notes-stay-in-their-sections.md) | No wiki; kept notes stay in their sections, edited and deleted on the project page | 2026-10-15 | Accepted |
 | [ADR-051](adr/051-line-selection-list-markers-and-focus-view-transition.md) | Selecting whole lines, list markers outside the field, and focus mode as a view transition | 2026-10-15 | Accepted |
+| [ADR-052](adr/052-people-and-waiting-tasks.md) | People are records, mentions are read from the text, and a waiting task reuses the intended date | 2026-10-15 | Accepted |

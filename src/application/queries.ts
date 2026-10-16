@@ -13,6 +13,7 @@ import type {
   DayRecord,
   Habit,
   Objective,
+  Person,
   Project,
   ProjectListGroup,
   Reminder,
@@ -29,6 +30,7 @@ import { buildDayPriorities, dayPriorityListId, type DayPriority } from '../doma
 import { FOCUS_LIST_ID, focusProjectIds, hasFreeSlot } from '../domain/focusProjects';
 import { activityByDay, lastActivityDay, recentlyFinished, stalledDays, type ActivityByDay } from '../domain/projectActivity';
 import { isDaySection, isStuckTask } from '../domain/projectPage';
+import { buildPeopleOverview, buildPersonPage, type PeopleOverview, type PersonPage } from '../domain/people';
 import { buildDayTriage, findPendingDays, isTriagePending, type DayTriage } from '../domain/triage';
 import type { Reader } from './ports';
 
@@ -131,8 +133,13 @@ async function withOrigins(reader: Reader, tasks: Block[]): Promise<TaskListItem
   }));
 }
 
+/** Active tasks that are mine to do: what a person owes me stays out (spec/pessoas.md). */
+async function myActiveTasks(reader: Reader): Promise<Block[]> {
+  return (await reader.tasksWithStatus('active')).filter((task) => !task.waiting);
+}
+
 export async function loadActiveTasks(reader: Reader): Promise<TaskListItem[]> {
-  const tasks = await reader.tasksWithStatus('active');
+  const tasks = await myActiveTasks(reader);
   return withOrigins(reader, tasks.sort(byIntendedDateThenCreation));
 }
 
@@ -261,12 +268,15 @@ export async function loadCleanupDashboard(reader: Reader, today: DayKey): Promi
 export interface MenuCounts {
   projects: number;
   active: number;
+  /** Active people. */
+  people: number;
 }
 
 export async function loadMenuCounts(reader: Reader): Promise<MenuCounts> {
-  const active = (await reader.tasksWithStatus('active')).length;
+  const active = (await myActiveTasks(reader)).length;
   const projects = (await reader.projects()).filter((project) => project.status === 'active').length;
-  return { projects, active };
+  const people = (await reader.people()).filter((person) => person.status === 'active').length;
+  return { projects, active, people };
 }
 
 /** The projects in focus, active ones only, in the order chosen. */
@@ -554,4 +564,44 @@ export async function loadHabits(reader: Reader, today: DayKey): Promise<HabitVi
         month: habitStats(habit, logs, month.start, today < month.end ? today : month.end),
       };
     });
+}
+
+/** Blocks that may cite someone, with the sections they were written in (spec/pessoas.md). */
+async function mentionContext(reader: Reader) {
+  const people = await reader.people();
+  const blocks = await reader.blocksWithMentions();
+  const sections = await reader.sectionsByIds([...new Set(blocks.map((block) => block.sectionId))]);
+  return { people, blocks, sectionsById: new Map(sections.map((section) => [section.id, section])) };
+}
+
+/** The people the `@` can suggest and recognize: everyone but the merged. */
+export async function loadPeople(reader: Reader): Promise<Person[]> {
+  return (await reader.people()).filter((person) => person.status !== 'merged');
+}
+
+export interface PeopleView extends PeopleOverview {
+  sectionsById: Map<string, Section>;
+}
+
+/** The "Pessoas" screen. */
+export async function loadPeopleView(reader: Reader, today: DayKey): Promise<PeopleView> {
+  const { people, blocks, sectionsById } = await mentionContext(reader);
+  return { ...buildPeopleOverview(people, blocks, today), sectionsById };
+}
+
+export interface PersonView extends PersonPage {
+  sectionsById: Map<string, Section>;
+  /** Other people this one can be merged into, by name. */
+  others: Person[];
+}
+
+/** A person's page; null when the person does not exist, or was merged into someone else. */
+export async function loadPersonView(reader: Reader, personId: string, today: DayKey): Promise<PersonView | null> {
+  const { people, blocks, sectionsById } = await mentionContext(reader);
+  const person = people.find((each) => each.id === personId);
+  if (!person || person.status === 'merged') return null;
+  const others = people
+    .filter((each) => each.id !== person.id && each.status !== 'merged')
+    .sort((a, b) => a.name.localeCompare(b.name, 'pt-BR'));
+  return { ...buildPersonPage(person, blocks, people, sectionsById, today), sectionsById, others };
 }

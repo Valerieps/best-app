@@ -6,6 +6,7 @@ import type {
   Habit,
   HabitLog,
   Objective,
+  Person,
   PriorityList,
   Project,
   Reflection,
@@ -50,6 +51,7 @@ export class AppDatabase extends Dexie {
   resources!: Table<Resource, string>;
   habits!: Table<Habit, string>;
   habitLogs!: Table<HabitLog, string>;
+  people!: Table<Person, string>;
 
   constructor(name = DATABASE_NAME) {
     super(name);
@@ -117,5 +119,9 @@ export class AppDatabase extends Dexie {
             Object.assign(row, undateArchivedTask(row));
           });
       });
+    // People cited with `@` (spec/pessoas.md).
+    this.version(9).stores({
+      people: 'id, status',
+    });
   }
 }

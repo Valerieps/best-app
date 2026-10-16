@@ -176,9 +176,10 @@ export function Sidebar({ route, today, pendingDays, reviews, backupState }: Pro
       count: cleanupCount || undefined,
     },
   ];
-  const groups: { title: string; places: Place[] }[] = [
+  // The groups have no titles since 15/10/2026: a space sets them apart (spec/navegacao.md).
+  const groups: { key: string; places: Place[] }[] = [
     {
-      title: 'Planejamento',
+      key: 'planning',
       places: [
         {
           key: 'projects',
@@ -195,7 +196,7 @@ export function Sidebar({ route, today, pendingDays, reviews, backupState }: Pro
       ],
     },
     {
-      title: 'Listas',
+      key: 'lists',
       places: [
         {
           key: 'active',
@@ -203,6 +204,13 @@ export function Sidebar({ route, today, pendingDays, reviews, backupState }: Pro
           route: { name: 'active' },
           label: 'Tarefas',
           count: counts?.active,
+        },
+        {
+          key: 'people',
+          place: 'people',
+          route: { name: 'people' },
+          label: 'Pessoas',
+          count: counts?.people,
         },
       ],
     },
@@ -283,8 +291,7 @@ export function Sidebar({ route, today, pendingDays, reviews, backupState }: Pro
       </div>
 
       {groups.map((group) => (
-        <div className="sidebar__group" key={group.title}>
-          <span className="sidebar__group-title">{group.title}</span>
+        <div className="sidebar__group" key={group.key}>
           {group.places.map((place) => placeButton(place))}
         </div>
       ))}

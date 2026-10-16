@@ -31,7 +31,10 @@ export function periodMetrics(events: readonly DomainEvent[], since: string | nu
 function countMetrics(inPeriod: readonly DomainEvent[]): WeeklyMetrics {
   const postponed = new Set(inPeriod.filter((event) => event.type === 'task.postponed').map((event) => event.entityId));
   const finished = inPeriod.filter((event) => event.type === 'task.finished');
-  const withIntention = finished.filter((event) => typeof event.data.intendedDate === 'string');
+  // A follow-up date is not an intention to do something myself (spec/pessoas.md).
+  const withIntention = finished.filter(
+    (event) => typeof event.data.intendedDate === 'string' && !('waiting' in event.data && event.data.waiting),
+  );
   const onTime = withIntention.filter((event) => event.data.intendedDate === event.day);
   return {
     postponedTasks: postponed.size,

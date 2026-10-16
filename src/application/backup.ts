@@ -4,6 +4,7 @@ import type {
   Habit,
   HabitLog,
   Objective,
+  Person,
   PriorityList,
   Project,
   Reflection,
@@ -24,7 +25,7 @@ import { undateArchivedTask } from '../domain/tasks';
  */
 
 export const BACKUP_FORMAT = 'best-app-backup';
-export const BACKUP_SCHEMA_VERSION = 8;
+export const BACKUP_SCHEMA_VERSION = 9;
 
 export interface BackupTables {
   blocks: Block[];
@@ -44,6 +45,8 @@ export interface BackupTables {
   resources: Resource[];
   habits: Habit[];
   habitLogs: HabitLog[];
+  /** Added in version 9 (spec/pessoas.md). */
+  people: Person[];
 }
 
 export type BackupTableName = keyof BackupTables;
@@ -62,6 +65,7 @@ export const BACKUP_TABLES: readonly BackupTableName[] = [
   'resources',
   'habits',
   'habitLogs',
+  'people',
 ];
 
 /** Primary key field of each table. */
@@ -79,6 +83,7 @@ export const TABLE_KEYS: Record<BackupTableName, string> = {
   resources: 'id',
   habits: 'id',
   habitLogs: 'id',
+  people: 'id',
 };
 
 export interface BackupFile {
@@ -130,6 +135,7 @@ function upgradeTables(tables: Record<string, unknown>, version: number, exporte
   if (version < 8 && Array.isArray(upgraded.blocks)) {
     upgraded.blocks = upgraded.blocks.map((row: unknown) => (isRecord(row) ? undateArchivedTask(row) : row));
   }
+  if (version < 9) upgraded.people = []; // People cited with `@` (spec/pessoas.md).
   return upgraded;
 }
 
@@ -200,6 +206,7 @@ export function emptyTables(): BackupTables {
     resources: [],
     habits: [],
     habitLogs: [],
+    people: [],
   };
 }
 

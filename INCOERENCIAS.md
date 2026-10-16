@@ -118,9 +118,9 @@ As fases do `SPEC.md` deveriam poder ser construídas em ordem, mas:
 ## 3. Produto contra técnica
 
 - **localStorage ou IndexedDB.** A ADR-036 diz que você pediu IndexedDB, não localStorage. Mesmo assim, "Lembrar depois" e "fixar prioridades" usam localStorage (ADR-029).
-- **Cores do "Colocar ordem na casa".** A V4 da `AVALIACAO-UX.md` quer o vermelho só para erros. A ADR-028 usa os níveis amarelo, laranja e vermelho.
+- **Cores dos "Assistentes".** A V4 da `AVALIACAO-UX.md` quer o vermelho só para erros. A ADR-028 usa os níveis amarelo, laranja e vermelho.
 - **Plataforma da avaliação de UX.** A `AVALIACAO-UX.md` dá peso a problemas medidos no celular, em 375 px (N5, P8). O escopo atual é só o Chrome no computador.
-- **Dois "dashboards".** A ADR-028 e o código (`domain/cleanupStatus.ts`) chamam o "Colocar ordem na casa" de dashboard, o mesmo nome da tela de boas-vindas da seção 3.
+- **Dois "dashboards".** A ADR-028 e o código (`domain/cleanupStatus.ts`) chamam os "Assistentes" de dashboard, o mesmo nome da tela de boas-vindas da seção 3.
 
 ## 4. Documentos desatualizados
 

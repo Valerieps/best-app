@@ -41,7 +41,7 @@ export function isDaySection(section: Section): boolean {
  * Uses the same threshold that makes a task ask for attention at checkout.
  */
 export function isStuckTask(task: Block, today: DayKey): boolean {
-  if (task.kind !== 'task' || task.status !== 'active') return false;
+  if (task.kind !== 'task' || task.status !== 'active' || task.waiting) return false;
   return task.postponeCount >= POSTPONE_ATTENTION_THRESHOLD || (task.intendedDate !== null && task.intendedDate < today);
 }
 

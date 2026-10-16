@@ -68,6 +68,17 @@ describe('parseInline', () => {
     ]);
   });
 
+  it('reads @Nome as a mention, but not inside an e-mail (spec/pessoas.md)', () => {
+    expect(parseInline('falar com a @Ana, **@Rafael**')).toEqual([
+      { type: 'text', text: 'falar com a ' },
+      { type: 'mention', name: 'Ana' },
+      { type: 'text', text: ', ' },
+      { type: 'bold', children: [{ type: 'mention', name: 'Rafael' }] },
+    ]);
+    expect(parseInline('ana@empresa.com').every((node) => node.type === 'text')).toBe(true);
+    expect(hasMarkdown('com a @Ana')).toBe(true);
+  });
+
   it('never turns an unsafe address into a link', () => {
     expect(parseInline('[x](javascript:alert(1))').every((node) => node.type === 'text')).toBe(true);
     expect(parseInline('[x](data:text/html,hi)').every((node) => node.type === 'text')).toBe(true);

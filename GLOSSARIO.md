@@ -23,6 +23,10 @@ Os termos marcados com ⚠ ainda têm mais de um sentido nos documentos; o item 
 - **Precisão da data de intenção:** a parte das tarefas finalizadas com data de intenção que foram feitas no dia da intenção. (`spec/rituais.md`)
 - **Tarefas:** a lista das tarefas abertas, ou seja, nem finalizadas nem abandonadas, que também mostra as finalizadas quando eu peço. Antes se chamava "tarefas ativas". (`spec/tarefas.md`)
 - **Tarefa travada:** tarefa de projeto adiada 3 vezes ou mais, ou com a data de intenção vencida. ⚠ Não confundir com o assistente "Prioridades travadas" (`INCOERENCIAS.md`, 2.10). (`spec/projetos.md`)
+- **Pessoa:** alguém que eu cito com `@Nome`, de uma palavra só. Tem uma página com o que eu devo a ela e o que ela me deve. (`spec/pessoas.md`)
+- **Menção:** `@Nome` numa linha, que liga a linha à pessoa. Numa tarefa, quer dizer que eu devo aquilo à pessoa. (`spec/pessoas.md`)
+- **Aguardando:** uma tarefa que alguém me deve, criada com `[a] ` no começo da linha. Fica fora da lista de tarefas. (`spec/pessoas.md`)
+- **Data para cobrar:** a data de intenção de uma tarefa aguardando: o dia em que ela aparece na nota do dia para eu cobrar. Mudá-la não conta como adiamento. (`spec/pessoas.md`)
 - **Dia seguinte:** num fechamento do dia, o próximo dia ativo depois do dia triado, nunca antes de hoje. (`spec/checkout.md`)
 - **Dias ativos:** os dias da semana em que o app espera uso; os outros não contam como pulados. (`spec/rituais.md`)
 
@@ -62,20 +66,20 @@ Os termos marcados com ⚠ ainda têm mais de um sentido nos documentos; o item 
 
 ## Rituais e abertura do dia
 
-- **Ritual:** warm up, "Fechar o dia", Revisão de Foco e Revisão de Rumo (`spec/rituais.md`, "Rituais pulados"). O menu "Rituais" lista os dias a fechar, as revisões e "Colocar ordem na casa" (`spec/navegacao.md`, "Navegação").
+- **Ritual:** warm up, "Fechar o dia", Revisão de Foco e Revisão de Rumo (`spec/rituais.md`, "Rituais pulados"). A tela "Rituais" mostra o calendário dos dias a fechar e os "Assistentes", entre eles a Revisão de Foco (`spec/assistentes.md`).
 - **Revisão de Foco:** a revisão frequente, dos projetos: "no que eu estou trabalhando agora?". Substitui a reflexão semanal. (`spec/rituais.md`)
 - **Revisão de Rumo:** a revisão rara, dos objetivos: "estou indo para onde eu quero ir?". Substitui a reflexão mensal. (`spec/rituais.md`)
 - **Cadência (de uma revisão):** quantos dias fechados (Foco) ou Revisões de Foco (Rumo) até a revisão ficar disponível. (`spec/rituais.md`)
 - **Iniciar Dia:** a tela branca que abre o dia e começa o warm up. (`spec/abertura-do-dia.md`)
 - **Warm up:** o checklist que eu defino para começar o dia. (`spec/abertura-do-dia.md`)
-- **Dashboard:** a tela de boas-vindas depois do warm up, com os projetos em foco, mural e "Iniciar o Flow de Execução". ⚠ A `ARQUITETURA.md` e o código também chamam "Colocar ordem na casa" de dashboard (`INCOERENCIAS.md`, seção 3).
+- **Dashboard:** a tela de boas-vindas depois do warm up, com os projetos em foco, mural e "Iniciar o Flow de Execução". ⚠ A `ARQUITETURA.md` e o código também chamam os "Assistentes" de dashboard (`INCOERENCIAS.md`, seção 3).
 - **Flow de Execução:** o trabalho na nota do dia, que começa pelo botão "Iniciar o Flow de Execução" do dashboard. (`spec/abertura-do-dia.md`)
 - **Mural:** as frases de mim para mim mesma que o dashboard mostra em rodízio. ⚠ O `spec/abertura-do-dia.md` também as chama de "lembretes" (`INCOERENCIAS.md`, 2.9).
 - **Lembrete:** um item que volta dentro do app depois de um horário, como no "perguntar de novo às XXh" do warm up. Nunca é uma notificação. ⚠ Veja "Mural". (`spec/abertura-do-dia.md`)
 
 ## Limpeza
 
-- **Colocar ordem na casa:** a tela sem data que lista os assistentes que têm algo a limpar, com uma cor que diz há quanto tempo o item mais antigo espera. Recebe tudo o que não perece de um dia para o outro. Não confundir com "Fechar o dia". (`spec/assistentes.md`)
+- **Assistentes:** a grade sem data da tela "Rituais" que lista os assistentes que têm algo a limpar, com uma cor que diz há quanto tempo o item mais antigo espera. Recebe tudo o que não perece de um dia para o outro. Não confundir com "Fechar o dia". Antes se chamava "Colocar ordem na casa". (`spec/assistentes.md`)
 - **Assistente (de limpeza):** encontra o que está fora do lugar e sugere uma ação, que aceito em lote. Os nomes de cada um estão na tabela do `spec/assistentes.md`.
 
 ## Backup e avisos

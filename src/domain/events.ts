@@ -22,6 +22,7 @@ export type EntityType =
   | 'objective'
   | 'resource'
   | 'habit'
+  | 'person'
   | 'backup';
 
 /** No details: the type, the entity and the time say everything. */
@@ -54,6 +55,8 @@ export interface EventData {
     firstIntendedDate: DayKey | null;
     postponeCount: number;
     projectId: string | null;
+    /** A task someone owed me (spec/pessoas.md): left out of the intention metrics. */
+    waiting?: true;
   };
   'task.reopened': NoData;
   /** History only: archiving was removed, and archived tasks became undated active tasks (ADR-049). */
@@ -63,6 +66,8 @@ export interface EventData {
   'task.abandoned': NoData;
   'task.deferredToReflection': NoData;
   'task.convertedToHabit': { habitId: string };
+  /** The task became, or stopped being, something a person owes me (spec/pessoas.md). */
+  'task.waitingChanged': { waiting: boolean };
   /** `projectPage` and `projectId` when the section is a project's page. */
   'section.created': { kind: SectionKind; projectPage?: true; projectId?: string };
   'section.titleChanged': { from: string | null; to: string | null };
@@ -107,6 +112,12 @@ export interface EventData {
   'resource.added': { ownerType: Resource['ownerType']; ownerId: string; sectionId: string | null };
   'resource.renamed': { from: string; to: string };
   'resource.removed': { ownerId: string };
+  'person.created': { name: string };
+  'person.renamed': { from: string; to: string };
+  'person.merged': { into: string };
+  'person.archived': { archived: boolean };
+  /** The person was deleted; the lines that cited them keep their text. */
+  'person.deleted': { name: string };
   'habit.created': { name: string };
   'habit.updated': { name: string; criterion: string; weekdays: number[]; objectiveId: string | null };
   'habit.archived': { archived: boolean };

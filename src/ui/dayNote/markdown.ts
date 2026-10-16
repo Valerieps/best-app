@@ -6,6 +6,8 @@
  * React elements.
  */
 
+import { mentionStartingAt } from '../../domain/people';
+
 export type HeadingLevel = 1 | 2 | 3 | 4;
 export type ListKind = 'bullet' | 'numbered';
 
@@ -78,7 +80,9 @@ export type InlineNode =
   | { type: 'text'; text: string }
   | { type: 'bold'; children: InlineNode[] }
   | { type: 'italic'; children: InlineNode[] }
-  | { type: 'link'; href: string; children: InlineNode[] };
+  | { type: 'link'; href: string; children: InlineNode[] }
+  /** `@Nome`, a person cited in the line (spec/pessoas.md). */
+  | { type: 'mention'; name: string };
 
 /** Only web and mail links open; anything else (javascript:, data:...) stays plain text. */
 const SAFE_HREF = /^(https?:\/\/|mailto:)\S+$/i;
@@ -100,6 +104,13 @@ export function parseInline(text: string): InlineNode[] {
   let i = 0;
   while (i < text.length) {
     const rest = text.slice(i);
+    const mention = mentionStartingAt(text, i, plain ? plain[plain.length - 1] : i > 0 ? text[i - 1] : '');
+    if (mention) {
+      pushText();
+      nodes.push({ type: 'mention', name: mention.name });
+      i += mention.length;
+      continue;
+    }
     const match = matchAt(text, i);
     if (match) {
       pushText();

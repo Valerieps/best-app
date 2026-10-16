@@ -195,9 +195,18 @@ async function reopenNotesIfTriaged(ctx: AppContext, tx: StoreTransaction, secti
   await record(ctx, tx, 'section.notesReopened', 'section', section.id, today(ctx), { from: section.notesDestination });
 }
 
-function newBlock(ctx: AppContext, section: Section, kind: BlockKind, text: string, position: string, id?: string): Block {
+function newBlock(
+  ctx: AppContext,
+  section: Section,
+  kind: BlockKind,
+  text: string,
+  position: string,
+  id?: string,
+  waiting?: boolean,
+): Block {
   const at = nowIso(ctx);
   return {
+    ...(kind === 'task' && waiting ? { waiting: true } : {}),
     id: id ?? ctx.ids.next(),
     kind,
     text,
@@ -223,8 +232,9 @@ async function addBlock(
   text: string,
   position: string,
   id?: string,
+  waiting?: boolean,
 ): Promise<Block> {
-  const block = newBlock(ctx, section, kind, text, position, id);
+  const block = newBlock(ctx, section, kind, text, position, id, waiting);
   await tx.blocks.put(block);
   await record(ctx, tx, 'block.created', 'block', block.id, today(ctx), { kind, sectionId: section.id });
   if (kind === 'note') await reopenNotesIfTriaged(ctx, tx, section);
@@ -254,12 +264,12 @@ async function targetSection(ctx: AppContext, tx: StoreTransaction, target: NewB
   return section;
 }
 
-/** Creates a block from typed text; "[] " at the start makes it a task. */
+/** Creates a block from typed text; "[] " at the start makes it a task, "[a] " a waiting one. */
 export async function createBlock(ctx: AppContext, target: NewBlockTarget, typed: string): Promise<Block> {
-  const { kind, text } = detectKind(typed);
+  const { kind, text, waiting } = detectKind(typed);
   return ctx.store.transaction(async (tx) => {
     const section = await targetSection(ctx, tx, target);
-    return addBlock(ctx, tx, section, kind, text, target.position, target.blockId);
+    return addBlock(ctx, tx, section, kind, text, target.position, target.blockId, waiting);
   });
 }
 
@@ -308,7 +318,8 @@ export async function splitBlock(
 
     const section = await targetSection(ctx, tx, target);
     const kind = splitKind(block.kind, after);
-    return addBlock(ctx, tx, section, kind, detectKind(after).text, target.position, target.blockId);
+    const detected = detectKind(after);
+    return addBlock(ctx, tx, section, kind, detected.text, target.position, target.blockId, detected.waiting);
   });
 }
 
@@ -321,24 +332,30 @@ async function requireFreeBlock(ctx: AppContext, tx: StoreTransaction, blockId: 
   return { block, section: section! };
 }
 
-/** Changes a block between task and note. Only for untriaged blocks written today. */
-export async function changeBlockKind(ctx: AppContext, blockId: string, kind: BlockKind, text: string): Promise<void> {
+/**
+ * Changes a block between task and note. Only for untriaged blocks written today. `waiting`
+ * makes the new task something a person owes me ("[a] ", spec/pessoas.md).
+ */
+export async function changeBlockKind(ctx: AppContext, blockId: string, kind: BlockKind, text: string, waiting = false): Promise<void> {
   await ctx.store.transaction(async (tx) => {
     const { block, section } = await requireFreeBlock(ctx, tx, blockId);
     if (block.kind === kind) {
       if (block.text !== text) await tx.blocks.put({ ...block, text, updatedAt: nowIso(ctx) });
       return;
     }
+    const { waiting: _wasWaiting, ...rest } = block;
     const changed: Block = {
-      ...block,
+      ...rest,
       kind,
       text,
       status: kind === 'task' ? 'active' : null,
       projectId: kind === 'task' ? section.projectId : null,
+      ...(kind === 'task' && waiting ? { waiting: true } : {}),
       updatedAt: nowIso(ctx),
     };
     await tx.blocks.put(changed);
     await record(ctx, tx, 'block.kindChanged', 'block', block.id, today(ctx), { from: block.kind, to: kind });
+    if (kind === 'task' && waiting) await record(ctx, tx, 'task.waitingChanged', 'block', block.id, today(ctx), { waiting: true });
     if (kind === 'note') await reopenNotesIfTriaged(ctx, tx, section);
   });
 }
@@ -385,6 +402,7 @@ export async function finishTaskIn(ctx: AppContext, tx: StoreTransaction, task: 
     firstIntendedDate: task.firstIntendedDate,
     postponeCount: task.postponeCount,
     projectId: task.projectId,
+    ...(task.waiting ? { waiting: true as const } : {}),
   });
   return finished;
 }
@@ -408,6 +426,20 @@ export async function setTaskDone(ctx: AppContext, taskId: string, done: boolean
     if (task.kind !== 'task') throw new Error('Only tasks can be finished');
     if (done && task.status === 'active') await finishTaskIn(ctx, tx, task, today(ctx));
     if (!done && task.status === 'done') await reopenTaskIn(ctx, tx, task);
+  });
+}
+
+/**
+ * Marks an active task as something a person owes me, or back as mine (spec/pessoas.md). It
+ * keeps its date, which becomes, or stops being, the day to follow up.
+ */
+export async function setTaskWaiting(ctx: AppContext, taskId: string, waiting: boolean): Promise<void> {
+  await ctx.store.transaction(async (tx) => {
+    const task = await getOrThrow(tx.blocks.get(taskId), 'Task');
+    if (task.kind !== 'task' || task.status !== 'active' || Boolean(task.waiting) === waiting) return;
+    const { waiting: _previous, ...rest } = task;
+    await tx.blocks.put({ ...rest, ...(waiting ? { waiting: true } : {}), updatedAt: nowIso(ctx) });
+    await record(ctx, tx, 'task.waitingChanged', 'block', task.id, today(ctx), { waiting });
   });
 }
 

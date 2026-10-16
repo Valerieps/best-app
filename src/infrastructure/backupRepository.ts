@@ -15,7 +15,7 @@ const LAST_BACKUP_KEY = 'lastBackupAt';
 const OVERWRITE_ALLOWED_KEY = 'autoBackupOverwriteAllowed';
 
 function userTables(db: AppDatabase) {
-  return [db.blocks, db.sections, db.projects, db.days, db.events, db.priorities, db.reflections, db.settings, db.reminders, db.objectives, db.resources, db.habits, db.habitLogs];
+  return [db.blocks, db.sections, db.projects, db.days, db.events, db.priorities, db.reflections, db.settings, db.reminders, db.objectives, db.resources, db.habits, db.habitLogs, db.people];
 }
 
 export async function readAllTables(db: AppDatabase): Promise<BackupTables> {
@@ -33,6 +33,7 @@ export async function readAllTables(db: AppDatabase): Promise<BackupTables> {
     resources: await db.resources.toArray(),
     habits: await db.habits.toArray(),
     habitLogs: await db.habitLogs.toArray(),
+    people: await db.people.toArray(),
   }));
 }
 

@@ -1,7 +1,7 @@
 # Fechar o dia e auto-triagem
 
 - **Entra aqui:** o "Fechar o dia", o ritual diário que antes se chamava checkout; os destinos de cada tipo de item; o planejamento do dia seguinte; a auto-triagem; e o "Fechar dias pendentes". Antes, a auto-triagem tinha um arquivo próprio (`AUTO-TRIAGEM.md`).
-- **Não entra aqui:** o que acontece com o item depois do destino, como um hábito criado a partir de uma tarefa (`habitos.md`); a triagem da Revisão de Foco (`rituais.md`), que reaproveita esta; e o que não perece de um dia para o outro, como seções sem projeto e tarefas esquecidas, que fica nos assistentes de "Colocar ordem na casa" (`assistentes.md`).
+- **Não entra aqui:** o que acontece com o item depois do destino, como um hábito criado a partir de uma tarefa (`habitos.md`); a triagem da Revisão de Foco (`rituais.md`), que reaproveita esta; e o que não perece de um dia para o outro, como seções sem projeto e tarefas esquecidas, que fica nos "Assistentes" da tela "Rituais" (`assistentes.md`).
 
 ## Em aberto
 
@@ -9,7 +9,7 @@
 
 ## Fechar o dia *(1a)*
 
-O "Fechar o dia" é curto, de cerca de um minuto: ele cuida só do que perece de um dia para o outro, enquanto eu ainda lembro do contexto. Todo o resto o app resolve sozinho ou deixa para o "Colocar ordem na casa", que eu faço quando quiser e sem data (`assistentes.md`).
+O "Fechar o dia" é curto, de cerca de um minuto: ele cuida só do que perece de um dia para o outro, enquanto eu ainda lembro do contexto. Todo o resto o app resolve sozinho ou deixa para os "Assistentes", que eu faço quando quiser e sem data (`assistentes.md`).
 
 - O dia só vira depois da meia-noite.
 - O fechamento pode ser feito antes de o dia terminar e mais de uma vez por dia. Ao fim dele, eu posso continuar o mesmo dia normalmente. Se eu adicionar itens depois do fechamento, ele volta a ficar pendente.
@@ -28,6 +28,7 @@ O "Fechar o dia" é curto, de cerca de um minuto: ele cuida só do que perece de
 | Tarefa | Vincular a um projeto (opcional) | 2 |
 | Tarefa | Decidir na Revisão de Foco | 2 |
 | Tarefa | Converter em hábito (`habitos.md`) | 6 |
+| Tarefa aguardando (`pessoas.md`) | Pede decisão quando passa pelo fechamento: data para cobrar (atalho para o dia seguinte); concluir; abandonar; deixar como está, que é a sugestão | 2 |
 | Notas de uma seção | Ficam onde foram escritas; não passam pelo fechamento | 1a |
 | Compromisso | Marcar como migrado; marcar como feito; descartar; vincular a um projeto (opcional) | 5 |
 | Lembrete ignorado | Manter; mudar; largar | 3 |
