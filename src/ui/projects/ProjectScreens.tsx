@@ -13,7 +13,7 @@ import { requestFocus } from '../dayNote/focus';
 import { Icon } from '../components/Icon';
 import { BackButton, ScreenHeader } from '../components/ScreenHeader';
 import { LoadingPage } from '../components/Skeleton';
-import { formatLongDate, formatShortDate, plural, stuckReasonLabel, weekdayName } from '../format';
+import { formatLongDate, formatShortDate, stuckReasonLabel, weekdayName } from '../format';
 import { navigate } from '../hooks';
 import { appContext, reader } from '../services';
 import { useLiveQuery } from '../useLiveQuery';
@@ -49,7 +49,7 @@ function useNarrow(): boolean {
   return narrow;
 }
 
-/** "Nova tarefa", above the tabs while the tasks show: Enter creates the task and keeps the field for the next one. */
+/** "Nova tarefa", between "Próximos dias" and "Sem data": Enter creates the task and keeps the field for the next one. */
 function NewTaskField({ projectId }: { projectId: string }) {
   const [text, setText] = useState('');
   const onKeyDown = (event: KeyboardEvent<HTMLInputElement>) => {
@@ -185,10 +185,6 @@ export function ProjectScreen({ id, tab, today }: { id: string; tab: 'tasks' | '
     />
   );
 
-  const togglePanel = () => {
-    if (docked) write(() => setProjectPanelPinned(appContext, false));
-    else setPeek(!peek);
-  };
   const togglePin = () => {
     setPeek(false);
     write(() => setProjectPanelPinned(appContext, !pinned));
@@ -218,7 +214,6 @@ export function ProjectScreen({ id, tab, today }: { id: string; tab: 'tasks' | '
             <ProjectActionsMenu project={project} objectives={objectives} canAddToPriorities={view.canAddToPriorities} />
           </header>
 
-          {tab === 'tasks' && <NewTaskField projectId={project.id} />}
 
           <div className="project-tabs" role="tablist" aria-label="Conteúdo do projeto">
             <button type="button" role="tab" aria-selected={tab === 'tasks'} className="project-tabs__tab" onClick={() => goTab('tasks')}>
@@ -226,19 +221,6 @@ export function ProjectScreen({ id, tab, today }: { id: string; tab: 'tasks' | '
             </button>
             <button type="button" role="tab" aria-selected={tab === 'notes'} className="project-tabs__tab" onClick={() => goTab('notes')}>
               Notas <span className="project-tabs__count">{view.notes.length}</span>
-            </button>
-            <span className="project-tabs__spacer" />
-            {/* The only way into the side column; the badge counts the resources inside it. */}
-            <button
-              type="button"
-              className="tertiary project-tabs__side"
-              aria-expanded={panelShown}
-              aria-label={`${panelShown ? 'Esconder' : 'Mostrar'} detalhes e recursos${resources.length > 0 ? `, ${plural(resources.length, 'recurso', 'recursos')}` : ''}`}
-              title="Detalhes e recursos"
-              onClick={togglePanel}
-            >
-              <Icon name="sidebar" />
-              {resources.length > 0 && <span className="project-tabs__badge">{resources.length}</span>}
             </button>
           </div>
 
@@ -291,6 +273,8 @@ export function ProjectScreen({ id, tab, today }: { id: string; tab: 'tasks' | '
                   ))}
                 </div>
               </section>
+
+              <NewTaskField projectId={project.id} />
 
               <FoldedGroup label="Sem data" count={groups.undated.length} initiallyOpen className="task-group--undated">
                 {groups.undated.map((task) => line(task))}

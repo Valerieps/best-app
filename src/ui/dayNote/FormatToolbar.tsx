@@ -21,7 +21,8 @@ const BUTTONS: { command: FormatCommand; label: string; content: ReactNode }[] =
  * none, the section's last line (its empty first line, in a section with no lines yet).
  */
 function targetLine(toolbar: HTMLElement): HTMLTextAreaElement | null {
-  const section = toolbar.closest('.section');
+  // A day note's section, or an entry of a project's notes being edited.
+  const section = toolbar.closest('.section, .timeline__entry');
   if (!section) return null;
   const active = document.activeElement;
   if (active instanceof HTMLTextAreaElement && active.classList.contains('line__text') && section.contains(active)) return active;
