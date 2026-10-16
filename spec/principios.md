@@ -5,13 +5,15 @@
 
 ## Princípios
 
-- O app sempre avisa em vez de bloquear.
+- O app sempre avisa em vez de bloquear. A única exceção é a pasta do backup, que eu escolho antes de usar o app ("Primeiro uso").
 - Sempre dá para criar ou editar qualquer coisa fora dos rituais. Os rituais existem apenas para garantir que isso será feito em alguma hora.
 - Qualquer ritual pode ser acionado a qualquer hora, independente da cadência e dos sinais que deixam uma revisão disponível (`rituais.md`, "Quando uma revisão fica disponível").
 
 ## Primeiro uso
 
-Não há onboarding: no primeiro uso eu já saio usando o ciclo diário, e os rituais e conceitos entram aos poucos.
+Antes de qualquer outra coisa, o app pede a pasta do backup, numa tela só, sem barra lateral e sem nenhum jeito de pular. A tela diz que os dados ficam só neste navegador, sem conta nem nuvem, recomenda uma pasta sincronizada com a nuvem (como o Google Drive ou o OneDrive), mostra a frequência do backup ("Backup") e tem o botão "Escolher pasta". Se a pasta já tiver um backup deste app, o app oferece importá-lo em seguida, como em qualquer escolha de pasta. A tela aparece para todo mundo que ainda não escolheu uma pasta, também para quem já tem dados no navegador. Num navegador que não deixa escolher pasta, a tela diz para usar o Chrome no computador, e o app não abre.
+
+Depois da pasta, não há onboarding: eu já saio usando o ciclo diário, e os rituais e conceitos entram aos poucos.
 
 - Primeiros dias: nota do dia, "Fechar o dia" e planejamento do dia seguinte, sem projetos nem objetivos.
 - Primeira Revisão de Foco: o app sugere agregar tarefas em projetos e definir o checklist de warm up.
@@ -20,7 +22,7 @@ Não há onboarding: no primeiro uso eu já saio usando o ciclo diário, e os ri
 ## Plataforma e dados
 
 - Nesta primeira fase, o app roda só no Chrome do computador, como um web app instalável (PWA). O Android fica para uma fase posterior.
-- O app pode ser instalado no computador como PWA. A instalação no Android fica para a fase do Android. *(1b)*
+- O app pode ser instalado no computador como PWA, pelas opções normais do Chrome (o ícone de instalar na barra de endereço); o app não tem botão próprio de instalar. A instalação no Android fica para a fase do Android. *(1b)*
 - Os dados ficam só no navegador (IndexedDB), sem nuvem, login nem conexões externas, por causa das regras de segurança do meu trabalho. As regras estão em `google-safe.md`.
 - O app é publicado como arquivos estáticos no Cloudflare Pages, para que outras pessoas também possam usar. Cada pessoa tem os próprios dados no próprio navegador, e nenhum dado passa pelo servidor.
 - O app funciona sem internet.
@@ -40,7 +42,8 @@ Não há onboarding: no primeiro uso eu já saio usando o ciclo diário, e os ri
 
 ## Backup
 
-- Como não há sincronização, o app faz backup automático numa pasta: eu escolho a pasta uma vez, de preferência sincronizada com o Google Drive da empresa, e o app regrava nela o arquivo do backup alguns segundos depois de cada mudança. Também dá para baixar uma cópia e importar um backup a qualquer momento.
+- Como não há sincronização, o app faz backup automático numa pasta: eu escolho a pasta uma vez, no primeiro uso, de preferência sincronizada com a nuvem (como o Google Drive ou o OneDrive), e o app regrava nela o arquivo do backup. O backup automático já começa ligado. Também dá para baixar uma cópia e importar um backup a qualquer momento.
+- Eu escolho com que frequência o backup é gravado, no primeiro uso e em "Dados e backup": "A cada mudança" (o padrão: alguns segundos depois da última mudança), "A cada 15 minutos" ou "A cada hora". Com 15 minutos ou uma hora, a primeira mudança começa a contar o tempo, e as seguintes entram na mesma gravação, para o backup sair mesmo se eu não parar de mexer. Ao fechar o app, só "A cada mudança" grava na hora; nas outras, o que faltou é gravado quando eu abro o app de novo, já que os dados continuam no navegador. As cópias datadas seguem a regra delas, abaixo.
 - Como o arquivo do backup é regravado a cada mudança, um erro que estrague os dados chegaria a ele em segundos. Por isso o app também guarda cópias datadas, na subpasta "copias" da pasta do backup: do dia de hoje, uma cópia a cada 2 horas, ficando com as 5 mais recentes; de cada um dos 14 dias anteriores, só a última versão do dia. O app apaga sozinho as cópias além desse limite, e só elas: nunca mexe em outros arquivos.
 - Antes de uma versão nova do app mudar o formato dos dados, a última versão no formato antigo também vira uma cópia.
 - Em "Dados e backup", eu vejo as cópias por data e posso restaurar qualquer uma. Restaurar funciona como importar: mostra antes o que se perderia, e dá para desfazer.

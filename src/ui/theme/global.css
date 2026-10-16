@@ -4369,3 +4369,30 @@ button:not(.link, .day-part__handle):active:not(:disabled) {
     animation: none;
   }
 }
+
+/* First-use screen: the backup folder is chosen before anything else. */
+.backup-setup {
+  padding: var(--space-5);
+  text-align: center;
+}
+
+.backup-setup__title {
+  margin: 0;
+  font-size: var(--font-size-xl);
+}
+
+.backup-setup__text {
+  margin: 0;
+  max-width: 34rem;
+  color: var(--color-text-muted);
+}
+
+.backup-interval {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.backup-interval select {
+  width: auto;
+}
