@@ -2295,8 +2295,36 @@ button.sidebar__toggle:hover {
   color: var(--color-text);
 }
 
-.sidebar__due {
-  margin-top: var(--space-2);
+/* Collapsed, each place is its icon alone; the name shows on hover */
+.sidebar--collapsed > .sidebar__toggle {
+  margin-bottom: var(--space-4);
+}
+
+button.sidebar__item.sidebar__icon {
+  position: relative;
+  justify-content: center;
+  padding: var(--space-2);
+}
+
+/* The "Rituais" counter and the backup dot sit on the corner of their icon */
+.sidebar__icon > .badge {
+  position: absolute;
+  top: 0;
+  right: 0;
+  margin-left: 0;
+  min-width: 14px;
+  padding: 0 3px;
+  line-height: 14px;
+}
+
+.sidebar__icon > .backup-status {
+  position: absolute;
+  right: var(--space-1);
+  bottom: var(--space-1);
+}
+
+.sidebar__icon .backup-status__label {
+  display: none;
 }
 
 .sidebar__group {
