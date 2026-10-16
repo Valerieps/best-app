@@ -22,7 +22,7 @@ import type {
   WarmupItem,
 } from '../domain/entities';
 import { habitStats, isExpectedOn, type HabitStats } from '../domain/habits';
-import { monthKey, monthRange } from '../domain/month';
+import { daysBetween as daysInRange, monthKey, monthRange, type MonthKey } from '../domain/month';
 import { dayStage, dueReminders, type DayStage } from '../domain/dayFlow';
 import { weekOf } from '../domain/week';
 import { comparePositions } from '../domain/position';
@@ -52,6 +52,19 @@ export interface DayNoteView {
 /** Sections of a day's note: the section behind a project page belongs to no day. */
 async function daySections(reader: Reader, day: DayKey): Promise<Section[]> {
   return (await reader.sectionsOfDay(day)).filter(isDaySection);
+}
+
+/** Days of the month with at least one line written, for the "Rituais" calendar. */
+export async function loadDaysWithNotes(reader: Reader, month: MonthKey): Promise<DayKey[]> {
+  const { start, end } = monthRange(month);
+  const days: DayKey[] = [];
+  for (const day of daysInRange(start, end)) {
+    const sections = await daySections(reader, day);
+    if (sections.length > 0 && (await reader.blocksInSections(sections.map((section) => section.id))).length > 0) {
+      days.push(day);
+    }
+  }
+  return days;
 }
 
 export async function loadDayNote(reader: Reader, day: DayKey): Promise<DayNoteView> {
@@ -226,7 +239,7 @@ export interface CleanupView {
   duplicates: DuplicateGroup[];
 }
 
-/** What the cleanup assistants of 1b have to show ("Colocar ordem na casa"). */
+/** What the cleanup assistants of 1b have to show ("Assistentes"). */
 export async function loadCleanup(reader: Reader): Promise<CleanupView> {
   const sections = await reader.sectionsWithStatus('leftUnlinked');
   const projects = await reader.projects();
@@ -245,7 +258,7 @@ export interface CleanupDashboard extends CleanupView {
   cards: AssistantCard[];
 }
 
-/** The "Colocar ordem na casa" dashboard: each assistant's findings and color. */
+/** The "Assistentes" grid of the "Rituais" screen: each assistant's findings and color. */
 export async function loadCleanupDashboard(reader: Reader, today: DayKey): Promise<CleanupDashboard> {
   const cleanup = await loadCleanup(reader);
   const pendingDays = await loadPendingDays(reader, today);

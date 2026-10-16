@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { keepProjectsSeparate, mergeProjects, resolveWhiteboardGroup } from '../../application/assistants';
 import { loadCleanupDashboard, type CleanupDashboard } from '../../application/queries';
+import type { ReviewAvailability } from '../../application/reviewQueries';
 import type { DuplicateGroup, WhiteboardGroup, WhiteboardGroupAction } from '../../domain/assistants';
 import type { AssistantId } from '../../domain/cleanupStatus';
 import type { DayKey } from '../../domain/day';
@@ -13,56 +14,116 @@ import { listDays, plural } from '../format';
 import { navigate } from '../hooks';
 import { appContext, reader } from '../services';
 import { useLiveQuery } from '../useLiveQuery';
-import { ageLabel, ASSISTANT_INFO, AssistantIcon, STATUS_LABELS } from './assistantInfo';
+import { ageLabel, ASSISTANT_INFO, AssistantIcon, FocusReviewIcon, focusReviewStatus, STATUS_LABELS } from './assistantInfo';
+import { RitualsCalendar } from './RitualsCalendar';
 
 interface Props {
   today: DayKey;
-  /** The assistant whose details are open; omitted shows the dashboard. */
+  /** The assistant whose details are open; omitted shows the "Rituais" screen. */
   assistant?: AssistantId;
+  pendingDays: DayKey[];
+  /** Which reviews are available, loaded by the app. */
+  reviews: ReviewAvailability | undefined;
 }
 
 /**
- * "Colocar ordem na casa" (spec/assistentes.md): a dashboard with one card per assistant, colored
- * by how long its oldest item has been waiting. The details and suggested actions only show after
- * opening a card.
+ * The "Rituais" screen (spec/assistentes.md, "A tela Rituais"): a small calendar of the days
+ * without a closing, then the "Assistentes" grid, with one card per assistant colored by how long
+ * its oldest item has been waiting, and the Revisão de Foco. The details and suggested actions of
+ * an assistant only show after opening its card.
  */
-export function CleanupScreen({ today, assistant }: Props) {
+export function RitualsScreen({ today, assistant, pendingDays, reviews }: Props) {
   const dashboard = useLiveQuery(() => loadCleanupDashboard(reader, today), [today]);
   const projects = useLiveQuery(() => reader.projects()) ?? [];
-  if (!dashboard) return <LoadingPage title={assistant ? undefined : 'Colocar ordem na casa'} />;
+  if (!dashboard) return <LoadingPage title={assistant ? undefined : 'Rituais'} />;
   return assistant ? (
     <AssistantScreen id={assistant} dashboard={dashboard} projects={projects} today={today} />
   ) : (
-    <Dashboard dashboard={dashboard} />
+    <Rituals
+      dashboard={dashboard}
+      today={today}
+      pendingDays={pendingDays}
+      focusAvailable={(reviews?.focus.length ?? 0) > 0}
+    />
   );
 }
 
-function Dashboard({ dashboard }: { dashboard: CleanupDashboard }) {
+function Rituals({
+  dashboard,
+  today,
+  pendingDays,
+  focusAvailable,
+}: {
+  dashboard: CleanupDashboard;
+  today: DayKey;
+  pendingDays: DayKey[];
+  focusAvailable: boolean;
+}) {
+  const [closing, setClosing] = useState(false);
+  const focusStatus = focusReviewStatus(focusAvailable);
+  const focusLabel = focusAvailable ? 'disponível' : STATUS_LABELS[focusStatus];
   return (
     <main className="page">
-      <ScreenHeader title="Colocar ordem na casa" />
-      <ul className="cleanup-grid">
-        {dashboard.cards.map(({ id, status, ageInDays }) => {
-          const { name } = ASSISTANT_INFO[id];
-          const age = ageLabel(ageInDays);
-          return (
-            <li key={id}>
-              <button
-                type="button"
-                className={`cleanup-card status--${status}`}
-                title={[STATUS_LABELS[status], age].filter(Boolean).join(', ')}
-                aria-label={[name, STATUS_LABELS[status], age].filter(Boolean).join(', ')}
-                onClick={() => navigate({ name: 'cleanup', assistant: id })}
-              >
-                <span className="status-icon">
-                  <AssistantIcon id={id} />
-                </span>
-                {name}
-              </button>
-            </li>
-          );
-        })}
-      </ul>
+      <ScreenHeader title="Rituais" />
+
+      <section className="rituals-section">
+        <div className="rituals-section__head rituals-section__head--calendar">
+          <h2 className="rituals-section__title">Fechar o dia</h2>
+          {pendingDays.length > 0 && (
+            <button type="button" className="tertiary" onClick={() => setClosing(true)}>
+              Fechar dias pendentes
+            </button>
+          )}
+        </div>
+        <RitualsCalendar today={today} pendingDays={pendingDays} />
+        {closing && <ClosePendingDaysDialog today={today} onClose={() => setClosing(false)} />}
+      </section>
+
+      <section className="rituals-section">
+        <div className="rituals-section__head">
+          <h2 className="rituals-section__title">Assistentes</h2>
+        </div>
+        <ul className="cleanup-grid">
+          <li>
+            <button
+              type="button"
+              className={`cleanup-card status--${focusStatus}`}
+              title={focusLabel}
+              aria-label={`Revisão de Foco, ${focusLabel}`}
+              onClick={() => navigate({ name: 'focusReview' })}
+            >
+              {focusAvailable && <span className="cleanup-card__flag">disponível</span>}
+              <span className="status-icon">
+                <FocusReviewIcon />
+              </span>
+              Revisão de Foco
+            </button>
+          </li>
+          {/* The calendar above does the job of "Dias em aberto". */}
+          {dashboard.cards
+            .filter(({ id }) => id !== 'pendingDays')
+            .map(({ id, status, ageInDays }) => {
+              const { name } = ASSISTANT_INFO[id];
+              const age = ageLabel(ageInDays);
+              return (
+                <li key={id}>
+                  <button
+                    type="button"
+                    className={`cleanup-card status--${status}`}
+                    title={[STATUS_LABELS[status], age].filter(Boolean).join(', ')}
+                    aria-label={[name, STATUS_LABELS[status], age].filter(Boolean).join(', ')}
+                    onClick={() => navigate({ name: 'rituals', assistant: id })}
+                  >
+                    <span className="status-icon">
+                      <AssistantIcon id={id} />
+                    </span>
+                    {name}
+                  </button>
+                </li>
+              );
+            })}
+        </ul>
+      </section>
     </main>
   );
 }
@@ -80,12 +141,12 @@ function AssistantScreen({
 }) {
   const { name, description } = ASSISTANT_INFO[id];
   const card = dashboard.cards.find((candidate) => candidate.id === id)!;
-  const backToDashboard = () => navigate({ name: 'cleanup' });
+  const backToDashboard = () => navigate({ name: 'rituals' });
 
   return (
     <main className="page">
       <button type="button" className="link screen-header__back" onClick={backToDashboard}>
-        ← Colocar ordem na casa
+        ← Rituais
       </button>
       <header className={`assistant-header status--${card.status}`}>
         <span className="status-icon">

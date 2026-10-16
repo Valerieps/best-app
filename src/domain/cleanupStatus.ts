@@ -1,8 +1,8 @@
 import { daysBetween, type DayKey } from './day';
 
 /**
- * How urgent each cleanup assistant is, shown as a color on the "Colocar ordem na casa"
- * dashboard (spec/assistentes.md). The color says how long the oldest item has been waiting, not
+ * How urgent each cleanup assistant is, shown as a color on the "Assistentes"
+ * grid of the "Rituais" screen (spec/assistentes.md). The color says how long the oldest item has been waiting, not
  * how many items there are, because the cost of cleaning grows with age: the longer it waits, the
  * less I remember of its context. The limits, in days, are set in the settings (ADR-045).
  */

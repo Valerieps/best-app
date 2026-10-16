@@ -87,7 +87,7 @@ export function SettingsScreen() {
       </section>
 
       <section className="panel settings__panel">
-        <h2>Colocar ordem na casa</h2>
+        <h2>Assistentes</h2>
         <p className="muted">
           A cor de cada assistente diz há quanto tempo o item mais antigo dele está esperando. Sem nenhum item, ou com um
           item recente, o cartão fica verde. Escolha a partir de quantos dias de espera ele fica amarelo, laranja e vermelho.

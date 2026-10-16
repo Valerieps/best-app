@@ -760,6 +760,7 @@ button.priorities__pin[aria-pressed='true'] {
 }
 
 .cleanup-card {
+  position: relative;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -771,6 +772,165 @@ button.priorities__pin[aria-pressed='true'] {
   border-radius: var(--radius-lg);
   font-weight: 600;
   text-align: center;
+}
+
+.cleanup-card__flag {
+  position: absolute;
+  top: var(--space-2);
+  right: var(--space-3);
+  font-size: var(--font-size-xs);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--color-status1-strong);
+}
+
+/* The "Rituais" screen (spec/assistentes.md, "A tela Rituais") */
+.rituals-section {
+  margin-bottom: var(--space-7);
+}
+
+.rituals-section__head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-4);
+  margin-bottom: var(--space-4);
+}
+
+.rituals-section__head--calendar {
+  max-width: 340px;
+}
+
+.rituals-section__title {
+  margin: 0;
+  font-size: var(--font-size-lg);
+  font-weight: 600;
+}
+
+.rituals-calendar {
+  width: 280px;
+  padding: var(--space-3);
+  border: var(--border-width) solid var(--color-border);
+  border-radius: var(--radius-lg);
+}
+
+.rituals-calendar__nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: var(--space-2);
+  font-size: var(--font-size-sm);
+}
+
+.rituals-calendar__month {
+  font-weight: 600;
+}
+
+.rituals-calendar__arrow:disabled {
+  opacity: 0.35;
+  cursor: default;
+}
+
+.rituals-calendar__grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 3px;
+}
+
+.rituals-calendar__weekday {
+  text-align: center;
+  font-size: var(--font-size-xs);
+  color: var(--color-text-muted);
+}
+
+.rituals-calendar__day {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  aspect-ratio: 1 / 1;
+  padding: 0;
+  border: var(--border-width) solid transparent;
+  border-radius: var(--radius-sm);
+  background: none;
+  font: inherit;
+  font-size: var(--font-size-xs);
+  color: var(--color-text);
+}
+
+.rituals-calendar__day--pending {
+  font-weight: 700;
+  background: var(--color-mark-bg);
+  border-color: var(--color-status1-border);
+  color: var(--color-mark-text);
+  cursor: pointer;
+}
+
+.rituals-calendar__day--today {
+  font-weight: 700;
+  border: 1.5px solid var(--color-accent);
+  cursor: pointer;
+}
+
+.rituals-calendar__day--pending:hover,
+.rituals-calendar__day--today:hover {
+  filter: brightness(0.95);
+}
+
+.rituals-calendar__day--closed {
+  color: var(--color-text-muted);
+}
+
+.rituals-calendar__day--closed::after,
+.rituals-calendar__dot {
+  content: '';
+  display: inline-block;
+  width: 4px;
+  height: 4px;
+  border-radius: var(--radius-pill);
+  background: var(--color-dot-ok);
+}
+
+.rituals-calendar__day--closed::after {
+  position: absolute;
+  bottom: 3px;
+}
+
+.rituals-calendar__day--empty,
+.rituals-calendar__day--future {
+  color: var(--color-border-strong);
+}
+
+.rituals-calendar__legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-1) var(--space-3);
+  margin-top: var(--space-3);
+  font-size: var(--font-size-xs);
+  color: var(--color-text-muted);
+}
+
+.rituals-calendar__legend > span {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+}
+
+.rituals-calendar__swatch {
+  width: 12px;
+  height: 12px;
+  border-radius: 3px;
+}
+
+.rituals-calendar__swatch--pending {
+  background: var(--color-mark-bg);
+  border: var(--border-width) solid var(--color-status1-border);
+}
+
+.rituals-calendar__swatch--today {
+  border: 1.5px solid var(--color-accent);
 }
 
 .cleanup-card:hover {
@@ -2167,11 +2327,6 @@ button.sidebar__item--current {
   border-color: var(--color-border);
 }
 
-button.sidebar__item--sub {
-  padding-left: var(--space-5);
-  font-size: var(--font-size-sm);
-}
-
 .sidebar__label {
   flex: 1;
   min-width: 0;
@@ -2244,11 +2399,6 @@ button.sidebar__footer-item {
   color: var(--color-mark-text);
   font-size: var(--font-size-xs);
   text-align: center;
-}
-
-.badge--warning {
-  background: var(--color-warning-bg);
-  color: var(--color-warning-text);
 }
 
 .dropdown {

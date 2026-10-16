@@ -25,7 +25,8 @@ export type Route =
   | { name: 'checkout'; day: DayKey }
   | { name: 'active' }
   /** `assistant` opens one assistant's details; omitted shows the dashboard. */
-  | { name: 'cleanup'; assistant?: AssistantId }
+  /** The "Rituais" screen, or one of its assistants when `assistant` is set. */
+  | { name: 'rituals'; assistant?: AssistantId }
   | { name: 'data' }
   /** Section 2: the Revisão de Foco, always the one in progress. */
   | { name: 'focusReview' }
@@ -62,9 +63,10 @@ export function parseRoute(hash: string): Route {
     // The archived tasks list is gone (ADR-049); its old address opens the task list.
     case 'arquivadas':
       return { name: 'active' };
-    case 'ordem': {
+    case 'rituais':
+    case 'ordem': { // "Colocar ordem na casa", before the "Rituais" screen
       const assistant = ASSISTANT_IDS.find((id) => ASSISTANT_SLUGS[id] === parts[1]);
-      return assistant ? { name: 'cleanup', assistant } : { name: 'cleanup' };
+      return assistant ? { name: 'rituals', assistant } : { name: 'rituals' };
     }
     case 'dados':
       return { name: 'data' };
@@ -106,8 +108,8 @@ export function routeHash(route: Route): string {
       return `#/checkout/${route.day}`;
     case 'active':
       return '#/tarefas';
-    case 'cleanup':
-      return route.assistant ? `#/ordem/${ASSISTANT_SLUGS[route.assistant]}` : '#/ordem';
+    case 'rituals':
+      return route.assistant ? `#/rituais/${ASSISTANT_SLUGS[route.assistant]}` : '#/rituais';
     case 'data':
       return '#/dados';
     case 'focusReview':

@@ -144,7 +144,8 @@ Nada disso é guardado: é calculado a partir das tabelas, por funções de `app
 | Notas de um projeto | Seções do projeto com `notesDestination = 'wiki'`, cada entrada com as notas da seção, da mais recente para a mais antiga (`loadSectionNotes`) |
 | Projeto | Seções, tarefas e notas com o `projectId` dele, agrupadas em travadas, próximos dias, sem data e feitas |
 | Lista de projetos | Projetos por status, projetos em foco e mapa de atividade calculado dos eventos (ADR-034) |
-| "Assistentes" (antes "Colocar ordem na casa") | Contagens de cada assistente e a cor pela idade do item mais antigo, com os limites das configurações (ADR-045) |
+| Tela "Rituais" | Dias pendentes e dias com nota do mês, para o calendário (`domain/ritualsCalendar.ts`, ADR-053) |
+| "Assistentes" (antes "Colocar ordem na casa") | Contagens de cada assistente e a cor pela idade do item mais antigo, com os limites das configurações (ADR-045); o cartão da Revisão de Foco, pela disponibilidade dela (ADR-053) |
 | Abertura do dia | Etapa do dia (iniciar, warm up, dashboard, execução) e lembretes vencidos (ADR-023) |
 | Revisões e métricas | Eventos desde a última revisão de cada tipo passados às funções de métricas (seção 9); disponibilidade de cada revisão por cadência e sinais (`application/reviewQueries.ts`, ADR-039) |
 

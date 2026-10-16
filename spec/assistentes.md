@@ -17,7 +17,7 @@ Os assistentes de limpeza colocam ordem na casa: cada um encontra o que está fo
 O item "Rituais" da barra lateral abre esta tela, com duas partes, nesta ordem *(1b)*. O rascunho é o `rascunhos/rascunho-rituais_1.html`.
 
 - **Fechar o dia:** um calendário pequeno, de um mês, com setas para os meses anteriores. Os dias sem fechamento ficam destacados, todos com a mesma cor, sem escala de idade. Hoje tem só um contorno. Os dias fechados ganham um ponto verde, e os dias sem nota ficam apagados. Clicar num dia destacado, ou em hoje, abre o "Fechar o dia" daquele dia; clicar num dia fechado não faz nada. Ao lado do título fica "Fechar dias pendentes", que fecha todos de uma vez, com as regras da auto-triagem (`checkout.md`).
-- **Assistentes:** a grade de cartões descrita abaixo. A Revisão de Foco é um dos cartões: abrir o cartão abre a revisão (`rituais.md`), e um selo "disponível" aparece quando ela está disponível. A Revisão de Rumo ainda não entra na grade.
+- **Assistentes:** a grade de cartões descrita abaixo. A Revisão de Foco é um dos cartões: abrir o cartão abre a revisão (`rituais.md`). O cartão fica verde enquanto a revisão não está disponível e amarelo quando está, com o selo "disponível". A Revisão de Rumo ainda não entra na grade.
 - O assistente "Dias em aberto" não tem cartão na grade, porque o calendário faz o papel dele.
 
 ## Como funcionam

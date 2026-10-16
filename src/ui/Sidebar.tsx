@@ -1,23 +1,21 @@
 import { useState, type CSSProperties, type KeyboardEvent, type PointerEvent } from 'react';
-import { loadCleanup, loadMenuCounts } from '../application/queries';
+import { loadMenuCounts } from '../application/queries';
 import type { ReviewAvailability } from '../application/reviewQueries';
 import { setSidebarCollapsed, setSidebarWidth } from '../application/settings';
 import type { DayKey } from '../domain/day';
 import type { AutoBackupState } from '../infrastructure/autoBackup';
 import { BackupStatus } from './backup/BackupStatus';
 import { Icon } from './components/Icon';
-import { formatShortDate, weekdayName } from './format';
 import { navigate, type Route } from './hooks';
 import { appContext, reader } from './services';
-import { isRitual, sidebarPlace, type SidebarPlace } from './sidebarPlace';
+import { sidebarPlace, type SidebarPlace } from './sidebarPlace';
 import { clampSidebarWidth, SIDEBAR_WIDTH, SIDEBAR_WIDTH_STEP } from './sidebarWidth';
 import { useLiveQueryState } from './useLiveQuery';
-import { directionReviewEnabled, FEATURES } from './features';
+import { FEATURES } from './features';
 import { enqueue } from './writeQueue';
 
 interface Props {
   route: Route;
-  today: DayKey;
   pendingDays: DayKey[];
   /** Which reviews are available; loaded by the app, which also shows their notice. */
   reviews: ReviewAvailability | undefined;
@@ -30,7 +28,8 @@ interface Place {
   route: Route;
   label: string;
   count?: number;
-  badge?: string;
+  /** The "Rituais" counter: pending days plus available reviews. */
+  due?: number;
 }
 
 function Badge({ count }: { count: number }) {
@@ -41,13 +40,12 @@ function Badge({ count }: { count: number }) {
  * Level 1 of the navigation (spec/navegacao.md, "Navegação"): the only global bar, fixed on the
  * left of every screen but "Iniciar Dia". Only places, in groups; it can be collapsed to a strip.
  */
-export function Sidebar({ route, today, pendingDays, reviews, backupState }: Props) {
+export function Sidebar({ route, pendingDays, reviews, backupState }: Props) {
   const current = sidebarPlace(route);
   const storedCollapsed = useLiveQueryState(async () => (await reader.settings())?.sidebarCollapsed ?? false).value;
   // The toggle shows at once; the settings write follows (as in ADR-036).
   const [collapsedNow, setCollapsedNow] = useState<boolean | null>(null);
   const collapsed = collapsedNow ?? storedCollapsed ?? false;
-  const [ritualsOpen, setRitualsOpen] = useState(() => isRitual(current));
   const storedWidth = useLiveQueryState(async () => (await reader.settings())?.sidebarWidth ?? null).value;
   // While dragging, the width follows the mouse; it is saved once, when the drag ends.
   const [widthNow, setWidthNow] = useState<number | null>(null);
@@ -57,8 +55,6 @@ export function Sidebar({ route, today, pendingDays, reviews, backupState }: Pro
   const counts = useLiveQueryState(() => loadMenuCounts(reader)).value;
   const focusDue = (reviews?.focus.length ?? 0) > 0;
   const directionDue = (reviews?.direction.length ?? 0) > 0;
-  const cleanup = useLiveQueryState(() => loadCleanup(reader)).value;
-  const cleanupCount = cleanup ? cleanup.whiteboards.length + cleanup.duplicates.length : 0;
   const dueCount = pendingDays.length + (focusDue ? 1 : 0) + (directionDue ? 1 : 0);
 
   const toggle = () => {
@@ -135,47 +131,6 @@ export function Sidebar({ route, today, pendingDays, reviews, backupState }: Pro
     );
   }
 
-  const rituals: Place[] = [
-    {
-      key: 'checkout-today',
-      place: 'checkout',
-      route: { name: 'checkout', day: today },
-      label: 'Fechar o dia de hoje',
-    },
-    ...pendingDays.map((day): Place => ({
-      key: `checkout-${day}`,
-      place: 'checkout',
-      route: { name: 'checkout', day },
-      label: `Fechar ${weekdayName(day)}, ${formatShortDate(day)}`,
-      badge: 'pendente',
-    })),
-    {
-      key: 'focusReview',
-      place: 'focusReview',
-      route: { name: 'focusReview' },
-      label: 'Revisão de Foco',
-      badge: focusDue ? 'disponível' : undefined,
-    },
-    // Hidden until the objectives' spec is done (ui/features.ts).
-    ...(directionReviewEnabled()
-      ? [
-          {
-            key: 'directionReview',
-            place: 'directionReview' as const,
-            route: { name: 'directionReview' as const },
-            label: 'Revisão de Rumo',
-            badge: directionDue ? 'disponível' : undefined,
-          },
-        ]
-      : []),
-    {
-      key: 'cleanup',
-      place: 'cleanup',
-      route: { name: 'cleanup' },
-      label: 'Colocar ordem na casa',
-      count: cleanupCount || undefined,
-    },
-  ];
   // The groups have no titles since 15/10/2026: a space sets them apart (spec/navegacao.md).
   const groups: { key: string; places: Place[] }[] = [
     {
@@ -216,10 +171,7 @@ export function Sidebar({ route, today, pendingDays, reviews, backupState }: Pro
     },
   ];
 
-  // A checkout is current only for its own day; the other places match by name.
-  const isCurrent = (place: Place) =>
-    place.place === current &&
-    (place.route.name !== 'checkout' || (route.name === 'checkout' && route.day === place.route.day));
+  const isCurrent = (place: Place) => place.place === current;
 
   const placeButton = (place: Place, extraClass = '') => (
     <button
@@ -230,9 +182,7 @@ export function Sidebar({ route, today, pendingDays, reviews, backupState }: Pro
       onClick={() => navigate(place.route)}
     >
       <span className="sidebar__label">{place.label}</span>
-      {place.badge && (
-        <span className={`badge ${place.badge === 'pendente' ? 'badge--warning' : ''}`}>{place.badge}</span>
-      )}
+      {place.due !== undefined && <Badge count={place.due} />}
       {place.count !== undefined && <span className="muted">{place.count}</span>}
     </button>
   );
@@ -276,18 +226,13 @@ export function Sidebar({ route, today, pendingDays, reviews, backupState }: Pro
           route: { name: 'day' },
           label: 'Hoje',
         })}
-        <button
-          type="button"
-          className="sidebar__item"
-          aria-expanded={ritualsOpen}
-          onClick={() => setRitualsOpen(!ritualsOpen)}
-        >
-          <span className="sidebar__label">
-            Rituais <Icon name={ritualsOpen ? 'chevronDown' : 'chevronRight'} size="sm" />
-          </span>
-          <Badge count={dueCount} />
-        </button>
-        {ritualsOpen && rituals.map((place) => placeButton(place, 'sidebar__item--sub'))}
+        {placeButton({
+          key: 'rituals',
+          place: 'rituals',
+          route: { name: 'rituals' },
+          label: 'Rituais',
+          due: dueCount,
+        })}
       </div>
 
       {groups.map((group) => (

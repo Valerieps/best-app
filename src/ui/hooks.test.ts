@@ -7,10 +7,10 @@ describe('routes', () => {
     { name: 'day', day: '2026-10-09' },
     { name: 'checkout', day: '2026-10-11' },
     { name: 'active' },
-    { name: 'cleanup' },
-    { name: 'cleanup', assistant: 'pendingDays' },
-    { name: 'cleanup', assistant: 'whiteboards' },
-    { name: 'cleanup', assistant: 'duplicates' },
+    { name: 'rituals' },
+    { name: 'rituals', assistant: 'pendingDays' },
+    { name: 'rituals', assistant: 'whiteboards' },
+    { name: 'rituals', assistant: 'duplicates' },
     { name: 'data' },
     { name: 'focusReview' },
     { name: 'projects' },
@@ -29,7 +29,12 @@ describe('routes', () => {
     expect(parseRoute('')).toEqual({ name: 'day' });
     expect(parseRoute('#/nada')).toEqual({ name: 'day' });
     expect(parseRoute('#/checkout/ontem')).toEqual({ name: 'day' });
-    expect(parseRoute('#/ordem/nada')).toEqual({ name: 'cleanup' });
+    expect(parseRoute('#/rituais/nada')).toEqual({ name: 'rituals' });
+  });
+
+  it('takes the old "Colocar ordem na casa" links to the "Rituais" screen', () => {
+    expect(parseRoute('#/ordem')).toEqual({ name: 'rituals' });
+    expect(parseRoute('#/ordem/secoes-soltas')).toEqual({ name: 'rituals', assistant: 'whiteboards' });
   });
 
   it('takes the old reflection links to the reviews', () => {
