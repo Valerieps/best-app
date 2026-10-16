@@ -1,8 +1,8 @@
-import { useCallback, useEffect, useState, type MouseEvent } from 'react';
+import { useCallback, useEffect, useState, type DragEvent, type MouseEvent } from 'react';
 import { applyPlanning, applyTriage, completeCheckout, defaultClosingDecisions, type PlanningChange } from '../../application/checkout';
 import type { TaskListItem } from '../../application/queries';
 import { loadDayTriage, loadPlanning } from '../../application/queries';
-import { rangeBetween } from '../../domain/checkoutSteps';
+import { planningColumnOf, rangeBetween, type PlanningColumn } from '../../domain/checkoutSteps';
 import { addDays, type DayKey } from '../../domain/day';
 import { Fireworks, playPlim } from '../components/Celebration';
 import { ProjectChip } from '../components/Chips';
@@ -23,46 +23,61 @@ interface Props {
   onDone(): void;
 }
 
-type When = 'target' | 'other' | 'none' | 'past';
+/** What a card's date field shows: one of the board's days, another date, no date, or still late. */
+type When = DayKey | 'other' | 'none' | 'late';
+
+const DRAG_TYPE = 'application/x-vesper-task';
 
 /**
- * Step "Amanhã": every task carries a date, and nothing is finished here. Tasks already in the
- * target day's note, the ones scheduled for the next few days, and the other active tasks can
- * each get a new date, one by one or in a batch (spec/checkout.md, "Planejamento do dia seguinte").
+ * Step "Amanhã", as a board of three columns where each task is a card: the late tasks all
+ * together first, when there are any, then today when it has tasks, and the target day with the
+ * days after it. Each card can get a new date from its field, by being dragged to another day,
+ * or in a batch; nothing is finished here, and the dates are saved at "Finalizar meu dia"
+ * (spec/checkout.md, "Planejamento do dia seguinte").
  */
 export function PlanningStep({ day, target, today, onBack, onDone }: Props) {
-  const view = useLiveQuery(() => loadPlanning(reader, target), [target]);
+  const view = useLiveQuery(() => loadPlanning(reader, target, today), [target, today]);
   const [dates, setDates] = useState<Map<string, DayKey | null>>(new Map());
   const [selecting, setSelecting] = useState(false);
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [anchor, setAnchor] = useState<string | null>(null);
   const [batchDate, setBatchDate] = useState<DayKey>(addDays(target, 1));
   const [flash, setFlash] = useState('');
+  const [dropOn, setDropOn] = useState<number | null>(null);
   const [celebrating, setCelebrating] = useState(false);
   const [busy, setBusy] = useState(false);
   const finish = useCallback(() => onDone(), [onDone]);
 
   const label = relativeDay(target, today);
   const Label = label.charAt(0).toUpperCase() + label.slice(1);
-  const items = view ? [...view.planned, ...view.soon, ...view.others] : [];
-  const ids = items.map((item) => item.task.id);
+  const columns: PlanningColumn[] = view ? view.columns.map(({ column }) => column) : [];
+  const items = view ? view.columns.flatMap((each) => each.items) : [];
   const dateOf = (item: TaskListItem) => (dates.has(item.task.id) ? (dates.get(item.task.id) ?? null) : item.task.intendedDate);
-  const whenOf = (item: TaskListItem): When => {
-    const date = dateOf(item);
-    if (date !== null && date < target) return 'past';
-    return date === target ? 'target' : date === null ? 'none' : 'other';
+  const changed = (item: TaskListItem) => dateOf(item) !== item.task.intendedDate;
+  const dayLabel = (date: DayKey) => {
+    if (date === today || date === addDays(today, 1)) {
+      const relative = relativeDay(date, today);
+      return relative.charAt(0).toUpperCase() + relative.slice(1);
+    }
+    return `${weekdayName(date).slice(0, 3)}, ${formatShortDate(date)}`;
   };
-  const dateLabel = (date: DayKey | null) =>
-    date === null ? 'Sem data' : date === target ? Label : `${weekdayName(date).slice(0, 3)}, ${formatShortDate(date)}`;
+  const dateLabel = (date: DayKey | null) => (date === null ? 'Sem data' : dayLabel(date));
+  const columnLabel = (column: PlanningColumn) => (column.kind === 'late' ? 'Atrasadas' : dayLabel(column.day));
   const setDate = (id: string, date: DayKey | null) => setDates((previous) => new Map(previous).set(id, date));
-  const targetCount = items.filter((item) => whenOf(item) === 'target').length;
+
+  // A changed card moves to its new day; one sent off the board stays where it was, marked.
+  const columnOf = (item: TaskListItem) => {
+    const now = planningColumnOf(dateOf(item), columns, today);
+    return now !== -1 ? now : planningColumnOf(item.task.intendedDate, columns, today);
+  };
+  const board = columns.map((column, index) => ({ column, cards: items.filter((item) => columnOf(item) === index) }));
+  const ids = board.flatMap(({ cards }) => cards.map((item) => item.task.id));
+  const targetCount = items.filter((item) => dateOf(item) === target).length;
 
   async function finalize() {
     if (busy || !view) return;
     setBusy(true);
-    const changes: PlanningChange[] = items
-      .filter((item) => dates.has(item.task.id) && dateOf(item) !== item.task.intendedDate)
-      .map((item) => ({ taskId: item.task.id, date: dateOf(item) }));
+    const changes: PlanningChange[] = items.filter(changed).map((item) => ({ taskId: item.task.id, date: dateOf(item) }));
     await applyPlanning(appContext, day, changes);
     // Whatever is still open (a task added meanwhile, or notes when there were no tasks) is settled.
     await applyTriage(appContext, day, defaultClosingDecisions(await loadDayTriage(reader, day, today)));
@@ -94,12 +109,12 @@ export function PlanningStep({ day, target, today, onBack, onDone }: Props) {
     setAnchor(id);
   }
 
-  function pickGroup(group: TaskListItem[]) {
-    const groupIds = group.map((item) => item.task.id);
-    const all = groupIds.every((id) => selected.has(id));
+  function pickColumn(cards: TaskListItem[]) {
+    const columnIds = cards.map((item) => item.task.id);
+    const all = columnIds.every((id) => selected.has(id));
     setSelected((previous) => {
       const updated = new Set(previous);
-      for (const id of groupIds) {
+      for (const id of columnIds) {
         if (all) updated.delete(id);
         else updated.add(id);
       }
@@ -132,52 +147,82 @@ export function PlanningStep({ day, target, today, onBack, onDone }: Props) {
 
   if (!view) return <SkeletonLines />;
 
-  const renderRow = (item: TaskListItem) => {
+  const dayColumns = columns.filter((column): column is { kind: 'day'; day: DayKey } => column.kind === 'day');
+  const whenOf = (item: TaskListItem): When => {
+    const date = dateOf(item);
+    if (date === null) return 'none';
+    if (date < today) return 'late';
+    return dayColumns.some((column) => column.day === date) ? date : 'other';
+  };
+
+  function onDrop(event: DragEvent, column: PlanningColumn) {
+    event.preventDefault();
+    setDropOn(null);
+    const id = event.dataTransfer.getData(DRAG_TYPE);
+    if (id && column.kind === 'day') setDate(id, column.day);
+  }
+
+  const renderCard = (item: TaskListItem) => {
     const id = item.task.id;
     const date = dateOf(item);
     const when = whenOf(item);
-    const changed = date !== item.task.intendedDate;
     const postponed = postponedLabel(item.task.postponeCount);
-    const pastDate = item.task.intendedDate !== null && item.task.intendedDate < target && !changed;
-    const text = (
-      <span className="plan-row__text">
+    const late = item.task.intendedDate !== null && item.task.intendedDate < today && !changed(item);
+    // Sent off the board (no date, or a date after the last column): it stays here, marked.
+    const away = changed(item) && planningColumnOf(date, columns, today) === -1;
+    const body = (
+      <span className="plan-card__text">
         <Linkified text={item.task.text || '(tarefa sem texto)'} />
-        {item.project && <ProjectChip name={item.project.name} />}
-        {postponed && <span className="muted">{postponed}</span>}
-        {pastDate && item.task.intendedDate && <span className="muted">intenção: {relativeDay(item.task.intendedDate, today)}</span>}
-        {changed && <span className="chip chip--warning">mudou</span>}
+        <span className="plan-card__meta">
+          {item.project && <ProjectChip name={item.project.name} />}
+          {postponed && <span className="muted">{postponed}</span>}
+          {late && item.task.intendedDate && <span className="muted">intenção: {relativeDay(item.task.intendedDate, today)}</span>}
+          {away && <span className="chip chip--warning">→ {dateLabel(date).toLowerCase()}</span>}
+          {changed(item) && !away && <span className="chip chip--warning">mudou</span>}
+        </span>
       </span>
     );
     if (selecting) {
       const on = selected.has(id);
       return (
         <li key={id}>
-          <button type="button" className={`plan-row plan-row--select ${on ? 'plan-row--on' : ''}`} aria-pressed={on} onClick={(event) => pick(id, event)}>
-            {text}
-            <span className={`when-label when-label--${when}`}>{dateLabel(date)}</span>
+          <button type="button" className={`plan-card plan-card--select ${on ? 'plan-card--on' : ''}`} aria-pressed={on} onClick={(event) => pick(id, event)}>
+            {body}
           </button>
         </li>
       );
     }
     return (
-      <li className="plan-row" key={id}>
-        {text}
-        <span className="plan-row__when">
+      <li
+        key={id}
+        className={`plan-card ${away ? 'plan-card--away' : ''}`}
+        draggable
+        onDragStart={(event) => {
+          event.dataTransfer.setData(DRAG_TYPE, id);
+          event.dataTransfer.effectAllowed = 'move';
+        }}
+      >
+        {body}
+        <span className="plan-card__when">
           <select
-            className={`text-input when-select when-select--${when}`}
+            className={`text-input when-select ${when === target ? 'when-select--target' : when === 'none' ? 'when-select--none' : ''}`}
             value={when}
             onChange={(event) => {
               const value = event.target.value as When;
-              if (value === 'target') setDate(id, target);
-              else if (value === 'none') setDate(id, null);
+              if (value === 'none') setDate(id, null);
               else if (value === 'other') setDate(id, date !== null && date > target ? date : addDays(target, 1));
+              else if (value !== 'late') setDate(id, value);
             }}
             aria-label={`Data de intenção de "${item.task.text}"`}
           >
-            <option value="target">{Label}</option>
+            {dayColumns.map((column) => (
+              <option key={column.day} value={column.day}>
+                {dayLabel(column.day)}
+              </option>
+            ))}
             <option value="other">Outra data</option>
             <option value="none">Sem data</option>
-            {when === 'past' && <option value="past">Data passada</option>}
+            {when === 'late' && <option value="late">Atrasada</option>}
           </select>
           {when === 'other' && date && (
             <input
@@ -194,34 +239,14 @@ export function PlanningStep({ day, target, today, onBack, onDone }: Props) {
     );
   };
 
-  const group = (title: string, list: TaskListItem[]) => {
-    if (list.length === 0) return null;
-    const all = list.every((item) => selected.has(item.task.id));
-    return (
-      <section className="checkout-group">
-        <h3 className="checkout-group__title">
-          {title}
-          {selecting && (
-            <IconAction
-              icon="checklist"
-              label={all ? 'Tirar a seleção do grupo' : 'Selecionar o grupo'}
-              pressed={all}
-              onClick={() => pickGroup(list)}
-              className="checkout-group__pick"
-            />
-          )}
-        </h3>
-        <ul className="plan-list">{list.map(renderRow)}</ul>
-      </section>
-    );
-  };
-
   return (
     <>
       <div className={`card__body checkout-step ${selecting ? 'checkout-step--batch' : ''}`}>
         <StepQuestion focusKey="planning">O que entra na nota de {label}?</StepQuestion>
         <div className="plan-intro">
-          <p className="muted">{selecting ? 'Shift + clique seleciona um intervalo.' : 'Ajuste a data de qualquer tarefa.'}</p>
+          <p className="muted">
+            {selecting ? 'Shift + clique seleciona um intervalo.' : 'Arraste um card para outro dia, ou mude a data no próprio card.'}
+          </p>
           <IconAction
             icon="checklist"
             label={selecting ? 'Sair da seleção' : 'Selecionar várias'}
@@ -229,10 +254,45 @@ export function PlanningStep({ day, target, today, onBack, onDone }: Props) {
             onClick={selecting ? leaveSelection : () => setSelecting(true)}
           />
         </div>
-        {group(`Já na nota de ${label}`, view.planned)}
-        {group('Próximos dias', view.soon)}
-        {group('Data já passou', view.others)}
-        {items.length === 0 && <p className="muted">Nenhuma tarefa com data.</p>}
+        <div className="plan-board">
+          {board.map(({ column, cards }, index) => {
+            const all = cards.length > 0 && cards.every((item) => selected.has(item.task.id));
+            const droppable = column.kind === 'day' && !selecting;
+            return (
+              <section
+                key={column.kind === 'late' ? 'late' : column.day}
+                className={`plan-column ${column.kind === 'late' ? 'plan-column--late' : ''} ${dropOn === index ? 'plan-column--drop' : ''}`}
+                aria-label={columnLabel(column)}
+                onDragOver={
+                  droppable
+                    ? (event) => {
+                        if (!event.dataTransfer.types.includes(DRAG_TYPE)) return;
+                        event.preventDefault();
+                        setDropOn(index);
+                      }
+                    : undefined
+                }
+                onDragLeave={droppable ? () => setDropOn((current) => (current === index ? null : current)) : undefined}
+                onDrop={droppable ? (event) => onDrop(event, column) : undefined}
+              >
+                <h3 className="plan-column__title">
+                  {columnLabel(column)} <span className="muted">({cards.length})</span>
+                  {selecting && cards.length > 0 && (
+                    <IconAction
+                      icon="checklist"
+                      label={all ? 'Tirar a seleção da coluna' : 'Selecionar a coluna'}
+                      pressed={all}
+                      onClick={() => pickColumn(cards)}
+                      className="checkout-group__pick"
+                    />
+                  )}
+                </h3>
+                <ul className="plan-column__cards">{cards.map(renderCard)}</ul>
+                {cards.length === 0 && <p className="muted plan-column__empty">Nenhuma tarefa.</p>}
+              </section>
+            );
+          })}
+        </div>
         <p className="plan-total">
           {Label} começa com <b>{plural(targetCount, 'tarefa', 'tarefas')}</b>.
         </p>

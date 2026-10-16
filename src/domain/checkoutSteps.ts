@@ -70,23 +70,33 @@ export function groupByProject<T>(items: readonly T[], projectOf: (item: T) => s
   return [...result.filter((group) => group.projectId !== null), ...result.filter((group) => group.projectId === null)];
 }
 
-/** The planning shows the tasks scheduled for the days right after the target (spec/checkout.md). */
-export const PLANNING_HORIZON_DAYS = 3;
+/** The planning is a board of three columns (spec/checkout.md, "Planejamento do dia seguinte"). */
+export const PLANNING_COLUMNS = 3;
 
-export type PlanningGroup = 'target' | 'soon' | 'other';
+/** A column of the planning board: the late tasks, all together, or the tasks of one day. */
+export type PlanningColumn = { kind: 'late' } | { kind: 'day'; day: DayKey };
 
 /**
- * Where a task goes in the planning: in the target day's note, scheduled for the next few days,
- * or among the other tasks whose date already passed. Tasks without a date are the "algum dia"
- * and stay out (null), as do tasks scheduled further ahead.
+ * The columns of the planning board. The late tasks (dated before today) come first, all in one
+ * column, when there are any. Then today, when a task is dated for it and it is not the target
+ * already, and the target day with the days after it, until there are three columns.
  */
-export function planningGroup(intendedDate: DayKey | null, target: DayKey): PlanningGroup | null {
-  if (intendedDate === null) return null;
-  if (intendedDate === target) return 'target';
-  if (intendedDate > target) {
-    return intendedDate <= addDays(target, PLANNING_HORIZON_DAYS) ? 'soon' : null;
-  }
-  return 'other';
+export function planningColumns(dates: readonly (DayKey | null)[], today: DayKey, target: DayKey): PlanningColumn[] {
+  const columns: PlanningColumn[] = [];
+  if (dates.some((date) => date !== null && date < today)) columns.push({ kind: 'late' });
+  if (today < target && dates.includes(today)) columns.push({ kind: 'day', day: today });
+  for (let day = target; columns.length < PLANNING_COLUMNS; day = addDays(day, 1)) columns.push({ kind: 'day', day });
+  return columns;
+}
+
+/**
+ * The column of a task with this date, as an index in `columns`; -1 when it is not on the board:
+ * without a date (the "algum dia", in the task list) or dated after the last column.
+ */
+export function planningColumnOf(date: DayKey | null, columns: readonly PlanningColumn[], today: DayKey): number {
+  if (date === null) return -1;
+  if (date < today) return columns.findIndex((column) => column.kind === 'late');
+  return columns.findIndex((column) => column.kind === 'day' && column.day === date);
 }
 
 /** The items between two others, both included, in list order: Shift + click selects a range. */
