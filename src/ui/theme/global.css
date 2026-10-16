@@ -4395,6 +4395,7 @@ button:not(.link, .day-part__handle):active:not(:disabled) {
 
 .backup-interval select {
   width: auto;
+}
 
 /* Ctrl + K: go to a place of the sidebar (spec/navegacao.md, "Global") */
 .palette {
