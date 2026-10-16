@@ -224,8 +224,13 @@ export interface Settings {
    * Absent or null shows the whole note. Only the user leaves it.
    */
   dayNoteFocus?: DayNoteFocus | null;
+  /** Light, dark or the system's appearance (spec/principios.md, "Aparência"). Absent means the system's. */
+  appearance?: Appearance;
   updatedAt: string;
 }
+
+/** The app's appearance: always light, always dark, or following the system. */
+export type Appearance = 'light' | 'dark' | 'system';
 
 /** Collapsible groups of the project list: "Outros ativos" (open by default) and "Finalizados" (closed). */
 export type ProjectListGroup = 'others' | 'finished';
