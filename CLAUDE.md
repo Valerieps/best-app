@@ -24,6 +24,10 @@ edits docs between messages).
 
 Never read `AVALIACAO-UX.md` (frozen) unless the task cites one of its codes (N1, P4...).
 
+`google-safe.md` is not in git (it is in `.gitignore`): it exists only in the owner's main checkout.
+In a worktree under `.claude/worktrees/<name>/`, read it at `../../../google-safe.md`; if it is not
+there either, follow the hard rules below.
+
 Hard rules from `google-safe.md`, valid for every change:
 - No outbound network calls, analytics, telemetry or remote storage; `connect-src 'none'`.
 - Data stays in IndexedDB; backups go only to local files the user picks (File System Access
