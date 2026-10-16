@@ -207,9 +207,19 @@ export interface PlanningView {
  * target day with the days after it. Tasks without a date, or dated after the last column, stay
  * out. The late ones go from the oldest date, and the tasks of the projects in focus come first
  * in each column, in the order of the projects (spec/prioridades.md, "Projetos em foco").
+ * `exclude` leaves out tasks shown elsewhere (the triage of the day), and `late: false` leaves
+ * out the late tasks and their column.
  */
-export async function loadPlanning(reader: Reader, target: DayKey, today: DayKey): Promise<PlanningView> {
-  const items = await loadActiveTasks(reader);
+export async function loadPlanning(
+  reader: Reader,
+  target: DayKey,
+  today: DayKey,
+  options: { exclude?: ReadonlySet<string>; late?: boolean } = {},
+): Promise<PlanningView> {
+  const { exclude, late = true } = options;
+  const items = (await loadActiveTasks(reader)).filter(
+    (item) => !exclude?.has(item.task.id) && (late || item.task.intendedDate === null || item.task.intendedDate >= today),
+  );
   const focusIds = await loadFocusProjectIds(reader, await reader.projects());
   const rank = (item: TaskListItem) => {
     const index = item.task.projectId ? focusIds.indexOf(item.task.projectId) : -1;

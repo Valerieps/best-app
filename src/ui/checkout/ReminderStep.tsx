@@ -26,7 +26,13 @@ const OPTIONS: ChoiceOption<ReminderChoice['kind']>[] = [
  * Step "Lembretes" (section 3): one card per reminder ignored during the day: manter, mudar ou
  * largar. "Manter" comes first, since dropping takes the reminder out of circulation.
  */
-export function ReminderStep({ reminders, busy, onBack, onNext }: Pick<StepProps, 'busy' | 'onBack' | 'onNext'> & { reminders: Reminder[] }) {
+export function ReminderStep({
+  reminders,
+  busy,
+  onBack,
+  onNext,
+  primary,
+}: Pick<StepProps, 'busy' | 'onBack' | 'onNext'> & { reminders: Reminder[]; primary: string }) {
   const [index, setIndex] = useState(0);
   const [choices, setChoices] = useState<Map<string, ReminderChoice>>(new Map());
   const reminder = reminders[Math.min(index, reminders.length - 1)];
@@ -82,7 +88,7 @@ export function ReminderStep({ reminders, busy, onBack, onNext }: Pick<StepProps
           {choice.kind === 'drop' && <span>Sai de circulação.</span>}
         </ChoiceDetail>
       </div>
-      <StepFooter onBack={back} primary={last ? 'Seguir' : 'Próximo lembrete'} onPrimary={next} busy={busy} keysHint={OPTIONS.length} />
+      <StepFooter onBack={back} primary={last ? primary : 'Próximo lembrete'} onPrimary={next} busy={busy} keysHint={OPTIONS.length} />
     </>
   );
 }
