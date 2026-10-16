@@ -31,6 +31,9 @@
 
 - A seção de reunião não tem campos próprios: os campos de participantes e de link para documentos saíram da nota do dia (15/10/2026). O que já estava preenchido continua guardado.
 - Eu posso interagir com cada tipo de bloco com atalhos que aparecem com mouse hover. Na tarefa: finalizar, definir a data de intenção e o prazo máximo, e promover a prioridade. Na nota geral: converter em tarefa.
+- Os atalhos de uma linha aparecem logo depois do fim do texto, e não na ponta direita da seção, para ficarem fáceis de mirar. Eles flutuam por cima do que vem depois, então mostrar ou esconder os atalhos nunca faz o texto mudar de lugar quando eu passo de uma linha para outra. Para caberem mesmo depois de uma linha comprida, a linha deixa um espaço livre à direita.
+- Alt + S (Option + S no Mac), com o cursor numa tarefa, promove a prioridade do dia, e de novo tira das prioridades. Dá para fazer só com a mão esquerda.
+- Eu posso recolher cada seção, inclusive "De outros dias", pelo ícone de setinha à direita do ícone do modo foco. Recolhida, a seção mostra só o cabeçalho. A escolha fica guardada só neste navegador, e o modo foco sempre mostra a seção aberta.
 - No topo da nota do dia, onde aparece a data, um botão de setinha pagina entre os dias. Ele passa somente pelas notas que ainda têm itens pendentes.
 
 ## Formatação *(1b)*

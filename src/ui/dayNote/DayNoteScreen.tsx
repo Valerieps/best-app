@@ -44,6 +44,7 @@ import { FOCUS_PART_TRANSITION, hasFocusTransition, runFocusTransition } from '.
 import { isSamePlace, isTypingKey, partMoveKey, useLineDrag } from './lineDrag';
 import { PendingDaysBanner } from './PendingDaysBanner';
 import { PrioritiesBlock, usePinnedPriorities } from './PrioritiesBlock';
+import { useCollapsedParts } from './collapsedParts';
 import { Icon } from '../components/Icon';
 import { ScreenHeader } from '../components/ScreenHeader';
 import { SkeletonLines } from '../components/Skeleton';
@@ -179,6 +180,7 @@ export function DayNoteScreen({
   const prioritiesDay = focus ? focus.day : today;
   const priorities = useLiveQuery(() => loadDayPriorities(reader, prioritiesDay), [prioritiesDay]) ?? [];
   const [pinned, setPinned] = usePinnedPriorities();
+  const [collapsedParts, toggleCollapsedPart] = useCollapsedParts();
   // The arrows page only through days that still have pending items (1b).
   const previousDay = [...pendingDays].reverse().find((pending) => pending < day) ?? null;
   const nextDay = pendingDays.find((pending) => pending > day) ?? (day < today ? today : null);
@@ -616,6 +618,25 @@ export function DayNoteScreen({
     );
   }
 
+  /** Collapsing a part hides its lines and keeps its header; focus mode always shows them. */
+  const isCollapsed = (key: string) => !focus && collapsedParts.has(key);
+  function collapseButton(key: string, label: string) {
+    if (focus) return null;
+    const collapsed = collapsedParts.has(key);
+    return (
+      <button
+        type="button"
+        className="icon-button part-collapse"
+        title={collapsed ? `Expandir ${label}` : `Recolher ${label}`}
+        aria-label={collapsed ? `Expandir ${label}` : `Recolher ${label}`}
+        aria-expanded={!collapsed}
+        onClick={() => toggleCollapsedPart(key)}
+      >
+        <Icon name={collapsed ? 'chevronRight' : 'chevronDown'} size="sm" />
+      </button>
+    );
+  }
+
   const prioritiesBlock = (
     <PrioritiesBlock
       priorities={priorities}
@@ -653,8 +674,9 @@ export function DayNoteScreen({
           <div className="section__header">
             <span className="section__carried-title">De outros dias</span>
             {focusButton(part.key, 'nas tarefas de outros dias')}
+            {collapseButton(part.key, 'as tarefas de outros dias')}
           </div>
-          {entry.carried.map((block, index) => (
+          {!isCollapsed(part.key) && entry.carried.map((block, index) => (
             <BlockLine
               key={block.id}
               block={block}
@@ -673,7 +695,7 @@ export function DayNoteScreen({
     const kind = section?.kind ?? 'general';
     return (
       <section
-        className={`section section--${kind} ${section?.projectId ? 'section--project' : ''}`}
+        className={`section section--${kind} ${section?.projectId ? 'section--project' : ''} ${isCollapsed(part.key) ? 'section--collapsed' : ''}`}
         aria-label={kind === 'meeting' ? 'Seção de reunião' : 'Seção geral'}
       >
         <SectionHeader
@@ -689,10 +711,11 @@ export function DayNoteScreen({
             <>
               <FormatToolbar />
               {focusButton(part.key, section?.title ? `na seção "${section.title}"` : 'nesta seção', entry.key)}
+              {collapseButton(part.key, section?.title ? `a seção "${section.title}"` : 'esta seção')}
             </>
           }
         />
-        {entry.blocks.map((block, index) => (
+        {!isCollapsed(part.key) && entry.blocks.map((block, index) => (
           <BlockLine
             key={block.id}
             block={block}
@@ -703,14 +726,14 @@ export function DayNoteScreen({
             {...lineProps}
           />
         ))}
-        {writable && entry.blocks.length === 0 && (
+        {writable && !isCollapsed(part.key) && entry.blocks.length === 0 && (
           <GhostLine
             id={`ghost:${section?.id ?? DAY_ENTRY}`}
             placeholder={NOTE_HINT}
             onCreate={(text, caret) => createFirstLine(entry, text, caret)}
           />
         )}
-        {writable && entry.blocks.length > 0 && appendingTo === entry.key && (
+        {writable && !isCollapsed(part.key) && entry.blocks.length > 0 && appendingTo === entry.key && (
           <GhostLine
             id={`ghost:end:${entry.key}`}
             placeholder={NOTE_HINT}

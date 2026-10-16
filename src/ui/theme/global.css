@@ -393,7 +393,9 @@ a.chip--link:focus-visible {
 }
 
 .line__text {
-  flex: 1;
+  flex: 0 1 auto;
+  min-width: 2ch;
+  max-width: 100%;
   font: inherit;
   line-height: var(--line-height);
   color: inherit;
@@ -481,30 +483,52 @@ a.chip--link:focus-visible {
   color: var(--color-firework-1);
 }
 
-.line__actions {
-  display: none;
-  align-items: center;
-  gap: var(--space-1);
-  flex-shrink: 0;
-  padding-top: 2px;
+/* Right after the text and as wide as nothing: the shortcuts float from here over what follows,
+   so showing them never changes the width left to the text. Lines that have shortcuts keep room
+   for them at the right, so they still fit after a line that fills the row. */
+.line:has(> .line__tail) {
+  padding-right: var(--line-actions-room);
 }
 
+.line__tail {
+  position: relative;
+  align-self: stretch;
+  width: 0;
+  flex-shrink: 0;
+}
+
+.line__actions {
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: 1;
+  display: flex;
+  visibility: hidden;
+  align-items: center;
+  gap: var(--space-1);
+  padding-top: 2px;
+  white-space: nowrap;
+}
+
+/* Hidden but still taking its place, so revealing it moves nothing. */
 .line__reveal {
-  display: none;
+  visibility: hidden;
 }
 
 .line:hover .line__actions,
 .line:focus-within .line__actions,
 .priorities__item:hover .line__actions,
-.priorities__item:focus-within .line__actions {
-  display: flex;
-}
-
+.priorities__item:focus-within .line__actions,
 .line:hover .line__reveal,
 .line:focus-within .line__reveal,
 .priorities__item:hover .line__reveal,
 .priorities__item:focus-within .line__reveal {
-  display: inline-block;
+  visibility: visible;
+}
+
+/* In the priorities block the shortcuts keep their own place in the row. */
+.priorities__item .line__actions {
+  position: static;
 }
 
 .line__action {
@@ -3975,6 +3999,33 @@ button.part-focus:hover {
   margin-left: auto;
 }
 
+/* Collapsing a part, right of the focus mode button: shown like it, and always while collapsed */
+button.part-collapse {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2px;
+  color: var(--color-text-muted);
+  opacity: 0;
+}
+
+.day-part:hover button.part-collapse,
+.day-part:focus-within button.part-collapse,
+button.part-collapse:focus-visible,
+button.part-collapse[aria-expanded='false'] {
+  opacity: 1;
+}
+
+button.part-collapse:hover {
+  color: var(--color-text);
+}
+
+/* A collapsed section keeps only its header, without the free space below the lines */
+.section.section--collapsed {
+  padding-bottom: var(--space-2);
+  min-height: 0;
+}
+
 /* Markdown formatting toolbar (spec/nota-do-dia.md, "Formatação"): discreet, at the right of a
    section's header, before the focus mode button; it shows on hover or while writing in the section */
 .format-toolbar {
@@ -4054,7 +4105,7 @@ button.format-toolbar__button:focus-visible {
 }
 
 .line__rendered {
-  flex: 1;
+  flex: 0 1 auto;
   min-width: 0;
   display: flex;
   align-items: baseline;
@@ -4078,7 +4129,7 @@ button.format-toolbar__button:focus-visible {
 
 /* The text field, with a list item's marker beside it while the line is edited */
 .line__field {
-  flex: 1;
+  flex: 0 1 auto;
   min-width: 0;
   display: flex;
   align-items: flex-start;

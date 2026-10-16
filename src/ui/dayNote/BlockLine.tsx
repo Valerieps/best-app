@@ -11,6 +11,7 @@ import { pendingFocusId, useFocusTarget } from './focus';
 import { entersWithMotion, NoteSettledContext } from './entryMotion';
 import { partMoveKey } from './lineDrag';
 import { isSelectAllKey, selectsAllLines } from './blockSelection';
+import { isPriorityKey, PRIORITY_SHORTCUT } from './priorityShortcut';
 import {
   applyFormat,
   FORMAT_EVENT,
@@ -329,6 +330,11 @@ export function BlockLine({ block, free, day, today, isPriority, allowNewLines, 
       format(command);
       return;
     }
+    if (isPriorityKey(event)) {
+      event.preventDefault();
+      if (block.kind === 'task' && block.status === 'active' && !block.waiting) handlers.onTogglePriority(block, !isPriority);
+      return;
+    }
     if (event.altKey && (event.key === 'ArrowUp' || event.key === 'ArrowDown') && handlers.onMove) {
       event.preventDefault();
       handlers.onMove(block, event.key === 'ArrowUp' ? 'up' : 'down');
@@ -396,7 +402,21 @@ export function BlockLine({ block, free, day, today, isPriority, allowNewLines, 
       {children}
     </DatePicker>
   );
-  const priorityLabel = isPriority ? 'Tirar das prioridades do dia' : 'Promover a prioridade do dia';
+  const priorityLabel = `${isPriority ? 'Tirar das prioridades do dia' : 'Promover a prioridade do dia'} (${PRIORITY_SHORTCUT})`;
+  const starButton = () => (
+    <button
+      type="button"
+      className={`line__star ${isPriority ? 'line__star--on' : ''}`}
+      title={priorityLabel}
+      aria-label={priorityLabel}
+      aria-pressed={isPriority}
+      onClick={() => handlers.onTogglePriority(block, !isPriority)}
+    >
+      {isPriority ? '★' : '☆'}
+    </button>
+  );
+  const convertible = block.kind === 'note' && free && !notesOnly;
+  const hasActions = open || convertible;
 
   const structure = parseLine(text);
   const prefixLength = structure.list ? structure.prefixLength : 0;
@@ -413,6 +433,12 @@ export function BlockLine({ block, free, day, today, isPriority, allowNewLines, 
     element.setSelectionRange(element.value.length, element.value.length);
   }
 
+  /** The text takes only its own width: a click on the empty row beside it edits the line too. */
+  function editFromRow(event: MouseEvent<HTMLElement>) {
+    if (event.target !== event.currentTarget) return;
+    editFromPreview(event);
+  }
+
   const dragClasses = drag ? `${drag.dragging ? 'line--dragging' : ''} ${drag.mark ? `line--drop-${drag.mark}` : ''}` : '';
 
   return (
@@ -420,6 +446,7 @@ export function BlockLine({ block, free, day, today, isPriority, allowNewLines, 
       className={`line line--${block.kind} ${done ? 'line--done' : ''} ${headingClass} ${preview ? 'line--preview' : ''} ${selected ? 'line--selected' : ''} ${entering ? 'line--entering' : ''} ${dragClasses}`}
       data-drag-group={drag?.group}
       data-drag-id={block.id}
+      onMouseDown={editFromRow}
     >
       {drag && (
         <span className="line__handle" title="Arraste para mudar a ordem (ou Alt + ↑/↓)" aria-hidden="true" onPointerDown={drag.onStart}>
@@ -505,39 +532,35 @@ export function BlockLine({ block, free, day, today, isPriority, allowNewLines, 
         {deadline &&
           (open ? pickDeadline('Mudar o prazo máximo', 'line__chip', deadlineLabel, 'Tirar o prazo máximo') : <span className="chip chip--muted">{deadlineLabel}</span>)}
       </span>
-      {/* Shortcuts on hover and focus. The checkbox finalizes, so there is no separate button for it. */}
-      <span className="line__actions">
-        {open && !showDate && (waiting
-          ? pickDate('Data para cobrar', 'line__action', 'Cobrar')
-          : pickDate(hideDate ? 'Mudar a data de intenção' : 'Data de intenção', 'line__action', 'Data'))}
-        {open && !waiting && !deadline && pickDeadline('Prazo máximo', 'line__action', 'Prazo')}
-        {open && handlers.onSetWaiting && (
-          <button
-            type="button"
-            className="line__action"
-            title={waiting ? 'Voltar a ser uma tarefa minha' : 'Marcar como algo que alguém me deve'}
-            onClick={() => handlers.onSetWaiting?.(block, !waiting)}
-          >
-            {waiting ? 'Não é aguardando' : 'Aguardando'}
-          </button>
-        )}
-        {block.kind === 'note' && free && !notesOnly && (
-          <button type="button" className="line__action" onClick={() => handlers.onMakeTask(block, text)}>
-            Converter em tarefa
-          </button>
-        )}
-      </span>
-      {open && !waiting && (
-        <button
-          type="button"
-          className={`line__star ${isPriority ? 'line__star--on' : 'line__reveal'}`}
-          title={priorityLabel}
-          aria-label={priorityLabel}
-          aria-pressed={isPriority}
-          onClick={() => handlers.onTogglePriority(block, !isPriority)}
-        >
-          {isPriority ? '★' : '☆'}
-        </button>
+      {open && !waiting && isPriority && starButton()}
+      {/* Shortcuts on hover and focus, right after the text. They float over what follows instead of
+          taking room, so showing them never rewraps the text. The checkbox finalizes, so there is no
+          separate button for it. */}
+      {hasActions && (
+        <span className="line__tail">
+          <span className="line__actions">
+            {open && !waiting && !isPriority && starButton()}
+            {open && !showDate && (waiting
+              ? pickDate('Data para cobrar', 'line__action', 'Cobrar')
+              : pickDate(hideDate ? 'Mudar a data de intenção' : 'Data de intenção', 'line__action', 'Data'))}
+            {open && !waiting && !deadline && pickDeadline('Prazo máximo', 'line__action', 'Prazo')}
+            {open && handlers.onSetWaiting && (
+              <button
+                type="button"
+                className="line__action"
+                title={waiting ? 'Voltar a ser uma tarefa minha' : 'Marcar como algo que alguém me deve'}
+                onClick={() => handlers.onSetWaiting?.(block, !waiting)}
+              >
+                {waiting ? 'Não é aguardando' : 'Aguardando'}
+              </button>
+            )}
+            {convertible && (
+              <button type="button" className="line__action" onClick={() => handlers.onMakeTask(block, text)}>
+                Converter em tarefa
+              </button>
+            )}
+          </span>
+        </span>
       )}
     </div>
   );

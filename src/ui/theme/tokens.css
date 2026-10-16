@@ -125,6 +125,8 @@
   --space-5: 24px;
   --space-6: 32px;
   --space-7: 48px;
+  /* Room kept at the right of a line for the shortcuts that float after its text */
+  --line-actions-room: 220px;
 
   /* Shape */
   --radius-sm: 6px;
