@@ -99,11 +99,12 @@ describe('projects in focus in the day to day', () => {
     await setIntendedDates(ctx, [loose.id, outside.id, inFocus.id], '2026-10-12');
     const undated = await createBlock(ctx, { sectionId: null, position: positionBetween(null, null) }, '[] Algum dia');
 
-    const view = await loadPlanning(reader, '2026-10-12');
-    expect(view.planned.map((item) => item.task.text)[0]).toBe('Do projeto em foco');
-    expect(view.planned.map((item) => item.task.id)).toEqual(expect.arrayContaining([loose.id, outside.id]));
+    const view = await loadPlanning(reader, '2026-10-12', SUNDAY);
+    const planned = view.columns.find(({ column }) => column.kind === 'day' && column.day === '2026-10-12')!.items;
+    expect(planned.map((item) => item.task.text)[0]).toBe('Do projeto em foco');
+    expect(planned.map((item) => item.task.id)).toEqual(expect.arrayContaining([loose.id, outside.id]));
     // Tasks without a date are the "algum dia": they stay out of the planning.
-    expect([...view.planned, ...view.soon, ...view.others].map((item) => item.task.id)).not.toContain(undated.id);
+    expect(view.columns.flatMap(({ items }) => items).map((item) => item.task.id)).not.toContain(undated.id);
   });
 
   it('lists them for the dashboard, but without a warm up the day still opens on the day note', async () => {

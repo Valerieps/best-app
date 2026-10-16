@@ -1992,6 +1992,144 @@ button.plan-row--on:hover {
   color: var(--color-success-text);
 }
 
+/* "Fechar o dia", step "Tarefas": checkbox, the row, and its actions on hover. */
+.checkout-task {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.checkout-task > .plan-row {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.checkout-task__actions {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  opacity: 0;
+  transition: opacity var(--motion-fast) ease;
+}
+
+.checkout-task:hover .checkout-task__actions,
+.checkout-task:focus-within .checkout-task__actions,
+.checkout-task__actions--open {
+  opacity: 1;
+}
+
+.icon-button.checkout-group__toggle {
+  margin-left: calc(-1 * var(--space-1));
+}
+
+/* "Fechar o dia", planning: a board of three columns with a card per task. */
+.plan-board {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--space-3);
+  margin-top: var(--space-3);
+  align-items: start;
+}
+
+.plan-column {
+  min-height: 120px;
+  padding: var(--space-2);
+  border: var(--border-width) solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-surface-soft);
+}
+
+.plan-column--drop {
+  border-color: var(--color-accent);
+  background: var(--color-select-bg);
+}
+
+.plan-column__title {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin: 0 0 var(--space-2);
+  font-size: var(--font-size-sm);
+  font-weight: 600;
+}
+
+.plan-column--late .plan-column__title {
+  color: var(--color-danger);
+}
+
+.plan-column__cards {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.plan-column__empty {
+  margin: 0;
+  font-size: var(--font-size-sm);
+}
+
+.plan-card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  padding: var(--space-2);
+  border: var(--border-width) solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: var(--color-surface);
+  box-shadow: 0 1px 2px var(--color-shadow-soft);
+  line-height: 1.4;
+}
+
+li.plan-card {
+  cursor: grab;
+}
+
+li.plan-card:active {
+  cursor: grabbing;
+}
+
+.plan-card--away {
+  opacity: 0.6;
+}
+
+button.plan-card--select {
+  width: 100%;
+  font: inherit;
+  text-align: left;
+  color: inherit;
+  user-select: none;
+}
+
+button.plan-card--on,
+button.plan-card--on:hover {
+  border-color: var(--color-accent);
+  background: var(--color-select-bg);
+}
+
+.plan-card__text {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.plan-card__meta,
+.plan-card__when {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  font-size: var(--font-size-xs);
+}
+
+.plan-card__meta:empty {
+  display: none;
+}
+
 /* Actions shown as icons, named by a tooltip on hover and focus. */
 .icon-action {
   position: relative;

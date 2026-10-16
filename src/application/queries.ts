@@ -5,7 +5,7 @@ import {
   type WhiteboardGroup,
 } from '../domain/assistants';
 import { assistantCards, oldestDay, type AssistantCard } from '../domain/cleanupStatus';
-import { planningGroup } from '../domain/checkoutSteps';
+import { planningColumnOf, planningColumns, type PlanningColumn } from '../domain/checkoutSteps';
 import { addDays, fromDayKey, toDayKey, type DayKey } from '../domain/day';
 import { buildDayNote, type DayNoteSection } from '../domain/dayNote';
 import type {
@@ -198,21 +198,17 @@ export async function loadSectionNotes(reader: Reader): Promise<SectionNotes[]> 
 
 export interface PlanningView {
   target: DayKey;
-  /** Tasks already in the target day's note. */
-  planned: TaskListItem[];
-  /** Tasks scheduled for the next few days after the target (`PLANNING_HORIZON_DAYS`). */
-  soon: TaskListItem[];
-  /** Other active tasks: without a date, or with a date already past. */
-  others: TaskListItem[];
+  /** The board's columns (`planningColumns`), each with its tasks. */
+  columns: { column: PlanningColumn; items: TaskListItem[] }[];
 }
 
 /**
- * The planning step of the checkout: active tasks with a date, split into the target day's note,
- * the next few days, and the ones whose date already passed. Tasks without a date stay out. The
- * tasks of the projects in focus come first in each group, in the order of the projects
- * (spec/prioridades.md, "Projetos em foco").
+ * The planning step of the checkout, as a board: the late tasks, today when it has tasks, and the
+ * target day with the days after it. Tasks without a date, or dated after the last column, stay
+ * out. The late ones go from the oldest date, and the tasks of the projects in focus come first
+ * in each column, in the order of the projects (spec/prioridades.md, "Projetos em foco").
  */
-export async function loadPlanning(reader: Reader, target: DayKey): Promise<PlanningView> {
+export async function loadPlanning(reader: Reader, target: DayKey, today: DayKey): Promise<PlanningView> {
   const items = await loadActiveTasks(reader);
   const focusIds = await loadFocusProjectIds(reader, await reader.projects());
   const rank = (item: TaskListItem) => {
@@ -221,11 +217,14 @@ export async function loadPlanning(reader: Reader, target: DayKey): Promise<Plan
   };
   // A stable sort keeps the usual order inside each project.
   const focusFirst = (list: TaskListItem[]) => list.map((item, index) => ({ item, index })).sort((a, b) => rank(a.item) - rank(b.item) || a.index - b.index).map(({ item }) => item);
+  const columns = planningColumns(items.map((item) => item.task.intendedDate), today, target);
+  const byDate = (a: TaskListItem, b: TaskListItem) => ((a.task.intendedDate ?? '') < (b.task.intendedDate ?? '') ? -1 : a.task.intendedDate === b.task.intendedDate ? 0 : 1);
   return {
     target,
-    planned: focusFirst(items.filter((item) => planningGroup(item.task.intendedDate, target) === 'target')),
-    soon: focusFirst(items.filter((item) => planningGroup(item.task.intendedDate, target) === 'soon')),
-    others: focusFirst(items.filter((item) => planningGroup(item.task.intendedDate, target) === 'other')),
+    columns: columns.map((column, index) => {
+      const list = focusFirst(items.filter((item) => planningColumnOf(item.task.intendedDate, columns, today) === index));
+      return { column, items: column.kind === 'late' ? [...list].sort(byDate) : list };
+    }),
   };
 }
 
