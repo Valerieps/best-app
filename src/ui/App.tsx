@@ -43,7 +43,7 @@ export function App() {
   // The shell keeps working when one of its queries fails: the failure is logged, and the screen
   // below still has its own error boundary.
   const hasData = useLiveQueryState(async () => (await db.events.count()) > 0).value ?? false;
-  const everBackedUp = useLiveQueryState(async () => (await getLastBackupAt(db)) !== null).value ?? false;
+  const lastBackupAt = useLiveQueryState(() => getLastBackupAt(db)).value ?? null;
 
   useEffect(() => {
     requestPersistentStorage().then(setStoragePersisted, () => setStoragePersisted(false));
@@ -83,8 +83,9 @@ export function App() {
   const reviews = visibleReviews(useLiveQueryState(() => loadReviewAvailability(reader, today), [today]).value);
   const [reviewSnoozedAt, snoozeReview] = useReviewSnooze();
   const reviewNotice = isReviewSnoozed(reviewSnoozedAt, reviews?.lastCheckoutAt ?? null) ? null : pickReviewNotice(reviews);
+  const backupLevel = backupNoticeLevel(backupState, hasData, lastBackupAt, new Date());
   const notice = pickTopNotice({
-    backup: backupNoticeLevel(backupState, hasData, everBackedUp),
+    backup: backupLevel,
     pendingCheckout: onToday && stage === 'execution' && pendingDays.length > 0,
     onDataScreen: route.name === 'data',
     snoozed,
@@ -102,7 +103,12 @@ export function App() {
       <Sidebar route={route} today={today} pendingDays={pendingDays} reviews={reviews} backupState={backupState} />
       <div className="shell__main">
         {!focus && (notice === 'backupProblem' || notice === 'backupSetup') && (
-          <BackupBanner state={backupState} actions={backup} onSnooze={() => snooze('backupSetup')} />
+          <BackupBanner
+            state={backupState}
+            actions={backup}
+            staleSince={backupLevel === 'stale' ? lastBackupAt : null}
+            onSnooze={() => snooze('backupSetup')}
+          />
         )}
 
         {/* One broken screen shows an error in its place; the sidebar keeps working. */}

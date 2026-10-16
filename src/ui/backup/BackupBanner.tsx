@@ -1,10 +1,16 @@
 import type { ReactNode } from 'react';
 import type { AutoBackupState } from '../../infrastructure/autoBackup';
+import { daysSinceBackup } from '../notices';
 import type { BackupActions } from './useBackup';
 
 interface Props {
   state: AutoBackupState;
   actions: BackupActions;
+  /**
+   * Date of the last backup, when the backup is not writing and that backup is more than 24
+   * hours old: the band turns red and cannot be snoozed (`backupNoticeLevel`).
+   */
+  staleSince: string | null;
   /**
    * "Lembrar depois", for the setup warnings only. When this band shows is decided by
    * `pickTopNotice`: one warning at a time.
@@ -21,7 +27,24 @@ function Banner({ tone = 'warning', children }: { tone?: 'warning' | 'danger'; c
 }
 
 /** Only shows up when the automatic backup needs attention. Warns, never blocks. */
-export function BackupBanner({ state, actions, onSnooze }: Props) {
+export function BackupBanner({ state, actions, staleSince, onSnooze }: Props) {
+  if (staleSince !== null && (state.status === 'needsPermission' || state.status === 'noFile')) {
+    const days = daysSinceBackup(staleSince, new Date());
+    return (
+      <Banner tone="danger">
+        <span>Seu último backup foi há {days === 1 ? '1 dia' : `${days} dias`}.</span>
+        {state.status === 'needsPermission' ? (
+          <button type="button" className="link" onClick={actions.resume}>
+            Retomar
+          </button>
+        ) : (
+          <button type="button" className="link" onClick={actions.chooseFolder}>
+            Escolher pasta
+          </button>
+        )}
+      </Banner>
+    );
+  }
   const later = (
     <button type="button" className="link" onClick={onSnooze}>
       Lembrar depois
