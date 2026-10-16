@@ -27,6 +27,7 @@ import { isReviewSnoozed, pickReviewNotice } from './reviews/reviewNotice';
 import { autoBackup, db, reader } from './services';
 import { SettingsScreen } from './settings/SettingsScreen';
 import { Sidebar } from './Sidebar';
+import { PlacePalette } from './components/PlacePalette';
 import { useLiveQueryState } from './useLiveQuery';
 import { ErrorBoundary } from './components/ErrorBoundary';
 import { ScreenError } from './components/ErrorScreens';
@@ -102,6 +103,7 @@ export function App() {
   return (
     <div className="shell">
       <Sidebar route={route} pendingDays={pendingDays} reviews={reviews} backupState={backupState} />
+      <PlacePalette />
       <div className="shell__main">
         {!focus && (notice === 'backupProblem' || notice === 'backupSetup') && (
           <BackupBanner
