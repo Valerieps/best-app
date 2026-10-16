@@ -28,6 +28,7 @@ O "Fechar o dia" é curto, de cerca de um minuto: ele cuida só do que perece de
 | Tarefa | Vincular a um projeto (opcional) | 2 |
 | Tarefa | Decidir na Revisão de Foco | 2 |
 | Tarefa | Converter em hábito (`habitos.md`) | 6 |
+| Tarefa aguardando (`pessoas.md`) | Pede decisão quando passa pelo fechamento: data para cobrar (atalho para o dia seguinte); concluir; abandonar; deixar como está, que é a sugestão | 2 |
 | Notas de uma seção | Ficam onde foram escritas; não passam pelo fechamento | 1a |
 | Compromisso | Marcar como migrado; marcar como feito; descartar; vincular a um projeto (opcional) | 5 |
 | Lembrete ignorado | Manter; mudar; largar | 3 |

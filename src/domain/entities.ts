@@ -47,6 +47,11 @@ export interface Block {
    * `day` is the intended date; absent until the task is reordered.
    */
   carriedOrder?: { day: DayKey; position: string } | null;
+  /**
+   * Task only: something a person owes me ("aguardando", spec/pessoas.md). Its intended date is
+   * the day to follow up ("data para cobrar"). Absent in records saved before people existed.
+   */
+  waiting?: boolean;
 }
 
 export type SectionKind = 'general' | 'meeting';
@@ -103,6 +108,19 @@ export interface Project {
   objectiveId?: string | null;
   /** Section 2: one of `PROJECT_ICONS`; absent or null shows the name's initial. */
   icon?: string | null;
+}
+
+/** Someone cited with `@Nome` (spec/pessoas.md). `merged` people were joined into `mergedInto`. */
+export type PersonStatus = 'active' | 'archived' | 'merged';
+
+export interface Person {
+  id: string;
+  /** One word, as written after the `@`. */
+  name: string;
+  status: PersonStatus;
+  mergedInto?: string | null;
+  createdAt: string;
+  updatedAt: string;
 }
 
 /** Per-day bookkeeping. Whether a checkout is pending is derived from the blocks. */

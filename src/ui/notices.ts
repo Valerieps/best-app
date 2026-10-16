@@ -14,23 +14,39 @@ export type TopNotice = 'backupProblem' | 'pendingCheckout' | 'backupSetup' | 'r
  */
 export type SnoozableNotice = 'pendingCheckout' | 'backupSetup';
 
+/** How long the backup may stay paused, counted from the last backup, before the warning turns red. */
+export const STALE_BACKUP_MS = 24 * 60 * 60 * 1000;
+
+/** Whole days since the last backup, at least 1, for "Seu último backup foi há N dias". */
+export function daysSinceBackup(lastBackupAt: string, now: Date): number {
+  return Math.max(1, Math.floor((now.getTime() - Date.parse(lastBackupAt)) / (24 * 60 * 60 * 1000)));
+}
+
 /**
  * Whether the automatic backup needs a warning: a problem (blocked, error) always does; the
- * setup (no file yet, paused, unsupported browser) only until the first backup is made.
+ * setup (no file yet, paused, unsupported browser) only until the first backup is made. Once
+ * there was a backup, a backup that is not writing (paused or without a file) warns again,
+ * strongly, when the last backup is more than 24 hours old (issue #29).
  */
 export function backupNoticeLevel(
   state: AutoBackupState,
   hasData: boolean,
-  everBackedUp: boolean,
-): 'problem' | 'setup' | null {
+  lastBackupAt: string | null,
+  now: Date,
+): 'problem' | 'stale' | 'setup' | null {
+  const everBackedUp = lastBackupAt !== null;
+  const stale = everBackedUp && now.getTime() - Date.parse(lastBackupAt) > STALE_BACKUP_MS;
   switch (state.status) {
     case 'blocked':
     case 'error':
       return 'problem';
     case 'noFile':
+      if (stale) return 'stale';
+      return hasData && !everBackedUp ? 'setup' : null;
     case 'unsupported':
       return hasData && !everBackedUp ? 'setup' : null;
     case 'needsPermission':
+      if (stale) return 'stale';
       return everBackedUp ? null : 'setup';
     default:
       return null;
@@ -38,7 +54,7 @@ export function backupNoticeLevel(
 }
 
 interface NoticeInput {
-  backup: 'problem' | 'setup' | null;
+  backup: 'problem' | 'stale' | 'setup' | null;
   /** Today's day note is open and past days are waiting for checkout. */
   pendingCheckout: boolean;
   /** "Dados e backup" already shows how to set the backup up. */
@@ -48,9 +64,12 @@ interface NoticeInput {
   reviewAvailable?: boolean;
 }
 
-/** The one warning to show, in order: backup problem, pending checkout, backup setup, available review. */
+/**
+ * The one warning to show, in order: backup problem (including a backup paused for more than
+ * 24 hours), pending checkout, backup setup, available review.
+ */
 export function pickTopNotice({ backup, pendingCheckout, onDataScreen, snoozed, reviewAvailable = false }: NoticeInput): TopNotice | null {
-  if (backup === 'problem') return 'backupProblem';
+  if (backup === 'problem' || backup === 'stale') return 'backupProblem';
   if (pendingCheckout && !snoozed.has('pendingCheckout')) return 'pendingCheckout';
   if (backup === 'setup' && !onDataScreen && !snoozed.has('backupSetup')) return 'backupSetup';
   if (reviewAvailable) return 'reviewAvailable';

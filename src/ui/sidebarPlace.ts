@@ -8,6 +8,7 @@ export type SidebarPlace =
   | 'objectives'
   | 'habits'
   | 'active'
+  | 'people'
   | 'data'
   | 'settings';
 
@@ -21,6 +22,8 @@ export function sidebarPlace(route: Route): SidebarPlace {
       return 'projects';
     case 'objective':
       return 'objectives';
+    case 'person':
+      return 'people';
     case 'checkout':
     case 'focusReview':
     case 'directionReview':

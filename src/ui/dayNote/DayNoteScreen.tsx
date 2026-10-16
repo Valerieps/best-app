@@ -16,12 +16,14 @@ import {
   reorderSectionLines,
   setSectionTitle,
   setTaskDone,
+  setTaskWaiting,
   splitBlock,
   splitKind,
   updateBlockText,
   type NewBlockTarget,
 } from '../../application/notebook';
 import { moveDayPriority, setDayPriority, setDeadline, setIntendedDate } from '../../application/dayTools';
+import { ensurePeople } from '../../application/people';
 import { setDayNoteFocus } from '../../application/settings';
 import { loadDayNote, loadDayPriorities } from '../../application/queries';
 import { detectKind } from '../../domain/blockKind';
@@ -130,9 +132,10 @@ function sameIds(blocks: readonly Block[], ids: readonly string[]): boolean {
   return blocks.length === ids.length && blocks.every((block, at) => block.id === ids[at]);
 }
 
-function draftBlock(id: string, sectionId: string, kind: BlockKind, text: string, position: string): Block {
+function draftBlock(id: string, sectionId: string, kind: BlockKind, text: string, position: string, waiting?: boolean): Block {
   const at = new Date().toISOString();
   return {
+    ...(kind === 'task' && waiting ? { waiting: true } : {}),
     id,
     kind,
     text,
@@ -390,11 +393,11 @@ export function DayNoteScreen({
     return { sectionId: null, position, blockId, newSectionId };
   }
 
-  function showDraft(entry: Entry, target: NewBlockTarget, kind: BlockKind, text: string) {
+  function showDraft(entry: Entry, target: NewBlockTarget, kind: BlockKind, text: string, waiting?: boolean) {
     const sectionId = target.sectionId ?? target.newSectionId ?? '';
     setOptimistic((previous) => [
       ...previous,
-      { entryKey: entry.key, block: draftBlock(target.blockId!, sectionId, kind, text, target.position) },
+      { entryKey: entry.key, block: draftBlock(target.blockId!, sectionId, kind, text, target.position, waiting) },
     ]);
   }
 
@@ -479,7 +482,8 @@ export function DayNoteScreen({
       }
       const target = newLineTarget(slot.entry, positionAfter(slot));
       const after = text.slice(caret);
-      showDraft(slot.entry, target, splitKind(block.kind, after), detectKind(after).text);
+      const detected = detectKind(after);
+      showDraft(slot.entry, target, splitKind(block.kind, after), detected.text, detected.waiting);
       requestFocus(target.blockId!, newCaret);
       write(() => splitBlock(ctx, block.id, text, caret, target));
     },
@@ -499,7 +503,9 @@ export function DayNoteScreen({
         write(() => deleteBlock(ctx, block.id));
       }
     },
-    onMakeTask: (block, text) => write(() => changeBlockKind(ctx, block.id, 'task', text)),
+    onMakeTask: (block, text, waiting) => write(() => changeBlockKind(ctx, block.id, 'task', text, waiting)),
+    onSetWaiting: (block, waiting) => write(() => setTaskWaiting(ctx, block.id, waiting)),
+    onEnsurePeople: (names) => write(() => ensurePeople(ctx, names)),
     onToggleDone: (block, done) => write(() => setTaskDone(ctx, block.id, done)),
     onArrow: (block, direction) => {
       const index = lines.findIndex((line) => line.block.id === block.id);
@@ -526,8 +532,8 @@ export function DayNoteScreen({
   function createFirstLine(entry: Entry, typed: string, caret?: number) {
     setAppendingTo(null);
     const target = newLineTarget(entry, positionBetween(entry.blocks.at(-1)?.position ?? null, null));
-    const { kind, text } = detectKind(typed);
-    showDraft(entry, target, kind, text);
+    const { kind, text, waiting } = detectKind(typed);
+    showDraft(entry, target, kind, text, waiting);
     requestFocus(target.blockId!, caret ?? 'end');
     write(() => createBlock(ctx, target, typed));
   }

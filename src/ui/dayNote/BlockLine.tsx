@@ -2,7 +2,9 @@ import { useCallback, useEffect, useLayoutEffect, useRef, useState, type Keyboar
 import { detectKind } from '../../domain/blockKind';
 import type { DayKey } from '../../domain/day';
 import type { Block } from '../../domain/entities';
+import { completeMention, mentionAt, personOptions, unknownNames, type PersonOption } from '../../domain/people';
 import { relativeDay } from '../format';
+import { usePeople } from '../people/PeopleContext';
 import { useSaveOnPageLeave } from '../pageLeave';
 import { rememberUnsavedLine } from '../unsavedLines';
 import { useFocusTarget } from './focus';
@@ -30,7 +32,12 @@ export interface LineHandlers {
   /** Splits the line at `caret`; the new line takes the focus at `newCaret` (0 by default). */
   onEnter(block: Block, text: string, caret: number, newCaret?: number): void;
   onBackspaceAtStart(block: Block, text: string): void;
-  onMakeTask(block: Block, text: string): void;
+  /** `waiting` when the line started with "[a] ": something a person owes me (spec/pessoas.md). */
+  onMakeTask(block: Block, text: string, waiting?: boolean): void;
+  /** Marks a task as something a person owes me, or back as mine. Absent hides the action. */
+  onSetWaiting?(block: Block, waiting: boolean): void;
+  /** Creates the people the line cites who do not exist yet (spec/pessoas.md). */
+  onEnsurePeople?(names: string[]): void;
   onToggleDone(block: Block, done: boolean): void;
   onArrow(block: Block, direction: 'up' | 'down'): void;
   onSetDate(block: Block, date: DayKey | null): void;
@@ -143,6 +150,13 @@ export function BlockLine({ block, free, day, today, isPriority, allowNewLines, 
   const [editing, setEditing] = useState(false);
   // The selection to restore once a formatted text renders.
   const selectionAfter = useRef<[number, number] | null>(null);
+  // The `@` suggestions follow the caret; Escape closes them for the mention being typed.
+  const people = usePeople();
+  const [caret, setCaret] = useState<number | null>(null);
+  const [highlight, setHighlight] = useState(0);
+  const [dismissedAt, setDismissedAt] = useState<number | null>(null);
+  // The text when the line got the focus: leaving it creates only the people cited since then.
+  const textAtFocus = useRef(block.text);
 
   // A list item's marker is drawn beside the field, which holds only the text after it. Carets and
   // selections handed around are counted on the whole line, so they move by this offset.
@@ -213,6 +227,30 @@ export function BlockLine({ block, free, day, today, isPriority, allowNewLines, 
     return () => element.removeEventListener(FORMAT_EVENT, listener);
   }, [format]);
 
+  const mention = editing && caret !== null ? mentionAt(text, caret) : null;
+  const options: PersonOption[] = mention && mention.start !== dismissedAt ? personOptions(mention.query, people) : [];
+  const active = Math.min(highlight, Math.max(options.length - 1, 0));
+
+  function chooseOption(option: PersonOption) {
+    if (!mention) return;
+    const name = option.type === 'person' ? option.person.name : option.name;
+    const next = completeMention(text, mention, name);
+    setText(next.text);
+    latest.current.text = next.text;
+    selectionAfter.current = [next.caret, next.caret];
+    setCaret(next.caret);
+    if (option.type === 'create') handlers.onEnsurePeople?.([name]);
+    if (saveTimer.current) clearTimeout(saveTimer.current);
+    saveTimer.current = setTimeout(flush, SAVE_DELAY_MS);
+  }
+
+  /** Leaving the line without choosing anyone creates the people typed there (spec/pessoas.md). */
+  function createTypedPeople() {
+    const before = new Set(unknownNames(textAtFocus.current, people));
+    const names = unknownNames(latest.current.text, people).filter((name) => !before.has(name));
+    if (names.length > 0) handlers.onEnsurePeople?.(names);
+  }
+
   function onChange(field: HTMLTextAreaElement) {
     const before = listPrefixLength(text);
     // Typing `- ` or `* ` at the start makes a list item right away: the marker moves out of the field.
@@ -226,7 +264,19 @@ export function BlockLine({ block, free, day, today, isPriority, allowNewLines, 
       if (detected.kind === 'task') {
         setText(detected.text);
         if (saveTimer.current) clearTimeout(saveTimer.current);
-        handlers.onMakeTask(block, detected.text);
+        handlers.onMakeTask(block, detected.text, detected.waiting);
+        return;
+      }
+    }
+    // "[a] " at the start of one of my tasks makes it something a person owes me.
+    if (block.kind === 'task' && block.status === 'active' && !block.waiting && handlers.onSetWaiting) {
+      const detected = detectKind(value);
+      if (detected.waiting) {
+        setText(detected.text);
+        latest.current.text = detected.text;
+        handlers.onSetWaiting(block, true);
+        if (saveTimer.current) clearTimeout(saveTimer.current);
+        saveTimer.current = setTimeout(flush, SAVE_DELAY_MS);
         return;
       }
     }
@@ -243,6 +293,24 @@ export function BlockLine({ block, free, day, today, isPriority, allowNewLines, 
     const list = parseLine(edit.text).list;
     // Moving the whole section is handled by the section around the line.
     if (partMoveKey(event)) return;
+    if (options.length > 0 && !event.nativeEvent.isComposing) {
+      if (event.key === 'ArrowDown' || event.key === 'ArrowUp') {
+        event.preventDefault();
+        const step = event.key === 'ArrowDown' ? 1 : -1;
+        setHighlight((active + step + options.length) % options.length);
+        return;
+      }
+      if (event.key === 'Enter' || event.key === 'Tab') {
+        event.preventDefault();
+        chooseOption(options[active]);
+        return;
+      }
+      if (event.key === 'Escape') {
+        event.preventDefault();
+        setDismissedAt(mention?.start ?? null);
+        return;
+      }
+    }
     if (isSelectAllKey(event) && handlers.onSelectAll && selectsAllLines(element)) {
       event.preventDefault();
       handlers.onSelectAll(block);
@@ -298,10 +366,12 @@ export function BlockLine({ block, free, day, today, isPriority, allowNewLines, 
 
   const isTask = block.kind === 'task';
   const done = isTask && block.status === 'done';
-  const active = isTask && block.status === 'active';
+  const open = isTask && block.status === 'active';
+  // Something a person owes me: its date is the day to follow up (spec/pessoas.md).
+  const waiting = isTask && block.waiting === true;
   const deadline = block.deadline ?? null;
   const showDate = isTask && !hideDate && block.intendedDate !== null && block.intendedDate !== day;
-  const dateLabel = showDate ? relativeDay(block.intendedDate!, today) : '';
+  const dateLabel = showDate ? `${waiting ? 'cobrar ' : ''}${relativeDay(block.intendedDate!, today)}` : '';
   const deadlineLabel = deadline ? `prazo ${relativeDay(deadline, today)}` : '';
   const pickDate = (label: string, className: string, children: string, clearLabel?: string) => (
     <DatePicker
@@ -368,17 +438,49 @@ export function BlockLine({ block, free, day, today, isPriority, allowNewLines, 
           rows={1}
           value={text.slice(prefixLength)}
           spellCheck
-          onChange={(event) => onChange(event.target)}
+          onChange={(event) => {
+            setCaret(event.target.selectionStart + prefixLength);
+            setHighlight(0);
+            onChange(event.target);
+          }}
           onKeyDown={onKeyDown}
-          onFocus={() => setEditing(true)}
+          onSelect={(event) => setCaret(event.currentTarget.selectionStart + prefixLength)}
+          onFocus={(event) => {
+            setEditing(true);
+            setCaret(event.currentTarget.selectionStart + prefixLength);
+            textAtFocus.current = latest.current.text;
+          }}
           onBlur={() => {
             setEditing(false);
+            setDismissedAt(null);
             flush();
+            createTypedPeople();
           }}
           placeholder={block.kind === 'note' && free && allowNewLines && !structure.list ? NOTE_HINT : undefined}
           aria-label={isTask ? 'Tarefa' : 'Nota'}
+          aria-expanded={options.length > 0}
+          aria-autocomplete="list"
         />
       </div>
+      {options.length > 0 && (
+        <ul className="suggestions line__suggestions" role="listbox" aria-label="Pessoas">
+          {options.map((option, index) => (
+            <li
+              key={option.type === 'person' ? option.person.id : 'create'}
+              role="option"
+              aria-selected={index === active}
+              className={`suggestions__item ${index === active ? 'suggestions__item--active' : ''}`}
+              onMouseDown={(event) => {
+                // Keeps the focus in the line, so the choice lands where I was typing.
+                event.preventDefault();
+                chooseOption(option);
+              }}
+            >
+              {option.type === 'person' ? `@${option.person.name}` : <>Criar a pessoa “{option.name}”</>}
+            </li>
+          ))}
+        </ul>
+      )}
       {preview && (
         <div className="line__rendered" onMouseDown={editFromPreview} aria-hidden="true">
           <MarkdownText text={text} />
@@ -387,22 +489,39 @@ export function BlockLine({ block, free, day, today, isPriority, allowNewLines, 
       {/* Dates already set are chips; an active task's chip changes the date. */}
       <span className="line__meta">
         {extraMeta}
+        {waiting && <span className="chip chip--waiting">aguardando</span>}
         {showDate &&
-          (active ? pickDate('Mudar a data de intenção', 'line__chip', dateLabel, 'Tirar a data de intenção') : <span className="muted">{dateLabel}</span>)}
+          (open
+            ? waiting
+              ? pickDate('Mudar a data para cobrar', 'line__chip', dateLabel, 'Tirar a data para cobrar')
+              : pickDate('Mudar a data de intenção', 'line__chip', dateLabel, 'Tirar a data de intenção')
+            : <span className="muted">{dateLabel}</span>)}
         {deadline &&
-          (active ? pickDeadline('Mudar o prazo máximo', 'line__chip', deadlineLabel, 'Tirar o prazo máximo') : <span className="chip chip--muted">{deadlineLabel}</span>)}
+          (open ? pickDeadline('Mudar o prazo máximo', 'line__chip', deadlineLabel, 'Tirar o prazo máximo') : <span className="chip chip--muted">{deadlineLabel}</span>)}
       </span>
       {/* Shortcuts on hover and focus. The checkbox finalizes, so there is no separate button for it. */}
       <span className="line__actions">
-        {active && !showDate && pickDate(hideDate ? 'Mudar a data de intenção' : 'Data de intenção', 'line__action', 'Data')}
-        {active && !deadline && pickDeadline('Prazo máximo', 'line__action', 'Prazo')}
+        {open && !showDate && (waiting
+          ? pickDate('Data para cobrar', 'line__action', 'Cobrar')
+          : pickDate(hideDate ? 'Mudar a data de intenção' : 'Data de intenção', 'line__action', 'Data'))}
+        {open && !waiting && !deadline && pickDeadline('Prazo máximo', 'line__action', 'Prazo')}
+        {open && handlers.onSetWaiting && (
+          <button
+            type="button"
+            className="line__action"
+            title={waiting ? 'Voltar a ser uma tarefa minha' : 'Marcar como algo que alguém me deve'}
+            onClick={() => handlers.onSetWaiting?.(block, !waiting)}
+          >
+            {waiting ? 'Não é aguardando' : 'Aguardando'}
+          </button>
+        )}
         {block.kind === 'note' && free && (
           <button type="button" className="line__action" onClick={() => handlers.onMakeTask(block, text)}>
             Converter em tarefa
           </button>
         )}
       </span>
-      {active && (
+      {open && !waiting && (
         <button
           type="button"
           className={`line__star ${isPriority ? 'line__star--on' : 'line__reveal'}`}

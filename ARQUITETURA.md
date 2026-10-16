@@ -65,7 +65,7 @@ Alguns pontos ainda não seguem essas regras: o fluxo de backup é chamado pela 
 
 Cada entidade é um registro separado. Um bloco existe uma vez só: a nota do dia, os projetos e os recursos apontam para ele, sem cópias. Datas de calendário são `AAAA-MM-DD` no fuso local, e o dia vira à meia-noite (ADR-005). Semanas são semanas ISO, como `2026-W42` (ADR-020). Os ids são UUIDs, e todo registro tem `createdAt` e `updatedAt`. Os tipos estão em `src/domain/entities.ts`.
 
-### Tabelas implementadas (versão 7 do banco)
+### Tabelas implementadas (versão 9 do banco)
 
 **`blocks`**: tarefas e notas.
 
@@ -84,6 +84,7 @@ Cada entidade é um registro separado. Um bloco existe uma vez só: a nota do di
 | `deadline` | Prazo máximo (1b) |
 | `awaitingReflection` | Deixada para "decidir na Revisão de Foco" (2; o nome gravado é antigo, ADR-039) |
 | `carriedOrder` | `{ day, position }`: ordem entre as tarefas de outros dias, só enquanto `day` é a data de intenção (ADR-040) |
+| `waiting` | Tarefa aguardando, que alguém me deve; a `intendedDate` dela é a data para cobrar (ADR-052) |
 | `closedAt`, `createdAt`, `updatedAt` | Datas e horários |
 
 **`sections`**: as seções da nota do dia.
@@ -99,6 +100,8 @@ Cada entidade é um registro separado. Um bloco existe uma vez só: a nota do di
 | `projectPage` | Seção escondida que guarda as tarefas escritas na página do projeto; não aparece em nenhuma nota do dia (ADR-031) |
 
 **`projects`**: `name`, `status` (`active`, `finished` ou `merged`), `finishedAt`, `mergedInto` e `keepSeparateFrom` (assistente de projetos repetidos), `objectiveId` (4) e `icon` (2).
+
+**`people`**: as pessoas citadas com `@Nome`: `name` (uma palavra), `status` (`active`, `archived` ou `merged`) e `mergedInto`. A menção não é gravada à parte: fica no texto do bloco e é lida de novo a cada consulta; renomear e juntar reescrevem o texto das linhas (ADR-052).
 
 **`days`**: `day` (chave), `lastCheckoutAt` e, a partir da seção 3, `startedAt`, `warmup` (resultado de cada item do dia) e `executionStartedAt`; `sectionOrder`, a ordem das partes da nota do dia quando eu a mudo (ADR-040). Se o checkout está pendente é sempre calculado a partir dos blocos; esta tabela só guarda o que não dá para calcular. A etapa do dia também é calculada (ADR-023).
 
@@ -127,7 +130,7 @@ Cada entidade é um registro separado. Um bloco existe uma vez só: a nota do di
 
 ### Mudanças de esquema
 
-Cada mudança no esquema sobe a versão do banco no Dexie (`infrastructure/db.ts`) e a `BACKUP_SCHEMA_VERSION`, que andam juntas, e o `parseBackup` aprende a converter backups antigos (`upgradeTables`). Uma migração que transforma dados, como a da versão 6, usa uma função pura do domínio, testada sem banco. Cada versão tem a sua ADR (016, 019, 022, 025, 035 e 038).
+Cada mudança no esquema sobe a versão do banco no Dexie (`infrastructure/db.ts`) e a `BACKUP_SCHEMA_VERSION`, que andam juntas, e o `parseBackup` aprende a converter backups antigos (`upgradeTables`). Uma migração que transforma dados, como a da versão 6, usa uma função pura do domínio, testada sem banco. Cada versão tem a sua ADR (016, 019, 022, 025, 035, 038, 049 e 052).
 
 ## 5. Consultas derivadas (implementado)
 
@@ -141,8 +144,8 @@ Nada disso é guardado: é calculado a partir das tabelas, por funções de `app
 | Notas de um projeto | Seções do projeto com `notesDestination = 'wiki'`, cada entrada com as notas da seção, da mais recente para a mais antiga (`loadSectionNotes`) |
 | Projeto | Seções, tarefas e notas com o `projectId` dele, agrupadas em travadas, próximos dias, sem data e feitas |
 | Lista de projetos | Projetos por status, projetos em foco e mapa de atividade calculado dos eventos (ADR-034) |
-| Tela "Rituais" | Dias pendentes e dias com nota do mês, para o calendário (`domain/ritualsCalendar.ts`, ADR-052) |
-| "Assistentes" (antes "Colocar ordem na casa") | Contagens de cada assistente e a cor pela idade do item mais antigo, com os limites das configurações (ADR-045); o cartão da Revisão de Foco, pela disponibilidade dela (ADR-052) |
+| Tela "Rituais" | Dias pendentes e dias com nota do mês, para o calendário (`domain/ritualsCalendar.ts`, ADR-053) |
+| "Assistentes" (antes "Colocar ordem na casa") | Contagens de cada assistente e a cor pela idade do item mais antigo, com os limites das configurações (ADR-045); o cartão da Revisão de Foco, pela disponibilidade dela (ADR-053) |
 | Abertura do dia | Etapa do dia (iniciar, warm up, dashboard, execução) e lembretes vencidos (ADR-023) |
 | Revisões e métricas | Eventos desde a última revisão de cada tipo passados às funções de métricas (seção 9); disponibilidade de cada revisão por cadência e sinais (`application/reviewQueries.ts`, ADR-039) |
 

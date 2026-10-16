@@ -9,6 +9,7 @@ Os assistentes de limpeza colocam ordem na casa: cada um encontra o que está fo
 
 ## Em aberto
 
+- [ ] Como a cor do cartão da Revisão de Foco é calculada: pelos dias fechados desde a última revisão, ou pelos dias desde que ela ficou disponível? E os limites de cada cor?
 - [ ] Os prazos que definem "parado" ou "antigo" (semanas, meses) ainda são chutes. Quais valem?
 
 ## A tela "Rituais"

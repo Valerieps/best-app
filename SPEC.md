@@ -17,6 +17,7 @@ A spec é a fonte da verdade do produto. Este arquivo é o índice: as regras fi
 | [`spec/prioridades.md`](spec/prioridades.md) | Prioridades do dia e projetos em foco |
 | [`spec/checkout.md`](spec/checkout.md) | "Fechar o dia", destinos de cada item, planejamento do dia seguinte, auto-triagem e "Fechar dias pendentes" |
 | [`spec/projetos.md`](spec/projetos.md) | Projetos, lista de projetos, página do projeto, atividade, projeto parado e tarefa travada |
+| [`spec/pessoas.md`](spec/pessoas.md) | Pessoas, menção com `@`, tarefa aguardando e data para cobrar, tela "Pessoas" e página da pessoa |
 | [`spec/rituais.md`](spec/rituais.md) | Revisão de Foco, Revisão de Rumo com o raio-x, quando cada uma fica disponível, e rituais pulados |
 | [`spec/abertura-do-dia.md`](spec/abertura-do-dia.md) | "Iniciar Dia", warm up, dashboard, mural e lembretes |
 | [`spec/objetivos.md`](spec/objetivos.md) | Objetivos, meta, motivação e recursos |

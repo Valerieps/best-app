@@ -20,7 +20,7 @@ import {
   type StepProps,
 } from './StepParts';
 
-type Choice = 'reflection' | 'next' | 'other' | 'undate' | 'abandon' | 'habit' | 'finish';
+type Choice = 'reflection' | 'next' | 'other' | 'undate' | 'abandon' | 'habit' | 'finish' | 'keep';
 
 function choiceOf(decision: TaskDecision, nextDay: string): Choice {
   if (decision.kind === 'schedule') return decision.date === nextDay ? 'next' : 'other';
@@ -44,8 +44,17 @@ export function AttentionStep({ day, today, triage, projects, busy, onBack, onNe
   const suggested = choiceOf(row.suggestion, nextDay);
   const setDecision = (value: TaskDecision) => setDecisions((previous) => new Map(previous).set(row.task.id, value));
 
+  const waiting = row.task.waiting === true;
+  // Something a person owes me: follow up, or leave it as it is (spec/pessoas.md).
+  const waitingOptions: ChoiceOption<Choice>[] = [
+    { value: 'keep', label: 'Deixar como está' },
+    { value: 'next', label: `Cobrar ${nextLabel}` },
+    { value: 'other', label: 'Cobrar em outra data' },
+    { value: 'finish', label: 'Concluir' },
+    { value: 'abandon', label: 'Abandonar' },
+  ];
   const options: ChoiceOption<Choice>[] = (
-    [
+    waiting ? waitingOptions : [
       { value: 'reflection', label: 'Revisão de Foco' },
       { value: 'next', label: nextLabel.charAt(0).toUpperCase() + nextLabel.slice(1) },
       { value: 'other', label: 'Outra data' },
@@ -84,7 +93,9 @@ export function AttentionStep({ day, today, triage, projects, busy, onBack, onNe
     <>
       <div className="card__body checkout-step">
         <StepQuestion focusKey={row.task.id} eyebrow={`Tarefa ${index + 1} de ${rows.length} que pede atenção`}>
-          {reason === 'postponed'
+          {reason === 'waiting'
+            ? 'Você ainda está aguardando isto. O que fazer?'
+            : reason === 'postponed'
             ? `Você já adiou esta tarefa ${row.task.postponeCount} vezes. O que fazer com ela?`
             : `O prazo desta tarefa ${(row.task.deadline ?? nextDay) < today ? 'era' : 'é'} ${relativeDay(row.task.deadline ?? nextDay, today)}. O que fazer com ela?`}
         </StepQuestion>
@@ -106,7 +117,9 @@ export function AttentionStep({ day, today, triage, projects, busy, onBack, onNe
         <ChoicePills label={`Destino de "${row.task.text}"`} options={options} value={choice} onChange={choose} />
         <ChoiceDetail>
           {choice === 'reflection' && <span>Ela espera a próxima Revisão de Foco, onde você decide com calma.</span>}
-          {choice === 'next' && <span>Volta para a nota de {nextLabel}.</span>}
+          {choice === 'keep' && <span>Continua aguardando, sem data para cobrar. Fica na página da pessoa.</span>}
+          {choice === 'finish' && waiting && <span>Chegou: a tarefa é concluída.</span>}
+          {choice === 'next' && <span>{waiting ? `Aparece na nota de ${nextLabel} para você cobrar.` : `Volta para a nota de ${nextLabel}.`}</span>}
           {choice === 'other' && decision.kind === 'schedule' && (
             <>
               <span>Escolha o dia:</span>
@@ -116,7 +129,7 @@ export function AttentionStep({ day, today, triage, projects, busy, onBack, onNe
                 min={today}
                 value={decision.date}
                 onChange={(event) => event.target.value && setDecision({ kind: 'schedule', date: event.target.value })}
-                aria-label="Outra data de intenção"
+                aria-label={waiting ? 'Outra data para cobrar' : 'Outra data de intenção'}
               />
             </>
           )}

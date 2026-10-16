@@ -6,6 +6,7 @@ import type {
   Habit,
   HabitLog,
   Objective,
+  Person,
   PriorityList,
   Project,
   Reflection,
@@ -36,7 +37,7 @@ export class DexieStore implements Store {
 
   async transaction<T>(work: (tx: StoreTransaction) => Promise<T>): Promise<T> {
     const db = this.db;
-    const result = await db.transaction('rw', [db.blocks, db.sections, db.projects, db.days, db.events, db.priorities, db.reflections, db.settings, db.reminders, db.objectives, db.resources, db.habits, db.habitLogs], (trans: Transaction) => {
+    const result = await db.transaction('rw', [db.blocks, db.sections, db.projects, db.days, db.events, db.priorities, db.reflections, db.settings, db.reminders, db.objectives, db.resources, db.habits, db.habitLogs, db.people], (trans: Transaction) => {
       // Tables taken from the transaction object stay bound to it, so use cases can be plain
       // async functions. Dexie.waitFor keeps the transaction open across their native awaits,
       // which would otherwise make Dexie abort with PrematureCommitError (ADR-003).
@@ -58,6 +59,9 @@ export class DexieStore implements Store {
           resources: repository(trans.table('resources') as Table<Resource, string>),
           habits: repository(trans.table('habits') as Table<Habit, string>),
           habitLogs: repository(trans.table('habitLogs') as Table<HabitLog, string>),
+          people: repository(trans.table('people') as Table<Person, string>),
+          allPeople: () => (trans.table('people') as Table<Person, string>).toArray(),
+          blocksWithMentions: () => blocks.filter((block) => block.text.includes('@')).toArray(),
           blocksInSection: (sectionId) => blocks.where('sectionId').equals(sectionId).toArray(),
           blocksOfProject: (projectId) => blocks.where('projectId').equals(projectId).toArray(),
           sectionsOfProject: (projectId) => sections.where('projectId').equals(projectId).toArray(),

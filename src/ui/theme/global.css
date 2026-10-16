@@ -2306,12 +2306,6 @@ button.sidebar__toggle:hover {
   margin-bottom: var(--space-4);
 }
 
-.sidebar__group-title {
-  padding: 0 var(--space-3);
-  color: var(--color-text-muted);
-  font-size: var(--font-size-xs);
-}
-
 button.sidebar__item {
   display: flex;
   align-items: center;
@@ -4136,4 +4130,112 @@ select.line__action.active-tasks__project {
   align-items: center;
   gap: var(--space-2);
   margin-top: var(--space-2);
+}
+
+/* People (spec/pessoas.md): a mention in a line, the "aguardando" tag and the two screens. */
+.mention {
+  color: var(--color-meeting-text);
+  background: var(--color-meeting-bg);
+  border-radius: var(--radius-sm);
+  padding: 0 2px;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+a.mention:hover {
+  text-decoration: underline;
+}
+
+.mention--unknown {
+  background: none;
+}
+
+.chip--waiting {
+  background: var(--color-warning-bg);
+  color: var(--color-warning-text);
+}
+
+/* The `@` suggestions open under the line, aligned with its text. */
+.line__suggestions {
+  left: var(--space-6);
+}
+
+.people__group {
+  margin-bottom: var(--space-6);
+}
+
+.people__group > .projects__group-title,
+.people__group > .projects__toggle {
+  margin-bottom: var(--space-2);
+}
+
+.people__columns {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-5);
+}
+
+.people__name {
+  font-weight: 500;
+  color: var(--color-text);
+  text-decoration: none;
+}
+
+.people__name:hover {
+  text-decoration: underline;
+}
+
+.people__item {
+  align-items: flex-start;
+}
+
+.people__item .line__check {
+  margin-top: 3px;
+}
+
+.people__item-text {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-width: 0;
+  gap: 2px;
+}
+
+.people__item-from {
+  font-size: var(--font-size-xs);
+}
+
+.people__title {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.people__form {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: var(--space-2);
+  margin-bottom: var(--space-5);
+  padding: var(--space-3) var(--space-4);
+  border: var(--border-width) solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-surface-soft);
+}
+
+.people__form > p {
+  flex-basis: 100%;
+  margin: 0;
+}
+
+.people__label {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  font-size: var(--font-size-sm);
+}
+
+.people__problem {
+  color: var(--color-warning-text);
+  font-size: var(--font-size-sm);
 }

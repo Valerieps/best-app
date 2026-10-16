@@ -33,6 +33,17 @@ describe('weeklyMetrics', () => {
     });
   });
 
+  it('leaves the follow-up date of a waiting task out of the accuracy (spec/pessoas.md)', () => {
+    const metrics = weeklyMetrics(
+      [
+        event('task.finished', 'a', '2026-10-08', { intendedDate: '2026-10-08' }),
+        event('task.finished', 'w', '2026-10-09', { intendedDate: '2026-10-08', waiting: true }),
+      ],
+      week,
+    );
+    expect(metrics).toMatchObject({ finishedTasks: 2, finishedWithIntention: 1, intentionAccuracy: 1 });
+  });
+
   it('has no accuracy when no finished task had a date', () => {
     expect(weeklyMetrics([], week).intentionAccuracy).toBeNull();
   });
