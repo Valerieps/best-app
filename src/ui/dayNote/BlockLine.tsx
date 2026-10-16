@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useLayoutEffect, useRef, useState, type KeyboardEvent, type MouseEvent, type PointerEvent, type ReactNode } from 'react';
+import { useCallback, useContext, useEffect, useLayoutEffect, useRef, useState, type KeyboardEvent, type MouseEvent, type PointerEvent, type ReactNode } from 'react';
 import { detectKind } from '../../domain/blockKind';
 import type { DayKey } from '../../domain/day';
 import type { Block } from '../../domain/entities';
@@ -7,7 +7,8 @@ import { relativeDay } from '../format';
 import { usePeople } from '../people/PeopleContext';
 import { useSaveOnPageLeave } from '../pageLeave';
 import { rememberUnsavedLine } from '../unsavedLines';
-import { useFocusTarget } from './focus';
+import { pendingFocusId, useFocusTarget } from './focus';
+import { entersWithMotion, NoteSettledContext } from './entryMotion';
 import { partMoveKey } from './lineDrag';
 import { isSelectAllKey, selectsAllLines } from './blockSelection';
 import {
@@ -148,6 +149,9 @@ export function BlockLine({ block, free, day, today, isPriority, allowNewLines, 
   latest.current = { block, text, handlers };
   // While the line is not being edited, its Markdown shows formatted.
   const [editing, setEditing] = useState(false);
+  // A line that appears while the note is on screen fades in, unless it is about to take the caret.
+  const settled = useContext(NoteSettledContext);
+  const [entering] = useState(() => entersWithMotion(settled, pendingFocusId(), block.id));
   // The selection to restore once a formatted text renders.
   const selectionAfter = useRef<[number, number] | null>(null);
   // The `@` suggestions follow the caret; Escape closes them for the mention being typed.
@@ -411,7 +415,7 @@ export function BlockLine({ block, free, day, today, isPriority, allowNewLines, 
 
   return (
     <div
-      className={`line line--${block.kind} ${done ? 'line--done' : ''} ${headingClass} ${preview ? 'line--preview' : ''} ${selected ? 'line--selected' : ''} ${dragClasses}`}
+      className={`line line--${block.kind} ${done ? 'line--done' : ''} ${headingClass} ${preview ? 'line--preview' : ''} ${selected ? 'line--selected' : ''} ${entering ? 'line--entering' : ''} ${dragClasses}`}
       data-drag-group={drag?.group}
       data-drag-id={block.id}
     >
