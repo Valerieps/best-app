@@ -211,22 +211,16 @@ export function PlanningStep({ day, target, today, onBack }: Props) {
   return (
     <>
       <div className={`card__body checkout-step ${selecting ? 'checkout-step--batch' : ''}`}>
-        <StepQuestion focusKey="planning" eyebrow="Planejamento">
-          O que entra na nota de {label}?
-        </StepQuestion>
+        <StepQuestion focusKey="planning">O que entra na nota de {label}?</StepQuestion>
         <div className="plan-intro">
-          <p className="muted">
-            {selecting
-              ? 'Clique nas tarefas para selecionar e escolha a data na barra de baixo. Shift + clique seleciona um intervalo.'
-              : 'Ajuste a data de qualquer tarefa. Nada é concluído aqui. As tarefas sem data ficam na lista de tarefas, para algum dia.'}
-          </p>
+          <p className="muted">{selecting ? 'Shift + clique seleciona um intervalo.' : 'Ajuste a data de qualquer tarefa.'}</p>
           <button type="button" className={selecting ? 'primary' : ''} aria-pressed={selecting} onClick={selecting ? leaveSelection : () => setSelecting(true)}>
             {selecting ? 'Pronto' : 'Selecionar várias'}
           </button>
         </div>
         {group(`Já na nota de ${label}`, view.planned)}
-        {group('Agendadas para os próximos dias', view.soon)}
-        {group('Com data que já passou', view.others)}
+        {group('Próximos dias', view.soon)}
+        {group('Data já passou', view.others)}
         {items.length === 0 && <p className="muted">Nenhuma tarefa com data.</p>}
         <p className="plan-total">
           {Label} começa com <b>{plural(targetCount, 'tarefa', 'tarefas')}</b>.

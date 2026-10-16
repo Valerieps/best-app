@@ -89,6 +89,20 @@ button.tertiary[aria-current='page'] {
   color: var(--color-text);
 }
 
+/* A small icon button in a row, such as the warm-up item's arrows */
+.icon-button.icon-button--sm {
+  display: inline-grid;
+  place-items: center;
+  padding: var(--space-1);
+  border-radius: var(--radius-sm);
+  color: var(--color-text-muted);
+}
+
+.icon-button.icon-button--sm:not(:disabled):hover {
+  background: var(--color-hover);
+  color: var(--color-text);
+}
+
 input[type='checkbox'] {
   width: 18px;
   height: 18px;
@@ -193,12 +207,6 @@ input[type='checkbox'] {
 
 .page--wide {
   max-width: var(--content-width-wide);
-}
-
-.page__title {
-  font-size: var(--font-size-xl);
-  font-weight: 500;
-  margin: 0 0 var(--space-4);
 }
 
 /* Chips */
@@ -787,7 +795,7 @@ button.priorities__pin[aria-pressed='true'] {
 
 /* The "Rituais" screen (spec/assistentes.md, "A tela Rituais") */
 .rituals-section {
-  margin-bottom: var(--space-7);
+  margin-bottom: var(--space-6);
 }
 
 .rituals-section__head {
@@ -804,7 +812,7 @@ button.priorities__pin[aria-pressed='true'] {
 
 .rituals-section__title {
   margin: 0;
-  font-size: var(--font-size-lg);
+  font-size: var(--font-size-md);
   font-weight: 600;
 }
 
@@ -965,31 +973,27 @@ button.priorities__pin[aria-pressed='true'] {
 .status--1 .status-icon { background: var(--color-status1-strong); }
 .status--2 .status-icon { background: var(--color-status2-strong); }
 .status--3 .status-icon { background: var(--color-status3-strong); }
+.status-icon--0 { background: var(--color-status0-strong); }
+.status-icon--1 { background: var(--color-status1-strong); }
+.status-icon--2 { background: var(--color-status2-strong); }
+.status-icon--3 { background: var(--color-status3-strong); }
 
-.assistant-header {
+/* An assistant's screen: its colored icon, its name and how long its oldest item waits */
+.assistant-title {
   display: flex;
   align-items: center;
-  gap: var(--space-4);
-  padding: var(--space-4);
-  border-radius: var(--radius-lg);
-  margin: var(--space-2) 0 var(--space-5);
+  gap: var(--space-3);
+  min-width: 0;
 }
 
-.assistant-header .status-icon {
-  width: 44px;
-  height: 44px;
+.assistant-title .status-icon {
+  width: 32px;
+  height: 32px;
 }
 
-.assistant-header__title {
-  font-size: var(--font-size-xl);
-  font-weight: 600;
-  margin: 0;
-}
-
-.assistant-header__description {
-  margin: 0;
-  color: var(--color-text-muted);
-  font-size: var(--font-size-sm);
+.assistant-title .assistant-icon {
+  width: 18px;
+  height: 18px;
 }
 
 /* Settings: limits of the dashboard colors */
@@ -1041,19 +1045,6 @@ button.priorities__pin[aria-pressed='true'] {
   border: var(--border-width) solid var(--color-warning-border);
   border-radius: var(--radius-md);
   margin-bottom: var(--space-4);
-}
-
-.reflection__header {
-  display: flex;
-  align-items: center;
-  gap: var(--space-2);
-  margin-bottom: var(--space-3);
-}
-
-.reflection__title {
-  margin: 0;
-  flex: 1;
-  text-align: center;
 }
 
 .reflection__step {
@@ -1427,12 +1418,6 @@ button.priorities__pin[aria-pressed='true'] {
   text-align: center;
 }
 
-.card__subtitle {
-  font-size: var(--font-size-md);
-  font-weight: 500;
-  margin: var(--space-4) 0 var(--space-2);
-}
-
 .card__body {
   padding: var(--space-3) var(--space-5) var(--space-5);
 }
@@ -1566,28 +1551,28 @@ button.priorities__pin[aria-pressed='true'] {
   max-width: 680px;
 }
 
-.checkout-step__eyebrow,
-.checkout-step__decide {
-  margin: var(--space-3) 0 0;
-  font-size: var(--font-size-xs);
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
+.checkout-step__head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-4);
+  margin-top: var(--space-3);
+}
+
+.checkout-step__progress {
+  flex-shrink: 0;
+  font-size: var(--font-size-sm);
   color: var(--color-text-muted);
+  font-variant-numeric: tabular-nums;
 }
 
 .checkout-step__question {
-  margin: var(--space-1) 0;
+  margin: 0;
   font-size: var(--font-size-xl);
   font-weight: 600;
   line-height: 1.3;
   text-wrap: balance;
   outline: none;
-}
-
-.checkout-step__decide {
-  margin: var(--space-5) 0 var(--space-3);
-  padding-top: var(--space-4);
-  border-top: var(--border-width) solid var(--color-border);
 }
 
 .checkout-step__note {
@@ -1694,6 +1679,11 @@ button.priorities__pin[aria-pressed='true'] {
 }
 
 /* What to decide: a row of pills, with the chosen one's explanation below */
+/* What exists (the task) and what to decide (the pills) are apart by space alone */
+.task-replica + .choice-pills {
+  margin-top: var(--space-5);
+}
+
 .choice-pills {
   display: flex;
   flex-wrap: wrap;
@@ -2095,9 +2085,14 @@ button.plan-row--on:hover {
   padding: var(--space-4) var(--space-5);
 }
 
+.panel__intro {
+  margin-top: 0;
+}
+
 .panel h2 {
-  font-size: var(--font-size-lg);
-  margin: 0 0 var(--space-3);
+  font-size: var(--font-size-md);
+  font-weight: 600;
+  margin: 0 0 var(--space-2);
 }
 
 .panel__actions {
@@ -2327,6 +2322,14 @@ button.sidebar__item--current {
   border-color: var(--color-border);
 }
 
+button.sidebar__item > .icon {
+  color: var(--color-text-muted);
+}
+
+button.sidebar__item--current > .icon {
+  color: var(--color-text);
+}
+
 .sidebar__label {
   flex: 1;
   min-width: 0;
@@ -2449,12 +2452,31 @@ button.sidebar__footer-item {
   width: 100%;
 }
 
+/* Every screen's title: xl/600, then sections in md/600 and groups in sm/600 */
 .screen-header {
-  margin-bottom: var(--space-4);
+  margin-bottom: var(--space-5);
 }
 
-.screen-header__back {
-  margin-bottom: var(--space-2);
+/* The arrow back sits on the title's line, in place of a link above it */
+.icon-button.screen-header__back {
+  display: inline-grid;
+  place-items: center;
+  padding: var(--space-1);
+  margin-left: calc(-1 * var(--space-1));
+  border-radius: var(--radius-sm);
+  color: var(--color-text-muted);
+}
+
+.icon-button.screen-header__back:hover {
+  background: var(--color-hover);
+  color: var(--color-text);
+}
+
+.screen-header__h1 {
+  margin: 0;
+  font-size: var(--font-size-xl);
+  font-weight: 600;
+  line-height: 1.3;
 }
 
 .screen-header__row {
@@ -2465,8 +2487,16 @@ button.sidebar__footer-item {
 }
 
 .screen-header__title {
-  font-size: var(--font-size-xl);
-  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-width: 0;
+}
+
+.screen-header__actions button.primary {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
 }
 
 .screen-header__actions {
@@ -2499,7 +2529,7 @@ button.sidebar__footer-item {
 .day-title__date {
   margin: 0;
   font-size: var(--font-size-xl);
-  font-weight: 500;
+  font-weight: 600;
 }
 
 .day-title__arrow:disabled {
@@ -2614,25 +2644,6 @@ button.sidebar__footer-item {
   min-width: 0;
 }
 
-.crumb {
-  display: flex;
-  align-items: center;
-  gap: var(--space-1);
-  margin-bottom: var(--space-3);
-  font-size: var(--font-size-sm);
-  color: var(--color-text-muted);
-}
-
-.crumb a {
-  color: inherit;
-  text-decoration: none;
-}
-
-.crumb a:hover {
-  color: var(--color-text);
-  text-decoration: underline;
-}
-
 .project-head {
   display: flex;
   align-items: center;
@@ -2644,9 +2655,9 @@ button.sidebar__footer-item {
   flex: 1;
   min-width: 12rem;
   font: inherit;
-  font-size: var(--font-size-2xl);
+  font-size: var(--font-size-xl);
   font-weight: 600;
-  line-height: 1.2;
+  line-height: 1.3;
   border: var(--border-width) solid transparent;
   border-radius: var(--radius-sm);
   padding: 2px var(--space-1);
@@ -3213,26 +3224,10 @@ button.resource-card__toggle {
   outline: none;
 }
 
-@media (max-width: 640px) {
-  .project-head__name {
-    font-size: var(--font-size-xl);
-  }
-}
 
 /* Project list (spec/projetos.md, "Projetos"): where projects are followed */
-.projects__title {
-  margin: 0;
-  font-size: var(--font-size-xl);
-  font-weight: 500;
-}
-
-.projects__summary {
-  margin: 2px 0 0;
-  font-size: var(--font-size-sm);
-}
-
 .projects__group {
-  margin-top: var(--space-5);
+  margin-bottom: var(--space-6);
 }
 
 .projects__group-head {
@@ -3243,10 +3238,15 @@ button.resource-card__toggle {
   margin-bottom: var(--space-3);
 }
 
+.section-title,
 .projects__group-title {
   margin: 0;
   font-size: var(--font-size-md);
   font-weight: 600;
+}
+
+h2.section-title {
+  margin-bottom: var(--space-2);
 }
 
 button.projects__toggle {
@@ -3981,8 +3981,8 @@ button.format-toolbar__button:focus-visible {
 }
 
 /* Dated copies of the backup, in "Dados e backup" */
-.backup-copies__title {
-  margin: var(--space-4) 0 var(--space-2);
+.panel h2.backup-copies__title {
+  margin: var(--space-5) 0 var(--space-2);
   font-size: var(--font-size-md);
   font-weight: 600;
 }

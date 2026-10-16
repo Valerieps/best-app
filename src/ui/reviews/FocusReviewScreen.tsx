@@ -7,6 +7,7 @@ import { addDays, type DayKey } from '../../domain/day';
 import { FOCUS_PROJECT_LIMIT } from '../../domain/focusProjects';
 import type { NotesDecision, TaskDecision, TriageRow } from '../../domain/triage';
 import { NotesRowView, rowKey, TaskRowView, GroupHeader, type Decision } from '../checkout/TriageRows';
+import { ScreenHeader } from '../components/ScreenHeader';
 import { LoadingPage } from '../components/Skeleton';
 import { formatShortDate } from '../format';
 import { navigate, routeHash } from '../hooks';
@@ -23,14 +24,7 @@ export function FocusReviewScreen({ today }: { today: DayKey }) {
 
   return (
     <main className="page page--wide">
-      <header className="reflection__header">
-        <h1 className="page__title reflection__title">Revisão de Foco</h1>
-      </header>
-      <p className="muted">
-        {view.since
-          ? `Desde a última Revisão de Foco, em ${formatShortDate(view.since.slice(0, 10))}.`
-          : 'Esta é a primeira Revisão de Foco: ela cobre tudo desde o começo.'}
-      </p>
+      <ScreenHeader title="Revisão de Foco" back={{ label: 'Rituais', onSelect: () => navigate({ name: 'rituals' }) }} />
 
       <Step number={1} title="Triagem do que foi deixado para cá">
         <DeferredTriage rows={view.deferred} projects={view.projects} today={today} />
@@ -41,13 +35,11 @@ export function FocusReviewScreen({ today }: { today: DayKey }) {
       </Step>
 
       <Step number={3} title="Agregar tarefas em projetos">
-        <p className="muted">
-          Esta etapa espera uma decisão em aberto na spec: se o app propõe os grupos ou se você agrupa à mão. Enquanto
-          isso, vincule tarefas a projetos ao fechar o dia ou na triagem acima.
-        </p>
+        <p className="muted">Em breve. Por enquanto, vincule tarefas a projetos ao fechar o dia ou na triagem acima.</p>
       </Step>
 
-      <Step number={4} title="Métricas do período">
+      {/* The period lives in this step's title, the only place it matters. */}
+      <Step number={4} title={view.since ? `Métricas desde ${formatShortDate(view.since.slice(0, 10))}` : 'Métricas desde o começo'}>
         <div className="metrics">
           <Metric value={view.metrics.finishedTasks} label="tarefas executadas" />
           <Metric
@@ -130,8 +122,7 @@ function FocusProjectsStep({ view }: { view: FocusReviewView }) {
   return (
     <div className="priority-step">
       <p className="muted">
-        Até {FOCUS_PROJECT_LIMIT} projetos, que valem até a próxima Revisão de Foco. {chosen.length} de {FOCUS_PROJECT_LIMIT}{' '}
-        escolhidos.
+        {chosen.length} de {FOCUS_PROJECT_LIMIT}, até a próxima Revisão de Foco.
       </p>
       {active.length === 0 ? (
         <p className="muted">Nenhum projeto ativo.</p>

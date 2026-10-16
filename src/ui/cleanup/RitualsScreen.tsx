@@ -14,7 +14,7 @@ import { listDays, plural } from '../format';
 import { navigate } from '../hooks';
 import { appContext, reader } from '../services';
 import { useLiveQuery } from '../useLiveQuery';
-import { ageLabel, ASSISTANT_INFO, AssistantIcon, FocusReviewIcon, focusReviewStatus, STATUS_LABELS } from './assistantInfo';
+import { ageLabel, ASSISTANT_INFO, shortAgeLabel, AssistantIcon, FocusReviewIcon, focusReviewStatus, STATUS_LABELS } from './assistantInfo';
 import { RitualsCalendar } from './RitualsCalendar';
 
 interface Props {
@@ -103,14 +103,15 @@ function Rituals({
           {dashboard.cards
             .filter(({ id }) => id !== 'pendingDays')
             .map(({ id, status, ageInDays }) => {
-              const { name } = ASSISTANT_INFO[id];
+              const { name, description } = ASSISTANT_INFO[id];
               const age = ageLabel(ageInDays);
+              const state = [STATUS_LABELS[status], age].filter(Boolean).join(', ');
               return (
                 <li key={id}>
                   <button
                     type="button"
                     className={`cleanup-card status--${status}`}
-                    title={[STATUS_LABELS[status], age].filter(Boolean).join(', ')}
+                    title={`${description} ${state.charAt(0).toUpperCase()}${state.slice(1)}.`}
                     aria-label={[name, STATUS_LABELS[status], age].filter(Boolean).join(', ')}
                     onClick={() => navigate({ name: 'rituals', assistant: id })}
                   >
@@ -143,24 +144,30 @@ function AssistantScreen({
   const card = dashboard.cards.find((candidate) => candidate.id === id)!;
   const backToDashboard = () => navigate({ name: 'rituals' });
 
+  const age = card.count > 0 ? ageLabel(card.ageInDays) : null;
+
   return (
     <main className="page">
-      <button type="button" className="link screen-header__back" onClick={backToDashboard}>
-        ← Rituais
-      </button>
-      <header className={`assistant-header status--${card.status}`}>
-        <span className="status-icon">
-          <AssistantIcon id={id} />
-        </span>
-        <div>
-          <h1 className="assistant-header__title">{name}</h1>
-          <p className="assistant-header__description">
-            {description}
-            {card.count > 0 && ` ${(ageLabel(card.ageInDays) ?? '').replace(/^o/, 'O')}.`}
-          </p>
-        </div>
-        <span className="visually-hidden">Estado: {STATUS_LABELS[card.status]}</span>
-      </header>
+      <ScreenHeader
+        back={{ label: 'Rituais', onSelect: backToDashboard }}
+        title={
+          <span className="assistant-title">
+            {/* The color says how long the oldest item waits, as on the card that opened it. */}
+            <span className={`status-icon status-icon--${card.status}`} title={STATUS_LABELS[card.status]}>
+              <AssistantIcon id={id} />
+            </span>
+            <h1 className="screen-header__h1" title={description}>
+              {name}
+            </h1>
+            {age && (
+              <span className="chip chip--muted" title={age}>
+                {shortAgeLabel(card.ageInDays)}
+              </span>
+            )}
+            <span className="visually-hidden">Estado: {STATUS_LABELS[card.status]}</span>
+          </span>
+        }
+      />
 
       {card.count === 0 ? (
         <p className="muted">Nada para limpar aqui.</p>

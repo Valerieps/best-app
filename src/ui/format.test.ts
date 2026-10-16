@@ -8,7 +8,6 @@ import {
   monthName,
   pendingDaysSentence,
   postponedLabel,
-  projectListSummary,
   relativeDay,
   stuckReasonLabel,
 } from './format';
@@ -52,12 +51,6 @@ describe('format', () => {
     expect(activityDetail('2026-10-07', { notes: 1, sections: 0, tasksCreated: 0, tasksFinished: 2 })).toBe('07/10 · 1 nota, 2 tarefas finalizadas');
     expect(activityDetail('2026-10-07', { notes: 0, sections: 1, tasksCreated: 1, tasksFinished: 0 })).toBe('07/10 · 1 seção aberta, 1 tarefa criada');
     expect(activityDetail('2026-10-07', { notes: 0, sections: 0, tasksCreated: 0, tasksFinished: 0 })).toBe('07/10 · nada');
-  });
-
-  it('sums up the project list', () => {
-    expect(projectListSummary({ active: 4, stalled: 1, stuck: 3 })).toBe('4 ativos · 1 parado · 3 travadas');
-    expect(projectListSummary({ active: 1, stalled: 0, stuck: 1 })).toBe('1 ativo · 1 travada');
-    expect(projectListSummary({ active: 0, stalled: 0, stuck: 0 })).toBe('0 ativos');
   });
 
   it('spells out why a task is stuck', () => {

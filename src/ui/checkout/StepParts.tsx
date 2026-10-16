@@ -75,23 +75,26 @@ export function useStepKeys({ options, onPick, onEnter }: { options?: number; on
   }, []);
 }
 
-/** The step's question. It takes the focus whenever `focusKey` changes, so a new card is read first. */
-export function StepQuestion({ focusKey, eyebrow, children }: { focusKey: string; eyebrow?: ReactNode; children: ReactNode }) {
+/**
+ * The step's question, with nothing above it. A step that walks through items one by one shows
+ * where it is ("2/5") on the right. It takes the focus whenever `focusKey` changes, so a new card
+ * is read first.
+ */
+export function StepQuestion({ focusKey, progress, children }: { focusKey: string; progress?: { index: number; total: number }; children: ReactNode }) {
   const ref = useRef<HTMLHeadingElement>(null);
   useEffect(() => ref.current?.focus({ preventScroll: true }), [focusKey]);
   return (
-    <>
-      {eyebrow && <p className="checkout-step__eyebrow">{eyebrow}</p>}
+    <div className="checkout-step__head">
       <h2 className="checkout-step__question" tabIndex={-1} ref={ref}>
         {children}
       </h2>
-    </>
+      {progress && progress.total > 1 && (
+        <span className="checkout-step__progress" aria-label={`${progress.index + 1} de ${progress.total}`}>
+          {progress.index + 1}/{progress.total}
+        </span>
+      )}
+    </div>
   );
-}
-
-/** Separates what exists (read only) from what to decide. */
-export function DecideLabel() {
-  return <p className="checkout-step__decide">Sua decisão</p>;
 }
 
 /** A task as it looks in the day note: read only, with an empty box. */

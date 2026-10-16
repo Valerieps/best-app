@@ -10,7 +10,6 @@ import { appContext } from '../services';
 import {
   ChoiceDetail,
   ChoicePills,
-  DecideLabel,
   noDecisions,
   StepFooter,
   StepQuestion,
@@ -92,7 +91,7 @@ export function AttentionStep({ day, today, triage, projects, busy, onBack, onNe
   return (
     <>
       <div className="card__body checkout-step">
-        <StepQuestion focusKey={row.task.id} eyebrow={`Tarefa ${index + 1} de ${rows.length} que pede atenção`}>
+        <StepQuestion focusKey={row.task.id} progress={{ index, total: rows.length }}>
           {reason === 'waiting'
             ? 'Você ainda está aguardando isto. O que fazer?'
             : reason === 'postponed'
@@ -113,7 +112,6 @@ export function AttentionStep({ day, today, triage, projects, busy, onBack, onNe
             </>
           }
         />
-        <DecideLabel />
         <ChoicePills label={`Destino de "${row.task.text}"`} options={options} value={choice} onChange={choose} />
         <ChoiceDetail>
           {choice === 'reflection' && <span>Ela espera a próxima Revisão de Foco, onde você decide com calma.</span>}

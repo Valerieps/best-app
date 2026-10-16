@@ -12,6 +12,7 @@ import { navigate, routeHash } from '../hooks';
 import { ProjectIconBadge } from '../projects/ProjectIcon';
 import { FEATURES } from '../features';
 import { appContext } from '../services';
+import { ScreenHeader } from '../components/ScreenHeader';
 
 /** A simple line drawing of a sun, in the theme's colors. */
 function Sun() {
@@ -48,7 +49,7 @@ function defaultLaterTime(): string {
 function WarmupRow({ item, answered }: { item: WarmupItem; answered: string | undefined }) {
   const [time, setTime] = useState(defaultLaterTime);
   const [askingLater, setAskingLater] = useState(false);
-  const labels: Record<string, string> = { done: 'feito', skipped: 'pulado hoje', later: 'volta mais tarde' };
+  const labels: Record<string, string> = { done: 'feito', skipped: 'pulado', later: 'volta mais tarde' };
 
   return (
     <li className="card-list__item">
@@ -70,11 +71,11 @@ function WarmupRow({ item, answered }: { item: WarmupItem; answered: string | un
           <button type="button" className="small primary" onClick={() => void answerWarmupItem(appContext, item, 'done')}>
             Feito
           </button>
-          <button type="button" className="small" onClick={() => void answerWarmupItem(appContext, item, 'skipped')}>
-            Pular hoje
+          <button type="button" className="small" onClick={() => void answerWarmupItem(appContext, item, 'skipped')} title="Pular hoje">
+            Pular
           </button>
-          <button type="button" className="small" onClick={() => setAskingLater(true)}>
-            Perguntar de novo às…
+          <button type="button" className="small" onClick={() => setAskingLater(true)} title="Perguntar de novo mais tarde">
+            Mais tarde…
           </button>
         </span>
       )}
@@ -87,7 +88,7 @@ export function WarmupScreen({ view }: { view: DayOpeningView }) {
   const answers = view.record?.warmup ?? {};
   return (
     <main className="page">
-      <h1 className="page__title">Warm up</h1>
+      <ScreenHeader title="Warm up" />
       <ul className="card-list">
         {view.warmupItems.map((item) => (
           <WarmupRow key={item.id} item={item} answered={answers[item.id]} />
@@ -115,16 +116,14 @@ export function DashboardScreen({ view, today }: { view: DayOpeningView; today: 
 
   return (
     <main className="page dashboard">
-      <h1 className="page__title">
-        {greeting(new Date().getHours())}. {formatLongDate(today)}.
-      </h1>
+      <ScreenHeader title={`${greeting(new Date().getHours())}. ${formatLongDate(today)}.`} />
       <button type="button" className="primary dashboard__start" onClick={() => void startExecution(appContext)}>
         Iniciar o Flow de Execução
       </button>
 
       {view.focusProjects.length > 0 && (
         <section className="dashboard__focus" aria-labelledby="dashboard-focus">
-          <h2 className="card__subtitle" id="dashboard-focus">
+          <h2 className="section-title" id="dashboard-focus">
             Em foco
           </h2>
           <ul className="card-list">
@@ -167,13 +166,20 @@ export function DashboardScreen({ view, today }: { view: DayOpeningView; today: 
           ))}
         </ul>
       )}
-      {view.pendingDays.length > 0 && <p className="muted">{pendingDaysSentence(view.pendingDays, today)}. O dia pode começar mesmo assim.</p>}
+      {view.pendingDays.length > 0 && <p className="muted">{pendingDaysSentence(view.pendingDays, today)}.</p>}
 
       {writing && (
         <div className="panel dashboard__thoughts">
           <label className="field">
-            <span className="field__label">Pensamentos (entram numa seção geral da nota do dia)</span>
-            <textarea className="text-area" rows={4} value={thoughts} onChange={(event) => setThoughts(event.target.value)} autoFocus />
+            <span className="field__label">Pensamentos</span>
+            <textarea
+              className="text-area"
+              rows={4}
+              value={thoughts}
+              placeholder="Vão para uma seção da nota do dia"
+              onChange={(event) => setThoughts(event.target.value)}
+              autoFocus
+            />
           </label>
           <div className="assistant__actions">
             <button

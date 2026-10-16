@@ -10,6 +10,7 @@ import { loadObjective, loadObjectives } from '../../application/queries';
 import { plural } from '../format';
 import { navigate, routeHash } from '../hooks';
 import { appContext, reader } from '../services';
+import { ScreenHeader } from '../components/ScreenHeader';
 import { LoadingPage } from '../components/Skeleton';
 import { useLiveQuery } from '../useLiveQuery';
 import { Resources } from './Resources';
@@ -42,7 +43,7 @@ export function ObjectivesScreen() {
 
   return (
     <main className="page">
-      <h1 className="page__title">Objetivos</h1>
+      <ScreenHeader title="Objetivos" />
       {active.length === 0 ? <p className="muted">Nenhum objetivo ativo. A Revisão de Rumo sugere objetivos a partir dos projetos.</p> : list(active)}
       {finished.length > 0 && (
         <>
@@ -138,7 +139,7 @@ export function ObjectiveScreen({ id }: { id: string }) {
         )}
       </div>
 
-      <h2 className="card__subtitle">Projetos</h2>
+      <h2 className="section-title">Projetos</h2>
       {view.projects.length === 0 ? (
         <p className="muted">Nenhum projeto ligado a este objetivo.</p>
       ) : (
@@ -171,7 +172,7 @@ export function ObjectiveScreen({ id }: { id: string }) {
         </select>
       )}
 
-      <h2 className="card__subtitle">Hábitos</h2>
+      <h2 className="section-title">Hábitos</h2>
       {view.habits.length === 0 ? (
         <p className="muted">
           Nenhum hábito. Ligue hábitos a este objetivo em <a href={routeHash({ name: 'habits' })}>Hábitos</a>.
@@ -186,7 +187,7 @@ export function ObjectiveScreen({ id }: { id: string }) {
         </ul>
       )}
 
-      <h2 className="card__subtitle">Recursos</h2>
+      <h2 className="section-title">Recursos</h2>
       <Resources owner={{ ownerType: 'objective', ownerId: objective.id }} resources={view.resources} />
     </main>
   );

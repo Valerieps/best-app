@@ -5,7 +5,7 @@ import { setSidebarCollapsed, setSidebarWidth } from '../application/settings';
 import type { DayKey } from '../domain/day';
 import type { AutoBackupState } from '../infrastructure/autoBackup';
 import { BackupStatus } from './backup/BackupStatus';
-import { Icon } from './components/Icon';
+import { Icon, type IconName } from './components/Icon';
 import { navigate, type Route } from './hooks';
 import { appContext, reader } from './services';
 import { sidebarPlace, type SidebarPlace } from './sidebarPlace';
@@ -31,6 +31,19 @@ interface Place {
   /** The "Rituais" counter: pending days plus available reviews. */
   due?: number;
 }
+
+/** Every place has an icon before its label, as in most sidebars, so it is found at a glance. */
+const PLACE_ICONS: Record<SidebarPlace, IconName> = {
+  day: 'sun',
+  rituals: 'repeat',
+  projects: 'folder',
+  objectives: 'target',
+  habits: 'leaf',
+  active: 'checklist',
+  people: 'users',
+  data: 'database',
+  settings: 'settings',
+};
 
 function Badge({ count }: { count: number }) {
   return count > 0 ? <span className="badge">{count}</span> : null;
@@ -181,6 +194,7 @@ export function Sidebar({ route, pendingDays, reviews, backupState }: Props) {
       aria-current={isCurrent(place) ? 'page' : undefined}
       onClick={() => navigate(place.route)}
     >
+      <Icon name={PLACE_ICONS[place.place]} />
       <span className="sidebar__label">{place.label}</span>
       {place.due !== undefined && <Badge count={place.due} />}
       {place.count !== undefined && <span className="muted">{place.count}</span>}
@@ -248,6 +262,7 @@ export function Sidebar({ route, pendingDays, reviews, backupState }: Props) {
           aria-current={current === 'data' ? 'page' : undefined}
           onClick={() => navigate({ name: 'data' })}
         >
+          <Icon name={PLACE_ICONS.data} />
           <span className="sidebar__label">Dados e backup</span>
           <BackupStatus state={backupState} />
         </button>

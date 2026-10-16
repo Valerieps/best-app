@@ -5,6 +5,7 @@ import { loadDirectionReview } from '../../application/reviewQueries';
 import { closeReview } from '../../application/reviews';
 import type { DayKey } from '../../domain/day';
 import type { Objective, Project } from '../../domain/entities';
+import { ScreenHeader } from '../components/ScreenHeader';
 import { LoadingPage } from '../components/Skeleton';
 import { formatShortDate } from '../format';
 import { navigate, routeHash } from '../hooks';
@@ -57,16 +58,9 @@ export function DirectionReviewScreen({ today }: { today: DayKey }) {
 
   return (
     <main className="page page--wide">
-      <header className="reflection__header">
-        <h1 className="page__title reflection__title">Revisão de Rumo</h1>
-      </header>
-      <p className="muted">
-        {view.since
-          ? `Desde a última Revisão de Rumo, em ${formatShortDate(view.since.slice(0, 10))}.`
-          : 'Esta é a primeira Revisão de Rumo: ela cobre tudo desde o começo.'}
-      </p>
+      <ScreenHeader title="Revisão de Rumo" back={{ label: 'Rituais', onSelect: () => navigate({ name: 'rituals' }) }} />
 
-      <Step title="Raio-x do período">
+      <Step title={view.since ? `Raio-x desde ${formatShortDate(view.since.slice(0, 10))}` : 'Raio-x desde o começo'}>
         <div className="metrics">
           <Metric value={`${view.metrics.projectsWithoutObjective} de ${view.metrics.activeProjects}`} label="projetos ativos sem objetivo" />
           <Metric value={view.metrics.habitsWithoutObjective} label="hábitos sem objetivo" />

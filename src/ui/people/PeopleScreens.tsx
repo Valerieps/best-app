@@ -136,14 +136,15 @@ export function PeopleScreen({ today }: { today: DayKey }) {
       <ScreenHeader title="Pessoas" />
       {none ? (
         <p className="muted">
-          Ninguém por aqui ainda. Escreva <strong>@Nome</strong> numa linha da nota do dia para citar alguém, ou comece a linha com{' '}
-          <strong>[a]</strong> para algo que alguém te deve.
+          Ninguém por aqui ainda. Cite alguém com <strong>@Nome</strong> na nota do dia; <strong>[a]</strong> no começo da linha marca
+          algo que alguém te deve.
         </p>
       ) : (
         <>
-          <Group title="Pessoas" count={view.active.length}>
+          {/* The screen's title already says "Pessoas": the list comes right below it. */}
+          <section className="people__group">
             {view.active.length > 0 ? <PersonList people={view.active} /> : <p className="muted">Todas as pessoas estão arquivadas.</p>}
-          </Group>
+          </section>
           <Group title="Aguardando" count={view.waiting.length}>
             <ItemList
               items={view.waiting}
@@ -298,7 +299,7 @@ export function PersonScreen({ id, today }: { id: string; today: DayKey }) {
     return (
       <main className="page">
         <ScreenHeader title="Pessoa não encontrada" back={{ label: 'Pessoas', onSelect: () => navigate({ name: 'people' }) }} />
-        <p className="muted">Esta pessoa foi apagada ou juntada com outra.</p>
+        <p className="muted">Ela foi apagada ou juntada com outra.</p>
       </main>
     );
   }
@@ -312,10 +313,10 @@ export function PersonScreen({ id, today }: { id: string; today: DayKey }) {
     <main className="page page--wide">
       <ScreenHeader
         title={
-          <span className="people__title">
+          <h1 className="screen-header__h1 people__title">
             @{person.name}
             {archived && <span className="chip chip--muted">arquivada</span>}
-          </span>
+          </h1>
         }
         back={{ label: 'Pessoas', onSelect: () => navigate({ name: 'people' }) }}
         more={[
@@ -343,7 +344,7 @@ export function PersonScreen({ id, today }: { id: string; today: DayKey }) {
           <ItemList items={view.theyOwe} today={today} empty="Nada aguardando." sectionsById={view.sectionsById} />
         </Group>
         <Group title="Eu devo" count={view.iOwe.length}>
-          <ItemList items={view.iOwe} today={today} empty="Você não deve nada a esta pessoa." sectionsById={view.sectionsById} />
+          <ItemList items={view.iOwe} today={today} empty="Nada a entregar." sectionsById={view.sectionsById} />
         </Group>
       </div>
       <Group title="Menções" count={view.mentions.length}>
