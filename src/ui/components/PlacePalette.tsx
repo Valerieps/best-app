@@ -10,7 +10,7 @@ const optionId = (key: string) => `place-palette-${key}`;
 /**
  * Ctrl + K opens a box to go to another place of the sidebar (spec/navegacao.md, "Global").
  * Mounted only on screens with the sidebar. A day note line that formats a link with Ctrl + K
- * prevents the key's default, and then the palette stays closed (ADR-055).
+ * prevents the key's default, and then the palette stays closed (ADR-057).
  */
 export function PlacePalette() {
   const [open, setOpen] = useState(false);

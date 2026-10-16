@@ -29,6 +29,5 @@ Estes pontos não puderam ser testados no navegador embutido do Claude Code.
 
 ### Configuração e publicação
 
-- [ ] **Cloudflare Pages.** Criar a conta e o projeto, conectar o repositório privado, usar `npm run build` como comando de build e `dist` como pasta de saída. Um domínio próprio é opcional.
 - [ ] **Política da empresa.** O `google-safe.md` aceita hospedagem estática como o Cloudflare Pages, mas o código do app ainda é baixado de um servidor externo. Vale confirmar que isso é aceito antes de usar o app com dados reais.
 - [ ] **Limite de 3 adiamentos.** Está em 3, como proposto no `spec/checkout.md`; se a resposta à pergunta em aberto for outra, muda numa constante.

@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import type { Block, Project } from '../domain/entities';
 import type { DomainEvent } from '../domain/events';
-import { decideAutoBackup } from './autoBackup';
+import { AUTO_BACKUP_DELAY_MS, autoBackupWait, decideAutoBackup } from './autoBackup';
 import { createBackup, emptyTables, type BackupTables } from './backup';
 
 function project(id: string, updatedAt = '2026-10-11T10:00:00Z'): Project {
@@ -92,5 +92,16 @@ describe('decideAutoBackup', () => {
     ['another JSON file', '{"hello": "world"}'],
   ])('never overwrites %s, even when overwriting is allowed', (_label, text) => {
     expect(decideAutoBackup(text, tables([]), true)).toEqual({ kind: 'blocked', reason: 'invalidFile' });
+  });
+});
+
+describe('autoBackupWait', () => {
+  it('restarts a short wait on every change by default', () => {
+    expect(autoBackupWait('afterChange')).toEqual({ ms: AUTO_BACKUP_DELAY_MS, restartOnChange: true });
+  });
+
+  it('keeps the first wait with an interval, so working nonstop still writes', () => {
+    expect(autoBackupWait('quarterHour')).toEqual({ ms: 15 * 60 * 1000, restartOnChange: false });
+    expect(autoBackupWait('hour')).toEqual({ ms: 60 * 60 * 1000, restartOnChange: false });
   });
 });

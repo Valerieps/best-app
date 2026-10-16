@@ -3,7 +3,9 @@ import { loadDayOpening, loadPendingDays } from '../application/queries';
 import { getLastBackupAt } from '../infrastructure/backupRepository';
 import { requestPersistentStorage } from '../infrastructure/browser';
 import { BackupBanner } from './backup/BackupBanner';
+import { useAutoBackupInterval } from './backup/BackupIntervalSelect';
 import { BackupPanel } from './backup/BackupPanel';
+import { BackupSetupScreen } from './backup/BackupSetupScreen';
 import { ImportDialog } from './backup/ImportDialog';
 import { useAutoBackupState, useBackup } from './backup/useBackup';
 import { CheckoutScreen } from './checkout/CheckoutScreen';
@@ -20,7 +22,7 @@ import { ProjectsScreen } from './projects/ProjectListScreen';
 import { ProjectScreen } from './projects/ProjectScreens';
 import { PeopleScreen, PersonScreen } from './people/PeopleScreens';
 import { loadReviewAvailability } from '../application/reviewQueries';
-import { backupNoticeLevel, pickTopNotice, useReviewSnooze, useSnoozedNotices } from './notices';
+import { backupNoticeLevel, needsBackupSetup, pickTopNotice, useReviewSnooze, useSnoozedNotices } from './notices';
 import { DirectionReviewScreen } from './reviews/DirectionReviewScreen';
 import { FocusReviewScreen } from './reviews/FocusReviewScreen';
 import { isReviewSnoozed, pickReviewNotice } from './reviews/reviewNotice';
@@ -34,6 +36,7 @@ import { ScreenError } from './components/ErrorScreens';
 import { SaveErrorNotice } from './components/SaveErrorNotice';
 import { reportSaveError } from './saveErrors';
 import { enabledRoute, visibleReviews } from './features';
+import { applyAppearance, parseAppearance } from './theme/appearance';
 
 export function App() {
   // Screens of features hidden until their spec is done open the day note (ui/features.ts).
@@ -52,7 +55,7 @@ export function App() {
     void autoBackup.init();
     // Try to save right away when the tab is hidden or closed.
     const onHide = () => {
-      if (document.visibilityState === 'hidden') void autoBackup.flush();
+      if (document.visibilityState === 'hidden') autoBackup.onHidden();
     };
     document.addEventListener('visibilitychange', onHide);
     // A button whose save failed leaves its error unhandled: tell the user, besides the console.
@@ -63,6 +66,15 @@ export function App() {
       window.removeEventListener('unhandledrejection', onUnhandled);
     };
   }, []);
+
+  // The appearance saved in the settings wins over the copy applied before the first render,
+  // including after importing a backup (ADR-055).
+  const appearance = useLiveQueryState(async () => parseAppearance((await reader.settings())?.appearance)).value;
+  useEffect(() => {
+    if (appearance) applyAppearance(appearance);
+  }, [appearance]);
+  const backupInterval = useAutoBackupInterval();
+  useEffect(() => autoBackup.setInterval(backupInterval), [backupInterval]);
 
   // Focus mode on a part of the day note survives reloading, and only the user leaves it: no
   // new day, opening screen or notice takes its place (spec/nota-do-dia.md, "Modo foco").
@@ -94,6 +106,9 @@ export function App() {
     reviewAvailable: onToday && stage === 'execution' && reviewNotice !== null,
   });
 
+  // Nothing opens before there is a backup folder (spec/principios.md, "Primeiro uso").
+  if (backupState.status === 'loading') return null;
+  if (needsBackupSetup(backupState)) return <BackupSetupScreen state={backupState} actions={backup} />;
   // Wait for the focus too, so a focused part never flashes the opening screens on reload.
   if (route.name === 'day' && focusQuery.value === undefined && focusQuery.error === undefined) return null;
   if (onToday && stage === null) return null;
