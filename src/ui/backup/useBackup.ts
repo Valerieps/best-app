@@ -3,6 +3,7 @@ import { parseBackup, type BackupFile, type ImportLoss } from '../../application
 import { exportBackup, importBackup, previewImport, undoImport } from '../../infrastructure/backupRepository';
 import { downloadBackup, readBackupFile } from '../../infrastructure/backupFiles';
 import { autoBackup, db } from '../services';
+import { runAfterPendingWrites } from '../writeQueue';
 
 export interface BackupMessage {
   kind: 'success' | 'error';
@@ -75,7 +76,7 @@ export function useBackup() {
     if (!pendingImport) return;
     setPendingImport(null);
     try {
-      await importBackup(db, pendingImport.backup, new Date());
+      await runAfterPendingWrites(() => importBackup(db, pendingImport.backup, new Date()));
       setMessage({ kind: 'success', text: 'Backup importado.' });
       await autoBackup.flush();
     } catch {
@@ -87,7 +88,7 @@ export function useBackup() {
 
   const undo = useCallback(async () => {
     try {
-      await undoImport(db);
+      await runAfterPendingWrites(() => undoImport(db));
       setMessage({ kind: 'success', text: 'Importação desfeita. Os dados voltaram ao que eram antes.' });
       await autoBackup.flush();
     } catch {
