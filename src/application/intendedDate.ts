@@ -19,7 +19,8 @@ export async function moveIntendedDate(
 ): Promise<Block> {
   const from = task.intendedDate;
   if (from === to) return task;
-  const postponed = isPostponement(from, to);
+  // Moving the day to follow up on something a person owes me is no postponement (spec/pessoas.md).
+  const postponed = !task.waiting && isPostponement(from, to);
   await record(ctx, tx, 'task.intendedDateChanged', 'block', task.id, day, { from, to, reason });
   if (postponed) await record(ctx, tx, 'task.postponed', 'block', task.id, day, { from, to, reason });
   return {

@@ -4,6 +4,7 @@ import type {
   Habit,
   HabitLog,
   Objective,
+  Person,
   PriorityList,
   Project,
   Reflection,
@@ -23,7 +24,7 @@ import { migrateMonthPriorityLists, migrateToFocusList } from '../domain/focusPr
  */
 
 export const BACKUP_FORMAT = 'best-app-backup';
-export const BACKUP_SCHEMA_VERSION = 7;
+export const BACKUP_SCHEMA_VERSION = 8;
 
 export interface BackupTables {
   blocks: Block[];
@@ -43,6 +44,8 @@ export interface BackupTables {
   resources: Resource[];
   habits: Habit[];
   habitLogs: HabitLog[];
+  /** Added in version 8 (spec/pessoas.md). */
+  people: Person[];
 }
 
 export type BackupTableName = keyof BackupTables;
@@ -61,6 +64,7 @@ export const BACKUP_TABLES: readonly BackupTableName[] = [
   'resources',
   'habits',
   'habitLogs',
+  'people',
 ];
 
 /** Primary key field of each table. */
@@ -78,6 +82,7 @@ export const TABLE_KEYS: Record<BackupTableName, string> = {
   resources: 'id',
   habits: 'id',
   habitLogs: 'id',
+  people: 'id',
 };
 
 export interface BackupFile {
@@ -125,6 +130,7 @@ function upgradeTables(tables: Record<string, unknown>, version: number, exporte
   if (version < 7 && Array.isArray(upgraded.priorities)) {
     upgraded.priorities = migrateToFocusList(upgraded.priorities, toDayKey(new Date(exportedAt)));
   }
+  if (version < 8) upgraded.people = []; // People cited with `@` (spec/pessoas.md).
   return upgraded;
 }
 
@@ -195,6 +201,7 @@ export function emptyTables(): BackupTables {
     resources: [],
     habits: [],
     habitLogs: [],
+    people: [],
   };
 }
 

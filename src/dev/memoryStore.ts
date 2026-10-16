@@ -7,6 +7,7 @@ import type {
   Habit,
   HabitLog,
   Objective,
+  Person,
   PriorityList,
   Project,
   Reflection,
@@ -63,6 +64,9 @@ export class MemoryStore implements Store, Reader {
       resources: this.repository('resources'),
       habits: this.repository('habits'),
       habitLogs: this.repository('habitLogs'),
+      people: this.repository('people'),
+      allPeople: () => this.people(),
+      blocksWithMentions: () => this.blocksWithMentions(),
       blocksInSection: async (sectionId) => this.blocks().filter((block) => block.sectionId === sectionId),
       blocksOfProject: async (projectId) => this.blocks().filter((block) => block.projectId === projectId),
       sectionsOfProject: async (projectId) => this.sections().filter((section) => section.projectId === projectId),
@@ -206,5 +210,13 @@ export class MemoryStore implements Store, Reader {
 
   async priorityListsBetween(fromId: string, toId: string) {
     return structuredClone(this.rows<PriorityList>('priorities').filter((list) => list.id >= fromId && list.id <= toId));
+  }
+
+  async people() {
+    return structuredClone(this.rows<Person>('people'));
+  }
+
+  async blocksWithMentions() {
+    return structuredClone(this.blocks().filter((block) => block.text.includes('@')));
   }
 }

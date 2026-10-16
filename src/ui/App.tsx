@@ -19,6 +19,7 @@ import { DashboardScreen, StartDayScreen, WarmupScreen } from './opening/Opening
 import { useDueReminders, useReminderSignals } from './opening/Reminders';
 import { ProjectsScreen } from './projects/ProjectListScreen';
 import { ProjectScreen } from './projects/ProjectScreens';
+import { PeopleScreen, PersonScreen } from './people/PeopleScreens';
 import { loadReviewAvailability } from '../application/reviewQueries';
 import { backupNoticeLevel, pickTopNotice, useReviewSnooze, useSnoozedNotices } from './notices';
 import { DirectionReviewScreen } from './reviews/DirectionReviewScreen';
@@ -142,6 +143,8 @@ export function App() {
           {route.name === 'projects' && <ProjectsScreen today={today} />}
           {route.name === 'project' && <ProjectScreen key={route.id} id={route.id} tab={route.tab ?? 'tasks'} today={today} />}
           {route.name === 'settings' && <SettingsScreen />}
+          {route.name === 'people' && <PeopleScreen today={today} />}
+          {route.name === 'person' && <PersonScreen key={route.id} id={route.id} today={today} />}
           {route.name === 'objectives' && <ObjectivesScreen />}
           {route.name === 'objective' && <ObjectiveScreen id={route.id} />}
           {route.name === 'habits' && <HabitsScreen today={today} />}

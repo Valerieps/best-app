@@ -27,6 +27,9 @@ import { Simulation } from './simulation';
  *   left for it and the notes of a retrospective; archived tasks from 31, 10 and 5 days ago.
  * - Active tasks without a date for weeks, for the future stale tasks assistant.
  * - Today: a task planned for today as a priority, and a task whose deadline is today.
+ * - People (spec/pessoas.md): Ana, Rafael, Jorge, Paula and Marcão, cited with `@`. Rafael owes
+ *   an estimate to follow up today, Jorge a schedule in 3 days, and Ana and Paula things with
+ *   no follow-up date; I owe Paula the user manual.
  */
 
 /** English classes before the main story, twice a week; the course goes on at a slower pace later. */
@@ -322,7 +325,9 @@ export async function buildSyntheticData(now: Date, ids: IdGenerator): Promise<S
     daily3,
     'Página pública: falta só o estado de "sem horários disponíveis".',
     '[] Revisar os textos da página pública com a Ana',
+    '[a] @Ana aprovar os textos da página pública',
   );
+  await sim.people('Ana');
   await sim.checkout({ whiteboards: [[daily3, { kind: 'leaveUnlinked' }]] });
 
   // Day -12: more decoration ideas, again on a whiteboard.
@@ -388,6 +393,9 @@ export async function buildSyntheticData(now: Date, ids: IdGenerator): Promise<S
     '[] Página de status do sistema',
   );
   await sim.intend(monitoring, 3);
+  const [estimate] = await sim.write(planning42, '[a] @Rafael mandar a estimativa do monitoramento');
+  await sim.people('Rafael');
+  await sim.intend(estimate, 0);
   const invitations = await sim.section('general', 'Festa: convites');
   await sim.link(invitations, party);
   const [, invitationDesign, sendInvitations] = await sim.write(
@@ -416,6 +424,13 @@ export async function buildSyntheticData(now: Date, ids: IdGenerator): Promise<S
   );
   await sim.intend(secondPayment, 1);
   await sim.deadline(secondPayment, 0);
+  const [, writtenSchedule] = await sim.write(
+    schedule,
+    'O @Jorge vai mandar o cronograma por escrito, e o @Marcão começa logo depois da demolição.',
+    '[a] @Jorge enviar o cronograma por escrito',
+  );
+  await sim.people('Jorge', 'Marcão');
+  await sim.intend(writtenSchedule, 3);
   await englishClass('Inglês: revisão', 'Revisão do mês: conditionals e phrasal verbs.');
   await sim.checkout({ tasks: [[statusPage, { kind: 'archive' }]] });
 
@@ -427,7 +442,10 @@ export async function buildSyntheticData(now: Date, ids: IdGenerator): Promise<S
     daily4,
     'A primeira clínica (Dra. Paula) começa a testar na semana que vem.',
     '[] Preparar o ambiente de homologação para a clínica',
+    'A @Paula quer começar pelos horários da manhã.',
+    '[a] @Paula confirmar quais médicos testam primeiro',
   );
+  await sim.people('Paula');
   await sim.checkout();
 
   // Days -3, -2 and -1: no checkout, so they wait for "Fechar dias pendentes".
@@ -470,6 +488,8 @@ export async function buildSyntheticData(now: Date, ids: IdGenerator): Promise<S
     week,
     'Semana pesada: homologação da clínica e começo da obra.',
     '[] Separar a louça antes da demolição',
+    'Conversar com a @Ana sobre o lançamento da página pública.',
+    '[] Mandar o manual de uso para a @Paula',
   );
   await sim.priority(cancellationReview);
   await sim.priority(dishes);

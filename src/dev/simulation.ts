@@ -17,6 +17,7 @@ import {
 } from '../application/notebook';
 import type { AppContext, IdGenerator } from '../application/ports';
 import { addFocusProject } from '../application/focusProjects';
+import { ensurePeople } from '../application/people';
 import { createProject, setProjectFinished, setProjectIcon } from '../application/projects';
 import { loadDayTriage, loadPendingTriages } from '../application/queries';
 import { setDayPriority, setDeadline, setIntendedDate, setSectionDetails } from '../application/dayTools';
@@ -102,6 +103,12 @@ export class Simulation {
       blocks.push(await createBlock(this.ctx, { sectionId: section.id, position }, line));
     }
     return blocks;
+  }
+
+  /** The people cited with `@`, created as when I leave the line (spec/pessoas.md). */
+  async people(...names: string[]): Promise<void> {
+    this.step();
+    await ensurePeople(this.ctx, names);
   }
 
   async project(name: string): Promise<Project> {

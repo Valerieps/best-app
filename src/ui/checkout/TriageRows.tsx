@@ -19,7 +19,7 @@ interface RowProps<D> {
   onChange(decision: D): void;
 }
 
-type TaskChoice = 'finish' | 'next' | 'other' | 'archive' | 'abandon' | 'reflection' | 'habit';
+type TaskChoice = 'finish' | 'next' | 'other' | 'archive' | 'abandon' | 'reflection' | 'habit' | 'keep';
 
 interface TaskRowExtras {
   nextDay: DayKey;
@@ -80,15 +80,26 @@ export function TaskRowView({
         <Segmented<TaskChoice>
           label={`Destino de "${row.task.text}"`}
           value={choice}
-          options={[
-            { value: 'finish', label: 'Finalizar' },
-            { value: 'next', label: nextLabel.charAt(0).toUpperCase() + nextLabel.slice(1) },
-            { value: 'other', label: 'Outra data' },
-            { value: 'archive', label: 'Arquivar' },
-            { value: 'abandon', label: 'Abandonar' },
-            ...(allowReflection ? [{ value: 'reflection' as const, label: 'Revisão de Foco' }] : []),
-            ...(FEATURES.habits ? [{ value: 'habit' as const, label: 'Virar hábito' }] : []),
-          ]}
+          options={
+            // Something a person owes me: follow up, or leave it as it is (spec/pessoas.md).
+            row.task.waiting
+              ? [
+                  { value: 'keep', label: 'Deixar como está' },
+                  { value: 'next', label: `Cobrar ${nextLabel}` },
+                  { value: 'other', label: 'Cobrar em outra data' },
+                  { value: 'finish', label: 'Concluir' },
+                  { value: 'abandon', label: 'Abandonar' },
+                ]
+              : [
+                  { value: 'finish', label: 'Finalizar' },
+                  { value: 'next', label: nextLabel.charAt(0).toUpperCase() + nextLabel.slice(1) },
+                  { value: 'other', label: 'Outra data' },
+                  { value: 'archive', label: 'Arquivar' },
+                  { value: 'abandon', label: 'Abandonar' },
+                  ...(allowReflection ? [{ value: 'reflection' as const, label: 'Revisão de Foco' }] : []),
+                  ...(FEATURES.habits ? [{ value: 'habit' as const, label: 'Virar hábito' }] : []),
+                ]
+          }
           onChange={(value) => {
             if (value === 'next') onChange({ kind: 'schedule', date: nextDay });
             // "Outra data" starts one day after "dia seguinte", then the date field changes it.
@@ -103,7 +114,7 @@ export function TaskRowView({
             min={today}
             value={decision.date}
             onChange={(event) => event.target.value && onChange({ kind: 'schedule', date: event.target.value })}
-            aria-label="Outra data de intenção"
+            aria-label={row.task.waiting ? 'Outra data para cobrar' : 'Outra data de intenção'}
           />
         )}
       </span>

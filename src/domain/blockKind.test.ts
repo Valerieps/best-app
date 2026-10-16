@@ -7,6 +7,12 @@ describe('detectKind', () => {
     expect(detectKind('[] ')).toEqual({ kind: 'task', text: '' });
   });
 
+  it('turns a line starting with "[a] " into a task someone owes me (spec/pessoas.md)', () => {
+    expect(detectKind('[a] @Ana mandar o contrato')).toEqual({ kind: 'task', text: '@Ana mandar o contrato', waiting: true });
+    expect(detectKind('[A] Contrato')).toEqual({ kind: 'task', text: 'Contrato', waiting: true });
+    expect(detectKind('[a]sem espaço')).toEqual({ kind: 'note', text: '[a]sem espaço' });
+  });
+
   it('keeps everything else as a note', () => {
     expect(detectKind('Ideia solta')).toEqual({ kind: 'note', text: 'Ideia solta' });
     expect(detectKind('[]sem espaço')).toEqual({ kind: 'note', text: '[]sem espaço' });

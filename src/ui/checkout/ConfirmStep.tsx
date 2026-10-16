@@ -66,6 +66,8 @@ export function ConfirmStep({ day, today, triage, projects, resolved, busy, onBa
         return 'Revisão de Foco';
       case 'habit':
         return 'virar hábito';
+      case 'keep':
+        return 'deixar como está';
     }
   }
 

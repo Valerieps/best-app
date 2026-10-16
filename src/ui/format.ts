@@ -64,6 +64,12 @@ export function plural(count: number, one: string, many: string): string {
   return `${count} ${count === 1 ? one : many}`;
 }
 
+/** How long something has been open: "desde hoje", "há 1 dia", "há 12 dias" (spec/pessoas.md). */
+export function openForLabel(days: number): string {
+  if (days <= 0) return 'desde hoje';
+  return days === 1 ? 'há 1 dia' : `há ${days} dias`;
+}
+
 export function postponedLabel(count: number): string | null {
   if (count === 0) return null;
   return count === 1 ? 'adiada 1 vez' : `adiada ${count} vezes`;

@@ -64,7 +64,9 @@ export async function applyTaskDecision(
     // Undoing "finished during the day" and choosing something else reopens the task first.
     if (task.status === 'done') task = await reopenTaskIn(ctx, tx, task);
     if (task.status !== 'active') return;
-    if (decision.kind === 'schedule') {
+    if (decision.kind === 'keep') {
+      // Settled for the day, as it is: only `lastTriagedDay` changes, below.
+    } else if (decision.kind === 'schedule') {
       task = await moveIntendedDate(ctx, tx, task, decision.date, day, 'checkout');
     } else if (decision.kind === 'reflection') {
       task = { ...task, awaitingReflection: true, updatedAt: nowIso(ctx) };
@@ -279,6 +281,11 @@ export async function closePendingDays(ctx: AppContext, triages: readonly DayTri
       for (const taskId of openTasksOf(triage)) {
         const task = await tx.blocks.get(taskId);
         if (!task || task.status !== 'active' || (task.lastTriagedDay !== null && task.lastTriagedDay >= day)) continue;
+        // A waiting task is no postponement: it stays as it is, out of that day (spec/pessoas.md).
+        if (task.waiting) {
+          await tx.blocks.put({ ...task, lastTriagedDay: laterOf(task.lastTriagedDay, day), updatedAt: nowIso(ctx) });
+          continue;
+        }
         const from = task.intendedDate;
         await record(ctx, tx, 'task.postponed', 'block', task.id, day, { from, to: null, reason: 'closePendingDays' });
         if (from !== null) {

@@ -5,6 +5,7 @@ import type {
   Habit,
   HabitLog,
   Objective,
+  Person,
   PriorityList,
   Project,
   Reflection,
@@ -44,6 +45,10 @@ export interface StoreTransaction {
   resources: Repository<Resource>;
   habits: Repository<Habit>;
   habitLogs: Repository<HabitLog>;
+  people: Repository<Person>;
+  allPeople(): Promise<Person[]>;
+  /** Blocks whose text has an `@`: the ones that may cite someone (spec/pessoas.md). */
+  blocksWithMentions(): Promise<Block[]>;
   blocksInSection(sectionId: string): Promise<Block[]>;
   blocksOfProject(projectId: string): Promise<Block[]>;
   sectionsOfProject(projectId: string): Promise<Section[]>;
@@ -94,6 +99,9 @@ export interface Reader {
   habitLogsBetween(startDay: DayKey, endDay: DayKey): Promise<HabitLog[]>;
   /** Priority lists whose ids are between `fromId` and `toId` (e.g. every day of a month). */
   priorityListsBetween(fromId: string, toId: string): Promise<PriorityList[]>;
+  people(): Promise<Person[]>;
+  /** Blocks whose text has an `@`: the ones that may cite someone (spec/pessoas.md). */
+  blocksWithMentions(): Promise<Block[]>;
 }
 
 export interface AppContext {

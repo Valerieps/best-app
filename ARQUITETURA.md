@@ -65,7 +65,7 @@ Alguns pontos ainda não seguem essas regras: o fluxo de backup é chamado pela 
 
 Cada entidade é um registro separado. Um bloco existe uma vez só: notas, projetos, a wiki e a nota do dia apontam para ele, sem cópias. Datas de calendário são `AAAA-MM-DD` no fuso local, e o dia vira à meia-noite (ADR-005). Semanas são semanas ISO, como `2026-W42` (ADR-020). Os ids são UUIDs, e todo registro tem `createdAt` e `updatedAt`. Os tipos estão em `src/domain/entities.ts`.
 
-### Tabelas implementadas (versão 7 do banco)
+### Tabelas implementadas (versão 8 do banco)
 
 **`blocks`**: tarefas e notas.
 
@@ -84,6 +84,7 @@ Cada entidade é um registro separado. Um bloco existe uma vez só: notas, proje
 | `deadline` | Prazo máximo (1b) |
 | `awaitingReflection` | Deixada para "decidir na Revisão de Foco" (2; o nome gravado é antigo, ADR-039) |
 | `carriedOrder` | `{ day, position }`: ordem entre as tarefas de outros dias, só enquanto `day` é a data de intenção (ADR-040) |
+| `waiting` | Tarefa aguardando, que alguém me deve; a `intendedDate` dela é a data para cobrar (ADR-049) |
 | `closedAt`, `createdAt`, `updatedAt` | Datas e horários |
 
 **`sections`**: as seções da nota do dia.
@@ -100,13 +101,15 @@ Cada entidade é um registro separado. Um bloco existe uma vez só: notas, proje
 
 **`projects`**: `name`, `status` (`active`, `finished` ou `merged`), `finishedAt`, `mergedInto` e `keepSeparateFrom` (assistente de projetos repetidos), `objectiveId` (4) e `icon` (2).
 
+**`people`**: as pessoas citadas com `@Nome`: `name` (uma palavra), `status` (`active`, `archived` ou `merged`) e `mergedInto`. A menção não é gravada à parte: fica no texto do bloco e é lida de novo a cada consulta; renomear e juntar reescrevem o texto das linhas (ADR-049).
+
 **`days`**: `day` (chave), `lastCheckoutAt` e, a partir da seção 3, `startedAt`, `warmup` (resultado de cada item do dia) e `executionStartedAt`; `sectionOrder`, a ordem das partes da nota do dia quando eu a mudo (ADR-040). Se o checkout está pendente é sempre calculado a partir dos blocos; esta tabela só guarda o que não dá para calcular. A etapa do dia também é calculada (ADR-023).
 
 **`priorities`**: listas ordenadas, com id `escopo:período`. `day:2026-10-11` guarda as tarefas escolhidas à mão para o dia; as tarefas com prazo no dia entram na leitura (ADR-017). `focusProjects` guarda a lista única de até 3 projetos em foco; cada mudança grava um evento com a lista inteira, que é o histórico lido pelo raio-x (ADR-038). As listas `weekProjects:2026-W42`, de antes das revisões, ficam como histórico dos dias anteriores à primeira mudança.
 
 **`reflections`**: as revisões, `kind` `focus` ou `direction`. A revisão em andamento tem id fixo (`focus:open`, `direction:open`); ao fechar, vira `kind:id` com `start`, `end` e `closedAt`, e não reabre (ADR-039). Textos livres (melhores momentos, o que pode melhorar). Os registros `week:2026-W41` e `month:2026-10`, das reflexões antigas, contam como a última revisão de cada tipo.
 
-**`settings`**: um registro só, id `main`: cadência das revisões (`reviewCadence`, ADR-039), dias ativos, checklist do warm up, limites das cores de "Colocar ordem na casa", em dias de espera (`cleanupAgeLimits`, ADR-045; o antigo `cleanupLimits`, por quantidade, não é mais lido), coluna fixada da página do projeto e grupos abertos da lista de projetos (ADR-036). Entra no backup.
+**`settings`**: um registro só, id `main`: cadência das revisões (`reviewCadence`, ADR-039), dias ativos, checklist do warm up, limites das cores dos "Assistentes", em dias de espera (`cleanupAgeLimits`, ADR-045; o antigo `cleanupLimits`, por quantidade, não é mais lido), coluna fixada da página do projeto e grupos abertos da lista de projetos (ADR-036). Entra no backup.
 
 **`reminders`**: lembretes que voltam dentro do app (3): origem, texto, `dueAt` e `status` (`pending`, `done` ou `dropped`). O app nunca manda notificação (ADR-024).
 
@@ -127,7 +130,7 @@ Cada entidade é um registro separado. Um bloco existe uma vez só: notas, proje
 
 ### Mudanças de esquema
 
-Cada mudança no esquema sobe a versão do banco no Dexie (`infrastructure/db.ts`) e a `BACKUP_SCHEMA_VERSION`, que andam juntas, e o `parseBackup` aprende a converter backups antigos (`upgradeTables`). Uma migração que transforma dados, como a da versão 6, usa uma função pura do domínio, testada sem banco. Cada versão tem a sua ADR (016, 019, 022, 025, 035 e 038).
+Cada mudança no esquema sobe a versão do banco no Dexie (`infrastructure/db.ts`) e a `BACKUP_SCHEMA_VERSION`, que andam juntas, e o `parseBackup` aprende a converter backups antigos (`upgradeTables`). Uma migração que transforma dados, como a da versão 6, usa uma função pura do domínio, testada sem banco. Cada versão tem a sua ADR (016, 019, 022, 025, 035, 038 e 049).
 
 ## 5. Consultas derivadas (implementado)
 
@@ -141,7 +144,7 @@ Nada disso é guardado: é calculado a partir das tabelas, por funções de `app
 | Wiki | Seções com `notesDestination = 'wiki'`, cada entrada com as notas da seção, em ordem cronológica |
 | Projeto | Seções, tarefas e notas com o `projectId` dele, agrupadas em travadas, próximos dias, sem data e feitas |
 | Lista de projetos | Projetos por status, projetos em foco e mapa de atividade calculado dos eventos (ADR-034) |
-| "Colocar ordem na casa" | Contagens de cada assistente e a cor pela idade do item mais antigo, com os limites das configurações (ADR-045) |
+| "Assistentes" (antes "Colocar ordem na casa") | Contagens de cada assistente e a cor pela idade do item mais antigo, com os limites das configurações (ADR-045) |
 | Abertura do dia | Etapa do dia (iniciar, warm up, dashboard, execução) e lembretes vencidos (ADR-023) |
 | Revisões e métricas | Eventos desde a última revisão de cada tipo passados às funções de métricas (seção 9); disponibilidade de cada revisão por cadência e sinais (`application/reviewQueries.ts`, ADR-039) |
 

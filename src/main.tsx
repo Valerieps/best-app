@@ -4,6 +4,7 @@ import { registerServiceWorker } from './infrastructure/browser';
 import { App } from './ui/App';
 import { ErrorBoundary } from './ui/components/ErrorBoundary';
 import { AppError } from './ui/components/ErrorScreens';
+import { PeopleProvider } from './ui/people/PeopleContext';
 import { appContext } from './ui/services';
 import { restoreUnsavedLines } from './ui/unsavedLines';
 import './ui/theme/global.css';
@@ -14,7 +15,9 @@ restoreUnsavedLines(appContext).catch((error: unknown) => console.error('Não fo
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <ErrorBoundary fallback={(error) => <AppError error={error} />}>
-      <App />
+      <PeopleProvider>
+        <App />
+      </PeopleProvider>
     </ErrorBoundary>
   </StrictMode>,
 );

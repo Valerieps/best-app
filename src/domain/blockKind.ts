@@ -13,6 +13,8 @@ export interface KindDetector {
 }
 
 const TASK_MARKER = /^\[\]\s/;
+/** "[a] ": a task someone owes me, "a" de aguardando (spec/pessoas.md). */
+const WAITING_MARKER = /^\[[aA]\]\s/;
 
 export const taskDetector: KindDetector = {
   kind: 'task',
@@ -21,7 +23,8 @@ export const taskDetector: KindDetector = {
 
 export const KIND_DETECTORS: readonly KindDetector[] = [taskDetector];
 
-export function detectKind(text: string): { kind: BlockKind; text: string } {
+export function detectKind(text: string): { kind: BlockKind; text: string; waiting?: true } {
+  if (WAITING_MARKER.test(text)) return { kind: 'task', text: text.replace(WAITING_MARKER, ''), waiting: true };
   for (const detector of KIND_DETECTORS) {
     const stripped = detector.match(text);
     if (stripped !== null) return { kind: detector.kind, text: stripped };

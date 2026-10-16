@@ -5,7 +5,7 @@
 
 ## Tarefas *(1a)*
 
-- Tarefas que ainda não foram finalizadas, arquivadas ou abandonadas moram na lista de tarefas ativas. É dela que eu escolho as tarefas no planejamento do dia seguinte.
+- Tarefas que ainda não foram finalizadas, arquivadas ou abandonadas moram na lista de tarefas ativas. É dela que eu escolho as tarefas no planejamento do dia seguinte. A tarefa aguardando, que alguém me deve, fica fora dessa lista (`pessoas.md`, "Aguardando").
 - Toda tarefa guarda o vínculo com a seção em que foi originalmente criada, com o título e o horário da seção. Se a seção está vinculada a um projeto, a tarefa também fica vinculada a ele.
 - A tarefa tem uma data de intenção de execução, definida no fechamento do dia. Definir essa data é escolher o dia em que a tarefa aparece na nota do dia. Quando a data chega, a tarefa aparece sozinha na nota daquele dia.
 - Conta como adiamento toda mudança da data de intenção para depois, e também a tarefa que passa pelo fechamento do dia sem ter sido feita no dia da intenção, inclusive quando ela vai sozinha para o dia seguinte. Tirar a data de intenção, deixando a tarefa sem data, também conta como adiamento.

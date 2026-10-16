@@ -54,10 +54,14 @@ export function previousStep(plan: readonly CheckoutStep[], current: CheckoutSte
   return [...plan.slice(0, Math.max(index, 0))].reverse().find((step) => stepHasItems(step, counts)) ?? null;
 }
 
-export type AttentionReason = 'postponed' | 'deadline';
+export type AttentionReason = 'waiting' | 'postponed' | 'deadline';
 
-/** Why a task asks for a decision: postponed too often, or a deadline before "dia seguinte". */
+/**
+ * Why a task asks for a decision: someone owes it to me, it was postponed too often, or its
+ * deadline is before "dia seguinte".
+ */
 export function attentionReason(task: Block): AttentionReason {
+  if (task.waiting) return 'waiting';
   return task.postponeCount >= POSTPONE_ATTENTION_THRESHOLD ? 'postponed' : 'deadline';
 }
 

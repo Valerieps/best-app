@@ -131,4 +131,12 @@ export class DexieReader implements Reader {
   priorityListsBetween(fromId: string, toId: string) {
     return this.db.priorities.where('id').between(fromId, toId, true, true).toArray();
   }
+
+  people() {
+    return this.db.people.toArray();
+  }
+
+  blocksWithMentions() {
+    return this.db.blocks.filter((block) => block.text.includes('@')).toArray();
+  }
 }

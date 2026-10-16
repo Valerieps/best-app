@@ -19,7 +19,9 @@ export type TaskDecision =
   /** Section 2: "decidir na reflexão semanal". */
   | { kind: 'reflection' }
   /** Section 6: the task becomes a habit. */
-  | { kind: 'habit' };
+  | { kind: 'habit' }
+  /** A waiting task stays as it is, without a new follow-up date (spec/pessoas.md). */
+  | { kind: 'keep' };
 
 /** `weeklyReflection` (section 2) leaves the notes for the weekly reflection. */
 export type NotesDecision = 'wiki' | 'discarded' | 'weeklyReflection';
@@ -124,6 +126,11 @@ export function buildDayTriage(input: DayTriageInput): DayTriage {
   const open: OpenTask[] = [];
   const addPending = (task: Block, section: Section | null) => {
     open.push({ task, section });
+    // Something a person owes me never rolls over on its own: it asks what to do (spec/pessoas.md).
+    if (task.waiting) {
+      rows.push({ type: 'task', task, section, suggestion: { kind: 'keep' }, attention: true });
+      return;
+    }
     const postponedOften = task.postponeCount >= POSTPONE_ATTENTION_THRESHOLD;
     const pastDeadline = task.deadline != null && task.deadline < nextDay;
     if (!postponedOften && !pastDeadline) {

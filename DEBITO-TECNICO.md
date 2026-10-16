@@ -23,6 +23,7 @@ Estes pontos não puderam ser testados no navegador embutido do Claude Code.
 - [ ] **Troca na Revisão de Foco, pela interface.** No navegador, desmarcar um projeto em foco e marcar outro em seguida deixou a lista com só 2 projetos. Provavelmente o segundo clique caiu antes de a caixa ser liberada (a tela leva cerca de 700 ms para atualizar), mas pode ser bug. Os testes do caso de uso passam.
 - [ ] **Finalizar um projeto em foco pela interface** (deve liberar a vaga e mostrar o card tracejado). Só os testes do caso de uso cobrem.
 - [ ] **"Nova data" das tarefas travadas.** Abre o calendário nativo com `showPicker`, que o navegador embutido não mostra; não foi conferido que a data escolhida é gravada.
+- [ ] **Pessoas, pela interface** (15/10/2026; só os testes cobrem): digitar `@` numa linha e escolher uma pessoa com as setas e Enter, ou com o mouse; sair da linha com um nome novo e ver a pessoa criada; `[a] ` numa linha vazia e numa tarefa já escrita; o "Aguardando" no hover; a migração para a versão 8 com os seus dados de verdade; e renomear, juntar, arquivar e apagar na página da pessoa.
 - [ ] **Layout em telas estreitas** (cards empilhados abaixo de 900 px, mapa das linhas escondido abaixo de 640 px) e com nomes longos.
 - [ ] **Tooltip do mapa nas bordas.** Os das 2 primeiras e das 3 últimas colunas abrem para dentro; não foi conferido em todos os tamanhos de card.
 
