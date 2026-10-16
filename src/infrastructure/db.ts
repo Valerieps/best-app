@@ -1,4 +1,4 @@
-import Dexie, { type Table } from 'dexie';
+import Dexie, { type Table, type Transaction } from 'dexie';
 import type { BackupTables } from '../application/backup';
 import type {
   Block,
@@ -35,6 +35,32 @@ export interface Snapshot {
 
 export const DATABASE_NAME = 'best-app';
 
+/** The last version declared below; raise it with each new `this.version(n)`. */
+export const DATABASE_VERSION = 9;
+
+/** Snapshot of the data as it was before the last database upgrade (ADR-059). */
+export const UPGRADE_SNAPSHOT_ID = 'beforeUpgrade';
+
+const snapshotted = new WeakSet<Transaction>();
+
+/**
+ * Copies every user table into `snapshots` before an upgrade changes any row, so a migration
+ * with a bug can be undone by hand. When several versions upgrade in one go, only the first
+ * copy is kept: it is the data as the previous app left it. Runs inside the upgrade
+ * transaction, so a failed upgrade leaves no copy and no change.
+ */
+export async function snapshotBeforeUpgrade(tx: Transaction, now: Date = new Date()): Promise<void> {
+  if (snapshotted.has(tx)) return;
+  snapshotted.add(tx);
+  const tables: Record<string, unknown[]> = {};
+  // The stores that exist at this step; later versions' tables are not created yet.
+  for (const name of Array.from(tx.idbtrans.objectStoreNames)) {
+    if (name === 'snapshots' || name === 'meta') continue;
+    tables[name] = await tx.table(name).toArray();
+  }
+  await tx.table('snapshots').put({ id: UPGRADE_SNAPSHOT_ID, createdAt: now.toISOString(), tables });
+}
+
 export class AppDatabase extends Dexie {
   blocks!: Table<Block, string>;
   sections!: Table<Section, string>;
@@ -56,7 +82,10 @@ export class AppDatabase extends Dexie {
   constructor(name = DATABASE_NAME) {
     super(name);
     // Each database version matches the BACKUP_SCHEMA_VERSION of the same number.
-    // Only indexed fields are listed here.
+    // Only indexed fields are listed here. Rules for new versions (ADR-059): only add tables,
+    // indexes or optional fields; never drop or rename in the same release; every `upgrade`
+    // calls `snapshotBeforeUpgrade` first; `backup.ts` gets the same migration; a version, once
+    // deployed, is never rolled back.
     this.version(1).stores({
       blocks: 'id, sectionId, status, intendedDate, projectId',
       sections: 'id, day, projectId',
@@ -91,6 +120,7 @@ export class AppDatabase extends Dexie {
     this.version(6)
       .stores({ priorities: 'id' })
       .upgrade(async (tx) => {
+        await snapshotBeforeUpgrade(tx);
         const table = tx.table('priorities');
         const rows = await table.toArray();
         const migrated = migrateMonthPriorityLists(rows);
@@ -102,6 +132,7 @@ export class AppDatabase extends Dexie {
     this.version(7)
       .stores({ priorities: 'id' })
       .upgrade(async (tx) => {
+        await snapshotBeforeUpgrade(tx);
         const table = tx.table('priorities');
         const rows = await table.toArray();
         const migrated = migrateToFocusList(rows, toDayKey(new Date()));
@@ -111,6 +142,7 @@ export class AppDatabase extends Dexie {
     this.version(8)
       .stores({ blocks: 'id, sectionId, status, intendedDate, projectId, deadline' })
       .upgrade(async (tx) => {
+        await snapshotBeforeUpgrade(tx);
         await tx
           .table('blocks')
           .where('status')
