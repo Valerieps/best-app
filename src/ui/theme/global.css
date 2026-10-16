@@ -1993,18 +1993,18 @@ button.plan-row--on:hover {
 }
 
 /* "Fechar o dia", step "Tarefas": checkbox, the row, and its actions on hover. */
-.triage-row {
+.checkout-task {
   display: flex;
   align-items: center;
   gap: var(--space-2);
 }
 
-.triage-row > .plan-row {
+.checkout-task > .plan-row {
   flex: 1 1 auto;
   min-width: 0;
 }
 
-.triage-row__actions {
+.checkout-task__actions {
   display: flex;
   align-items: center;
   gap: 2px;
@@ -2012,9 +2012,9 @@ button.plan-row--on:hover {
   transition: opacity var(--motion-fast) ease;
 }
 
-.triage-row:hover .triage-row__actions,
-.triage-row:focus-within .triage-row__actions,
-.triage-row__actions--open {
+.checkout-task:hover .checkout-task__actions,
+.checkout-task:focus-within .checkout-task__actions,
+.checkout-task__actions--open {
   opacity: 1;
 }
 
