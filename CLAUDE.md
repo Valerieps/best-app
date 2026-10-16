@@ -100,6 +100,9 @@ Portuguese; ADRs, code and this file in English.
 
 ## Deployment
 Cloudflare Pages, from the private repository. Build command `npm run build`, output directory `dist`.
+GitHub Actions (`.github/workflows/ci.yml`) runs the same build on every pull request. Merge a pull
+request only after its "CI / build" check passes (`gh pr checks <n> --watch`); `main` has no branch
+protection to enforce it (ADR-058). No `dev` branch: each branch's Cloudflare preview is the staging.
 
 ## Code Conventions
 - Keep Domain Entities free of framework dependencies
