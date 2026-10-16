@@ -99,10 +99,12 @@ Portuguese; ADRs, code and this file in English.
 - `npm run preview` - serve the production build locally
 
 ## Deployment
-Cloudflare Pages, from the private repository. Build command `npm run build`, output directory `dist`.
-GitHub Actions (`.github/workflows/ci.yml`) runs the same build on every pull request. Merge a pull
-request only after its "CI / build" check passes (`gh pr checks <n> --watch`); `main` has no branch
-protection to enforce it (ADR-058). No `dev` branch: each branch's Cloudflare preview is the staging.
+Cloudflare Pages, from the public GitHub repository. Build command `npm run build`, output directory `dist`.
+GitHub Actions (`.github/workflows/ci.yml`) runs the same build on every pull request. Branch
+protection on `main` requires its `build` check and a branch up to date with `main` before merging
+(ADR-058): wait with `gh pr checks <n> --watch`, and if the merge is refused because the branch is
+behind, bring it up to date and wait again. No direct pushes to `main`. No `dev` branch: each
+branch's Cloudflare preview is the staging.
 
 ## Code Conventions
 - Keep Domain Entities free of framework dependencies
