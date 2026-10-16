@@ -20,4 +20,4 @@ A Revisão de Foco escolhe projetos, e o fechamento do dia escolhe tarefas. Não
 - Os projetos em foco são até 3 projetos e formam uma lista separada das prioridades do dia.
 - Eu os escolho na Revisão de Foco, e eles valem até a próxima. Fora dela, posso adicionar um projeto à lista a qualquer momento, enquanto houver vaga, pela lista de projetos ou pela página do projeto. Trocar ou tirar um projeto da lista só é possível na Revisão de Foco.
 - Finalizar um projeto em foco tira o projeto da lista e libera a vaga. Reabrir o projeto não o devolve à lista; se eu quiser, adiciono de novo enquanto houver vaga.
-- No planejamento do dia seguinte, o fechamento mostra as tarefas dos projetos em foco primeiro, para eu escolher entre elas as tarefas do dia seguinte (`checkout.md`, "Planejamento do dia seguinte e fim do dia").
+- No planejamento do dia seguinte, o fechamento mostra as tarefas dos projetos em foco primeiro, para eu escolher entre elas as tarefas do dia seguinte (`checkout.md`, "Quadros do fechamento e fim do dia").

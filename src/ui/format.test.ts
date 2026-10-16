@@ -9,6 +9,7 @@ import {
   pendingDaysSentence,
   postponedLabel,
   relativeDay,
+  boardDayLabel,
   stuckReasonLabel,
 } from './format';
 
@@ -17,6 +18,12 @@ const today = '2026-10-11'; // a Sunday
 describe('format', () => {
   it('writes the day note date', () => {
     expect(formatLongDate(today)).toBe('Domingo, 11 de outubro');
+  });
+
+  it('names the columns of a board with the weekday and the day of the month', () => {
+    expect(boardDayLabel('2026-10-11', today)).toBe('Hoje · dom 11');
+    expect(boardDayLabel('2026-10-12', today)).toBe('Amanhã · seg 12');
+    expect(boardDayLabel('2026-10-14', today)).toBe('Qua 14');
   });
 
   it('names days relative to today', () => {

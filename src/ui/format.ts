@@ -8,6 +8,13 @@ function capitalize(text: string): string {
   return text.charAt(0).toUpperCase() + text.slice(1);
 }
 
+/** A column of a checkout board: "Hoje · sex 16", "Amanhã · sáb 17", or "Seg 19". */
+export function boardDayLabel(day: DayKey, today: DayKey): string {
+  const weekday = `${weekdayName(day).slice(0, 3)} ${fromDayKey(day).getDate()}`;
+  if (day === today || day === addDays(today, 1)) return `${capitalize(relativeDay(day, today))} · ${weekday}`;
+  return capitalize(weekday);
+}
+
 /** "Domingo, 11 de outubro" */
 export function formatLongDate(day: DayKey): string {
   return capitalize(fromDayKey(day).toLocaleDateString('pt-BR', { weekday: 'long', day: 'numeric', month: 'long' }));

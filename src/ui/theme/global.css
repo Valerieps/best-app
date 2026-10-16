@@ -4705,3 +4705,53 @@ button:not(.link, .day-part__handle):active:not(:disabled) {
   padding: var(--space-3) var(--space-4);
   font-size: var(--font-size-sm);
 }
+
+/* "Fechar o dia", boards: the drop zones above the board, and the card with its box. */
+.plan-drops {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-3);
+  margin-top: var(--space-3);
+}
+
+.plan-drop {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  min-height: 48px;
+  padding: var(--space-2);
+  border: var(--border-width) dashed var(--color-border-strong);
+  border-radius: var(--radius-md);
+  color: var(--color-text-muted);
+  font-size: var(--font-size-sm);
+}
+
+.plan-drop--danger {
+  color: var(--color-danger);
+}
+
+.plan-drop--on {
+  border-style: solid;
+  border-color: var(--color-accent);
+  background: var(--color-select-bg);
+}
+
+.plan-drop--danger.plan-drop--on {
+  border-color: var(--color-danger);
+}
+
+.plan-card__row {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-2);
+}
+
+.plan-card__row > input[type='checkbox'] {
+  flex: none;
+  margin-top: 3px;
+}
+
+.plan-card__done {
+  text-decoration: line-through;
+}

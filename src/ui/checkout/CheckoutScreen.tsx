@@ -1,19 +1,20 @@
 import { useEffect, useState } from 'react';
-import { loadDayTriage, loadReminderQuestions } from '../../application/queries';
+import { applyTriage, completeCheckout, defaultClosingDecisions } from '../../application/checkout';
+import type { Reader } from '../../application/ports';
+import { loadDayTriage, loadPlanning, loadReminderQuestions } from '../../application/queries';
 import { checkoutSteps, nextStep, previousStep, stepCounts, type CheckoutStep } from '../../domain/checkoutSteps';
 import type { DayKey } from '../../domain/day';
 import type { Project, Reminder } from '../../domain/entities';
 import type { DayTriage } from '../../domain/triage';
+import { Fireworks, playPlim } from '../components/Celebration';
 import { BackButton } from '../components/ScreenHeader';
 import { LoadingPage } from '../components/Skeleton';
-import { formatLongDate, relativeDay } from '../format';
+import { formatLongDate } from '../format';
 import { navigate, type Route } from '../hooks';
 import { loadLatest } from '../loadLatest';
-import { reader } from '../services';
-import { PlanningStep } from './PlanningStep';
+import { appContext, reader } from '../services';
+import { BoardStep } from './BoardStep';
 import { ReminderStep } from './ReminderStep';
-import type { StepProps } from './StepParts';
-import { TriageStep } from './TriageStep';
 
 interface Props {
   day: DayKey;
@@ -22,17 +23,12 @@ interface Props {
   from?: 'rituals';
 }
 
-function stepLabel(step: CheckoutStep, nextDay: DayKey, today: DayKey): string {
-  switch (step) {
-    case 'triage':
-      return 'Tarefas';
-    case 'reminders':
-      return 'Lembretes';
-    case 'planning': {
-      const label = relativeDay(nextDay, today);
-      return label.charAt(0).toUpperCase() + label.slice(1);
-    }
-  }
+const STEP_LABELS: Record<CheckoutStep, string> = { late: 'Atrasadas', triage: 'Tarefas', reminders: 'Lembretes' };
+
+/** How many late tasks the first board has: dated before today, and not in the triage of the day. */
+async function countLate(source: Reader, triage: DayTriage, today: DayKey): Promise<number> {
+  const view = await loadPlanning(source, triage.nextDay, today, { exclude: new Set(triage.rows.map((row) => row.task.id)) });
+  return view.columns.find(({ column }) => column.kind === 'late')?.items.length ?? 0;
 }
 
 /**
@@ -42,6 +38,8 @@ function stepLabel(step: CheckoutStep, nextDay: DayKey, today: DayKey): string {
  */
 export function CheckoutScreen({ day, today, from }: Props) {
   const [triage, setTriage] = useState<DayTriage | null>(null);
+  const [late, setLate] = useState(0);
+  const [celebrating, setCelebrating] = useState(false);
   const [projects, setProjects] = useState<Project[]>([]);
   const [reminders, setReminders] = useState<Reminder[]>([]);
   const [remindersAnswered, setRemindersAnswered] = useState(false);
@@ -55,9 +53,17 @@ export function CheckoutScreen({ day, today, from }: Props) {
   useEffect(
     () =>
       loadLatest(
-        () => Promise.all([loadDayTriage(reader, day, today), reader.projects(), loadReminderQuestions(reader, day)]),
-        ([dayTriage, allProjects, questions]) => {
-          const steps = checkoutSteps(stepCounts(dayTriage, questions.length));
+        async () => {
+          const [dayTriage, allProjects, questions] = await Promise.all([
+            loadDayTriage(reader, day, today),
+            reader.projects(),
+            loadReminderQuestions(reader, day),
+          ]);
+          return [dayTriage, allProjects, questions, await countLate(reader, dayTriage, today)] as const;
+        },
+        ([dayTriage, allProjects, questions, lateCount]) => {
+          const steps = checkoutSteps(stepCounts(lateCount, questions.length));
+          setLate(lateCount);
           setProjects(allProjects);
           setReminders(questions);
           setTriage(dayTriage);
@@ -73,37 +79,38 @@ export function CheckoutScreen({ day, today, from }: Props) {
   if (!triage || !step) return <LoadingPage title={`Fechar o dia · ${formatLongDate(day)}`} />;
 
   const reminderCount = (answered: boolean) => (answered ? 0 : reminders.length);
-  const counts = stepCounts(triage, reminderCount(remindersAnswered));
+  const counts = stepCounts(late, reminderCount(remindersAnswered));
   const previous = previousStep(plan, step, counts);
   const onBack = previous ? () => setStep(previous) : null;
+  const last = nextStep(plan, step, counts) === null;
+  const primary = last ? 'Finalizar meu dia ✦' : 'Seguir';
 
-  /** Saves a batch of the current step and reloads the triage, staying on the step. */
-  async function onApply(apply: () => Promise<void>) {
-    setBusy(true);
-    try {
-      await apply();
-      setTriage(await loadDayTriage(reader, day, today));
-    } finally {
-      setBusy(false);
-    }
-  }
-
-  async function onNext(apply?: () => Promise<void>) {
+  /** Saves the step (`apply`), then moves to the next step with something to decide, or finishes the day. */
+  async function onNext(apply: () => Promise<void>) {
     if (!step) return;
     setBusy(true);
     try {
-      if (apply) await apply();
+      await apply();
+      const fresh = await loadDayTriage(reader, day, today);
+      if (last) {
+        // Whatever is still open (a task added meanwhile, or the notes) is settled.
+        await applyTriage(appContext, day, defaultClosingDecisions(fresh));
+        await completeCheckout(appContext, day);
+        playPlim();
+        setCelebrating(true);
+        return;
+      }
       const answered = remindersAnswered || step === 'reminders';
-      const fresh = apply ? await loadDayTriage(reader, day, today) : triage!;
+      const lateCount = await countLate(reader, fresh, today);
       setTriage(fresh);
+      setLate(lateCount);
       setRemindersAnswered(answered);
-      setStep(nextStep(plan, step, stepCounts(fresh, reminderCount(answered))) ?? 'planning');
+      setStep(nextStep(plan, step, stepCounts(lateCount, reminderCount(answered))) ?? 'triage');
     } finally {
       setBusy(false);
     }
   }
 
-  const props: StepProps = { day, today, triage, projects, busy, onBack, onNext };
   const current = plan.indexOf(step);
 
   return (
@@ -125,17 +132,30 @@ export function CheckoutScreen({ day, today, from }: Props) {
                 aria-current={index === current ? 'step' : undefined}
               >
                 <span className="checkout-stepper__bar" aria-hidden="true" />
-                <span className="checkout-stepper__label">{stepLabel(each, triage.nextDay, today)}</span>
+                <span className="checkout-stepper__label">{STEP_LABELS[each]}</span>
               </li>
             ))}
           </ol>
         </nav>
-        {step === 'triage' && <TriageStep key={step} {...props} onApply={onApply} />}
-        {step === 'reminders' && <ReminderStep key={step} reminders={reminders} busy={busy} onBack={onBack} onNext={onNext} />}
-        {step === 'planning' && (
-          <PlanningStep key={step} day={day} target={triage.nextDay} today={today} onBack={onBack} onDone={() => navigate(origin)} />
+        {(step === 'late' || step === 'triage') && (
+          <BoardStep
+            key={step}
+            mode={step}
+            day={day}
+            today={today}
+            triage={triage}
+            projects={projects}
+            busy={busy}
+            onBack={onBack}
+            onNext={onNext}
+            primary={primary}
+          />
+        )}
+        {step === 'reminders' && (
+          <ReminderStep key={step} reminders={reminders} busy={busy} onBack={onBack} onNext={onNext} primary={primary} />
         )}
       </div>
+      {celebrating && <Fireworks onDone={() => navigate(origin)} />}
     </main>
   );
 }

@@ -17,9 +17,9 @@ O "Fechar o dia" é curto, de cerca de um minuto: ele cuida só do que perece de
 - As notas não passam pelo fechamento: as de todas as seções, gerais ou de reunião, com projeto ou em quadro branco, ficam onde foram escritas, e as de seções vinculadas também aparecem na página do projeto (veja "Regras da auto-triagem" e `nota-do-dia.md`, "Notas depois do dia").
 - As seções em quadro branco também não passam pelo fechamento. Se o dia termina com uma seção em quadro branco, o conteúdo dela fica sem vínculo com projeto, e o assistente "Seções soltas" oferece converter em projeto ou vincular depois (`assistentes.md`).
 - O fechamento não parte do princípio de que uma tarefa sem data vai para o dia seguinte: as datas que eu dei durante o dia ficam exatamente como estão. Passam pelo fechamento só as tarefas abertas sem data, as que estão com a data do próprio dia (escritas com data de hoje ou vindas de outro dia) e as tarefas aguardando (`pessoas.md`). As que têm data futura já têm destino e ficam de fora.
-- As tarefas são triadas em lote, agrupadas por projeto. Numa seção vinculada a um projeto, elas continuam vinculadas a ele.
+- As tarefas são triadas em quadros (veja "Quadros do fechamento e fim do dia"). Numa seção vinculada a um projeto, elas continuam vinculadas a ele.
 - Um fechamento é considerado finalizado quando o dia termina sem nenhum item pendente para triagem.
-- Dentro de cada projeto, a triagem mostra as tarefas na mesma ordem da nota do dia, inclusive a que eu escolhi ao reordenar (`nota-do-dia.md`, "Ordem das linhas e das seções"). Os projetos aparecem na ordem da primeira tarefa de cada um, e as tarefas sem projeto ficam por último. *(1b)*
+- Na coluna "Sem data", as tarefas aparecem na mesma ordem da nota do dia, inclusive a que eu escolhi ao reordenar (`nota-do-dia.md`, "Ordem das linhas e das seções"). Os projetos aparecem na ordem da primeira tarefa de cada um, e as tarefas sem projeto ficam por último. *(1b)*
 
 ## Destinos
 
@@ -41,13 +41,17 @@ O "Fechar o dia" é curto, de cerca de um minuto: ele cuida só do que perece de
 - As notas vinculadas como recurso continuam na página do projeto, porque as notas não moram num lugar só. *(4)*
 - Um lembrete ignorado continua na faixa da nota do dia até o fechamento, onde o item vira pergunta: manter, mudar ou largar. "Manter" vem pré-selecionado, porque largar tira o item de circulação. *(3)*
 
-## Planejamento do dia seguinte e fim do dia
+## Quadros do fechamento e fim do dia
 
-- Depois da triagem, eu faço o planejamento do dia seguinte: cada tarefa tem uma data, e eu posso mudar a de qualquer uma, para outro dia do quadro, para outra data ou para "sem data". A tela é um quadro de 3 colunas, como um kanban, em que cada tarefa é um card. Se houver tarefas atrasadas (com data antes de hoje), todas ficam juntas na primeira coluna, da data mais antiga para a mais nova. As outras colunas são as próximas datas: hoje, se houver tarefa com a data de hoje, e o dia seguinte com os dias depois dele, até completar as 3 colunas. As tarefas sem data não aparecem no planejamento: elas são o "algum dia" e ficam na lista de tarefas; as com data depois da última coluna também ficam de fora. Nada é finalizado ali, e a tarefa que eu não mudo fica como estava: com a data dela, ou sem data na lista de tarefas. *(1a)*
-- Eu mudo a data de um card arrastando-o para a coluna de outro dia, ou pelo campo de data do próprio card. Um card que muda para um dia do quadro vai para a coluna dele; um que fica sem data ou vai para depois do quadro continua onde estava, esmaecido e com o destino marcado, até eu finalizar o dia. A coluna das atrasadas não recebe cards. *(1a)*
-- No planejamento, eu posso mudar a data de várias tarefas de uma vez: entro no modo de seleção, seleciono os cards (Shift + clique seleciona um intervalo, e cada coluna tem "selecionar a coluna") e escolho a data numa barra no rodapé. Selecionar um card só o destaca, sem caixinha, para nunca parecer que finaliza a tarefa. *(1a)*
-- No planejamento do dia seguinte, as tarefas dos projetos em foco aparecem primeiro (`prioridades.md`, "Projetos em foco"). *(2)*
-- Quando tudo for triado, aparece o botão "finalizar meu dia" com sonzinho de "plim" e uma rápida animação de fogos de artifício. *(1a)*
+- O fechamento das tarefas é feito em quadros, como um kanban, em que cada tarefa é um card só com o texto dela e o nome do projeto. Cada coluna de dia mostra o dia da semana e o dia do mês, e hoje e amanhã continuam com o nome ("Amanhã · sáb 17"). *(1a)*
+- Primeiro vem o quadro das atrasadas, quando houver tarefas com data antes de hoje: todas ficam juntas na primeira coluna, da data mais antiga para a mais nova, e as outras colunas são o dia seguinte e os dias depois dele, até completar as 3 colunas. A coluna das atrasadas não recebe cards. *(1a)*
+- Depois vem o quadro das tarefas do dia, as que passam pelo fechamento: elas ficam na primeira coluna, "Sem data", cada uma com a caixinha de finalizar, e as outras colunas são o dia seguinte e os dois dias depois dele, com todas as tarefas que já estavam agendadas para cada um, inclusive as atrasadas que eu agendei no quadro anterior. A coluna "Sem data" não recebe cards. *(1a)*
+- As tarefas sem data que não são do dia não aparecem nos quadros: elas são o "algum dia" e ficam na lista de tarefas; as com data depois da última coluna também ficam de fora. *(1a)*
+- Eu mudo a data de um card arrastando-o para a coluna de outro dia. Acima do quadro há duas áreas para soltar o card: "Remover data de intenção" e "Abandonar tarefa". Um card que muda para um dia do quadro vai para a coluna dele; um que fica sem data, vai para depois do quadro ou é abandonado continua onde estava, esmaecido e com o destino marcado. Nada é gravado até eu clicar em seguir (ou "Finalizar meu dia"): só aí as datas mudam, as tarefas marcadas são finalizadas e as abandonadas saem de circulação. *(1a)*
+- A tarefa do dia que eu não mexo vai para a lista de tarefas, sem data; a de outro dia que eu não mexo fica como estava. *(1a)*
+- Nos quadros, eu posso mudar a data de várias tarefas de uma vez: entro no modo de seleção, seleciono os cards (Shift + clique seleciona um intervalo, e cada coluna tem "selecionar a coluna") e escolho a data numa barra no rodapé. Selecionar um card só o destaca, sem caixinha, para nunca parecer que finaliza a tarefa. *(1a)*
+- Nas colunas de dia dos quadros, as tarefas dos projetos em foco aparecem primeiro (`prioridades.md`, "Projetos em foco"). *(2)*
+- Na última etapa, o botão "finalizar meu dia" vem com sonzinho de "plim" e uma rápida animação de fogos de artifício. *(1a)*
 
 ## Fechamento em lote
 
@@ -55,15 +59,15 @@ O fechamento é em lote: eu seleciono várias tarefas e decido o destino de toda
 
 ### Fechamento em etapas
 
-Mostrar tudo numa tela só pesava, porque misturava tipos de decisão diferentes. O fechamento é uma sequência de etapas, cada uma com um tipo só de decisão, e a etapa sem nada para decidir é pulada. Num dia tranquilo, sobra o planejamento.
+Mostrar tudo numa tela só pesava, porque misturava tipos de decisão diferentes. O fechamento é uma sequência de etapas, cada uma com um tipo só de decisão, e a etapa sem nada para decidir é pulada. Num dia tranquilo, sobra o quadro das tarefas do dia.
 
-1. **Tarefas:** a lista das tarefas que passam pelo fechamento, agrupadas por projeto. Na mesma tela eu decido se já fiz, se quero dar uma data ou se fica sem data. Cada linha tem a caixinha de finalizar, como na nota do dia, e as outras ações aparecem nela ao passar o mouse: levar para o dia seguinte, escolher uma data, sem data e abandonar. Para várias de uma vez, eu seleciono as linhas clicando nelas (Shift + clique seleciona um intervalo, e cada grupo tem "selecionar o grupo") e escolho a ação na barra do rodapé, com as mesmas ações. Cada grupo de projeto tem uma setinha para recolher e abrir. Depois de cada ação, de uma linha ou em lote, aparece um contador rápido do que foi feito ("3 tarefas finalizadas"), e as tarefas somem da lista. A tarefa adiada 3 vezes ou mais e a com prazo antes do dia seguinte aparecem destacadas, mas nunca mudam sozinhas. O que sobra na lista quando eu sigo vai para a lista de tarefas, sem data.
-2. **Lembretes:** um card por lembrete ignorado: manter, mudar ou largar. *(3)*
-3. **Planejamento do dia seguinte** (veja "Planejamento do dia seguinte e fim do dia").
+1. **Atrasadas:** o quadro das tarefas atrasadas, quando houver (veja "Quadros do fechamento e fim do dia").
+2. **Tarefas:** o quadro das tarefas do dia, com a coluna "Sem data" e os próximos dias. Essa etapa sempre aparece, porque fecha o dia mesmo quando está vazia.
+3. **Lembretes:** um card por lembrete ignorado: manter, mudar ou largar. *(3)*
 
 - As ações de todas as etapas são ícones, com o nome numa dica ao passar o mouse. Voltar, Seguir e "Finalizar meu dia" continuam com texto.
 - Nos cards, as opções ficam numa fileira compacta, e só a escolhida mostra a explicação e o campo de que precisa. Os números escolhem a opção e Enter avança.
-- Cada ação em lote é salva na hora, e cada etapa é salva quando eu avanço. Se eu sair no meio, o que decidi fica, e o fechamento recomeça na primeira etapa que ainda tem algo pendente.
+- Cada etapa é salva quando eu avanço. Se eu sair no meio, o que decidi fica, e o fechamento recomeça na primeira etapa que ainda tem algo pendente.
 
 ### Depois do fechamento
 
