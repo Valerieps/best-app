@@ -1,6 +1,6 @@
 import { normalizeLimits, type AssistantId } from '../domain/cleanupStatus';
 import { toDayKey } from '../domain/day';
-import type { DayNoteFocus, ProjectListGroup, Settings, WarmupItem } from '../domain/entities';
+import type { Appearance, DayNoteFocus, ProjectListGroup, Settings, WarmupItem } from '../domain/entities';
 import { record } from './events';
 import type { AppContext } from './ports';
 
@@ -52,6 +52,11 @@ export function setProjectListGroupOpen(ctx: AppContext, group: ProjectListGroup
 /** Whether the sidebar is collapsed. Kept with the settings, like the other interface choices. */
 export function setSidebarCollapsed(ctx: AppContext, collapsed: boolean): Promise<void> {
   return updateSettings(ctx, { sidebarCollapsed: collapsed });
+}
+
+/** The app's appearance; "system" follows the system and is stored as absent, the default. */
+export function setAppearance(ctx: AppContext, appearance: Appearance): Promise<void> {
+  return updateSettings(ctx, { appearance: appearance === 'system' ? undefined : appearance });
 }
 
 /** Width of the open sidebar, in pixels, set by dragging its edge; null brings back the default. */
