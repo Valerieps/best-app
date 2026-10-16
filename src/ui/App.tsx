@@ -156,7 +156,7 @@ export function App() {
               focus={focus}
             />
           )}
-          {route.name === 'checkout' && <CheckoutScreen key={route.day} day={route.day} today={today} />}
+          {route.name === 'checkout' && <CheckoutScreen key={route.day} day={route.day} today={today} from={route.from} />}
           {route.name === 'active' && <ActiveTasksScreen today={today} />}
           {route.name === 'rituals' && (
             <RitualsScreen today={today} assistant={route.assistant} pendingDays={pendingDays} reviews={reviews} />

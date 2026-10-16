@@ -3,17 +3,20 @@ import type { TriageDecisions } from '../../application/checkout';
 import type { DayKey } from '../../domain/day';
 import type { Block, Project } from '../../domain/entities';
 import type { DayTriage } from '../../domain/triage';
+import { Icon, type IconName } from '../components/Icon';
 import { Linkified } from '../components/Linkified';
 
-/** Pieces shared by the steps of the checkout (spec/checkout.md, "Checkout em etapas"). */
+/** Pieces shared by the steps of the checkout (spec/checkout.md, "Fechamento em etapas"). */
 
 export interface ChoiceOption<T extends string> {
   value: T;
   label: string;
+  /** Shown in place of the label, which becomes the tooltip. */
+  icon: IconName;
   suggested?: boolean;
 }
 
-/** One decision as a row of pills; the number keys pick them, in order. */
+/** One decision as a row of icon pills, named by their tooltip; the number keys pick them, in order. */
 export function ChoicePills<T extends string>({
   label,
   options,
@@ -33,11 +36,13 @@ export function ChoicePills<T extends string>({
           type="button"
           role="radio"
           aria-checked={option.value === value}
-          className={`choice-pill ${option.value === value ? 'choice-pill--on' : ''}`}
+          className={`choice-pill icon-action ${option.value === value ? 'choice-pill--on' : ''}`}
+          aria-label={option.suggested ? `${option.label} (sugerido)` : option.label}
+          data-tip={option.suggested ? `${option.label} (sugerido)` : option.label}
           onClick={() => onChange(option.value)}
         >
           <kbd className="choice-pill__key">{index + 1}</kbd>
-          {option.label}
+          <Icon name={option.icon} />
           {option.suggested && <span className="choice-pill__tag">sugerido</span>}
         </button>
       ))}
@@ -148,13 +153,6 @@ export function StepFooter({
   );
 }
 
-/** What the steps already settled in this checkout, for the confirmation's "Já resolvido". */
-export interface Resolved {
-  doneNow: number;
-  attention: number;
-  reminders: number;
-}
-
 export interface StepProps {
   day: DayKey;
   today: DayKey;
@@ -164,7 +162,7 @@ export interface StepProps {
   /** Null on the first step. */
   onBack: (() => void) | null;
   /** Saves the step (`apply`) and moves to the next step that still has something to decide. */
-  onNext(apply?: () => Promise<void>, resolved?: Partial<Resolved>): void;
+  onNext(apply?: () => Promise<void>): void;
 }
 
 export function noDecisions(): TriageDecisions {

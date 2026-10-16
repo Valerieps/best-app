@@ -59,7 +59,7 @@ describe('synthetic data', () => {
 
     const apiDocs = threeDaysAgo.rows.find((row): row is TaskRow => row.type === 'task' && row.task.text === 'Atualizar a documentação da API');
     expect(apiDocs?.task.postponeCount).toBe(3);
-    expect(apiDocs).toMatchObject({ attention: true, suggestion: { kind: 'reflection' } });
+    expect(apiDocs).toMatchObject({ attention: true, suggestion: { kind: 'undate', untouched: true } });
     // Whiteboards no longer pass through the closing: the "Seções soltas" assistant takes them.
     expect(threeDaysAgo.automatic.some((item) => item.type === 'whiteboardUnlinked')).toBe(true);
     expect(threeDaysAgo.automatic.some((item) => item.type === 'finishedDuringDay')).toBe(true);
@@ -69,9 +69,10 @@ describe('synthetic data', () => {
     expect(twoDaysAgo.automatic.some((item) => item.type === 'notesToWiki')).toBe(true);
 
     expect(yesterday.automatic.map((item) => item.type)).toEqual(
-      expect.arrayContaining(['whiteboardUnlinked', 'notesToWiki', 'rolledOver']),
+      expect.arrayContaining(['whiteboardUnlinked', 'notesToWiki']),
     );
     expect(yesterday.open).toHaveLength(2);
+    expect(yesterday.rows).toHaveLength(2);
   });
 
   it('gives the whiteboards assistant groups to link, convert and keep', async () => {

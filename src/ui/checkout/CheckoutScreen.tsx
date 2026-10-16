@@ -7,33 +7,27 @@ import type { DayTriage } from '../../domain/triage';
 import { BackButton } from '../components/ScreenHeader';
 import { LoadingPage } from '../components/Skeleton';
 import { formatLongDate, relativeDay } from '../format';
-import { navigate } from '../hooks';
+import { navigate, type Route } from '../hooks';
 import { loadLatest } from '../loadLatest';
 import { reader } from '../services';
-import { AttentionStep } from './AttentionStep';
-import { ConfirmStep } from './ConfirmStep';
-import { DoneCheckStep } from './DoneCheckStep';
 import { PlanningStep } from './PlanningStep';
 import { ReminderStep } from './ReminderStep';
-import type { Resolved, StepProps } from './StepParts';
+import type { StepProps } from './StepParts';
+import { TriageStep } from './TriageStep';
 
 interface Props {
   day: DayKey;
   today: DayKey;
+  /** Where the closing started, and goes back to: the day note, or "Rituais". */
+  from?: 'rituals';
 }
-
-const NOTHING_RESOLVED: Resolved = { doneNow: 0, attention: 0, reminders: 0 };
 
 function stepLabel(step: CheckoutStep, nextDay: DayKey, today: DayKey): string {
   switch (step) {
-    case 'doneCheck':
-      return 'Fez e não marcou?';
-    case 'attention':
-      return 'Pedem atenção';
+    case 'triage':
+      return 'Tarefas';
     case 'reminders':
       return 'Lembretes';
-    case 'confirm':
-      return 'Confirmação';
     case 'planning': {
       const label = relativeDay(nextDay, today);
       return label.charAt(0).toUpperCase() + label.slice(1);
@@ -42,20 +36,21 @@ function stepLabel(step: CheckoutStep, nextDay: DayKey, today: DayKey): string {
 }
 
 /**
- * The checkout in steps (spec/checkout.md, "Checkout em etapas"): one kind of decision per step,
- * skipping the steps with nothing to decide. Each step is saved when moving on, so leaving
+ * The checkout in steps (spec/checkout.md, "Fechamento em etapas"): one kind of decision per
+ * step, skipping the steps with nothing to decide. Each step is saved when moving on, so leaving
  * halfway keeps what was decided, and coming back starts at the first step still pending.
  */
-export function CheckoutScreen({ day, today }: Props) {
+export function CheckoutScreen({ day, today, from }: Props) {
   const [triage, setTriage] = useState<DayTriage | null>(null);
   const [projects, setProjects] = useState<Project[]>([]);
   const [reminders, setReminders] = useState<Reminder[]>([]);
   const [remindersAnswered, setRemindersAnswered] = useState(false);
   const [plan, setPlan] = useState<CheckoutStep[]>([]);
   const [step, setStep] = useState<CheckoutStep | null>(null);
-  const [resolved, setResolved] = useState<Resolved>(NOTHING_RESOLVED);
   const [busy, setBusy] = useState(false);
   const [loadError, setLoadError] = useState<unknown>(undefined);
+  // The day note opens on today, which starts over if it was the day closed.
+  const origin: Route = from === 'rituals' ? { name: 'rituals' } : { name: 'day' };
 
   useEffect(
     () =>
@@ -82,7 +77,18 @@ export function CheckoutScreen({ day, today }: Props) {
   const previous = previousStep(plan, step, counts);
   const onBack = previous ? () => setStep(previous) : null;
 
-  async function onNext(apply?: () => Promise<void>, settled?: Partial<Resolved>) {
+  /** Saves a batch of the current step and reloads the triage, staying on the step. */
+  async function onApply(apply: () => Promise<void>) {
+    setBusy(true);
+    try {
+      await apply();
+      setTriage(await loadDayTriage(reader, day, today));
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function onNext(apply?: () => Promise<void>) {
     if (!step) return;
     setBusy(true);
     try {
@@ -91,13 +97,6 @@ export function CheckoutScreen({ day, today }: Props) {
       const fresh = apply ? await loadDayTriage(reader, day, today) : triage!;
       setTriage(fresh);
       setRemindersAnswered(answered);
-      if (settled) {
-        setResolved((current) => ({
-          doneNow: current.doneNow + (settled.doneNow ?? 0),
-          attention: current.attention + (settled.attention ?? 0),
-          reminders: current.reminders + (settled.reminders ?? 0),
-        }));
-      }
       setStep(nextStep(plan, step, stepCounts(fresh, reminderCount(answered))) ?? 'planning');
     } finally {
       setBusy(false);
@@ -111,7 +110,9 @@ export function CheckoutScreen({ day, today }: Props) {
     <main className="page page--wide">
       <div className="card">
         <header className="card__header">
-          <BackButton action={{ label: 'a nota do dia', onSelect: () => navigate({ name: 'day' }) }} />
+          <BackButton
+            action={{ label: from === 'rituals' ? 'Rituais' : 'a nota do dia', onSelect: () => navigate(origin) }}
+          />
           <h1 className="card__title">Fechar o dia · {formatLongDate(day)}</h1>
           <span />
         </header>
@@ -129,11 +130,11 @@ export function CheckoutScreen({ day, today }: Props) {
             ))}
           </ol>
         </nav>
-        {step === 'doneCheck' && <DoneCheckStep key={step} {...props} />}
-        {step === 'attention' && <AttentionStep key={step} {...props} />}
+        {step === 'triage' && <TriageStep key={step} {...props} onApply={onApply} />}
         {step === 'reminders' && <ReminderStep key={step} reminders={reminders} busy={busy} onBack={onBack} onNext={onNext} />}
-        {step === 'confirm' && <ConfirmStep key={step} {...props} resolved={resolved} />}
-        {step === 'planning' && <PlanningStep key={step} day={day} target={triage.nextDay} today={today} onBack={onBack} />}
+        {step === 'planning' && (
+          <PlanningStep key={step} day={day} target={triage.nextDay} today={today} onBack={onBack} onDone={() => navigate(origin)} />
+        )}
       </div>
     </main>
   );

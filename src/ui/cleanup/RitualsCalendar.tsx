@@ -72,7 +72,7 @@ export function RitualsCalendar({ today, pendingDays }: { today: DayKey; pending
                   className={`rituals-calendar__day rituals-calendar__day--${state}`}
                   title={label}
                   aria-label={label}
-                  onClick={() => navigate({ name: 'checkout', day })}
+                  onClick={() => navigate({ name: 'checkout', day, from: 'rituals' })}
                 >
                   {date}
                 </button>

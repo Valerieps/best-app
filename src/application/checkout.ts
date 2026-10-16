@@ -22,9 +22,9 @@ export interface TriageDecisions {
 }
 
 /**
- * What the closing writes when nothing is changed: the suggestion of every task that needs a
- * decision, and every automatic decision (notes kept, whiteboards left unlinked, tasks
- * rolling over to "dia seguinte").
+ * What the closing writes when nothing is changed: the suggestion of every task still waiting
+ * for a decision ("sem data", or as it is for a waiting task), and every automatic decision
+ * (notes kept, whiteboards left unlinked).
  */
 export function defaultClosingDecisions(triage: DayTriage) {
   const tasks = new Map<string, TaskDecision>();
@@ -34,7 +34,6 @@ export function defaultClosingDecisions(triage: DayTriage) {
   for (const item of triage.automatic) {
     if (item.type === 'notesToWiki') notes.set(item.section.id, 'wiki');
     if (item.type === 'whiteboardUnlinked') whiteboards.set(item.section.id, { kind: 'leaveUnlinked' });
-    if (item.type === 'rolledOver') tasks.set(item.task.id, { kind: 'schedule', date: triage.nextDay });
   }
   return { tasks, notes, whiteboards };
 }
@@ -68,7 +67,9 @@ export async function applyTaskDecision(
       // Settled for the day, as it is: only `lastTriagedDay` changes, below.
     } else if (decision.kind === 'schedule' || decision.kind === 'undate') {
       const to = decision.kind === 'schedule' ? decision.date : null;
-      task = await moveIntendedDate(ctx, tx, task, to, day, 'checkout');
+      // A task left untouched in the triage goes to the task list without counting as postponed.
+      const quiet = decision.kind === 'undate' && decision.untouched === true;
+      task = await moveIntendedDate(ctx, tx, task, to, day, 'checkout', { postpone: !quiet });
     } else if (decision.kind === 'reflection') {
       task = { ...task, awaitingReflection: true, updatedAt: nowIso(ctx) };
       await record(ctx, tx, 'task.deferredToReflection', 'block', task.id, day);
@@ -219,7 +220,7 @@ export interface ClosePendingDaysSummary {
   whiteboards: number;
 }
 
-/** Every task of a triage that is still open: the ones needing a decision and the ones rolling over. */
+/** Every task of a triage that is still open. */
 export function openTasksOf(triage: DayTriage): string[] {
   return triage.open.map((item) => item.task.id);
 }

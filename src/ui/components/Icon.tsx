@@ -19,6 +19,13 @@ const PATHS = {
   arrowLeft: 'M5 12h14M5 12l6 6M5 12l6-6',
   arrowUp: 'M12 5v14M18 11l-6-6M6 11l6-6',
   arrowDown: 'M12 5v14M18 13l-6 6M6 13l6 6',
+  arrowRight: 'M5 12h14M13 18l6-6M13 6l6 6',
+  check: 'M5 12l5 5l10-10',
+  calendar: 'M4 7a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-12a2 2 0 0 1-2-2zM16 3v4M8 3v4M4 11h16',
+  calendarOff:
+    'M9 5h9a2 2 0 0 1 2 2v9M19.816 19.839a2 2 0 0 1-1.816 1.161h-12a2 2 0 0 1-2-2v-12a2 2 0 0 1 1.158-1.815M16 3v4M8 3v1M4 11h7M15 11h5M3 3l18 18',
+  ban: 'M3 12a9 9 0 1 0 18 0a9 9 0 1 0-18 0M5.7 5.7l12.6 12.6',
+  clock: 'M3 12a9 9 0 1 0 18 0a9 9 0 0 0-18 0M12 7v5l3 3',
   // Places of the sidebar
   sun: 'M8 12a4 4 0 1 0 8 0a4 4 0 1 0-8 0M3 12h1M12 3v1M20 12h1M12 20v1M5.6 5.6l.7 .7M18.4 5.6l-.7 .7M17.7 17.7l.7 .7M6.3 17.7l-.7 .7',
   repeat: 'M4 12v-3a3 3 0 0 1 3-3h13M17 3l3 3l-3 3M20 12v3a3 3 0 0 1-3 3h-13M7 21l-3-3l3-3',

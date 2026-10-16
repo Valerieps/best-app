@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
-  attentionReason,
   checkoutSteps,
+  groupByProject,
   nextStep,
   planningGroup,
   previousStep,
@@ -12,42 +12,51 @@ import {
 import type { Block } from './entities';
 import type { DayTriage } from './triage';
 
-const NONE: StepCounts = { tasks: 0, attention: 0, reminders: 0 };
-const FULL: StepCounts = { tasks: 3, attention: 1, reminders: 1 };
+const NONE: StepCounts = { tasks: 0, reminders: 0 };
+const FULL: StepCounts = { tasks: 3, reminders: 1 };
 
 describe('checkout steps', () => {
-  it('skips the steps with nothing to decide, but always confirms and plans', () => {
-    expect(checkoutSteps(NONE)).toEqual(['confirm', 'planning']);
-    expect(checkoutSteps({ ...NONE, tasks: 2 })).toEqual(['doneCheck', 'confirm', 'planning']);
-    expect(checkoutSteps(FULL)).toEqual(['doneCheck', 'attention', 'reminders', 'confirm', 'planning']);
+  it('skips the steps with nothing to decide, but always plans', () => {
+    expect(checkoutSteps(NONE)).toEqual(['planning']);
+    expect(checkoutSteps({ ...NONE, tasks: 2 })).toEqual(['triage', 'planning']);
+    expect(checkoutSteps(FULL)).toEqual(['triage', 'reminders', 'planning']);
   });
 
-  it('counts the open tasks and the ones needing a decision', () => {
+  it('counts the tasks waiting for a decision', () => {
     const triage: DayTriage = {
       day: '2026-10-13',
       nextDay: '2026-10-14',
-      rows: [{ type: 'task', task: {} as Block, section: null, suggestion: { kind: 'reflection' }, attention: true }],
-      automatic: [{ type: 'rolledOver', task: {} as Block, section: null }],
+      rows: [{ type: 'task', task: {} as Block, section: null, suggestion: { kind: 'undate', untouched: true }, attention: false }],
+      automatic: [{ type: 'finishedDuringDay', task: {} as Block, section: null }],
       open: [],
     };
-    expect(stepCounts(triage, 2)).toEqual({ tasks: 2, attention: 1, reminders: 2 });
+    expect(stepCounts(triage, 2)).toEqual({ tasks: 1, reminders: 2 });
   });
 
   it('moves forward and back over the steps that still have items', () => {
     const plan = checkoutSteps(FULL);
-    // Marking the only task needing a decision as done empties its step.
-    const after = { ...FULL, attention: 0 };
-    expect(nextStep(plan, 'doneCheck', after)).toBe('reminders');
-    expect(previousStep(plan, 'reminders', after)).toBe('doneCheck');
-    expect(previousStep(plan, 'doneCheck', FULL)).toBeNull();
+    expect(nextStep(plan, 'triage', FULL)).toBe('reminders');
+    expect(nextStep(plan, 'triage', { ...FULL, reminders: 0 })).toBe('planning');
+    expect(previousStep(plan, 'planning', { ...FULL, reminders: 0 })).toBe('triage');
+    expect(previousStep(plan, 'triage', FULL)).toBeNull();
     expect(nextStep(plan, 'planning', FULL)).toBeNull();
   });
 });
 
-describe('attention reason', () => {
-  it('is the postponements from the threshold on, and the deadline otherwise', () => {
-    expect(attentionReason({ postponeCount: 3 } as Block)).toBe('postponed');
-    expect(attentionReason({ postponeCount: 1 } as Block)).toBe('deadline');
+describe('group by project', () => {
+  it('keeps the order of first appearance and puts the tasks without a project last', () => {
+    const items = [
+      { id: 1, project: null },
+      { id: 2, project: 'b' },
+      { id: 3, project: 'a' },
+      { id: 4, project: 'b' },
+    ];
+    const groups = groupByProject(items, (item) => item.project);
+    expect(groups.map((group) => [group.projectId, group.items.map((item) => item.id)])).toEqual([
+      ['b', [2, 4]],
+      ['a', [3]],
+      [null, [1]],
+    ]);
   });
 });
 
