@@ -1,6 +1,6 @@
 import { normalizeLimits, type AssistantId } from '../domain/cleanupStatus';
 import { toDayKey } from '../domain/day';
-import type { Appearance, DayNoteFocus, ProjectListGroup, Settings, WarmupItem } from '../domain/entities';
+import type { Appearance, AutoBackupInterval, DayNoteFocus, ProjectListGroup, Settings, WarmupItem } from '../domain/entities';
 import { record } from './events';
 import type { AppContext } from './ports';
 
@@ -70,6 +70,11 @@ export function setSidebarWidth(ctx: AppContext, width: number | null): Promise<
  */
 export function setDayNoteFocus(ctx: AppContext, focus: DayNoteFocus | null): Promise<void> {
   return updateSettings(ctx, { dayNoteFocus: focus });
+}
+
+/** How often the automatic backup writes the file. */
+export function setAutoBackupInterval(ctx: AppContext, interval: AutoBackupInterval): Promise<void> {
+  return updateSettings(ctx, { autoBackupInterval: interval });
 }
 
 /** Section 3: the warm-up checklist, defined by hand. Empty turns the warm up off. */

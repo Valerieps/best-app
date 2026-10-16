@@ -17,6 +17,15 @@ export type SnoozableNotice = 'pendingCheckout' | 'backupSetup';
 /** How long the backup may stay paused, counted from the last backup, before the warning turns red. */
 export const STALE_BACKUP_MS = 24 * 60 * 60 * 1000;
 
+/**
+ * Whether the app must ask for the backup folder before opening: no folder yet, or a browser
+ * that cannot pick one (spec/principios.md, "Primeiro uso"). A paused or failing backup still
+ * opens the app, with its warning at the top.
+ */
+export function needsBackupSetup(state: AutoBackupState): boolean {
+  return state.status === 'noFile' || state.status === 'unsupported';
+}
+
 /** Whole days since the last backup, at least 1, for "Seu último backup foi há N dias". */
 export function daysSinceBackup(lastBackupAt: string, now: Date): number {
   return Math.max(1, Math.floor((now.getTime() - Date.parse(lastBackupAt)) / (24 * 60 * 60 * 1000)));

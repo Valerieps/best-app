@@ -5,6 +5,7 @@ import { getImportSnapshotDate, getLastBackupAt } from '../../infrastructure/bac
 import { randomIds } from '../../infrastructure/browser';
 import { autoBackup, db } from '../services';
 import { useLiveQueryState } from '../useLiveQuery';
+import { BackupIntervalSelect } from './BackupIntervalSelect';
 import type { BackupActions } from './useBackup';
 
 interface Props {
@@ -38,9 +39,11 @@ export function BackupPanel({ state, actions, storagePersisted }: Props) {
   return (
     <section className="panel" aria-label="Backup">
       <p className="muted panel__intro">
-        Seus dados ficam só neste navegador. O backup automático grava tudo, a cada mudança, numa pasta sua: uma pasta
-        sincronizada do Google Drive da empresa deixa trocar de computador sem perder nada.
+        Seus dados ficam só neste navegador. O backup automático grava tudo numa pasta sua: uma pasta sincronizada com a
+        nuvem, como o Google Drive ou o OneDrive, deixa trocar de computador sem perder nada.
       </p>
+
+      <BackupIntervalSelect />
 
       <div className="panel__actions">
         {state.status === 'needsPermission' && (

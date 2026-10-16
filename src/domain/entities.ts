@@ -226,11 +226,16 @@ export interface Settings {
   dayNoteFocus?: DayNoteFocus | null;
   /** Light, dark or the system's appearance (spec/principios.md, "Aparência"). Absent means the system's. */
   appearance?: Appearance;
+  /** How often the automatic backup writes the file (spec/principios.md, "Backup"). Absent means after every change. */
+  autoBackupInterval?: AutoBackupInterval;
   updatedAt: string;
 }
 
 /** The app's appearance: always light, always dark, or following the system. */
 export type Appearance = 'light' | 'dark' | 'system';
+
+/** How often the automatic backup writes: a few seconds after every change, or at most every 15 minutes or hour. */
+export type AutoBackupInterval = 'afterChange' | 'quarterHour' | 'hour';
 
 /** Collapsible groups of the project list: "Outros ativos" (open by default) and "Finalizados" (closed). */
 export type ProjectListGroup = 'others' | 'finished';

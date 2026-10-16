@@ -4273,3 +4273,126 @@ a.mention:hover {
   color: var(--color-warning-text);
   font-size: var(--font-size-sm);
 }
+
+/*
+ * Micro-animations (issue #120): short transitions where the screen changes state, instead of a
+ * cut. Nothing here delays typing or moves the caret, and all of it is off with reduced motion.
+ * Focus mode keeps its own transition (ADR-051).
+ */
+
+/* Hover and press on buttons, sidebar items included */
+button {
+  transition:
+    background-color var(--motion-fast) var(--ease-out),
+    border-color var(--motion-fast) var(--ease-out),
+    color var(--motion-fast) var(--ease-out),
+    transform var(--motion-fast) var(--ease-out);
+}
+
+button:not(.link, .day-part__handle):active:not(:disabled) {
+  transform: scale(0.97);
+}
+
+.checkout-stepper__bar {
+  transition: background-color var(--motion-base) var(--ease-out);
+}
+
+/* A task marked as done: the strike comes in and the text fades to muted */
+.line--task .line__text,
+.line--task .line__rendered {
+  text-decoration-line: line-through;
+  text-decoration-color: transparent;
+  transition:
+    color var(--motion-base) var(--ease-out),
+    text-decoration-color var(--motion-base) var(--ease-out);
+}
+
+.line--task.line--done .line__text,
+.line--task.line--done .line__rendered {
+  text-decoration-color: currentColor;
+}
+
+/* A line or part of the day note that appears while the note is on screen (entryMotion.ts) */
+.line--entering,
+.day-part--entering {
+  animation: motion-fade-in var(--motion-base) var(--ease-out) backwards;
+}
+
+/* The next step of "Fechar o dia" */
+.checkout-step {
+  animation: motion-rise-in var(--motion-base) var(--ease-out) backwards;
+}
+
+/* Menus and suggestion lists opening */
+.dropdown__list,
+.suggestions {
+  animation: motion-pop-in var(--motion-fast) var(--ease-out) backwards;
+}
+
+@keyframes motion-fade-in {
+  from {
+    opacity: 0;
+  }
+}
+
+@keyframes motion-rise-in {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+}
+
+@keyframes motion-pop-in {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  button,
+  .checkout-stepper__bar,
+  .line--task .line__text,
+  .line--task .line__rendered {
+    transition: none;
+  }
+
+  button:not(.link, .day-part__handle):active:not(:disabled) {
+    transform: none;
+  }
+
+  .line--entering,
+  .day-part--entering,
+  .checkout-step,
+  .dropdown__list,
+  .suggestions {
+    animation: none;
+  }
+}
+
+/* First-use screen: the backup folder is chosen before anything else. */
+.backup-setup {
+  padding: var(--space-5);
+  text-align: center;
+}
+
+.backup-setup__title {
+  margin: 0;
+  font-size: var(--font-size-xl);
+}
+
+.backup-setup__text {
+  margin: 0;
+  max-width: 34rem;
+  color: var(--color-text-muted);
+}
+
+.backup-interval {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.backup-interval select {
+  width: auto;
+}

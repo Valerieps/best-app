@@ -15,6 +15,11 @@ export function requestFocus(id: string, caret: Caret = 'end'): void {
   listeners.forEach((listener) => listener());
 }
 
+/** The line about to take the focus, if one was asked for and has not taken it yet. */
+export function pendingFocusId(): string | null {
+  return request?.id ?? null;
+}
+
 function subscribe(listener: () => void) {
   listeners.add(listener);
   return () => listeners.delete(listener);
