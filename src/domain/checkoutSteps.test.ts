@@ -3,7 +3,8 @@ import {
   checkoutSteps,
   groupByProject,
   nextStep,
-  planningGroup,
+  planningColumnOf,
+  planningColumns,
   previousStep,
   rangeBetween,
   stepCounts,
@@ -60,19 +61,42 @@ describe('group by project', () => {
   });
 });
 
-describe('planning group', () => {
+describe('planning columns', () => {
+  const today = '2026-10-13';
   const target = '2026-10-14';
 
-  it('puts each task in the target note, the next three days or the others', () => {
-    expect(planningGroup(target, target)).toBe('target');
-    expect(planningGroup('2026-10-15', target)).toBe('soon');
-    expect(planningGroup('2026-10-17', target)).toBe('soon');
-    expect(planningGroup(null, target)).toBeNull();
-    expect(planningGroup('2026-10-10', target)).toBe('other');
+  it('shows the target and the two days after it on a quiet day', () => {
+    expect(planningColumns([target, null], today, target)).toEqual([
+      { kind: 'day', day: '2026-10-14' },
+      { kind: 'day', day: '2026-10-15' },
+      { kind: 'day', day: '2026-10-16' },
+    ]);
   });
 
-  it('leaves out tasks scheduled further ahead', () => {
-    expect(planningGroup('2026-10-18', target)).toBeNull();
+  it('puts the late tasks first, all together, and today when a task is dated for it', () => {
+    const columns = planningColumns(['2026-10-10', today], today, target);
+    expect(columns).toEqual([{ kind: 'late' }, { kind: 'day', day: today }, { kind: 'day', day: target }]);
+    expect(planningColumnOf('2026-10-01', columns, today)).toBe(0);
+    expect(planningColumnOf(today, columns, today)).toBe(1);
+    expect(planningColumnOf(target, columns, today)).toBe(2);
+    expect(planningColumnOf('2026-10-15', columns, today)).toBe(-1);
+    expect(planningColumnOf(null, columns, today)).toBe(-1);
+  });
+
+  it('jumps from today to the target over the days that are not active', () => {
+    expect(planningColumns([today], today, '2026-10-16')).toEqual([
+      { kind: 'day', day: today },
+      { kind: 'day', day: '2026-10-16' },
+      { kind: 'day', day: '2026-10-17' },
+    ]);
+  });
+
+  it('has no column for today when it is the target', () => {
+    expect(planningColumns([today], today, today)).toEqual([
+      { kind: 'day', day: today },
+      { kind: 'day', day: target },
+      { kind: 'day', day: '2026-10-15' },
+    ]);
   });
 });
 
