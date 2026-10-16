@@ -1,25 +1,27 @@
 import { describe, expect, it } from 'vitest';
 import { note, project, section, task } from '../test/builders';
-import { automaticTaskDecision, automaticToRow, buildDayTriage, findPendingDays, isTriagePending } from './triage';
+import { buildDayTriage, findPendingDays, isTriagePending } from './triage';
 
 const day = '2026-10-11';
 const base = { day, today: day, sections: [], blocks: [], carried: [], projects: [] };
 
 describe('buildDayTriage', () => {
-  it('rolls tasks not done over to "dia seguinte" on their own', () => {
+  it('never moves an open task on its own: it waits for a decision, "sem data" when untouched', () => {
     const s = section({ day, projectId: 'p' });
     const t = task(s.id);
     const triage = buildDayTriage({ ...base, sections: [s], blocks: [t] });
 
     expect(triage.nextDay).toBe('2026-10-12');
-    expect(triage.rows).toEqual([]);
-    expect(triage.automatic).toEqual([{ type: 'rolledOver', task: t, section: s }]);
+    expect(triage.rows).toEqual([{ type: 'task', task: t, section: s, suggestion: { kind: 'undate', untouched: true }, attention: false }]);
+    expect(triage.automatic).toEqual([]);
     expect(triage.open).toEqual([{ task: t, section: s }]);
-    expect(automaticTaskDecision({ type: 'rolledOver', task: t, section: s }, triage.nextDay)).toEqual({
-      kind: 'schedule',
-      date: '2026-10-12',
-    });
     expect(isTriagePending(triage)).toBe(true);
+  });
+
+  it('brings the tasks dated for the day itself', () => {
+    const s = section({ day });
+    const t = task(s.id, 'x', { intendedDate: day });
+    expect(buildDayTriage({ ...base, sections: [s], blocks: [t] }).rows.map((row) => row.task)).toEqual([t]);
   });
 
   it('takes tasks given a future date during the day out of the triage (1b)', () => {
@@ -28,26 +30,20 @@ describe('buildDayTriage', () => {
     const triage = buildDayTriage({ ...base, sections: [s], blocks: [t] });
     expect(triage.rows).toEqual([]);
     expect(triage.automatic).toEqual([{ type: 'scheduledDuringDay', task: t, section: s }]);
-    expect(automaticToRow({ type: 'scheduledDuringDay', task: t, section: s }, triage.nextDay)).toMatchObject({
-      suggestion: { kind: 'schedule', date: '2026-10-15' },
-    });
   });
 
-  it('asks for a decision when the deadline comes before "dia seguinte" (1b)', () => {
+  it('highlights a deadline before "dia seguinte" and tasks postponed 3 times or more (1b)', () => {
     const s = section({ day, projectId: 'p' });
     const late = task(s.id, 'x', { deadline: day });
     const fine = task(s.id, 'y', { deadline: '2026-10-20' });
-    const triage = buildDayTriage({ ...base, sections: [s], blocks: [late, fine] });
-    expect(triage.rows).toEqual([expect.objectContaining({ task: late, attention: true })]);
-    expect(triage.automatic).toEqual([{ type: 'rolledOver', task: fine, section: s }]);
-    expect(triage.open.map((item) => item.task)).toEqual([late, fine]);
-  });
-
-  it('asks for a decision on tasks postponed 3 times or more, suggesting the Revisão de Foco', () => {
-    const s = section({ day, projectId: 'p' });
-    const t = task(s.id, 'x', { postponeCount: 3 });
-    const triage = buildDayTriage({ ...base, sections: [s], blocks: [t] });
-    expect(triage.rows).toEqual([expect.objectContaining({ task: t, attention: true, suggestion: { kind: 'reflection' } })]);
+    const often = task(s.id, 'z', { postponeCount: 3 });
+    const triage = buildDayTriage({ ...base, sections: [s], blocks: [late, fine, often] });
+    expect(triage.rows.map((row) => [row.task.text, row.attention])).toEqual([
+      ['x', true],
+      ['y', false],
+      ['z', true],
+    ]);
+    expect(triage.rows.every((row) => row.suggestion.kind === 'undate')).toBe(true);
   });
 
   it('takes tasks finished during the day out of the triage', () => {
@@ -57,10 +53,6 @@ describe('buildDayTriage', () => {
 
     expect(triage.rows).toEqual([]);
     expect(triage.automatic).toEqual([{ type: 'finishedDuringDay', task: t, section: s }]);
-    expect(automaticToRow({ type: 'finishedDuringDay', task: t, section: s }, triage.nextDay)).toMatchObject({
-      type: 'task',
-      suggestion: { kind: 'finish' },
-    });
     expect(isTriagePending(triage)).toBe(false);
   });
 
@@ -68,7 +60,7 @@ describe('buildDayTriage', () => {
     const old = section({ day: '2026-10-10' });
     const carried = task(old.id, 'x', { intendedDate: day, lastTriagedDay: '2026-10-10', postponeCount: 1 });
     const triage = buildDayTriage({ ...base, carried: [carried] });
-    expect(triage.automatic).toEqual([{ type: 'rolledOver', task: carried, section: null }]);
+    expect(triage.rows).toEqual([expect.objectContaining({ task: carried, section: null })]);
   });
 
   it('sends the notes of every section to the wiki, linked to the project when there is one', () => {
@@ -111,7 +103,8 @@ describe('buildDayTriage', () => {
     const onlyTasks = section({ day, projectId: 'p' });
     const t = task(onlyTasks.id);
     const triage = buildDayTriage({ ...base, sections: [empty, onlyTasks], blocks: [t] });
-    expect(triage.automatic).toEqual([{ type: 'rolledOver', task: t, section: onlyTasks }]);
+    expect(triage.automatic).toEqual([]);
+    expect(triage.rows.map((row) => row.task)).toEqual([t]);
   });
 
   it('is not pending when everything was decided', () => {

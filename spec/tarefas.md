@@ -10,7 +10,7 @@
 - Abandonar é como apagar: a tarefa abandonada some de todas as telas. Só o histórico de eventos guarda o abandono, para as métricas.
 - Toda tarefa guarda o vínculo com a seção em que foi originalmente criada, com o título e o horário da seção. Se a seção está vinculada a um projeto, a tarefa também fica vinculada a ele.
 - A tarefa tem uma data de intenção de execução, definida no fechamento do dia. Definir essa data é escolher o dia em que a tarefa aparece na nota do dia. Quando a data chega, a tarefa aparece sozinha na nota daquele dia.
-- Conta como adiamento toda mudança da data de intenção para depois, e também a tarefa que passa pelo fechamento do dia sem ter sido feita no dia da intenção, inclusive quando ela vai sozinha para o dia seguinte. Tirar a data de intenção, deixando a tarefa sem data, também conta como adiamento.
+- Conta como adiamento toda mudança da data de intenção para depois, também a que eu faço no fechamento do dia. Tirar a data de intenção, deixando a tarefa sem data, também conta como adiamento, e o "Fechar dias pendentes" conta o adiamento de cada tarefa que devolve sem data. A tarefa que eu deixo sem mexer na triagem do "Fechar o dia" vai para a lista sem data e não conta (`checkout.md`).
 - O app guarda stats de quantos adiamentos e da distância entre a primeira intenção de execução e a ação final (finalizar, abandonar).
 
 ## Agrupar e ordenar as tarefas *(1b)*

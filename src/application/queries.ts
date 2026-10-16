@@ -67,17 +67,20 @@ export async function loadDaysWithNotes(reader: Reader, month: MonthKey): Promis
   return days;
 }
 
-export async function loadDayNote(reader: Reader, day: DayKey): Promise<DayNoteView> {
+/** `today` makes a closed today start over (`isShownAfterClosing`); past days keep everything. */
+export async function loadDayNote(reader: Reader, day: DayKey, today?: DayKey): Promise<DayNoteView> {
   const sections = await daySections(reader, day);
   const blocks = await reader.blocksInSections(sections.map((section) => section.id));
   const intended = await reader.tasksIntendedFor(day);
   const originIds = intended.map((task) => task.sectionId).filter((id) => !sections.some((s) => s.id === id));
   const origins = await reader.sectionsByIds(originIds);
   const projects = await reader.projects();
-  const sectionOrder = (await reader.dayRecord(day))?.sectionOrder;
+  const record = await reader.dayRecord(day);
+  const sectionOrder = record?.sectionOrder;
+  const closedAt = day === today ? (record?.lastCheckoutAt ?? null) : null;
   return {
     day,
-    entries: buildDayNote({ day, sections, blocks, intended }),
+    entries: buildDayNote({ day, sections, blocks, intended, closedAt }),
     sectionsById: new Map([...sections, ...origins].map((section) => [section.id, section])),
     projects,
     sectionOrder,

@@ -5,17 +5,20 @@ import { comparePositions } from './position';
 import { isTaskPendingOn, isTaskShownOn, nextPlanningDay, POSTPONE_ATTENTION_THRESHOLD } from './tasks';
 
 /**
- * "Fechar o dia" in batch (spec/checkout.md). For one day, decides what is automatic and what
- * needs a decision. Notes are kept where they were written, whiteboards stay unlinked and unfinished tasks roll
- * over to "dia seguinte" on their own; only tasks postponed too often, or past their deadline,
- * ask for a decision. The app never takes things out of circulation on its own.
+ * "Fechar o dia" (spec/checkout.md). For one day, decides what is automatic and what needs a
+ * decision. Notes are kept where they were written and whiteboards stay unlinked; tasks keep the
+ * dates given during the day, so only the open tasks without a future date (and the waiting ones)
+ * ask for a decision. The app never moves a task or takes it out of circulation on its own.
  */
 
 export type TaskDecision =
   | { kind: 'finish' }
   | { kind: 'schedule'; date: DayKey }
-  /** "Sem data": the task goes back to the task list, for some day. */
-  | { kind: 'undate' }
+  /**
+   * "Sem data": the task goes back to the task list, for some day. `untouched` is a task left
+   * as it was when moving on from the triage, which is no postponement.
+   */
+  | { kind: 'undate'; untouched?: boolean }
   | { kind: 'abandon' }
   /** Section 2: "decidir na reflexão semanal". */
   | { kind: 'reflection' }
@@ -38,6 +41,7 @@ export interface TaskRow {
   /** Section the task shows up under in the checkout; null for tasks carried from other days. */
   section: Section | null;
   suggestion: TaskDecision;
+  /** Postponed too often, or with a deadline before "dia seguinte": highlighted, never moved. */
   attention: boolean;
 }
 
@@ -53,18 +57,15 @@ export interface NotesRow {
 export type TriageRow = TaskRow | NotesRow;
 
 /**
- * Decisions the app applies on its own. The ones about tasks can be undone back into a regular
- * row; notes and whiteboards no longer pass through the closing (the project page and the "Seções
- * soltas" assistant take care of them).
+ * What the app settles on its own. Notes and whiteboards no longer pass through the closing (the
+ * project page and the "Seções soltas" assistant take care of them); tasks finished or given a
+ * future date during the day already have their destination.
  */
 export type AutomaticItem =
   | { type: 'notesToWiki'; section: Section; project: Project | null; noteCount: number }
   | { type: 'whiteboardUnlinked'; section: Section }
-  | { type: 'rolledOver'; task: Block; section: Section | null }
   | { type: 'finishedDuringDay'; task: Block; section: Section | null }
   | { type: 'scheduledDuringDay'; task: Block; section: Section | null };
-
-export type TaskAutomaticItem = Extract<AutomaticItem, { task: Block }>;
 
 export interface OpenTask {
   task: Block;
@@ -76,10 +77,10 @@ export interface DayTriage {
   day: DayKey;
   /** Where "Dia seguinte" sends tasks. */
   nextDay: DayKey;
-  /** Tasks that need a decision: postponed too often, or past their deadline. */
+  /** Tasks that need a decision: open, without a future date, in the day note's order. */
   rows: TaskRow[];
   automatic: AutomaticItem[];
-  /** Every task still open (needing a decision or rolling over), in the day note's order. */
+  /** Every task still open, in the day note's order. */
   open: OpenTask[];
 }
 
@@ -121,29 +122,19 @@ export function buildDayTriage(input: DayTriageInput): DayTriage {
   const rows: TaskRow[] = [];
   const automatic: AutomaticItem[] = [];
 
-  // An unfinished task rolls over to "dia seguinte" on its own. A task postponed many times
-  // asks for a decision instead and, since section 2, is suggested for the Revisão de Foco; a
-  // deadline before "dia seguinte" also asks for a decision.
+  // An open task keeps its date: only the ones without a future date ask for a decision, which
+  // is "sem data" when left untouched. Something a person owes me stays as it is (spec/pessoas.md).
   const open: OpenTask[] = [];
   const addPending = (task: Block, section: Section | null) => {
     open.push({ task, section });
-    // Something a person owes me never rolls over on its own: it asks what to do (spec/pessoas.md).
-    if (task.waiting) {
-      rows.push({ type: 'task', task, section, suggestion: { kind: 'keep' }, attention: true });
-      return;
-    }
     const postponedOften = task.postponeCount >= POSTPONE_ATTENTION_THRESHOLD;
     const pastDeadline = task.deadline != null && task.deadline < nextDay;
-    if (!postponedOften && !pastDeadline) {
-      automatic.push({ type: 'rolledOver', task, section });
-      return;
-    }
     rows.push({
       type: 'task',
       task,
       section,
-      suggestion: postponedOften ? { kind: 'reflection' } : { kind: 'schedule', date: nextDay },
-      attention: true,
+      suggestion: task.waiting ? { kind: 'keep' } : { kind: 'undate', untouched: true },
+      attention: !task.waiting && (postponedOften || pastDeadline),
     });
   };
 
@@ -202,24 +193,12 @@ export function buildDayTriage(input: DayTriageInput): DayTriage {
 
 /** Automatic decisions that still have to be written when the day is closed. */
 export function isAppliedOnClose(item: AutomaticItem): boolean {
-  return item.type === 'notesToWiki' || item.type === 'whiteboardUnlinked' || item.type === 'rolledOver';
+  return item.type === 'notesToWiki' || item.type === 'whiteboardUnlinked';
 }
 
 /** A day is pending while anything in it still needs a decision, or an automatic one written. */
 export function isTriagePending(triage: DayTriage): boolean {
   return triage.rows.length > 0 || triage.automatic.some(isAppliedOnClose);
-}
-
-/** The decision an automatic item about a task stands for. */
-export function automaticTaskDecision(item: TaskAutomaticItem, nextDay: DayKey): TaskDecision {
-  if (item.type === 'rolledOver') return { kind: 'schedule', date: nextDay };
-  if (item.type === 'scheduledDuringDay' && item.task.intendedDate) return { kind: 'schedule', date: item.task.intendedDate };
-  return { kind: 'finish' };
-}
-
-/** Turns an automatic decision about a task back into a regular row the user can change. */
-export function automaticToRow(item: TaskAutomaticItem, nextDay: DayKey): TaskRow {
-  return { type: 'task', task: item.task, section: item.section, suggestion: automaticTaskDecision(item, nextDay), attention: false };
 }
 
 export interface PendingDaysInput {

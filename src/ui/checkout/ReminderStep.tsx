@@ -17,9 +17,9 @@ import {
 type ReminderChoice = { kind: 'keep' } | { kind: 'change'; time: string } | { kind: 'drop' };
 
 const OPTIONS: ChoiceOption<ReminderChoice['kind']>[] = [
-  { value: 'keep', label: 'Manter', suggested: true },
-  { value: 'change', label: 'Mudar' },
-  { value: 'drop', label: 'Largar' },
+  { value: 'keep', label: 'Manter', icon: 'check', suggested: true },
+  { value: 'change', label: 'Mudar o horário', icon: 'clock' },
+  { value: 'drop', label: 'Largar', icon: 'ban' },
 ];
 
 /**
@@ -46,7 +46,7 @@ export function ReminderStep({ reminders, busy, onBack, onNext }: Pick<StepProps
         if (each.kind === 'drop') await answerReminder(appContext, id, 'dropped');
         if (each.kind === 'change') await snoozeReminder(appContext, id, askAgainAt(new Date(), each.time));
       }
-    }, { reminders: reminders.length });
+    });
   }
   const back = index > 0 ? () => setIndex(index - 1) : onBack;
 

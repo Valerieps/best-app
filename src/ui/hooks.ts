@@ -22,7 +22,8 @@ export function useToday(): DayKey {
 export type Route =
   /** The day note; `day` is set when paging to a past day with pending items (1b). */
   | { name: 'day'; day?: DayKey }
-  | { name: 'checkout'; day: DayKey }
+  /** `from` is where the closing goes back to when it ends: the day note, or "Rituais". */
+  | { name: 'checkout'; day: DayKey; from?: 'rituals' }
   | { name: 'active' }
   /** `assistant` opens one assistant's details; omitted shows the dashboard. */
   /** The "Rituais" screen, or one of its assistants when `assistant` is set. */
@@ -57,7 +58,8 @@ export function parseRoute(hash: string): Route {
     case 'dia':
       return isDayKey(parts[1]) ? { name: 'day', day: parts[1] } : { name: 'day' };
     case 'checkout':
-      return isDayKey(parts[1]) ? { name: 'checkout', day: parts[1] } : { name: 'day' };
+      if (!isDayKey(parts[1])) return { name: 'day' };
+      return parts[2] === 'rituais' ? { name: 'checkout', day: parts[1], from: 'rituals' } : { name: 'checkout', day: parts[1] };
     case 'tarefas':
       return { name: 'active' };
     // The archived tasks list is gone (ADR-049); its old address opens the task list.
@@ -105,7 +107,7 @@ export function routeHash(route: Route): string {
     case 'day':
       return route.day ? `#/dia/${route.day}` : '#/';
     case 'checkout':
-      return `#/checkout/${route.day}`;
+      return `#/checkout/${route.day}${route.from === 'rituals' ? '/rituais' : ''}`;
     case 'active':
       return '#/tarefas';
     case 'rituals':

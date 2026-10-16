@@ -1988,6 +1988,38 @@ button.plan-row--on:hover {
   gap: var(--space-2);
 }
 
+.batch-bar__flash {
+  color: var(--color-success-text);
+}
+
+/* Actions shown as icons, named by a tooltip on hover and focus. */
+.icon-action {
+  position: relative;
+}
+
+.icon-action.icon-action--on {
+  background: var(--color-hover);
+  color: var(--color-text);
+}
+
+.icon-action[data-tip]:hover::after,
+.icon-action[data-tip]:focus-visible::after {
+  content: attr(data-tip);
+  position: absolute;
+  bottom: calc(100% + 6px);
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 30;
+  padding: 2px var(--space-2);
+  border-radius: var(--radius-sm);
+  background: var(--color-accent);
+  color: var(--color-accent-text);
+  font-size: var(--font-size-xs);
+  font-weight: 400;
+  white-space: nowrap;
+  pointer-events: none;
+}
+
 @media (max-width: 640px) {
   .checkout-stepper__label {
     display: none;

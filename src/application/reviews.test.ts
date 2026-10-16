@@ -57,12 +57,12 @@ describe('section 2: Revisão de Foco', () => {
     expect((await loadFocusReview(reader, SUNDAY)).deferred).toEqual([]);
   });
 
-  it('suggests it for a task postponed 3 times', async () => {
+  it('no longer suggests it at the closing: a task postponed 3 times is only highlighted', async () => {
     const { ctx, reader, db } = createTestContext();
     const task = await createBlock(ctx, { sectionId: null, position: positionBetween(null, null) }, '[] Eterna');
     await db.blocks.update(task.id, { postponeCount: 3 });
     const [row] = (await loadDayTriage(reader, SUNDAY, SUNDAY)).rows.filter((r) => r.type === 'task');
-    expect(row).toMatchObject({ suggestion: { kind: 'reflection' }, attention: true });
+    expect(row).toMatchObject({ suggestion: { kind: 'undate', untouched: true }, attention: true });
   });
 
   it('measures the period, saves the texts and closes; the next period starts empty', async () => {

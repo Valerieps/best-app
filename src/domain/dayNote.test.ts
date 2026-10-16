@@ -54,4 +54,41 @@ describe('buildDayNote', () => {
     expect(entry.carried).toEqual([]);
     expect(entry.blocks).toEqual([t]);
   });
+
+  it('starts over after closing today: only the tasks kept on the day and what came later stay (spec/checkout.md)', () => {
+    const closedAt = `${day}T18:00:00.000Z`;
+    const morning = section({ day, projectId: 'p' });
+    const evening = section({ day, createdAt: `${day}T19:00:00.000Z` });
+    const empty = section({ day, kind: 'meeting', createdAt: `${day}T20:00:00.000Z` });
+    const old = section({ day: '2026-10-10' });
+    const kept = task(morning.id, 'fica hoje', { intendedDate: day, lastTriagedDay: day });
+    const undated = task(morning.id, 'sem data', { lastTriagedDay: day });
+    const tomorrow = task(morning.id, 'amanhã', { intendedDate: '2026-10-12', lastTriagedDay: day });
+    const finished = task(morning.id, 'feita', { status: 'done', closedAt: `${day}T15:00:00.000Z` });
+    const doneLater = task(morning.id, 'feita depois', { intendedDate: day, status: 'done', closedAt: `${day}T19:30:00.000Z` });
+    const oldNote = note(morning.id, 'nota da manhã');
+    const later = note(evening.id, 'depois do fechamento', { createdAt: `${day}T19:05:00.000Z` });
+    const carried = task(old.id, 'veio de ontem', { intendedDate: day, lastTriagedDay: day, createdAt: '2026-10-10T09:00:00.000Z' });
+
+    const entries = buildDayNote({
+      day,
+      sections: [morning, evening, empty],
+      blocks: [kept, undated, tomorrow, finished, doneLater, oldNote, later],
+      intended: [kept, doneLater, carried],
+      closedAt,
+    });
+
+    expect(entries.map((entry) => [entry.section?.id, entry.blocks.map((block) => block.text)])).toEqual([
+      [morning.id, ['fica hoje', 'feita depois']],
+      [evening.id, ['depois do fechamento']],
+      [empty.id, []],
+    ]);
+    expect(entries[0].carried.map((block) => block.text)).toEqual(['veio de ontem']);
+  });
+
+  it('drops the sections the closing emptied', () => {
+    const s = section({ day });
+    const entries = buildDayNote({ day, sections: [s], blocks: [note(s.id)], intended: [], closedAt: `${day}T18:00:00.000Z` });
+    expect(entries).toEqual([{ section: null, carried: [], blocks: [] }]);
+  });
 });

@@ -62,13 +62,14 @@ describe('day cycle', () => {
     ]);
   });
 
-  it('carries undone tasks to the next day and counts postponements from the second time', async () => {
+  it('keeps the dates of the day and sends untouched tasks to the task list, without postponing', async () => {
     const { ctx, reader, clock, db } = createTestContext();
     const task = await createBlock(ctx, { sectionId: null, position: nextPosition() }, '[] Revisar a spec');
 
-    // Sunday checkout: "dia seguinte" is the first intended date, not a postponement.
+    // Sunday: nothing moves on its own; the task waits for a decision.
     let triage = await loadDayTriage(reader, SUNDAY, SUNDAY);
-    await applyTriage(ctx, SUNDAY, defaultClosingDecisions(triage));
+    expect(triage.rows).toEqual([expect.objectContaining({ suggestion: { kind: 'undate', untouched: true } })]);
+    await applyTriage(ctx, SUNDAY, { ...noDecisions(), tasks: new Map([[task.id, { kind: 'schedule', date: MONDAY } as const]]) });
     await completeCheckout(ctx, SUNDAY);
     expect(await db.blocks.get(task.id)).toMatchObject({ intendedDate: MONDAY, postponeCount: 0, firstIntendedDate: MONDAY });
 
@@ -78,14 +79,42 @@ describe('day cycle', () => {
     expect(monday.entries[0].section).toBeNull();
     expect(monday.entries[0].carried.map((block) => block.id)).toEqual([task.id]);
 
+    // Left untouched, it goes to the task list without a date, and that is no postponement.
     triage = await loadDayTriage(reader, MONDAY, MONDAY);
-    expect(triage.automatic).toEqual([expect.objectContaining({ type: 'rolledOver', section: null })]);
-    await applyTriage(ctx, MONDAY, {
-      ...noDecisions(),
-      tasks: new Map([[task.id, { kind: 'schedule', date: '2026-10-13' } as const]]),
-    });
-    expect(await db.blocks.get(task.id)).toMatchObject({ intendedDate: '2026-10-13', postponeCount: 1 });
-    expect(await db.events.where('type').equals('task.postponed').count()).toBe(1);
+    expect(triage.rows.map((row) => row.task.id)).toEqual([task.id]);
+    await applyTriage(ctx, MONDAY, defaultClosingDecisions(triage));
+    expect(await db.blocks.get(task.id)).toMatchObject({ intendedDate: null, postponeCount: 0, lastTriagedDay: MONDAY });
+    expect(await db.events.where('type').equals('task.postponed').count()).toBe(0);
+  });
+
+  it('starts today over after closing it, while a past day keeps everything', async () => {
+    const { ctx, reader, clock } = createTestContext();
+    clock.set(`${SUNDAY}T09:00:00`);
+    const kept = await createBlock(ctx, { sectionId: null, position: nextPosition() }, '[] Fica hoje');
+    await createBlock(ctx, { sectionId: null, position: nextPosition() }, '[] Algum dia');
+    await createBlock(ctx, { sectionId: null, position: nextPosition() }, 'Uma nota');
+
+    clock.set(`${SUNDAY}T18:00:00`);
+    const triage = await loadDayTriage(reader, SUNDAY, SUNDAY);
+    const decisions = defaultClosingDecisions(triage);
+    decisions.tasks.set(kept.id, { kind: 'schedule', date: SUNDAY });
+    await applyTriage(ctx, SUNDAY, decisions);
+    await completeCheckout(ctx, SUNDAY);
+
+    const today = await loadDayNote(reader, SUNDAY, SUNDAY);
+    expect(today.entries.flatMap((entry) => entry.blocks.map((block) => block.id))).toEqual([kept.id]);
+    // Paging back to it another day shows the whole day.
+    const later = await loadDayNote(reader, SUNDAY, MONDAY);
+    expect(later.entries.flatMap((entry) => entry.blocks.map((block) => block.text))).toEqual(['Fica hoje', 'Algum dia', 'Uma nota']);
+  });
+
+  it('counts "sem data" chosen in the triage as a postponement of a dated task', async () => {
+    const { ctx, reader, db } = createTestContext();
+    const task = await createBlock(ctx, { sectionId: null, position: nextPosition() }, '[] Pagar a conta');
+    await applyTriage(ctx, SUNDAY, { ...noDecisions(), tasks: new Map([[task.id, { kind: 'schedule', date: SUNDAY } as const]]) });
+    expect((await loadDayTriage(reader, SUNDAY, SUNDAY)).rows).toEqual([]);
+    await applyTriage(ctx, MONDAY, { ...noDecisions(), tasks: new Map([[task.id, { kind: 'undate' } as const]]) });
+    expect(await db.blocks.get(task.id)).toMatchObject({ intendedDate: null, postponeCount: 1 });
   });
 
   it('finishing a task during the day takes it out of the triage', async () => {
@@ -97,7 +126,6 @@ describe('day cycle', () => {
     const triage = await loadDayTriage(reader, SUNDAY, SUNDAY);
     expect(triage.rows).toEqual([]);
     expect(triage.automatic).toContainEqual(expect.objectContaining({ type: 'finishedDuringDay' }));
-    expect(triage.automatic.some((item) => item.type === 'rolledOver')).toBe(false);
   });
 
   it('triages notes per section; every section keeps its notes on its own', async () => {

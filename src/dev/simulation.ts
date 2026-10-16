@@ -24,6 +24,7 @@ import { setDayPriority, setDeadline, setIntendedDate, setSectionDetails } from 
 import { addDays, fromDayKey, toDayKey, type DayKey } from '../domain/day';
 import type { Block, Project, Section, SectionKind } from '../domain/entities';
 import { positionBetween } from '../domain/position';
+import { POSTPONE_ATTENTION_THRESHOLD } from '../domain/tasks';
 import type { NotesDecision, TaskDecision, WhiteboardDecision } from '../domain/triage';
 import { MemoryStore } from './memoryStore';
 
@@ -189,8 +190,9 @@ export class Simulation {
   }
 
   /**
-   * The day's checkout at 18:00, as "Aceitar sugestões" with some choices changed. Tasks
-   * suggested for "dia seguinte" go to the next work day of the script instead.
+   * The day's checkout at 18:00, with some choices changed. Open tasks go to the next work day
+   * of the script, as a batch "dia seguinte" would, and the ones postponed too often wait for the
+   * Revisão de Foco.
    */
   async checkout(choices: CheckoutChoices = {}): Promise<void> {
     const day = this.day(this.offset);
@@ -200,8 +202,10 @@ export class Simulation {
     const next = this.nextWorkDay();
     const triage = await loadDayTriage(this.store, day, day);
     const decisions = defaultClosingDecisions(triage) satisfies TriageDecisions;
-    for (const [id, decision] of decisions.tasks) {
-      if (decision.kind === 'schedule' && decision.date === triage.nextDay) decisions.tasks.set(id, { kind: 'schedule', date: next });
+    for (const row of triage.rows) {
+      if (row.suggestion.kind !== 'undate') continue;
+      const often = row.task.postponeCount >= POSTPONE_ATTENTION_THRESHOLD;
+      decisions.tasks.set(row.task.id, often ? { kind: 'reflection' } : { kind: 'schedule', date: next });
     }
     for (const [task, decision] of choices.tasks ?? []) decisions.tasks.set(task.id, decision);
     for (const [section, decision] of choices.notes ?? []) decisions.notes.set(section.id, decision);

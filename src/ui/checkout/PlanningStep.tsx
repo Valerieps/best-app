@@ -1,15 +1,15 @@
 import { useCallback, useEffect, useState, type MouseEvent } from 'react';
-import { applyPlanning, completeCheckout, type PlanningChange } from '../../application/checkout';
+import { applyPlanning, applyTriage, completeCheckout, defaultClosingDecisions, type PlanningChange } from '../../application/checkout';
 import type { TaskListItem } from '../../application/queries';
-import { loadPlanning } from '../../application/queries';
+import { loadDayTriage, loadPlanning } from '../../application/queries';
 import { rangeBetween } from '../../domain/checkoutSteps';
 import { addDays, type DayKey } from '../../domain/day';
 import { Fireworks, playPlim } from '../components/Celebration';
 import { ProjectChip } from '../components/Chips';
+import { IconAction } from '../components/IconAction';
 import { Linkified } from '../components/Linkified';
 import { SkeletonLines } from '../components/Skeleton';
 import { formatShortDate, plural, postponedLabel, relativeDay, weekdayName } from '../format';
-import { navigate } from '../hooks';
 import { appContext, reader } from '../services';
 import { useLiveQuery } from '../useLiveQuery';
 import { StepFooter, StepQuestion, useStepKeys } from './StepParts';
@@ -19,6 +19,8 @@ interface Props {
   target: DayKey;
   today: DayKey;
   onBack: (() => void) | null;
+  /** After the fireworks: back to where the closing started. */
+  onDone(): void;
 }
 
 type When = 'target' | 'other' | 'none' | 'past';
@@ -28,7 +30,7 @@ type When = 'target' | 'other' | 'none' | 'past';
  * target day's note, the ones scheduled for the next few days, and the other active tasks can
  * each get a new date, one by one or in a batch (spec/checkout.md, "Planejamento do dia seguinte").
  */
-export function PlanningStep({ day, target, today, onBack }: Props) {
+export function PlanningStep({ day, target, today, onBack, onDone }: Props) {
   const view = useLiveQuery(() => loadPlanning(reader, target), [target]);
   const [dates, setDates] = useState<Map<string, DayKey | null>>(new Map());
   const [selecting, setSelecting] = useState(false);
@@ -38,7 +40,7 @@ export function PlanningStep({ day, target, today, onBack }: Props) {
   const [flash, setFlash] = useState('');
   const [celebrating, setCelebrating] = useState(false);
   const [busy, setBusy] = useState(false);
-  const finish = useCallback(() => navigate({ name: 'day' }), []);
+  const finish = useCallback(() => onDone(), [onDone]);
 
   const label = relativeDay(target, today);
   const Label = label.charAt(0).toUpperCase() + label.slice(1);
@@ -62,6 +64,8 @@ export function PlanningStep({ day, target, today, onBack }: Props) {
       .filter((item) => dates.has(item.task.id) && dateOf(item) !== item.task.intendedDate)
       .map((item) => ({ taskId: item.task.id, date: dateOf(item) }));
     await applyPlanning(appContext, day, changes);
+    // Whatever is still open (a task added meanwhile, or notes when there were no tasks) is settled.
+    await applyTriage(appContext, day, defaultClosingDecisions(await loadDayTriage(reader, day, today)));
     await completeCheckout(appContext, day);
     playPlim();
     setCelebrating(true);
@@ -198,9 +202,13 @@ export function PlanningStep({ day, target, today, onBack }: Props) {
         <h3 className="checkout-group__title">
           {title}
           {selecting && (
-            <button type="button" className="link checkout-group__pick" onClick={() => pickGroup(list)}>
-              {all ? 'tirar seleção do grupo' : 'selecionar grupo'}
-            </button>
+            <IconAction
+              icon="checklist"
+              label={all ? 'Tirar a seleção do grupo' : 'Selecionar o grupo'}
+              pressed={all}
+              onClick={() => pickGroup(list)}
+              className="checkout-group__pick"
+            />
           )}
         </h3>
         <ul className="plan-list">{list.map(renderRow)}</ul>
@@ -214,9 +222,12 @@ export function PlanningStep({ day, target, today, onBack }: Props) {
         <StepQuestion focusKey="planning">O que entra na nota de {label}?</StepQuestion>
         <div className="plan-intro">
           <p className="muted">{selecting ? 'Shift + clique seleciona um intervalo.' : 'Ajuste a data de qualquer tarefa.'}</p>
-          <button type="button" className={selecting ? 'primary' : ''} aria-pressed={selecting} onClick={selecting ? leaveSelection : () => setSelecting(true)}>
-            {selecting ? 'Pronto' : 'Selecionar várias'}
-          </button>
+          <IconAction
+            icon="checklist"
+            label={selecting ? 'Sair da seleção' : 'Selecionar várias'}
+            pressed={selecting}
+            onClick={selecting ? leaveSelection : () => setSelecting(true)}
+          />
         </div>
         {group(`Já na nota de ${label}`, view.planned)}
         {group('Próximos dias', view.soon)}
@@ -233,10 +244,7 @@ export function PlanningStep({ day, target, today, onBack }: Props) {
             {selected.size > 0 ? <b>{plural(selected.size, 'tarefa selecionada', 'tarefas selecionadas')}</b> : flash || 'Nenhuma tarefa selecionada'}
           </span>
           <span className="batch-bar__actions">
-            <span className="muted">Levar para</span>
-            <button type="button" disabled={selected.size === 0} onClick={() => applyBatch(target)}>
-              {Label}
-            </button>
+            <IconAction icon="arrowRight" label={`Levar para ${label}`} disabled={selected.size === 0} onClick={() => applyBatch(target)} />
             <span className="batch-bar__date">
               <input
                 type="date"
@@ -246,13 +254,9 @@ export function PlanningStep({ day, target, today, onBack }: Props) {
                 onChange={(event) => event.target.value && setBatchDate(event.target.value)}
                 aria-label="Data para as tarefas selecionadas"
               />
-              <button type="button" disabled={selected.size === 0} onClick={() => applyBatch(batchDate)}>
-                Nesta data
-              </button>
+              <IconAction icon="calendar" label="Levar para esta data" disabled={selected.size === 0} onClick={() => applyBatch(batchDate)} />
             </span>
-            <button type="button" disabled={selected.size === 0} onClick={() => applyBatch(null)}>
-              Sem data
-            </button>
+            <IconAction icon="calendarOff" label="Sem data: vai para a lista de tarefas" disabled={selected.size === 0} onClick={() => applyBatch(null)} />
           </span>
         </div>
       )}

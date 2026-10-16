@@ -138,7 +138,7 @@ Nada disso é guardado: é calculado a partir das tabelas, por funções de `app
 
 | Visão | Como é montada |
 | --- | --- |
-| Nota do dia | Seções com `day` igual ao dia, mais as tarefas `active` com `intendedDate` igual ao dia, na seção "De outros dias", que só existe na tela. A tarefa não é copiada; ela só aparece ali. As partes (seções, "De outros dias" e prioridades) seguem `days.sectionOrder` por `orderDayParts` (`domain/order.ts`, ADR-040) |
+| Nota do dia | Seções com `day` igual ao dia, mais as tarefas `active` com `intendedDate` igual ao dia, na seção "De outros dias", que só existe na tela. A tarefa não é copiada; ela só aparece ali. Depois de fechar hoje, a nota de hoje mostra só o que foi escrito depois de `days.lastCheckoutAt` e as tarefas com a data de hoje (`isShownAfterClosing`, `domain/dayNote.ts`); os dias passados mostram tudo. As partes (seções, "De outros dias" e prioridades) seguem `days.sectionOrder` por `orderDayParts` (`domain/order.ts`, ADR-040) |
 | Dia pendente | Tem tarefa com `lastTriagedDay` anterior ao dia, ou seção sem destino |
 | Tarefas (não concluídas, concluídas ou todas) | Blocos `task` por `status` (`active` e `done`) |
 | Notas de um projeto | Seções do projeto com `notesDestination = 'wiki'`, cada entrada com as notas da seção, da mais recente para a mais antiga (`loadSectionNotes`) |
@@ -178,7 +178,7 @@ Nada disso é guardado: é calculado a partir das tabelas, por funções de `app
 Um adiamento gera `task.postponed` e soma 1 em `postponeCount`. Ele acontece em dois casos:
 
 1. A data de intenção muda para depois.
-2. A tarefa passa pelo checkout sem ter sido feita no dia da intenção. Isso inclui as tarefas que o "Fechar dias pendentes" devolve sem data.
+2. As tarefas que o "Fechar dias pendentes" devolve sem data. No "Fechar o dia", a tarefa deixada sem mexer vai para a lista sem data e sem contar adiamento; o "sem data" escolhido conta pelo caso 1.
 
 Reativar uma tarefa arquivada limpa a data sem contar adiamento (ADR-015).
 
@@ -198,8 +198,8 @@ Reativar uma tarefa arquivada limpa a data sem contar adiamento (ADR-015).
 
 ## 8. Checkout e auto-triagem (implementado)
 
-- A auto-triagem é uma função pura no domínio (`domain/triage.ts`). Ela recebe um dia (seções, blocos e projetos) e devolve as decisões automáticas (notas guardadas, quadros brancos sem vínculo, tarefas que vão sozinhas para o dia seguinte, tarefas resolvidas durante o dia), as tarefas que pedem decisão e a lista das tarefas abertas na ordem da nota, seguindo `spec/checkout.md`. `defaultClosingDecisions` (`application/checkout.ts`) transforma isso nas decisões que o fechamento grava quando nada é mudado.
-- A tela do "Fechar o dia" (no código, ainda `checkout`) é feita de etapas (`domain/checkoutSteps.ts` decide quais existem e a ordem; cada etapa é um componente em `ui/checkout/`). Ela carrega a triagem como uma foto, para que nada mude enquanto a pessoa escolhe, e cada etapa grava só as suas decisões com `applyTriage`, numa transação, ao avançar. Depois de gravar, a tela relê a triagem e pula as etapas que ficaram vazias (ADR-044). As decisões automáticas e as sugestões que sobram são gravadas na confirmação, numa transação só (ADR-012).
+- A auto-triagem é uma função pura no domínio (`domain/triage.ts`). Ela recebe um dia (seções, blocos e projetos) e devolve as decisões automáticas (notas guardadas, quadros brancos sem vínculo, tarefas resolvidas durante o dia), as tarefas que pedem decisão (abertas, sem data futura, e as aguardando) e a lista das tarefas abertas na ordem da nota, seguindo `spec/checkout.md`. Nenhuma tarefa muda de data sozinha. `defaultClosingDecisions` (`application/checkout.ts`) transforma isso nas decisões que o fechamento grava quando nada é mudado: "sem data" marcado como `untouched`, que não conta adiamento, e "deixar como está" para as aguardando.
+- A tela do "Fechar o dia" (no código, ainda `checkout`) é feita de etapas (`domain/checkoutSteps.ts` decide quais existem e a ordem; cada etapa é um componente em `ui/checkout/`). Ela carrega a triagem como uma foto, para que nada mude enquanto a pessoa escolhe, e cada etapa grava só as suas decisões com `applyTriage`, numa transação, ao avançar. Na etapa "Tarefas", cada ação em lote grava na hora e a tela relê a triagem sem sair da etapa; ao seguir, as sugestões que sobram e as decisões automáticas são gravadas numa transação só (ADR-012). Depois de gravar, a tela relê a triagem e pula as etapas que ficaram vazias (ADR-044). "Finalizar meu dia" grava de novo o que ainda estiver em aberto antes de marcar o dia como fechado, e volta para a origem guardada na rota (`#/checkout/<dia>/rituais` volta para "Rituais").
 - O planejamento grava a data de cada tarefa mudada (`applyPlanning`), inclusive das já agendadas; a seleção em lote só existe na tela, até "Finalizar meu dia".
 - "Fechar dias pendentes" usa a mesma função para vários dias. A diferença é que as tarefas não feitas voltam sem data.
 - O mesmo mecanismo de lote serve aos assistentes de limpeza (`spec/assistentes.md`): cada assistente só fornece a busca (`domain/assistants.ts`) e as ações (`application/assistants.ts`). A sugestão de vincular uma seção solta a um projeto citado no texto dela mora em "Seções soltas", que recebe o texto das seções.

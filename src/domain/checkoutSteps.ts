@@ -1,36 +1,30 @@
 import { addDays, type DayKey } from './day';
-import type { Block } from './entities';
-import { POSTPONE_ATTENTION_THRESHOLD } from './tasks';
 import type { DayTriage } from './triage';
 
 /**
  * "Fechar o dia" in steps (spec/checkout.md, "Fechamento em etapas"). Each step handles one kind
  * of decision, and a step with nothing to decide is skipped.
  */
-export type CheckoutStep = 'doneCheck' | 'attention' | 'reminders' | 'confirm' | 'planning';
+export type CheckoutStep = 'triage' | 'reminders' | 'planning';
 
-export const CHECKOUT_STEP_ORDER: readonly CheckoutStep[] = ['doneCheck', 'attention', 'reminders', 'confirm', 'planning'];
+export const CHECKOUT_STEP_ORDER: readonly CheckoutStep[] = ['triage', 'reminders', 'planning'];
 
 /** How many items each step that can be empty has to decide. */
 export interface StepCounts {
-  /** Every task still open: the ones needing a decision and the ones rolling over. */
+  /** Open tasks without a future date, and the waiting ones. */
   tasks: number;
-  attention: number;
   reminders: number;
 }
 
 export function stepCounts(triage: DayTriage, reminders: number): StepCounts {
-  const rolledOver = triage.automatic.filter((item) => item.type === 'rolledOver').length;
-  return { tasks: triage.rows.length + rolledOver, attention: triage.rows.length, reminders };
+  return { tasks: triage.rows.length, reminders };
 }
 
-/** The confirmation and the planning always show: they close the day even when it is empty. */
+/** The planning always shows: it closes the day even when it is empty. */
 export function stepHasItems(step: CheckoutStep, counts: StepCounts): boolean {
   switch (step) {
-    case 'doneCheck':
+    case 'triage':
       return counts.tasks > 0;
-    case 'attention':
-      return counts.attention > 0;
     case 'reminders':
       return counts.reminders > 0;
     default:
@@ -54,15 +48,26 @@ export function previousStep(plan: readonly CheckoutStep[], current: CheckoutSte
   return [...plan.slice(0, Math.max(index, 0))].reverse().find((step) => stepHasItems(step, counts)) ?? null;
 }
 
-export type AttentionReason = 'waiting' | 'postponed' | 'deadline';
+/** A group of the triage: the tasks of one project, or the ones without a project (`projectId` null). */
+export interface ProjectGroup<T> {
+  projectId: string | null;
+  items: T[];
+}
 
 /**
- * Why a task asks for a decision: someone owes it to me, it was postponed too often, or its
- * deadline is before "dia seguinte".
+ * The triage shows the tasks grouped by project, the groups in the order their first task
+ * appears in the day note, and the tasks without a project last.
  */
-export function attentionReason(task: Block): AttentionReason {
-  if (task.waiting) return 'waiting';
-  return task.postponeCount >= POSTPONE_ATTENTION_THRESHOLD ? 'postponed' : 'deadline';
+export function groupByProject<T>(items: readonly T[], projectOf: (item: T) => string | null): ProjectGroup<T>[] {
+  const groups = new Map<string | null, T[]>();
+  for (const item of items) {
+    const key = projectOf(item);
+    const group = groups.get(key);
+    if (group) group.push(item);
+    else groups.set(key, [item]);
+  }
+  const result = [...groups].map(([projectId, list]) => ({ projectId, items: list }));
+  return [...result.filter((group) => group.projectId !== null), ...result.filter((group) => group.projectId === null)];
 }
 
 /** The planning shows the tasks scheduled for the days right after the target (spec/checkout.md). */

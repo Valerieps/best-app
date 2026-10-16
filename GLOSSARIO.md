@@ -19,7 +19,7 @@ Os termos marcados com ⚠ ainda têm mais de um sentido nos documentos; o item 
 
 - **Data de intenção (de execução):** o dia em que a tarefa aparece na nota do dia. (`spec/tarefas.md`)
 - **Prazo máximo:** a segunda data, opcional. No dia do prazo, a tarefa vira prioridade do dia. (`spec/tarefas.md`)
-- **Adiamento:** mudar a data de intenção para depois, tirar a data, ou passar pelo fechamento do dia sem fazer a tarefa no dia da intenção, inclusive quando ela vai sozinha para o dia seguinte. (`spec/tarefas.md`)
+- **Adiamento:** mudar a data de intenção para depois, ou tirar a data, inclusive no fechamento do dia. A tarefa deixada sem mexer na triagem do "Fechar o dia" não conta. (`spec/tarefas.md`)
 - **Precisão da data de intenção:** a parte das tarefas finalizadas com data de intenção que foram feitas no dia da intenção. (`spec/rituais.md`)
 - **Tarefas:** a lista das tarefas abertas, ou seja, nem finalizadas nem abandonadas, que também mostra as finalizadas quando eu peço. Antes se chamava "tarefas ativas". (`spec/tarefas.md`)
 - **Tarefa travada:** tarefa de projeto adiada 3 vezes ou mais, ou com a data de intenção vencida. ⚠ Não confundir com o assistente "Prioridades travadas" (`INCOERENCIAS.md`, 2.10). (`spec/projetos.md`)

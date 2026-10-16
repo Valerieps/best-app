@@ -91,7 +91,6 @@ describe('waiting tasks', () => {
     const waiting = await createBlock(ctx, { sectionId: null, position: at() }, '[a] @Ana mandar o contrato');
     const triage = await loadDayTriage(reader, SUNDAY, SUNDAY);
     expect(triage.rows).toEqual([expect.objectContaining({ task: expect.objectContaining({ id: waiting.id }), suggestion: { kind: 'keep' } })]);
-    expect(triage.automatic.some((item) => item.type === 'rolledOver')).toBe(false);
 
     await applyTriage(ctx, SUNDAY, defaultClosingDecisions(triage));
     expect(await db.blocks.get(waiting.id)).toMatchObject({ status: 'active', intendedDate: null, lastTriagedDay: SUNDAY, postponeCount: 0 });

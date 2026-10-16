@@ -175,7 +175,7 @@ export function DayNoteScreen({
   // In focus mode, a part opened on today's note keeps taking new lines past midnight: the day
   // turning never interrupts what I am writing (spec/nota-do-dia.md, "Modo foco").
   const writable = focus ? focus.writable : isToday;
-  const view = useLiveQuery(() => loadDayNote(reader, day), [day]);
+  const view = useLiveQuery(() => loadDayNote(reader, day, today), [day, today]);
   const prioritiesDay = focus ? focus.day : today;
   const priorities = useLiveQuery(() => loadDayPriorities(reader, prioritiesDay), [prioritiesDay]) ?? [];
   const [pinned, setPinned] = usePinnedPriorities();
