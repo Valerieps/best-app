@@ -1,23 +1,30 @@
 import { useEffect, useState } from 'react';
 import { setReviewCadence } from '../../application/reviews';
-import { setActiveDays, setCleanupLimits, setWarmupItems } from '../../application/settings';
+import { setActiveDays, setAppearance, setCleanupLimits, setWarmupItems } from '../../application/settings';
 import { ASSISTANT_IDS, limitsFor, withLimit, type AssistantId, type StatusLimits } from '../../domain/cleanupStatus';
 import { ALL_DAYS } from '../../domain/dayFlow';
-import type { Settings, WarmupItem } from '../../domain/entities';
+import type { Appearance, Settings, WarmupItem } from '../../domain/entities';
 import { DEFAULT_REVIEW_CADENCE } from '../../domain/reviews';
 import { ASSISTANT_INFO } from '../cleanup/assistantInfo';
 import { appContext, reader } from '../services';
 import { Icon } from '../components/Icon';
 import { ScreenHeader } from '../components/ScreenHeader';
+import { Segmented, type SegmentOption } from '../components/Segmented';
 import { LoadingPage } from '../components/Skeleton';
+import { parseAppearance } from '../theme/appearance';
 import { directionReviewEnabled } from '../features';
 import { useLiveQuery } from '../useLiveQuery';
 
 const WEEKDAYS = ['domingo', 'segunda', 'terça', 'quarta', 'quinta', 'sexta', 'sábado'];
 /** Monday first, as people read a work week. */
 const WEEK_ORDER = [1, 2, 3, 4, 5, 6, 0];
+const APPEARANCES: readonly SegmentOption<Appearance>[] = [
+  { value: 'light', label: 'Clara' },
+  { value: 'dark', label: 'Escura' },
+  { value: 'system', label: 'Igual à do sistema' },
+];
 
-/** User settings: review cadence (section 2), active days and warm up (section 3). */
+/** User settings: review cadence (section 2), active days and warm up (section 3), appearance. */
 export function SettingsScreen() {
   const settings = useLiveQuery(async () => (await reader.settings()) ?? null);
   if (settings === undefined) return <LoadingPage title="Configurações" />;
@@ -83,6 +90,16 @@ export function SettingsScreen() {
         <h2>Assistentes</h2>
         <p className="muted">Dias de espera do item mais antigo para o cartão mudar de cor.</p>
         <CleanupLimitsEditor saved={settings?.cleanupAgeLimits} />
+      </section>
+
+      <section className="panel settings__panel">
+        <h2>Aparência</h2>
+        <Segmented
+          label="Aparência"
+          options={APPEARANCES}
+          value={parseAppearance(settings?.appearance)}
+          onChange={(appearance) => void setAppearance(appContext, appearance)}
+        />
       </section>
     </main>
   );

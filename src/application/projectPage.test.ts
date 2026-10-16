@@ -6,7 +6,7 @@ import { createBlock, linkSectionToProject, setTaskDone } from './notebook';
 import { renameResource, addLinkResource } from './objectives';
 import { createProject, createProjectTask, setProjectFinished, setProjectIcon } from './projects';
 import { loadDayNote, loadDayTriage, loadPendingDays, loadProject, loadProjectList } from './queries';
-import { setProjectListGroupOpen, setProjectPanelPinned, setSidebarCollapsed, setSidebarWidth } from './settings';
+import { setAppearance, setProjectListGroupOpen, setProjectPanelPinned, setSidebarCollapsed, setSidebarWidth } from './settings';
 
 const TODAY = '2026-10-11';
 
@@ -183,5 +183,18 @@ describe('sidebar', () => {
     expect((await reader.settings())?.sidebarWidth).toBe(320);
     await setSidebarWidth(ctx, null);
     expect((await reader.settings())?.sidebarWidth).toBeUndefined();
+  });
+});
+
+describe('appearance', () => {
+  it('starts following the system and remembers light or dark in the settings', async () => {
+    const { ctx, reader } = createTestContext();
+    expect((await reader.settings())?.appearance).toBeUndefined();
+    await setAppearance(ctx, 'dark');
+    expect((await reader.settings())?.appearance).toBe('dark');
+    await setAppearance(ctx, 'light');
+    expect((await reader.settings())?.appearance).toBe('light');
+    await setAppearance(ctx, 'system');
+    expect((await reader.settings())?.appearance).toBeUndefined();
   });
 });
