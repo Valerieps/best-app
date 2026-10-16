@@ -6,7 +6,7 @@ import { setProjectListGroupOpen } from '../../application/settings';
 import { toDayKey, type DayKey } from '../../domain/day';
 import type { ProjectListGroup } from '../../domain/entities';
 import { FOCUS_PROJECT_LIMIT } from '../../domain/focusProjects';
-import { CARD_MAP_WEEKS, ROW_MAP_WEEKS } from '../../domain/projectActivity';
+import { CARD_MAP_WEEKS } from '../../domain/projectActivity';
 import { Dropdown, DropdownItem } from '../components/Dropdown';
 import { Icon } from '../components/Icon';
 import { ScreenHeader } from '../components/ScreenHeader';
@@ -86,7 +86,6 @@ export function ProjectsScreen({ today }: { today: DayKey }) {
                 <span className={`project-row__state ${item.stalledDays !== null ? 'project-row__state--warning' : ''}`}>
                   {item.stalledDays !== null ? `Parado há ${item.stalledDays} dias` : plural(item.activeTasks, 'ativa', 'ativas')}
                 </span>
-                <ActivityMap activity={item.activity} today={today} weeks={ROW_MAP_WEEKS} name={item.project.name} />
                 <ProjectActionsMenu project={item.project} objectives={view.objectives} canAddToPriorities={item.canAddToPriorities} />
               </li>
             ))}

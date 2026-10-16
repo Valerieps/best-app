@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import type { Block, Section } from './entities';
-import { agendaDays, groupProjectTasks, isDaySection, isProjectIcon, isStuckTask, projectInitial, stuckReason } from './projectPage';
+import { agendaColumns, groupProjectTasks, isDaySection, isProjectIcon, isStuckTask, projectInitial, stuckReason } from './projectPage';
 
 const TODAY = '2026-10-12';
 
@@ -65,6 +65,15 @@ describe('groupProjectTasks', () => {
     expect(groups.upcoming).toEqual([]);
     expect(groups.undated).toEqual([]);
   });
+
+  it('shows every waiting task only among the waiting ones, with a date or without', () => {
+    const groups = groupProjectTasks(
+      [task('dated', { intendedDate: '2026-10-20', waiting: true }), task('late', { intendedDate: '2026-10-01', waiting: true }), task('none', { waiting: true })],
+      TODAY,
+    );
+    expect(groups.waiting.map((t) => t.id)).toEqual(['late', 'dated', 'none']);
+    expect([...groups.stuck, ...groups.upcoming, ...groups.undated]).toEqual([]);
+  });
 });
 
 describe('stuckReason', () => {
@@ -89,13 +98,24 @@ describe('stuckReason', () => {
   });
 });
 
-describe('agendaDays', () => {
-  it('gathers the upcoming tasks by intended date, in order', () => {
-    const days = agendaDays([task('b', { intendedDate: '2026-10-14' }), task('a', { intendedDate: '2026-10-13' }), task('c', { intendedDate: '2026-10-14' })]);
-    expect(days.map(({ day, tasks }) => [day, tasks.map((t) => t.id)])).toEqual([
-      ['2026-10-13', ['a']],
-      ['2026-10-14', ['b', 'c']],
+describe('agendaColumns', () => {
+  // 2026-10-16 is a Friday.
+  it('shows the next 3 days from today, each with its tasks; later tasks do not show', () => {
+    const columns = agendaColumns(
+      [task('a', { intendedDate: '2026-10-16' }), task('b', { intendedDate: '2026-10-18' }), task('c', { intendedDate: '2026-10-25' })],
+      '2026-10-16',
+    );
+    expect(columns.map(({ day, tasks }) => [day, tasks.map((t) => t.id)])).toEqual([
+      ['2026-10-16', ['a']],
+      ['2026-10-17', []],
+      ['2026-10-18', ['b']],
     ]);
+  });
+
+  it('skips the days that are not active', () => {
+    const weekdays = [1, 2, 3, 4, 5];
+    expect(agendaColumns([], '2026-10-16', weekdays).map(({ day }) => day)).toEqual(['2026-10-16', '2026-10-19', '2026-10-20']);
+    expect(agendaColumns([], '2026-10-17', weekdays).map(({ day }) => day)).toEqual(['2026-10-19', '2026-10-20', '2026-10-21']);
   });
 });
 
@@ -115,5 +135,6 @@ describe('icons and sections', () => {
     const section = { id: 's', projectPage: true } as Section;
     expect(isDaySection(section)).toBe(false);
     expect(isDaySection({ ...section, projectPage: undefined })).toBe(true);
+    expect(isDaySection({ ...section, projectPage: undefined, projectNote: true })).toBe(false);
   });
 });

@@ -81,6 +81,8 @@ interface Props {
   drag?: LineDragProps;
   /** Part of the lines selected together (spec/nota-do-dia.md, "Selecionar várias linhas"). */
   selected?: boolean;
+  /** The line stays a note: "[] " does not make it a task (a kept note on a project page). */
+  notesOnly?: boolean;
 }
 
 /** Hint on an empty line, shown only while the line is being written (P3 in AVALIACAO-UX.md). */
@@ -141,7 +143,7 @@ export function DatePicker({
   );
 }
 
-export function BlockLine({ block, free, day, today, isPriority, allowNewLines, handlers, extraMeta, hideDate = false, drag, selected = false }: Props) {
+export function BlockLine({ block, free, day, today, isPriority, allowNewLines, handlers, extraMeta, hideDate = false, drag, selected = false, notesOnly = false }: Props) {
   const ref = useRef<HTMLTextAreaElement>(null);
   const [text, setText] = useState(block.text);
   const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -263,7 +265,7 @@ export function BlockLine({ block, free, day, today, isPriority, allowNewLines, 
       const caret = field.selectionStart + before;
       selectionAfter.current = [caret, caret];
     }
-    if (block.kind === 'note' && free) {
+    if (block.kind === 'note' && free && !notesOnly) {
       const detected = detectKind(value);
       if (detected.kind === 'task') {
         setText(detected.text);
@@ -460,7 +462,7 @@ export function BlockLine({ block, free, day, today, isPriority, allowNewLines, 
             flush();
             createTypedPeople();
           }}
-          placeholder={block.kind === 'note' && free && allowNewLines && !structure.list ? NOTE_HINT : undefined}
+          placeholder={block.kind === 'note' && free && !notesOnly && allowNewLines && !structure.list ? NOTE_HINT : undefined}
           aria-label={isTask ? 'Tarefa' : 'Nota'}
           aria-expanded={options.length > 0}
           aria-autocomplete="list"
@@ -519,7 +521,7 @@ export function BlockLine({ block, free, day, today, isPriority, allowNewLines, 
             {waiting ? 'Não é aguardando' : 'Aguardando'}
           </button>
         )}
-        {block.kind === 'note' && free && (
+        {block.kind === 'note' && free && !notesOnly && (
           <button type="button" className="line__action" onClick={() => handlers.onMakeTask(block, text)}>
             Converter em tarefa
           </button>

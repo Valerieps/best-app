@@ -13,9 +13,8 @@ import { weekStart } from './week';
 export const STALLED_AFTER_DAYS = 14;
 /** "Finalizadas nas últimas 2 semanas": today and the 13 days before it. */
 export const RECENT_FINISH_DAYS = 14;
-/** Columns of the map on a priority project's card and on the other projects' rows. */
+/** Columns of the map on a priority project's card; the other projects' rows show no map. */
 export const CARD_MAP_WEEKS = 16;
-export const ROW_MAP_WEEKS = 8;
 
 export interface DayActivity {
   tasksCreated: number;

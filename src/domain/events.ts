@@ -68,8 +68,11 @@ export interface EventData {
   'task.convertedToHabit': { habitId: string };
   /** The task became, or stopped being, something a person owes me (spec/pessoas.md). */
   'task.waitingChanged': { waiting: boolean };
-  /** `projectPage` and `projectId` when the section is a project's page. */
-  'section.created': { kind: SectionKind; projectPage?: true; projectId?: string };
+  /**
+   * `projectPage` and `projectId` when the section is a project's page; `projectNote` and
+   * `projectId` when it is a note written on a project's page.
+   */
+  'section.created': { kind: SectionKind; projectPage?: true; projectNote?: true; projectId?: string };
   'section.titleChanged': { from: string | null; to: string | null };
   'section.linkedToProject': { projectId: string; mergedFrom?: string };
   /** The section went back to being a whiteboard; `projectId` is the project it left. */

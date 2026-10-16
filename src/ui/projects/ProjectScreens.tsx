@@ -7,13 +7,13 @@ import { loadDayPriorities, loadProject, loadProjectResources } from '../../appl
 import { setProjectPanelPinned } from '../../application/settings';
 import { type DayKey } from '../../domain/day';
 import type { Block } from '../../domain/entities';
-import { agendaDays, groupProjectTasks, stuckReason } from '../../domain/projectPage';
+import { agendaColumns, groupProjectTasks, stuckReason } from '../../domain/projectPage';
 import { BlockLine, DatePicker, type LineHandlers } from '../dayNote/BlockLine';
 import { requestFocus } from '../dayNote/focus';
 import { Icon } from '../components/Icon';
 import { BackButton, ScreenHeader } from '../components/ScreenHeader';
 import { LoadingPage } from '../components/Skeleton';
-import { agendaDate, formatLongDate, plural, stuckReasonLabel } from '../format';
+import { formatLongDate, formatShortDate, plural, stuckReasonLabel, weekdayName } from '../format';
 import { navigate } from '../hooks';
 import { appContext, reader } from '../services';
 import { useLiveQuery } from '../useLiveQuery';
@@ -49,7 +49,7 @@ function useNarrow(): boolean {
   return narrow;
 }
 
-/** "Nova tarefa", always above the tabs: Enter creates the task and keeps the field for the next one. */
+/** "Nova tarefa", above the tabs while the tasks show: Enter creates the task and keeps the field for the next one. */
 function NewTaskField({ projectId }: { projectId: string }) {
   const [text, setText] = useState('');
   const onKeyDown = (event: KeyboardEvent<HTMLInputElement>) => {
@@ -98,7 +98,8 @@ export function ProjectScreen({ id, tab, today }: { id: string; tab: 'tasks' | '
   const objectives = useLiveQuery(() => reader.objectives()) ?? [];
   const resources = useLiveQuery(() => loadProjectResources(reader, id), [id]) ?? [];
   const dayPriorities = useLiveQuery(() => loadDayPriorities(reader, today), [today]) ?? [];
-  const pinned = useLiveQuery(async () => (await reader.settings())?.projectPanelPinned ?? false) ?? false;
+  const settings = useLiveQuery(() => reader.settings());
+  const pinned = settings?.projectPanelPinned ?? false;
   const narrow = useNarrow();
   const [peek, setPeek] = useState(false);
   const [name, setName] = useState('');
@@ -146,10 +147,10 @@ export function ProjectScreen({ id, tab, today }: { id: string; tab: 'tasks' | '
   const active = view.activeTasks.map((item) => item.task);
   const done = view.doneTasks.map((item) => item.task);
   const groups = groupProjectTasks(active, today);
-  const agenda = agendaDays(groups.upcoming);
+  const agenda = agendaColumns(groups.upcoming, today, settings?.activeDays);
   const priorityIds = new Set(dayPriorities.map((priority) => priority.task.id));
   // Arrow keys move through the lines in the order they show.
-  const shownLines = [...groups.stuck, ...agenda.flatMap((entry) => entry.tasks), ...groups.undated, ...done];
+  const shownLines = [...groups.stuck, ...agenda.flatMap((entry) => entry.tasks), ...groups.undated, ...groups.waiting, ...done];
 
   const handlers: LineHandlers = {
     onSaveText: (block, text) => write(() => updateBlockText(appContext, block.id, text)),
@@ -217,7 +218,7 @@ export function ProjectScreen({ id, tab, today }: { id: string; tab: 'tasks' | '
             <ProjectActionsMenu project={project} objectives={objectives} canAddToPriorities={view.canAddToPriorities} />
           </header>
 
-          <NewTaskField projectId={project.id} />
+          {tab === 'tasks' && <NewTaskField projectId={project.id} />}
 
           <div className="project-tabs" role="tablist" aria-label="Conteúdo do projeto">
             <button type="button" role="tab" aria-selected={tab === 'tasks'} className="project-tabs__tab" onClick={() => goTab('tasks')}>
@@ -273,28 +274,30 @@ export function ProjectScreen({ id, tab, today }: { id: string; tab: 'tasks' | '
                 </section>
               )}
 
-              {agenda.length > 0 && (
-                <section className="agenda" aria-label="Próximos dias">
-                  <h3 className="task-group__title">
-                    Próximos dias <span className="task-group__count">{groups.upcoming.length}</span>
-                  </h3>
-                  {agenda.map(({ day, tasks }) => {
-                    const date = agendaDate(day, today);
-                    return (
-                      <div className="agenda__day" key={day}>
-                        <span className={`agenda__date ${day === today ? 'agenda__date--today' : ''}`} title={formatLongDate(day)}>
-                          <span className="agenda__date-top">{date.top}</span>
-                          <span className="agenda__date-number">{date.bottom}</span>
-                        </span>
-                        <div className="agenda__tasks">{tasks.map((task) => line(task, true))}</div>
+              {/* "Próximos dias" as a calendar of the next 3 active days; later tasks do not show. */}
+              <section className="agenda" aria-label="Próximos dias">
+                <h3 className="task-group__title">Próximos dias</h3>
+                <div className="agenda__columns">
+                  {agenda.map(({ day, tasks }) => (
+                    <div className={`agenda__day ${day === today ? 'agenda__day--today' : ''}`} key={day} aria-label={formatLongDate(day)}>
+                      <p className="agenda__date">
+                        <span className="agenda__weekday">{weekdayName(day)}</span>
+                        <span className="agenda__number">{day === today ? `hoje · ${formatShortDate(day)}` : formatShortDate(day)}</span>
+                      </p>
+                      <div className="agenda__tasks">
+                        {tasks.length > 0 ? tasks.map((task) => line(task, true)) : <p className="muted agenda__empty">Nada marcado</p>}
                       </div>
-                    );
-                  })}
-                </section>
-              )}
+                    </div>
+                  ))}
+                </div>
+              </section>
 
               <FoldedGroup label="Sem data" count={groups.undated.length} initiallyOpen className="task-group--undated">
                 {groups.undated.map((task) => line(task))}
+              </FoldedGroup>
+
+              <FoldedGroup label="Aguardando" count={groups.waiting.length} initiallyOpen className="task-group--waiting">
+                {groups.waiting.map((task) => line(task))}
               </FoldedGroup>
 
               <FoldedGroup label="Feitas" count={done.length} initiallyOpen={false} className="task-group--done">
@@ -303,7 +306,7 @@ export function ProjectScreen({ id, tab, today }: { id: string; tab: 'tasks' | '
             </div>
           ) : (
             <div role="tabpanel" aria-label="Notas">
-              <ProjectNotes entries={view.notes} projectName={project.name} />
+              <ProjectNotes entries={view.notes} projectId={project.id} projectName={project.name} today={today} />
             </div>
           )}
         </div>

@@ -98,6 +98,7 @@ Cada entidade é um registro separado. Um bloco existe uma vez só: a nota do di
 | `whiteboardDecision` | `pending`, `leftUnlinked` (checkout) ou `keptUnlinked` (assistente de seções soltas) |
 | `participants`, `docLink` | Só reuniões (1b); guardados, mas sem campo na nota do dia desde 15/10/2026 |
 | `projectPage` | Seção escondida que guarda as tarefas escritas na página do projeto; não aparece em nenhuma nota do dia (ADR-031) |
+| `projectNote` | Seção de uma nota escrita na aba "Notas" do projeto (`createProjectNote`), uma por nota nova, já com `notesDestination: 'wiki'`; não aparece em nenhuma nota do dia nem no fechamento, mas conta como atividade do projeto |
 
 **`projects`**: `name`, `status` (`active`, `finished` ou `merged`), `finishedAt`, `mergedInto` e `keepSeparateFrom` (assistente de projetos repetidos), `objectiveId` (4) e `icon` (2).
 
@@ -203,7 +204,7 @@ Reativar uma tarefa arquivada limpa a data sem contar adiamento (ADR-015).
 - O planejamento é um quadro de 3 colunas: `planningColumns` (`domain/checkoutSteps.ts`) decide as colunas (atrasadas, hoje quando tem tarefa, o dia seguinte e os dias depois dele) e `planningColumnOf` a coluna de cada tarefa. Ele grava a data de cada tarefa mudada (`applyPlanning`), inclusive das já agendadas; arrastar um card, mudar o campo dele e a seleção em lote só existem na tela, até "Finalizar meu dia".
 - "Fechar dias pendentes" usa a mesma função para vários dias. A diferença é que as tarefas não feitas voltam sem data.
 - O mesmo mecanismo de lote serve aos assistentes de limpeza (`spec/assistentes.md`): cada assistente só fornece a busca (`domain/assistants.ts`) e as ações (`application/assistants.ts`). A sugestão de vincular uma seção solta a um projeto citado no texto dela mora em "Seções soltas", que recebe o texto das seções.
-- Editar, apagar e vincular como recurso as notas de um dia fechado acontecem na aba "Notas" da página do projeto (`updateBlockText`, `deleteKeptNote` e `linkSectionNotesAsResource`), porque as notas não passam mais pelo fechamento. Não existe wiki (ADR-050).
+- Editar, apagar e vincular como recurso as notas de um dia fechado acontecem na aba "Notas" da página do projeto (`updateBlockText`, `splitKeptNote`, `mergeKeptNote`, `deleteKeptNote` e `linkSectionNotesAsResource`), porque as notas não passam mais pelo fechamento. Não existe wiki (ADR-050).
 - "Dia seguinte" num checkout atrasado é o próximo dia ativo depois do dia triado, mas nunca antes de hoje.
 - A triagem segue a ordem da nota do dia: as partes por `days.sectionOrder` e as tarefas de outros dias por `carriedOrder` (ADR-040).
 
