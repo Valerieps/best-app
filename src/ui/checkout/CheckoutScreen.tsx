@@ -4,6 +4,7 @@ import { checkoutSteps, nextStep, previousStep, stepCounts, type CheckoutStep } 
 import type { DayKey } from '../../domain/day';
 import type { Project, Reminder } from '../../domain/entities';
 import type { DayTriage } from '../../domain/triage';
+import { BackButton } from '../components/ScreenHeader';
 import { LoadingPage } from '../components/Skeleton';
 import { formatLongDate, relativeDay } from '../format';
 import { navigate } from '../hooks';
@@ -110,9 +111,7 @@ export function CheckoutScreen({ day, today }: Props) {
     <main className="page page--wide">
       <div className="card">
         <header className="card__header">
-          <button type="button" className="icon-button" onClick={() => navigate({ name: 'day' })} aria-label="Voltar para a nota do dia">
-            ←
-          </button>
+          <BackButton action={{ label: 'a nota do dia', onSelect: () => navigate({ name: 'day' }) }} />
           <h1 className="card__title">Fechar o dia · {formatLongDate(day)}</h1>
           <span />
         </header>

@@ -60,10 +60,7 @@ export function DoneCheckStep({ day, triage, busy, onBack, onNext }: StepProps) 
   return (
     <>
       <div className="card__body checkout-step">
-        <StepQuestion focusKey="doneCheck" eyebrow="Tarefas não finalizadas">
-          Você fez alguma destas e não marcou?
-        </StepQuestion>
-        <p className="muted">Marque só as que fez. As outras seguem com a sugestão do app.</p>
+        <StepQuestion focusKey="doneCheck">Você fez alguma destas e não marcou?</StepQuestion>
         {groupBySection(rows).map((group) => (
           <div className="checkout-group" key={group[0].task.id}>
             <SectionHeading row={group[0]} />

@@ -7,6 +7,8 @@ import type { Settings, WarmupItem } from '../../domain/entities';
 import { DEFAULT_REVIEW_CADENCE } from '../../domain/reviews';
 import { ASSISTANT_INFO } from '../cleanup/assistantInfo';
 import { appContext, reader } from '../services';
+import { Icon } from '../components/Icon';
+import { ScreenHeader } from '../components/ScreenHeader';
 import { LoadingPage } from '../components/Skeleton';
 import { directionReviewEnabled } from '../features';
 import { useLiveQuery } from '../useLiveQuery';
@@ -24,20 +26,17 @@ export function SettingsScreen() {
 
   return (
     <main className="page">
-      <h1 className="page__title">Configurações</h1>
+      <ScreenHeader title="Configurações" />
 
       <section className="panel settings__panel">
         <h2>Warm up</h2>
-        <p className="muted">
-          Com pelo menos um item, o dia passa a abrir com “Iniciar Dia”, o warm up e o dashboard. Sem itens, o app abre
-          direto na nota do dia.
-        </p>
+        <p className="muted">Com itens, o dia abre pelo warm up. Sem itens, abre direto na nota do dia.</p>
         <WarmupEditor items={settings?.warmupItems ?? []} />
       </section>
 
       <section className="panel settings__panel">
         <h2>Dias ativos</h2>
-        <p className="muted">Ao fechar o dia, “dia seguinte” pula os dias desmarcados: na sexta, o dia seguinte é a segunda.</p>
+        <p className="muted">Ao fechar o dia, o “dia seguinte” pula os dias desmarcados.</p>
         <div className="settings__days">
           {WEEK_ORDER.map((weekday) => (
             <label className="check-row" key={weekday}>
@@ -60,15 +59,9 @@ export function SettingsScreen() {
       <section className="panel settings__panel">
         <h2>Revisões</h2>
         {directionReviewEnabled() ? (
-          <p className="muted">
-            As revisões não têm data marcada. Cada uma fica disponível depois de um número de dias fechados ou de Revisões de
-            Foco, ou antes, se algo sair do lugar. Também dá para fazer qualquer uma a qualquer hora, pelo menu.
-          </p>
+          <p className="muted">Cada revisão fica disponível depois destes intervalos, ou antes, se algo sair do lugar.</p>
         ) : (
-          <p className="muted">
-            A Revisão de Foco não tem data marcada. Ela fica disponível depois de um número de dias fechados, ou antes, se algo
-            sair do lugar. Também dá para fazê-la a qualquer hora, pelo menu.
-          </p>
+          <p className="muted">Fica disponível depois deste intervalo, ou antes, se algo sair do lugar.</p>
         )}
         <CadenceField
           label="Revisão de Foco a cada"
@@ -88,10 +81,7 @@ export function SettingsScreen() {
 
       <section className="panel settings__panel">
         <h2>Assistentes</h2>
-        <p className="muted">
-          A cor de cada assistente diz há quanto tempo o item mais antigo dele está esperando. Sem nenhum item, ou com um
-          item recente, o cartão fica verde. Escolha a partir de quantos dias de espera ele fica amarelo, laranja e vermelho.
-        </p>
+        <p className="muted">Dias de espera do item mais antigo para o cartão mudar de cor.</p>
         <CleanupLimitsEditor saved={settings?.cleanupAgeLimits} />
       </section>
     </main>
@@ -115,7 +105,7 @@ function CleanupLimitsEditor({ saved }: { saved: Settings['cleanupAgeLimits'] })
             {LIMIT_COLORS.map(({ label, status }) => (
               <th key={label}>
                 <span className={`limits__swatch limits__swatch--${status}`} aria-hidden="true" />
-                {label} a partir de
+                {label}
               </th>
             ))}
             <th />
@@ -211,20 +201,27 @@ function WarmupEditor({ items }: { items: WarmupItem[] }) {
                 aria-label={`Item ${index + 1} do warm up`}
               />
               <span className="warmup__actions">
-                <button type="button" className="small" disabled={index === 0} onClick={() => move(index, -1)} aria-label="Subir">
-                  ↑
+                <button type="button" className="icon-button icon-button--sm" disabled={index === 0} onClick={() => move(index, -1)} aria-label="Subir" title="Subir">
+                  <Icon name="arrowUp" size="sm" />
                 </button>
                 <button
                   type="button"
-                  className="small"
+                  className="icon-button icon-button--sm"
                   disabled={index === draft.length - 1}
                   onClick={() => move(index, 1)}
                   aria-label="Descer"
+                  title="Descer"
                 >
-                  ↓
+                  <Icon name="arrowDown" size="sm" />
                 </button>
-                <button type="button" className="small" onClick={() => save(draft.filter((other) => other.id !== item.id))} aria-label="Remover">
-                  ✕
+                <button
+                  type="button"
+                  className="icon-button icon-button--sm"
+                  onClick={() => save(draft.filter((other) => other.id !== item.id))}
+                  aria-label="Remover"
+                  title="Remover"
+                >
+                  <Icon name="close" size="sm" />
                 </button>
               </span>
             </li>
@@ -243,7 +240,7 @@ function WarmupEditor({ items }: { items: WarmupItem[] }) {
         <input
           className="text-input warmup-editor__text"
           value={newText}
-          placeholder="Novo item, por exemplo: beber água"
+          placeholder="Novo item, como beber água"
           onChange={(event) => setNewText(event.target.value)}
           aria-label="Novo item do warm up"
         />

@@ -11,9 +11,10 @@ import { agendaDays, groupProjectTasks, stuckReason } from '../../domain/project
 import { BlockLine, DatePicker, type LineHandlers } from '../dayNote/BlockLine';
 import { requestFocus } from '../dayNote/focus';
 import { Icon } from '../components/Icon';
+import { BackButton, ScreenHeader } from '../components/ScreenHeader';
 import { LoadingPage } from '../components/Skeleton';
 import { agendaDate, formatLongDate, plural, stuckReasonLabel } from '../format';
-import { navigate, routeHash } from '../hooks';
+import { navigate } from '../hooks';
 import { appContext, reader } from '../services';
 import { useLiveQuery } from '../useLiveQuery';
 import { enqueue } from '../writeQueue';
@@ -131,18 +132,12 @@ export function ProjectScreen({ id, tab, today }: { id: string; tab: 'tasks' | '
     };
   }, [peek, docked]);
 
-  const back = (
-    <nav className="crumb" aria-label="Trilha">
-      <a href={routeHash({ name: 'projects' })}>Projetos</a>
-      <Icon name="chevronRight" size="sm" />
-      <span aria-current="page">{view?.project.name ?? ''}</span>
-    </nav>
-  );
+  const back = <BackButton action={{ label: 'Projetos', onSelect: () => navigate({ name: 'projects' }) }} />;
   if (view === undefined) return <LoadingPage before={back} />;
   if (view === null) {
     return (
       <main className="page">
-        <p className="muted">Projeto não encontrado.</p>
+        <ScreenHeader title="Projeto não encontrado" back={{ label: 'Projetos', onSelect: () => navigate({ name: 'projects' }) }} />
       </main>
     );
   }
@@ -203,8 +198,8 @@ export function ProjectScreen({ id, tab, today }: { id: string; tab: 'tasks' | '
     <main className={`page page--project ${docked ? 'page--project-docked' : ''}`}>
       <div className="project-layout">
         <div className="project-layout__main">
-          {back}
           <header className="project-head">
+            {back}
             <ProjectIconPicker project={project} onChange={(icon) => write(() => setProjectIcon(appContext, project.id, icon))} />
             <input
               className="project-head__name"

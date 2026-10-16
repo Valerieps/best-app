@@ -71,3 +71,10 @@ export function ageLabel(ageInDays: number | null): string | null {
   if (ageInDays === 0) return 'o mais antigo é de hoje';
   return `o mais antigo espera há ${ageInDays} ${ageInDays === 1 ? 'dia' : 'dias'}`;
 }
+
+/** The same age, short enough for a chip next to the assistant's name: "há 3 dias", "de hoje". */
+export function shortAgeLabel(ageInDays: number | null): string | null {
+  if (ageInDays === null) return null;
+  if (ageInDays === 0) return 'de hoje';
+  return `há ${ageInDays} ${ageInDays === 1 ? 'dia' : 'dias'}`;
+}

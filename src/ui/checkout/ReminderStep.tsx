@@ -7,7 +7,6 @@ import { appContext } from '../services';
 import {
   ChoiceDetail,
   ChoicePills,
-  DecideLabel,
   StepFooter,
   StepQuestion,
   useStepKeys,
@@ -56,8 +55,8 @@ export function ReminderStep({ reminders, busy, onBack, onNext }: Pick<StepProps
   return (
     <>
       <div className="card__body checkout-step">
-        <StepQuestion focusKey={reminder.id} eyebrow={`Lembrete ${index + 1} de ${reminders.length}`}>
-          Este lembrete ficou sem resposta. O que fazer com ele?
+        <StepQuestion focusKey={reminder.id} progress={{ index, total: reminders.length }}>
+          Este lembrete ficou sem resposta. O que fazer?
         </StepQuestion>
         <div className="task-replica">
           <span className="task-replica__text">
@@ -65,7 +64,6 @@ export function ReminderStep({ reminders, busy, onBack, onNext }: Pick<StepProps
             <span className="task-replica__meta">Era para {formatTime(reminder.dueAt)}</span>
           </span>
         </div>
-        <DecideLabel />
         <ChoicePills label={`O que fazer com "${reminder.text}"`} options={OPTIONS} value={choice.kind} onChange={choose} />
         <ChoiceDetail>
           {choice.kind === 'keep' && <span>Ele continua valendo como está.</span>}

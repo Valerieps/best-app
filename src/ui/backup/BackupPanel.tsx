@@ -36,13 +36,10 @@ export function BackupPanel({ state, actions, storagePersisted }: Props) {
   }
 
   return (
-    <section className="panel" aria-labelledby="backup-title">
-      <h2 id="backup-title">Dados e backup</h2>
-      <p className="muted">
-        Seus dados ficam só neste navegador. O backup automático grava tudo numa pasta que você escolhe, a cada
-        mudança, e guarda cópias datadas na subpasta "{COPIES_FOLDER}": hoje, uma a cada 2 horas (as {COPIES_KEPT_TODAY}{' '}
-        mais recentes); dos {PAST_DAYS_KEPT} dias anteriores, a última versão de cada dia. Escolha uma pasta sincronizada
-        do Google Drive da empresa para trocar de computador sem perder nada.
+    <section className="panel" aria-label="Backup">
+      <p className="muted panel__intro">
+        Seus dados ficam só neste navegador. O backup automático grava tudo, a cada mudança, numa pasta sua: uma pasta
+        sincronizada do Google Drive da empresa deixa trocar de computador sem perder nada.
       </p>
 
       <div className="panel__actions">
@@ -95,7 +92,7 @@ export function BackupPanel({ state, actions, storagePersisted }: Props) {
           >
             Carregar dados sintéticos
           </button>
-          <span className="muted">Só no modo de desenvolvimento. Substitui tudo, como uma importação.</span>
+          <span className="muted">Só em desenvolvimento; substitui tudo.</span>
         </div>
       )}
 
@@ -104,10 +101,7 @@ export function BackupPanel({ state, actions, storagePersisted }: Props) {
         {lastBackupAt ? `Último backup: ${formatDate(lastBackupAt)}.` : 'Nenhum backup feito ainda.'}
       </p>
       {state.status === 'active' && state.copies === 'off' && (
-        <p className="muted">
-          O backup ainda vai para um arquivo só, sem cópias datadas. Para guardá-las, escolha a pasta do backup em
-          "Trocar pasta do backup".
-        </p>
+        <p className="muted">Sem cópias datadas: para tê-las, escolha a pasta de novo em “Trocar pasta do backup”.</p>
       )}
       {state.status === 'active' && state.copies === 'failed' && (
         <p className="status status--error" role="status">
@@ -116,7 +110,11 @@ export function BackupPanel({ state, actions, storagePersisted }: Props) {
       )}
       {copies.length > 0 && (
         <>
-          <h3 className="backup-copies__title">Cópias datadas</h3>
+          <h2 className="backup-copies__title">Cópias datadas</h2>
+          <p className="muted">
+            Na subpasta "{COPIES_FOLDER}": hoje, uma a cada 2 horas (as {COPIES_KEPT_TODAY} mais recentes); dos {PAST_DAYS_KEPT}{' '}
+            dias anteriores, a última de cada dia. Restaurar mostra antes o que seria perdido, e dá para desfazer.
+          </p>
           <ul className="card-list backup-copies">
             {copies.map((copy) => (
               <li className="card-list__item" key={copy.name}>
@@ -127,7 +125,6 @@ export function BackupPanel({ state, actions, storagePersisted }: Props) {
               </li>
             ))}
           </ul>
-          <p className="muted">Restaurar mostra antes o que seria perdido, e dá para desfazer depois.</p>
         </>
       )}
       {storagePersisted === false && (

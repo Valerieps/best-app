@@ -134,12 +134,8 @@ export function ConfirmStep({ day, today, triage, projects, resolved, busy, onBa
   return (
     <>
       <div className="card__body checkout-step">
-        <StepQuestion focusKey="confirm" eyebrow="Confirmação do fechamento">
-          Isto acontece quando você confirmar
-        </StepQuestion>
-        <p className="muted">
-          {empty ? 'Nada mais para decidir neste dia.' : 'Não há nada para responder aqui. Para mudar algum item, clique em “mudar” ao lado dele.'}
-        </p>
+        <StepQuestion focusKey="confirm">Isto acontece quando você confirmar</StepQuestion>
+        {empty && <p className="muted">Nada mais para decidir neste dia.</p>}
 
         {rolled.length > 0 && (
           <section className="confirm-group">
