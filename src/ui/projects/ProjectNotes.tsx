@@ -1,5 +1,4 @@
-import { useState, type KeyboardEvent } from 'react';
-import { linkSectionNotesAsResource } from '../../application/checkout';
+import { useEffect, useState, type KeyboardEvent } from 'react';
 import { deleteKeptNote, mergeKeptNote, splitKeptNote, updateBlockText } from '../../application/notebook';
 import { createProjectNote } from '../../application/projects';
 import type { SectionNotes } from '../../application/queries';
@@ -8,19 +7,13 @@ import type { Block, Section } from '../../domain/entities';
 import { comparePositions, positionBetween } from '../../domain/position';
 import { Icon } from '../components/Icon';
 import { BlockLine, type LineHandlers } from '../dayNote/BlockLine';
+import { FormatToolbar } from '../dayNote/FormatToolbar';
 import { MarkdownText } from '../dayNote/MarkdownText';
 import { requestFocus } from '../dayNote/focus';
-import { FEATURES } from '../features';
 import { formatShortDate, formatTime } from '../format';
 import { appContext, reader } from '../services';
 import { useLiveQuery } from '../useLiveQuery';
 import { enqueue } from '../writeQueue';
-
-interface Owner {
-  /** `objective:id` or `project:id`. */
-  key: string;
-  label: string;
-}
 
 function write(work: () => Promise<unknown>) {
   enqueue(work).catch(() => {
@@ -31,21 +24,11 @@ function write(work: () => Promise<unknown>) {
 /**
  * The "Notas" tab of a project page (spec/projetos.md, "Página do projeto"): the notes of its
  * sections once their day is closed, and the notes written right here. "+" writes a new note;
- * "Editar" opens a whole entry in the day note's line editor. From section 4 the notes of a
- * section can become a resource.
+ * "Editar" opens a whole entry in the day note's line editor, with its formatting buttons.
  */
 export function ProjectNotes({ entries, projectId, projectName, today }: { entries: SectionNotes[]; projectId: string; projectName: string; today: DayKey }) {
-  const ownerData = useLiveQuery(async () => ({ projects: await reader.projects(), objectives: await reader.objectives() }));
   const [writing, setWriting] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
-  const owners: Owner[] = [
-    ...(ownerData?.objectives ?? [])
-      .filter((objective) => FEATURES.objectives && objective.status === 'active')
-      .map((objective) => ({ key: `objective:${objective.id}`, label: objective.goal })),
-    ...(ownerData?.projects ?? [])
-      .filter((project) => project.status === 'active')
-      .map((project) => ({ key: `project:${project.id}`, label: project.name })),
-  ];
 
   return (
     <>
@@ -74,6 +57,7 @@ export function ProjectNotes({ entries, projectId, projectName, today }: { entri
                   )}
                   {section.title && section.title !== projectName ? ` · ${section.title}` : ''}
                 </p>
+                {editingId === section.id && <FormatToolbar />}
                 {editingId === section.id ? (
                   <button type="button" className="line__action timeline__edit-toggle" onClick={() => setEditingId(null)}>
                     Concluir
@@ -89,7 +73,6 @@ export function ProjectNotes({ entries, projectId, projectName, today }: { entri
               ) : (
                 notes.map((note) => <NoteLine key={note.id} note={note} />)
               )}
-              {owners.length > 0 && <ResourceLink sectionId={section.id} owners={owners} />}
             </li>
           ))}
         </ol>
@@ -138,6 +121,11 @@ function NewNoteField({ projectId, onDone }: { projectId: string; onDone: () => 
 function SectionEditor({ section, today }: { section: Section; today: DayKey }) {
   const blocks = useLiveQuery(() => reader.blocksInSections([section.id]), [section.id]);
   const lines = (blocks ?? []).filter((block) => block.kind === 'note').sort(comparePositions);
+  const firstId = lines[0]?.id;
+  // Opening the editor puts the caret at the end of the entry's first line, as in the day note.
+  useEffect(() => {
+    if (firstId) requestFocus(firstId, 'end');
+  }, [firstId === undefined]);
 
   const handlers: LineHandlers = {
     onSaveText: (block, text) => write(() => updateBlockText(appContext, block.id, text)),
@@ -197,43 +185,5 @@ function NoteLine({ note }: { note: Block }) {
         </button>
       </span>
     </div>
-  );
-}
-
-/** Section 4: links the notes of a section as a resource of an objective or project. */
-function ResourceLink({ sectionId, owners }: { sectionId: string; owners: Owner[] }) {
-  const [message, setMessage] = useState('');
-  const [busy, setBusy] = useState(false);
-
-  async function link(key: string) {
-    if (!key) return;
-    const owner = owners.find((each) => each.key === key);
-    const [ownerType, ownerId] = key.split(':') as ['objective' | 'project', string];
-    setBusy(true);
-    try {
-      const existing = await reader.resourcesOf(ownerId);
-      if (existing.some((resource) => resource.sectionId === sectionId)) {
-        setMessage(`Já é recurso de ${owner?.label ?? 'lá'}.`);
-        return;
-      }
-      await linkSectionNotesAsResource(appContext, sectionId, { ownerType, ownerId });
-      setMessage(`Vinculada como recurso de ${owner?.label ?? ''}.`);
-    } finally {
-      setBusy(false);
-    }
-  }
-
-  return (
-    <span className="timeline__resource">
-      <select className="text-input" value="" onChange={(event) => void link(event.target.value)} disabled={busy} aria-label="Vincular como recurso">
-        <option value="">Vincular como recurso…</option>
-        {owners.map((owner) => (
-          <option key={owner.key} value={owner.key}>
-            {owner.label}
-          </option>
-        ))}
-      </select>
-      {message && <span className="muted">{message}</span>}
-    </span>
   );
 }

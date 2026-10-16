@@ -3136,7 +3136,6 @@ button.stuck__date {
 
 /* Level 3, "Sem data": quieter lines */
 .task-group--undated .line {
-  font-size: var(--font-size-md);
   color: var(--color-text-muted);
 }
 
