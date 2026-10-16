@@ -1,6 +1,35 @@
 import Dexie from 'dexie';
 import { describe, expect, it } from 'vitest';
-import { AppDatabase } from './db';
+import { AppDatabase, DATABASE_VERSION, UPGRADE_SNAPSHOT_ID } from './db';
+
+describe('snapshot before an upgrade', () => {
+  it('keeps the data as the previous version left it, before any migration', async () => {
+    const name = 'best-app-upgrade-snapshot';
+    const old = new Dexie(name);
+    old.version(7).stores({ blocks: 'id, sectionId, status, intendedDate, projectId, deadline', priorities: 'id', snapshots: 'id, createdAt' });
+    await old.open();
+    const archived = { id: 't1', kind: 'task', status: 'archived', intendedDate: '2026-10-05', closedAt: null, postponeCount: 0 };
+    await old.table('blocks').put(archived);
+    old.close();
+
+    const db = new AppDatabase(name);
+    const snapshot = await db.snapshots.get(UPGRADE_SNAPSHOT_ID);
+    expect(snapshot?.tables.blocks).toEqual([archived]);
+    expect(snapshot?.tables).not.toHaveProperty('snapshots');
+    expect(await db.blocks.get('t1')).toMatchObject({ status: 'active' });
+    db.close();
+    await Dexie.delete(name);
+  });
+
+  it('takes no snapshot on a new database', async () => {
+    const name = 'best-app-upgrade-fresh';
+    const db = new AppDatabase(name);
+    await db.open();
+    expect(await db.snapshots.count()).toBe(0);
+    db.close();
+    await Dexie.delete(name);
+  });
+});
 
 describe('database versions 6 to 8', () => {
   it('turns the month priority projects of a version 5 database into week lists, and then the list in focus', async () => {
@@ -55,6 +84,17 @@ describe('database versions 6 to 8', () => {
     const db = new AppDatabase(name);
     expect(await db.blocks.get('t1')).toMatchObject({ status: 'active', intendedDate: null, closedAt: null, postponeCount: 2 });
     expect(await db.blocks.get('t2')).toMatchObject({ status: 'abandoned' });
+    db.close();
+    await Dexie.delete(name);
+  });
+});
+
+describe('database version constant', () => {
+  it('matches the last version declared', async () => {
+    const name = 'best-app-version-constant';
+    const db = new AppDatabase(name);
+    await db.open();
+    expect(db.verno).toBe(DATABASE_VERSION);
     db.close();
     await Dexie.delete(name);
   });

@@ -67,3 +67,4 @@ Read only the ADRs your task touches: find them in this table or by grepping `ad
 | [ADR-056](adr/056-backup-folder-required-and-backup-interval.md) | The backup folder is required before the app opens, and the backup interval throttles instead of debouncing | 2026-10-16 | Accepted |
 | [ADR-057](adr/057-ctrl-k-place-palette.md) | Ctrl + K place palette; the day note keeps Ctrl + K for links | 2026-10-16 | Accepted |
 | [ADR-058](adr/058-ci-build-on-pull-requests.md) | CI runs the build on pull requests; no dev branch | 2026-10-16 | Accepted |
+| [ADR-059](adr/059-safe-database-upgrades.md) | Safe database upgrades: snapshot, version gate, no rollback | 2026-10-16 | Accepted |
