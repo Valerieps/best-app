@@ -9,7 +9,7 @@ Read only the ADRs your task touches: find them in this table or by grepping `ad
 
 | ADR | Decision | Date | Status |
 | --- | --- | --- | --- |
-| [ADR-001](adr/001-vite-react-typescript-minimal-dependencies.md) | Vite + React + TypeScript, minimal dependencies | 2026-10-11 | Accepted |
+| [ADR-001](adr/001-vite-react-typescript-minimal-dependencies.md) | Vite + React + TypeScript, minimal dependencies | 2026-10-11 | Accepted; amended by ADR-054 (bundled font) |
 | [ADR-002](adr/002-indexeddb-through-dexie-one-record-per-entity.md) | IndexedDB through Dexie, one record per entity | 2026-10-11 | Accepted |
 | [ADR-003](adr/003-entity-change-and-event-saved-in-one-transaction.md) | Entity change and event saved in one transaction | 2026-10-11 | Accepted |
 | [ADR-004](adr/004-no-event-for-plain-text-edits.md) | No event for plain text edits | 2026-10-11 | Accepted |
@@ -62,3 +62,4 @@ Read only the ADRs your task touches: find them in this table or by grepping `ad
 | [ADR-051](adr/051-line-selection-list-markers-and-focus-view-transition.md) | Selecting whole lines, list markers outside the field, and focus mode as a view transition | 2026-10-15 | Accepted |
 | [ADR-052](adr/052-people-and-waiting-tasks.md) | People are records, mentions are read from the text, and a waiting task reuses the intended date | 2026-10-15 | Accepted |
 | [ADR-053](adr/053-rituals-screen-replaces-the-sidebar-list.md) | The "Rituais" screen replaces the rituals list in the sidebar | 2026-10-15 | Accepted |
+| [ADR-054](adr/054-bundled-inter-font-and-brand-color-tokens.md) | Bundled Inter font and brand color tokens | 2026-10-16 | Accepted |

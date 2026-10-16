@@ -32,6 +32,12 @@ Não há onboarding: no primeiro uso eu já saio usando o ciclo diário, e os ri
 - Cada bloco existe uma vez só. A nota do dia, os projetos e os recursos apontam para ele por vínculos, sem cópias.
 - A arquitetura é desenhada para o escopo completo da spec, e a implementação segue as partes em ordem.
 
+## Aparência
+
+- O app tem uma cor própria, o lilás dos projetos. Ela marca o que é ação ou lugar: o botão principal de cada tela, o item atual da barra lateral, os links, o foco do teclado, o checkbox e o contador de "Rituais". As cores de alerta (backup, prazos, assistentes) ficam só para alertas, para o contador de "Rituais" não parecer um problema. *(1b)*
+- O texto usa a fonte Inter, que vem junto com o app: nada é baixado da internet. *(1b)*
+- Em Configurações eu escolho a aparência: clara, escura ou igual à do sistema. Ela começa igual à do sistema, e o app lembra a escolha. *(1b)*
+
 ## Backup
 
 - Como não há sincronização, o app faz backup automático numa pasta: eu escolho a pasta uma vez, de preferência sincronizada com o Google Drive da empresa, e o app regrava nela o arquivo do backup alguns segundos depois de cada mudança. Também dá para baixar uma cópia e importar um backup a qualquer momento.
