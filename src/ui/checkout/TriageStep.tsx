@@ -161,7 +161,7 @@ export function TriageStep({
     const deadline = row.task.deadline;
     const text = row.task.text || '(tarefa sem texto)';
     return (
-      <li key={id} className={`triage-row ${on ? 'triage-row--on' : ''}`}>
+      <li key={id} className={`checkout-task ${on ? 'checkout-task--on' : ''}`}>
         <input
           type="checkbox"
           checked={false}
@@ -178,7 +178,7 @@ export function TriageStep({
           </span>
           <span className="muted">{row.section ? (row.section.title ?? 'Sem título') : 'De outros dias'}</span>
         </button>
-        <span className={`triage-row__actions ${dating === id ? 'triage-row__actions--open' : ''}`}>
+        <span className={`checkout-task__actions ${dating === id ? 'checkout-task__actions--open' : ''}`}>
           <IconAction icon="arrowRight" label={`Levar para ${nextLabel}`} disabled={busy} onClick={() => act({ kind: 'next' }, [row])} />
           {dating === id ? (
             <input
