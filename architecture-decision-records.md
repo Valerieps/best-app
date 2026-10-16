@@ -64,3 +64,4 @@ Read only the ADRs your task touches: find them in this table or by grepping `ad
 | [ADR-053](adr/053-rituals-screen-replaces-the-sidebar-list.md) | The "Rituais" screen replaces the rituals list in the sidebar | 2026-10-15 | Accepted |
 | [ADR-054](adr/054-bundled-inter-font-and-brand-color-tokens.md) | Bundled Inter font and brand color tokens | 2026-10-16 | Accepted |
 | [ADR-055](adr/055-dark-theme-tokens-and-appearance-setting.md) | Dark theme tokens, and the appearance setting mirrored in localStorage | 2026-10-16 | Accepted |
+| [ADR-056](adr/056-backup-folder-required-and-backup-interval.md) | The backup folder is required before the app opens, and the backup interval throttles instead of debouncing | 2026-10-16 | Accepted |

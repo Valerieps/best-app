@@ -205,6 +205,39 @@ describe('AutoBackup', () => {
     expect(remembered.file.writes).toBe(writesAfterInit + 1);
   });
 
+  it('with an interval, keeps writing while changes never stop', async () => {
+    const remembered = memoryFile();
+    const { auto } = setup({ remembered: remembered.handle, delayMs: 100 });
+    await auto.init();
+    auto.setInterval('hour');
+    const writesAfterInit = remembered.file.writes;
+
+    // A change every 20 ms would postpone a restarting wait forever.
+    for (let i = 0; i < 30; i++) {
+      auto.schedule();
+      await new Promise((resolve) => setTimeout(resolve, 20));
+    }
+
+    expect(remembered.file.writes).toBeGreaterThan(writesAfterInit);
+  });
+
+  it('writes when the app is hidden only after every change, not with an interval', async () => {
+    const remembered = memoryFile();
+    const { auto } = setup({ remembered: remembered.handle, delayMs: 60_000 });
+    await auto.init();
+    const writesAfterInit = remembered.file.writes;
+
+    auto.setInterval('hour');
+    auto.schedule();
+    auto.onHidden();
+    await new Promise((resolve) => setTimeout(resolve, 50));
+    expect(remembered.file.writes).toBe(writesAfterInit);
+
+    auto.setInterval('afterChange');
+    auto.onHidden();
+    await vi.waitFor(() => expect(remembered.file.writes).toBe(writesAfterInit + 1), { timeout: 2000 });
+  });
+
   it('pauses until the user allows writing again in a new session', async () => {
     const remembered = memoryFile();
     remembered.file.permission = 'prompt';
