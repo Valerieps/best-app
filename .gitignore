@@ -9,3 +9,6 @@ vite.config.js
 # Never commit personal data exported from the app.
 backup*.json
 best-app-backup*.json
+
+# Security guidelines stay local only: they describe where the app is used.
+google-safe.md
