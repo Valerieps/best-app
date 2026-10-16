@@ -17,7 +17,7 @@ body {
 }
 
 a {
-  color: var(--color-focus);
+  color: var(--color-link);
 }
 
 button {
@@ -39,6 +39,11 @@ button.primary {
   background: var(--color-accent);
   border-color: var(--color-accent);
   color: var(--color-accent-text);
+}
+
+button.primary:hover:not(:disabled) {
+  background: var(--color-accent-hover);
+  border-color: var(--color-accent-hover);
 }
 
 button.danger {
@@ -2323,8 +2328,9 @@ button.sidebar__item:hover {
 }
 
 button.sidebar__item--current {
-  background: var(--color-surface);
-  border-color: var(--color-border);
+  background: var(--color-brand-soft);
+  color: var(--color-brand-strong);
+  font-weight: 600;
 }
 
 .sidebar__label {
