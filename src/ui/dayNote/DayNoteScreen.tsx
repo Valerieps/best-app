@@ -38,6 +38,7 @@ import { useLiveQuery } from '../useLiveQuery';
 import { enqueue } from '../writeQueue';
 import { BlockLine, GhostLine, NOTE_HINT, type LineDragProps, type LineHandlers } from './BlockLine';
 import { requestFocus } from './focus';
+import { NoteSettledContext, useEnteringKeys, useNoteSettled } from './entryMotion';
 import { FOCUS_SHORTCUT, isFocusToggleKey } from './focusMode';
 import { FOCUS_PART_TRANSITION, hasFocusTransition, runFocusTransition } from './focusTransition';
 import { isSamePlace, isTypingKey, partMoveKey, useLineDrag } from './lineDrag';
@@ -298,6 +299,9 @@ export function DayNoteScreen({
       }),
     [parts],
   );
+  // Lines and parts that appear while the note is on screen fade in; focus mode has its own transition.
+  const settled = useNoteSettled({ view: `${day}|${focus?.part ?? ''}`, shown: Boolean(view) && !focus });
+  const enteringParts = useEnteringKeys(parts.map((part) => part.key), settled);
 
   // Several lines selected at once (spec/nota-do-dia.md, "Selecionar várias linhas").
   const noteRef = useRef<HTMLDivElement>(null);
@@ -796,52 +800,54 @@ export function DayNoteScreen({
         )}
         {/* Pinned, the priorities stay at the top and do not move with the other parts. */}
         {isToday && pinned && prioritiesBlock}
-        <div className={`note ${typing ? 'note--typing' : ''}`} {...noteProps} {...typingProps}>
-          {onlyPriorities && !isToday && <p className="muted">Nada pendente neste dia.</p>}
-          {parts.map((part, index) => (
-            <div
-              key={part.kind === 'section' ? part.entry.key : part.key}
-              className={`day-part day-part--${part.kind} ${dragClasses(part.key, index)}`}
-              data-drag-group={PARTS_GROUP}
-              data-drag-id={part.key}
-              style={morphPart === part.key ? { viewTransitionName: FOCUS_PART_TRANSITION } : undefined}
-              onKeyDown={(event) => partKeyDown(event, part.key)}
-            >
-              {parts.length > 1 && (
-                <button
-                  type="button"
-                  className="day-part__handle"
-                  title="Arraste para mudar a ordem (ou Ctrl + Shift + ↑/↓)"
-                  aria-label={`Mover ${partLabel(part)} (Ctrl + Shift + ↑/↓)`}
-                  onPointerDown={(event) => startDrag(event, PARTS_GROUP, part.key)}
-                >
-                  ⠿
+        <NoteSettledContext.Provider value={settled}>
+          <div className={`note ${typing ? 'note--typing' : ''}`} {...noteProps} {...typingProps}>
+            {onlyPriorities && !isToday && <p className="muted">Nada pendente neste dia.</p>}
+            {parts.map((part, index) => (
+              <div
+                key={part.kind === 'section' ? part.entry.key : part.key}
+                className={`day-part day-part--${part.kind} ${enteringParts.has(part.key) ? 'day-part--entering' : ''} ${dragClasses(part.key, index)}`}
+                data-drag-group={PARTS_GROUP}
+                data-drag-id={part.key}
+                style={morphPart === part.key ? { viewTransitionName: FOCUS_PART_TRANSITION } : undefined}
+                onKeyDown={(event) => partKeyDown(event, part.key)}
+              >
+                {parts.length > 1 && (
+                  <button
+                    type="button"
+                    className="day-part__handle"
+                    title="Arraste para mudar a ordem (ou Ctrl + Shift + ↑/↓)"
+                    aria-label={`Mover ${partLabel(part)} (Ctrl + Shift + ↑/↓)`}
+                    onPointerDown={(event) => startDrag(event, PARTS_GROUP, part.key)}
+                  >
+                    ⠿
+                  </button>
+                )}
+                {renderPart(part)}
+                {isToday && index < parts.length - 1 && (
+                  <div className="part-insert">
+                    <button type="button" className="tertiary" onClick={() => insertSection('general', index)}>
+                      + Seção geral
+                    </button>
+                    <button type="button" className="tertiary" onClick={() => insertSection('meeting', index)}>
+                      + Seção de reunião
+                    </button>
+                  </div>
+                )}
+              </div>
+            ))}
+            {isToday && (
+              <div className="note__actions">
+                <button type="button" className="tertiary" onClick={() => addSection('general')}>
+                  + Seção geral
                 </button>
-              )}
-              {renderPart(part)}
-              {isToday && index < parts.length - 1 && (
-                <div className="part-insert">
-                  <button type="button" className="tertiary" onClick={() => insertSection('general', index)}>
-                    + Seção geral
-                  </button>
-                  <button type="button" className="tertiary" onClick={() => insertSection('meeting', index)}>
-                    + Seção de reunião
-                  </button>
-                </div>
-              )}
-            </div>
-          ))}
-          {isToday && (
-            <div className="note__actions">
-              <button type="button" className="tertiary" onClick={() => addSection('general')}>
-                + Seção geral
-              </button>
-              <button type="button" className="tertiary" onClick={() => addSection('meeting')}>
-                + Seção de reunião
-              </button>
-            </div>
-          )}
-        </div>
+                <button type="button" className="tertiary" onClick={() => addSection('meeting')}>
+                  + Seção de reunião
+                </button>
+              </div>
+            )}
+          </div>
+        </NoteSettledContext.Provider>
       </main>
     </>
   );
