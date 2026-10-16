@@ -1,4 +1,5 @@
-import { AUTO_BACKUP_DELAY_MS, decideAutoBackup } from '../application/autoBackup';
+import { autoBackupWait, decideAutoBackup, DEFAULT_AUTO_BACKUP_INTERVAL } from '../application/autoBackup';
+import type { AutoBackupInterval } from '../domain/entities';
 import { BACKUP_SCHEMA_VERSION, createBackup, parseBackup, type BackupFile, type ImportLoss } from '../application/backup';
 import { COPIES_FOLDER, copiesToDelete, copyBeforeOverwrite, copyName, listCopies, needsNewCopy } from '../application/backupCopies';
 import {
@@ -44,6 +45,7 @@ export interface AutoBackupDeps {
   pick: () => Promise<BackupFolderHandle>;
   supported: boolean;
   now: () => Date;
+  /** Replaces every wait, for tests. */
   delayMs?: number;
 }
 
@@ -75,6 +77,7 @@ export class AutoBackup {
   private timer: ReturnType<typeof setTimeout> | null = null;
   private running: Promise<void> | null = null;
   private runAgain = false;
+  private interval: AutoBackupInterval = DEFAULT_AUTO_BACKUP_INTERVAL;
 
   constructor(private readonly deps: AutoBackupDeps) {}
 
@@ -96,10 +99,34 @@ export class AutoBackup {
     await this.flush();
   }
 
+  /** The interval chosen in the settings. A change already waiting keeps waiting, with the new interval. */
+  setInterval(interval: AutoBackupInterval): void {
+    if (interval === this.interval) return;
+    this.interval = interval;
+    if (this.timer) {
+      clearTimeout(this.timer);
+      this.timer = null;
+      this.schedule();
+    }
+  }
+
   /** Call after every change. Bursts of changes become a single write. */
   schedule(): void {
-    if (this.timer) clearTimeout(this.timer);
-    this.timer = setTimeout(() => void this.flush(), this.deps.delayMs ?? AUTO_BACKUP_DELAY_MS);
+    const wait = autoBackupWait(this.interval);
+    if (this.timer) {
+      if (!wait.restartOnChange) return;
+      clearTimeout(this.timer);
+    }
+    this.timer = setTimeout(() => void this.flush(), this.deps.delayMs ?? wait.ms);
+  }
+
+  /**
+   * When the app is hidden or closed. After every change, it writes right away, so a closed tab
+   * loses nothing. With an interval it waits: the data is still in the browser, and the next
+   * opening catches up.
+   */
+  onHidden(): void {
+    if (autoBackupWait(this.interval).restartOnChange) void this.flush();
   }
 
   /** Writes now if possible. Concurrent calls are merged into one more write after the current one. */

@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import type { AutoBackupState } from '../infrastructure/autoBackup';
-import { backupNoticeLevel, daysSinceBackup, pickTopNotice, snoozedOn, type SnoozableNotice } from './notices';
+import { backupNoticeLevel, daysSinceBackup, needsBackupSetup, pickTopNotice, snoozedOn, type SnoozableNotice } from './notices';
 
 const none = new Set<SnoozableNotice>();
 
@@ -101,5 +101,21 @@ describe('snoozedOn', () => {
     const days = { pendingCheckout: '2026-10-12', backupSetup: '2026-10-11' };
     expect([...snoozedOn(days, '2026-10-12')]).toEqual(['pendingCheckout']);
     expect([...snoozedOn(days, '2026-10-13')]).toEqual([]);
+  });
+});
+
+describe('needsBackupSetup', () => {
+  it('blocks the app until there is a backup folder, and in browsers that cannot pick one', () => {
+    expect(needsBackupSetup({ status: 'noFile' })).toBe(true);
+    expect(needsBackupSetup({ status: 'unsupported' })).toBe(true);
+  });
+
+  it('lets the app open once a folder was chosen, even when the backup is paused or failing', () => {
+    expect(needsBackupSetup({ status: 'needsPermission', fileName: 'Backup' })).toBe(false);
+    expect(needsBackupSetup({ status: 'error', fileName: 'Backup' })).toBe(false);
+    expect(needsBackupSetup({ status: 'blocked', fileName: 'Backup', reason: 'invalidFile' })).toBe(false);
+    expect(
+      needsBackupSetup({ status: 'active', fileName: 'Backup', lastSavedAt: null, saving: false, copies: 'ok' }),
+    ).toBe(false);
   });
 });

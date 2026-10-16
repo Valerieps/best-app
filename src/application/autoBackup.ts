@@ -1,3 +1,4 @@
+import type { AutoBackupInterval } from '../domain/entities';
 import { computeImportLoss, parseBackup, type BackupFile, type BackupTables, type ImportLoss } from './backup';
 
 /**
@@ -9,6 +10,24 @@ import { computeImportLoss, parseBackup, type BackupFile, type BackupTables, typ
 
 /** Wait after the last change before writing, so a burst of edits becomes one write. */
 export const AUTO_BACKUP_DELAY_MS = 3000;
+
+export const DEFAULT_AUTO_BACKUP_INTERVAL: AutoBackupInterval = 'afterChange';
+
+/**
+ * How long a change waits before it is written. After every change, each new change restarts
+ * the short wait, so a burst becomes one write. With an interval, the first change starts the
+ * wait and later ones join it: restarting would never write while the user keeps working.
+ */
+export function autoBackupWait(interval: AutoBackupInterval): { ms: number; restartOnChange: boolean } {
+  switch (interval) {
+    case 'afterChange':
+      return { ms: AUTO_BACKUP_DELAY_MS, restartOnChange: true };
+    case 'quarterHour':
+      return { ms: 15 * 60 * 1000, restartOnChange: false };
+    case 'hour':
+      return { ms: 60 * 60 * 1000, restartOnChange: false };
+  }
+}
 
 export type AutoBackupDecision =
   | { kind: 'write' }

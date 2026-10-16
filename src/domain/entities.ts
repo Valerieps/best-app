@@ -224,8 +224,13 @@ export interface Settings {
    * Absent or null shows the whole note. Only the user leaves it.
    */
   dayNoteFocus?: DayNoteFocus | null;
+  /** How often the automatic backup writes the file (spec/principios.md, "Backup"). Absent means after every change. */
+  autoBackupInterval?: AutoBackupInterval;
   updatedAt: string;
 }
+
+/** How often the automatic backup writes: a few seconds after every change, or at most every 15 minutes or hour. */
+export type AutoBackupInterval = 'afterChange' | 'quarterHour' | 'hour';
 
 /** Collapsible groups of the project list: "Outros ativos" (open by default) and "Finalizados" (closed). */
 export type ProjectListGroup = 'others' | 'finished';
