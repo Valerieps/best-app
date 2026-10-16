@@ -286,11 +286,13 @@ export function BoardStep({ mode, day, today, triage, projects, busy, onBack, on
 
   return (
     <>
-      <div className={`card__body checkout-step ${selecting ? 'checkout-step--batch' : ''}`}>
+      <div className={`card__body checkout-step checkout-step--board ${selecting ? 'checkout-step--batch' : ''}`}>
         <StepQuestion focusKey={mode}>{question}</StepQuestion>
         <div className="plan-intro">
           <p className="muted">
-            {selecting ? 'Shift + clique seleciona um intervalo.' : 'Arraste um card para outro dia, para remover a data ou para abandonar.'}
+            {selecting
+              ? 'Shift + clique seleciona um intervalo.'
+              : mode === 'triage' && 'Arraste um card para outro dia, para remover a data ou para abandonar.'}
           </p>
           <IconAction
             icon="checklist"
