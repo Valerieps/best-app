@@ -4,6 +4,7 @@ import { loadHabits, type HabitView } from '../../application/queries';
 import type { DayKey } from '../../domain/day';
 import type { Habit, Objective } from '../../domain/entities';
 import { appContext, reader } from '../services';
+import { ScreenHeader } from '../components/ScreenHeader';
 import { LoadingPage } from '../components/Skeleton';
 import { useLiveQuery } from '../useLiveQuery';
 
@@ -138,7 +139,7 @@ export function HabitsScreen({ today }: { today: DayKey }) {
 
   return (
     <main className="page">
-      <h1 className="page__title">Hábitos</h1>
+      <ScreenHeader title="Hábitos" />
       {active.length === 0 && !creating && <p className="muted">Nenhum hábito. Ao fechar o dia, uma tarefa também pode virar hábito.</p>}
       {active.length > 0 && (
         <ul className="card-list">
@@ -204,7 +205,7 @@ export function HabitsScreen({ today }: { today: DayKey }) {
 
       {archived.length > 0 && (
         <>
-          <h2 className="card__subtitle">Arquivados</h2>
+          <h2 className="section-title">Arquivados</h2>
           <ul className="card-list">
             {archived.map((view) => (
               <li className="card-list__item" key={view.habit.id}>

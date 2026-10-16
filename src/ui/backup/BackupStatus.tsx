@@ -38,7 +38,8 @@ function statusOf(state: AutoBackupState): Status | null {
 
 /**
  * Compact backup status, shown in the sidebar's "Dados e backup" row: a colored dot and a short
- * label. The row opens "Dados e backup", where a paused backup is resumed.
+ * label. The row opens "Dados e backup", where a paused backup is resumed. When all is well, the
+ * green dot says it alone, and the time stays in the tooltip; a problem keeps its words.
  */
 export function BackupStatus({ state }: { state: AutoBackupState }) {
   const status = statusOf(state);
@@ -46,7 +47,7 @@ export function BackupStatus({ state }: { state: AutoBackupState }) {
   return (
     <span className={`backup-status backup-status--${status.tone}`} title={status.detail}>
       <span className="backup-status__dot" aria-hidden="true" />
-      <span className="backup-status__label">{status.label}</span>
+      {status.tone !== 'ok' && <span className="backup-status__label">{status.label}</span>}
       <span className="visually-hidden">: {status.detail}</span>
     </span>
   );

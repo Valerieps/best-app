@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react';
+import { ScreenHeader } from './ScreenHeader';
 
 /** Gray lines that stand in for content while a query runs. They fade in only after a short wait. */
 export function SkeletonLines({ count = 5 }: { count?: number }) {
@@ -12,12 +13,12 @@ export function SkeletonLines({ count = 5 }: { count?: number }) {
   );
 }
 
-/** A screen still loading: the title shows at once, so the screen never opens blank. */
-export function LoadingPage({ title, before, lines }: { title?: ReactNode; before?: ReactNode; lines?: number }) {
+/** A screen still loading: the title shows at once, in its usual place, so the screen never opens blank. */
+export function LoadingPage({ title, before, lines }: { title?: string; before?: ReactNode; lines?: number }) {
   return (
     <main className="page" aria-busy="true">
       {before}
-      {title && <h1 className="page__title">{title}</h1>}
+      {title && <ScreenHeader title={title} />}
       <SkeletonLines count={lines} />
     </main>
   );

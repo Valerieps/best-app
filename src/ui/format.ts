@@ -103,17 +103,6 @@ export function activityDetail(day: DayKey, activity: DayActivity): string {
   return `${formatShortDate(day)} · ${parts.length > 0 ? parts.join(', ') : 'nada'}`;
 }
 
-/** Header of the project list: "4 ativos · 1 parado · 3 travadas". Zero stalled or stuck is left out. */
-export function projectListSummary({ active, stalled, stuck }: { active: number; stalled: number; stuck: number }): string {
-  return [
-    plural(active, 'ativo', 'ativos'),
-    stalled > 0 ? plural(stalled, 'parado', 'parados') : null,
-    stuck > 0 ? plural(stuck, 'travada', 'travadas') : null,
-  ]
-    .filter(Boolean)
-    .join(' · ');
-}
-
 /** Why a task is stuck: "adiada 3 vezes · desde 18/09", "venceu em 09/10", or both. */
 export function stuckReasonLabel(reason: StuckReason): string {
   return [

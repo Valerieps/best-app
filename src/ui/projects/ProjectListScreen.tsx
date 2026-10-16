@@ -11,7 +11,7 @@ import { Dropdown, DropdownItem } from '../components/Dropdown';
 import { Icon } from '../components/Icon';
 import { ScreenHeader } from '../components/ScreenHeader';
 import { LoadingPage } from '../components/Skeleton';
-import { formatShortDate, plural, projectListSummary, relativeDay } from '../format';
+import { formatShortDate, plural, relativeDay } from '../format';
 import { navigate, routeHash } from '../hooks';
 import { appContext, reader } from '../services';
 import { useLiveQuery } from '../useLiveQuery';
@@ -42,20 +42,12 @@ export function ProjectsScreen({ today }: { today: DayKey }) {
 
   return (
     <main className="page page--wide projects">
-      <ScreenHeader
-        title={
-          <>
-            <h1 className="projects__title">Projetos</h1>
-            {hasActive && <p className="muted projects__summary">{projectListSummary(view.summary)}</p>}
-          </>
-        }
-        primary={{ label: 'Novo projeto', onSelect: () => setCreating(true) }}
-      >
+      <ScreenHeader title="Projetos" primary={{ label: 'Novo projeto', icon: 'plus', onSelect: () => setCreating(true) }}>
         {creating && <NewProjectField onDone={() => setCreating(false)} />}
       </ScreenHeader>
 
       {!hasActive && (
-        <p className="muted">Nenhum projeto ativo. Crie um aqui, ou dê um título a uma seção da nota do dia e escolha “Criar o projeto”.</p>
+        <p className="muted">Nenhum projeto ativo. Crie um aqui ou a partir de uma seção da nota do dia.</p>
       )}
 
       {hasActive && (

@@ -10,6 +10,7 @@ import { ProjectChip } from '../components/Chips';
 import { Icon } from '../components/Icon';
 import { DatePicker } from '../dayNote/BlockLine';
 import { Linkified } from '../components/Linkified';
+import { ScreenHeader } from '../components/ScreenHeader';
 import { LoadingPage } from '../components/Skeleton';
 import { plural, postponedLabel, relativeDay } from '../format';
 import { routeHash } from '../hooks';
@@ -19,7 +20,7 @@ import { useLiveQuery } from '../useLiveQuery';
 function ListPage({ title, className = '', children }: { title: string; className?: string; children: React.ReactNode }) {
   return (
     <main className={`page ${className}`}>
-      <h1 className="page__title">{title}</h1>
+      <ScreenHeader title={title} />
       {children}
     </main>
   );
@@ -503,7 +504,7 @@ export function ActiveTasksScreen({ today }: { today: DayKey }) {
           </TaskListControls>
           {selecting && (
             <p className="muted">
-              {flash || 'Clique nas tarefas para selecionar e escolha o que fazer na barra de baixo. Shift + clique seleciona um intervalo.'}
+              {flash || 'Shift + clique seleciona um intervalo.'}
             </p>
           )}
           {items.length === 0 && (
