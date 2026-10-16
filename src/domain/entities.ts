@@ -89,6 +89,11 @@ export interface Section {
    * was created. Absent in other sections.
    */
   projectPage?: boolean;
+  /**
+   * A note written on a project page's timeline: it belongs to no day note and shows only on
+   * the project page. Its `day` is the day it was written. Absent in other sections.
+   */
+  projectNote?: boolean;
 }
 
 /** `merged` projects were joined into another one (`mergedInto`) by the duplicates assistant. */

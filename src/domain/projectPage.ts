@@ -1,4 +1,5 @@
-import { toDayKey, type DayKey } from './day';
+import { addDays, fromDayKey, toDayKey, type DayKey } from './day';
+import { ALL_DAYS } from './dayFlow';
 import type { Block, Section } from './entities';
 import { POSTPONE_ATTENTION_THRESHOLD } from './tasks';
 
@@ -31,9 +32,12 @@ export function projectInitial(name: string): string {
   return name.trim().charAt(0).toLocaleUpperCase('pt-BR') || '?';
 }
 
-/** Sections that belong to a day note; the section that holds a project page's tasks does not. */
+/**
+ * Sections that belong to a day note. The section that holds a project page's tasks does not,
+ * nor do the notes written on a project page.
+ */
 export function isDaySection(section: Section): boolean {
-  return section.projectPage !== true;
+  return section.projectPage !== true && section.projectNote !== true;
 }
 
 /**
@@ -80,32 +84,44 @@ export interface ProjectTaskGroups {
   upcoming: Block[];
   /** "Sem data", and not stuck. */
   undated: Block[];
+  /** "Aguardando": every task a person owes me, with or without a date. */
+  waiting: Block[];
 }
 
 /**
  * The project's active tasks in the page's levels of emphasis, each group by date then creation.
- * A stuck task shows only among the stuck ones.
+ * A stuck task shows only among the stuck ones; a waiting task only among the waiting ones.
  */
 export function groupProjectTasks(active: readonly Block[], today: DayKey): ProjectTaskGroups {
   const sorted = [...active].sort(byDateThenCreation);
+  const waiting = sorted.filter((task) => task.waiting === true);
   const stuck = sorted.filter((task) => isStuckTask(task, today));
-  const rest = sorted.filter((task) => !stuck.includes(task));
+  const rest = sorted.filter((task) => !stuck.includes(task) && !waiting.includes(task));
   return {
     stuck,
+    waiting,
     upcoming: rest.filter((task) => task.intendedDate !== null),
     undated: rest.filter((task) => task.intendedDate === null),
   };
 }
 
-/** "Próximos dias" as a small agenda: one entry per intended date, in order. */
-export function agendaDays(upcoming: readonly Block[]): { day: DayKey; tasks: Block[] }[] {
-  const days: { day: DayKey; tasks: Block[] }[] = [];
-  for (const task of upcoming) {
-    const day = task.intendedDate;
-    if (day === null) continue;
-    const entry = days.find((candidate) => candidate.day === day);
-    if (entry) entry.tasks.push(task);
-    else days.push({ day, tasks: [task] });
+/** How many days "Próximos dias" shows, as columns of a calendar. */
+export const AGENDA_DAYS = 3;
+
+/**
+ * "Próximos dias" as a small calendar: the next 3 active days, starting today when today is
+ * active, each with the tasks intended for it. Tasks of other days do not show.
+ */
+export function agendaColumns(
+  upcoming: readonly Block[],
+  today: DayKey,
+  activeDays: readonly number[] = ALL_DAYS,
+): { day: DayKey; tasks: Block[] }[] {
+  const active = activeDays.length > 0 ? activeDays : ALL_DAYS;
+  const days: DayKey[] = [];
+  let day = today;
+  for (let i = 0; days.length < AGENDA_DAYS && i < 7 * AGENDA_DAYS; i++, day = addDays(day, 1)) {
+    if (active.includes(fromDayKey(day).getDay())) days.push(day);
   }
-  return days.sort((a, b) => (a.day < b.day ? -1 : a.day > b.day ? 1 : 0));
+  return days.map((each) => ({ day: each, tasks: upcoming.filter((task) => task.intendedDate === each) }));
 }

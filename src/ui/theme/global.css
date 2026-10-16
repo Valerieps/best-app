@@ -2852,6 +2852,7 @@ button.project-tabs__side[aria-expanded='true'] {
 .project-tasks .line {
   padding: var(--space-1) var(--space-2);
   border-radius: var(--radius-sm);
+  font-size: var(--font-size-lg);
 }
 
 .project-tasks .line:hover,
@@ -2951,54 +2952,53 @@ button.stuck__date {
   flex-shrink: 0;
 }
 
-/* Level 2, "Próximos dias": a small agenda, the date in a block on the left */
-.agenda__day {
-  display: flex;
-  align-items: flex-start;
+/* Level 2, "Próximos dias": a calendar of the next 3 active days, one column each */
+.agenda__columns {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: var(--space-3);
-  padding: var(--space-2) 0;
 }
 
-.agenda__day + .agenda__day {
-  border-top: var(--border-width) solid var(--color-border);
+.agenda__day {
+  min-width: 0;
+  padding: var(--space-2);
+  background: var(--color-surface);
+  border: var(--border-width) solid var(--color-border);
+  border-radius: var(--radius-md);
+}
+
+.agenda__day--today {
+  border-color: var(--color-check);
 }
 
 .agenda__date {
   display: flex;
-  flex-direction: column;
-  align-items: center;
-  flex-shrink: 0;
-  width: 52px;
-  padding: var(--space-1) 0;
-  background: var(--color-surface);
-  border: var(--border-width) solid var(--color-border);
-  border-radius: var(--radius-md);
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-2);
+  margin: 0 var(--space-2) var(--space-2);
   line-height: 1.2;
 }
 
-.agenda__date--today {
-  border-color: var(--color-check);
-}
-
-.agenda__date-top {
-  font-size: var(--font-size-xs);
-  color: var(--color-text-muted);
-}
-
-.agenda__date-number {
-  font-size: var(--font-size-lg);
+.agenda__weekday {
   font-weight: 600;
+  text-transform: capitalize;
+}
+
+.agenda__number {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-muted);
   font-variant-numeric: tabular-nums;
 }
 
-.agenda__tasks {
-  flex: 1;
-  min-width: 0;
+.agenda__empty {
+  margin: 0 var(--space-2);
+  font-size: var(--font-size-sm);
 }
 
 /* Level 3, "Sem data": quieter lines */
 .task-group--undated .line {
-  font-size: var(--font-size-sm);
+  font-size: var(--font-size-md);
   color: var(--color-text-muted);
 }
 
@@ -3480,7 +3480,7 @@ button.projects__toggle {
 
 .project-row {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 9rem auto auto;
+  grid-template-columns: minmax(0, 1fr) 9rem auto;
   align-items: center;
   gap: var(--space-3);
   padding: var(--space-2) var(--space-3) var(--space-2) var(--space-4);
@@ -3613,9 +3613,6 @@ button.project-actions {
     grid-template-columns: minmax(0, 1fr) auto;
   }
 
-  .project-row .activity-map {
-    display: none;
-  }
 }
 /* Parts of the day note (sections, carried tasks, priorities) can be moved as a whole */
 .day-part {
@@ -4162,7 +4159,40 @@ select.line__action.active-tasks__project {
   border-color: var(--color-warning-text);
 }
 
-/* A note on a project page: edit and delete on hover */
+/* The notes tab: "+" above the timeline, the new note's field, and an entry being edited */
+.timeline__head {
+  display: flex;
+  justify-content: flex-start;
+  margin-top: var(--space-4);
+}
+
+.timeline__new {
+  display: block;
+  width: 100%;
+  margin-top: var(--space-2);
+  resize: vertical;
+}
+
+.timeline__when-row {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-2);
+}
+
+.timeline__edit-toggle {
+  visibility: hidden;
+}
+
+.timeline__entry:hover .timeline__edit-toggle,
+.timeline__entry:focus-within .timeline__edit-toggle {
+  visibility: visible;
+}
+
+.timeline__editor {
+  margin-top: var(--space-1);
+}
+
+/* A note on a project page: delete on hover */
 .timeline__note-row {
   display: flex;
   align-items: flex-start;

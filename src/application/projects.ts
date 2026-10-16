@@ -144,3 +144,60 @@ export async function createProjectTask(ctx: AppContext, projectId: string, text
     return task;
   });
 }
+
+/**
+ * "Nova nota" on the project page's timeline: the lines become the notes of a new section of the
+ * project, written today. The section belongs to no day note, so the note shows only on the
+ * project page, and it has nothing to triage. Empty lines are dropped.
+ */
+export async function createProjectNote(ctx: AppContext, projectId: string, text: string): Promise<Section | null> {
+  const lines = text
+    .split('\n')
+    .map((line) => line.trimEnd())
+    .filter((line) => line.trim() !== '');
+  if (lines.length === 0) return null;
+  return ctx.store.transaction(async (tx) => {
+    const project = await tx.projects.get(projectId);
+    if (!project) throw new Error('Project not found');
+    const now = ctx.clock.now();
+    const at = now.toISOString();
+    const day = toDayKey(now);
+    const section: Section = {
+      id: ctx.ids.next(),
+      kind: 'general',
+      day,
+      createdAt: at,
+      updatedAt: at,
+      title: null,
+      projectId: project.id,
+      notesDestination: 'wiki',
+      whiteboardDecision: 'pending',
+      projectNote: true,
+    };
+    await tx.sections.put(section);
+    await record(ctx, tx, 'section.created', 'section', section.id, day, { kind: section.kind, projectNote: true, projectId: project.id });
+    let position: string | null = null;
+    for (const line of lines) {
+      position = positionBetween(position, null);
+      const note: Block = {
+        id: ctx.ids.next(),
+        kind: 'note',
+        text: line,
+        sectionId: section.id,
+        position,
+        projectId: null,
+        createdAt: at,
+        updatedAt: at,
+        status: null,
+        intendedDate: null,
+        firstIntendedDate: null,
+        postponeCount: 0,
+        closedAt: null,
+        lastTriagedDay: null,
+      };
+      await tx.blocks.put(note);
+      await record(ctx, tx, 'block.created', 'block', note.id, day, { kind: 'note', sectionId: section.id });
+    }
+    return section;
+  });
+}

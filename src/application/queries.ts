@@ -362,7 +362,8 @@ export async function loadActivities(reader: Reader, projects: readonly Project[
   const scopes = [];
   for (const project of projects) {
     const tasks = (await reader.blocksOfProject(project.id)).filter((block) => block.kind === 'task');
-    const sections = (await reader.sectionsOfProject(project.id)).filter(isDaySection);
+    // The notes written on the project page count too; the section of its tasks does not.
+    const sections = (await reader.sectionsOfProject(project.id)).filter((section) => section.projectPage !== true);
     // Notes are not linked to the project themselves: they belong to its sections.
     const notes = (await reader.blocksInSections(sections.map((section) => section.id))).filter(
       (block) => block.kind === 'note' && block.text.trim() !== '',

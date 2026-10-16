@@ -382,6 +382,42 @@ export async function deleteKeptNote(ctx: AppContext, blockId: string): Promise<
   });
 }
 
+/**
+ * Enter while editing a kept note on a project page (spec/projetos.md), whatever its day: the
+ * text before the caret stays, the rest becomes a new note right after it.
+ */
+export async function splitKeptNote(
+  ctx: AppContext,
+  blockId: string,
+  fullText: string,
+  caret: number,
+  position: string,
+  newId?: string,
+): Promise<Block | null> {
+  return ctx.store.transaction(async (tx) => {
+    const block = await tx.blocks.get(blockId);
+    if (!block || block.kind !== 'note') return null;
+    const section = await getOrThrow(tx.sections.get(block.sectionId), 'Section');
+    await tx.blocks.put({ ...block, text: fullText.slice(0, caret), updatedAt: nowIso(ctx) });
+    const note = newBlock(ctx, section, 'note', fullText.slice(caret), position, newId);
+    await tx.blocks.put(note);
+    await record(ctx, tx, 'block.created', 'block', note.id, today(ctx), { kind: 'note', sectionId: section.id });
+    return note;
+  });
+}
+
+/** Backspace at the start of a kept note on a project page: joins it to the note above. */
+export async function mergeKeptNote(ctx: AppContext, blockId: string, fullText: string, previousId: string): Promise<void> {
+  await ctx.store.transaction(async (tx) => {
+    const block = await tx.blocks.get(blockId);
+    const previous = await tx.blocks.get(previousId);
+    if (!block || !previous || block.kind !== 'note' || previous.kind !== 'note') return;
+    await tx.blocks.put({ ...previous, text: previous.text + fullText, updatedAt: nowIso(ctx) });
+    await tx.blocks.delete(block.id);
+    await record(ctx, tx, 'block.deleted', 'block', block.id, today(ctx), { kind: block.kind, mergedInto: previousId });
+  });
+}
+
 /** Backspace at the start of a line: appends its text to the previous block and deletes it. */
 export async function mergeIntoPrevious(ctx: AppContext, blockId: string, fullText: string, previousId: string): Promise<void> {
   await ctx.store.transaction(async (tx) => {
