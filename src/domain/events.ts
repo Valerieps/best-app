@@ -1,8 +1,5 @@
 import type { DayKey } from './day';
-import type { DirectionMetrics } from './directionMetrics';
 import type { BlockKind, NotesDestination, Resource, SectionKind, Settings, WarmupResult } from './entities';
-import type { WeeklyMetrics } from './metrics';
-import type { ReviewKind } from './reviews';
 
 /**
  * Append-only history of every change. Metrics, including future ones, are computed from it,
@@ -65,6 +62,7 @@ export interface EventData {
   /** History only, like `task.archived`. */
   'task.reactivated': { previousIntendedDate: DayKey | null };
   'task.abandoned': NoData;
+  /** History only: the task was left for the Revisão de Foco, which was removed (ADR-060). */
   'task.deferredToReflection': NoData;
   'task.convertedToHabit': { habitId: string };
   /** The task became, or stopped being, something a person owes me (spec/pessoas.md). */
@@ -82,8 +80,10 @@ export interface EventData {
   'section.keptUnlinked': NoData;
   'section.notesMovedToWiki': { projectId: string | null };
   'section.notesDiscarded': { projectId: string | null };
+  /** History only, like `task.deferredToReflection`. */
   'section.notesDeferredToReflection': { projectId: string | null };
-  'section.notesReopened': { from: NotesDestination };
+  /** `weeklyReflection` is a destination from before ADR-060. */
+  'section.notesReopened': { from: NotesDestination | 'weeklyReflection' };
   'section.detailsChanged': { participants: string | null; docLink: string | null };
   'project.created': { name: string };
   'project.renamed': { from: string; to: string };
@@ -94,13 +94,19 @@ export interface EventData {
   'project.linkedToObjective': { objectiveId: string | null };
   /**
    * A change of a priority list, carrying the whole list after it. Day priorities (entity
-   * `day:<day>`) name the task; the list in focus names the project, and a removal says why.
+   * `day:<day>`) name the task; the list in focus names the project, and a removal says why:
+   * `removed` by hand, `finished` with the project, `review` in the Revisão de Foco (history
+   * only, ADR-060). An addition that took another project's place names it in `replaced`.
    */
-  'priority.added': { taskId: string; itemIds: string[] } | { projectId: string; itemIds: string[] };
+  'priority.added': { taskId: string; itemIds: string[] } | { projectId: string; itemIds: string[]; replaced?: string };
   'priority.removed':
     | { taskId: string; itemIds: string[] }
-    | { projectId: string; reason: 'review' | 'finished'; itemIds: string[] };
-  'reflection.closed': { kind: ReviewKind; since: string | null; metrics: WeeklyMetrics | DirectionMetrics };
+    | { projectId: string; reason: 'removed' | 'finished' | 'review'; itemIds: string[] };
+  /**
+   * History only: a review was closed, with a snapshot of the metrics it showed. The reviews
+   * were removed (ADR-060); the closed ones stay in the history and in the backup.
+   */
+  'reflection.closed': { kind: 'focus' | 'direction'; since: string | null; metrics: Record<string, unknown> };
   'settings.changed': Partial<Omit<Settings, 'id' | 'updatedAt'>>;
   'day.started': NoData;
   'day.executionStarted': NoData;
@@ -141,7 +147,7 @@ export interface LegacyEventData {
   'priority.added': { projectId: string; itemIds: string[]; week: string };
   'priority.removed': { projectId: string; itemIds: string[]; week: string };
   /** The weekly and monthly reflections, before the Focus and Direction reviews. */
-  'reflection.closed': { week: string; metrics: WeeklyMetrics } | { month: string; metrics: unknown };
+  'reflection.closed': { week: string; metrics: unknown } | { month: string; metrics: unknown };
 }
 
 /**

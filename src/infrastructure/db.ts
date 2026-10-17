@@ -18,6 +18,7 @@ import type {
 import type { DomainEvent } from '../domain/events';
 import { toDayKey } from '../domain/day';
 import { migrateMonthPriorityLists, migrateToFocusList } from '../domain/focusProjects';
+import { keepDeferredNotes } from '../domain/reviewsRemoved';
 import { undateArchivedTask } from '../domain/tasks';
 
 /** App settings and bookkeeping that never go into a backup (e.g. file handles). */
@@ -36,7 +37,7 @@ export interface Snapshot {
 export const DATABASE_NAME = 'best-app';
 
 /** The last version declared below; raise it with each new `this.version(n)`. */
-export const DATABASE_VERSION = 9;
+export const DATABASE_VERSION = 10;
 
 /** Snapshot of the data as it was before the last database upgrade (ADR-059). */
 export const UPGRADE_SNAPSHOT_ID = 'beforeUpgrade';
@@ -155,5 +156,24 @@ export class AppDatabase extends Dexie {
     this.version(9).stores({
       people: 'id, status',
     });
+    // The reviews were removed (ADR-060): tasks left for the Revisão de Foco lose the flag, and
+    // notes left for it are kept. Closed reviews stay in `reflections`, as history.
+    this.version(10)
+      .stores({ blocks: 'id, sectionId, status, intendedDate, projectId, deadline', sections: 'id, day, projectId' })
+      .upgrade(async (tx) => {
+        await snapshotBeforeUpgrade(tx);
+        await tx
+          .table('blocks')
+          .filter((row: Record<string, unknown>) => 'awaitingReflection' in row)
+          .modify((row: Record<string, unknown>) => {
+            delete row.awaitingReflection;
+          });
+        await tx
+          .table('sections')
+          .filter((row: Record<string, unknown>) => row.notesDestination === 'weeklyReflection')
+          .modify((row: Record<string, unknown>) => {
+            Object.assign(row, keepDeferredNotes(row));
+          });
+      });
   }
 }

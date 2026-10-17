@@ -8,7 +8,7 @@ export interface SidebarEntry {
   route: Route;
   label: string;
   count?: number;
-  /** The "Rituais" counter: pending days plus available reviews. */
+  /** The "Rituais" counter: the pending days. */
   due?: number;
 }
 

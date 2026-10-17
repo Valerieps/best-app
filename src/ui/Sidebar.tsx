@@ -1,6 +1,5 @@
 import { useState, type CSSProperties, type KeyboardEvent, type PointerEvent } from 'react';
 import { loadMenuCounts } from '../application/queries';
-import type { ReviewAvailability } from '../application/reviewQueries';
 import { setSidebarCollapsed, setSidebarWidth } from '../application/settings';
 import type { DayKey } from '../domain/day';
 import type { AutoBackupState } from '../infrastructure/autoBackup';
@@ -18,8 +17,6 @@ import { enqueue } from './writeQueue';
 interface Props {
   route: Route;
   pendingDays: DayKey[];
-  /** Which reviews are available; loaded by the app, which also shows their notice. */
-  reviews: ReviewAvailability | undefined;
   backupState: AutoBackupState;
 }
 
@@ -31,7 +28,7 @@ function Badge({ count }: { count: number }) {
  * Level 1 of the navigation (spec/navegacao.md, "Navegação"): the only global bar, fixed on the
  * left of every screen but "Iniciar Dia". Only places, in groups; it can be collapsed to a strip.
  */
-export function Sidebar({ route, pendingDays, reviews, backupState }: Props) {
+export function Sidebar({ route, pendingDays, backupState }: Props) {
   const current = sidebarPlace(route);
   const storedCollapsed = useLiveQueryState(async () => (await reader.settings())?.sidebarCollapsed ?? false).value;
   // The toggle shows at once; the settings write follows (as in ADR-036).
@@ -44,9 +41,7 @@ export function Sidebar({ route, pendingDays, reviews, backupState }: Props) {
 
   // Counts are extras: a failed query is logged and the sidebar goes on without them.
   const counts = useLiveQueryState(() => loadMenuCounts(reader)).value;
-  const focusDue = (reviews?.focus.length ?? 0) > 0;
-  const directionDue = (reviews?.direction.length ?? 0) > 0;
-  const dueCount = pendingDays.length + (focusDue ? 1 : 0) + (directionDue ? 1 : 0);
+  const dueCount = pendingDays.length;
 
   const toggle = () => {
     const next = !collapsed;

@@ -16,6 +16,7 @@ import type {
 import type { DomainEvent, EntityType, EventType } from '../domain/events';
 import { toDayKey } from '../domain/day';
 import { migrateMonthPriorityLists, migrateToFocusList } from '../domain/focusProjects';
+import { dropAwaitingReflection, keepDeferredNotes } from '../domain/reviewsRemoved';
 import { undateArchivedTask } from '../domain/tasks';
 
 /**
@@ -25,7 +26,7 @@ import { undateArchivedTask } from '../domain/tasks';
  */
 
 export const BACKUP_FORMAT = 'best-app-backup';
-export const BACKUP_SCHEMA_VERSION = 9;
+export const BACKUP_SCHEMA_VERSION = 10;
 
 export interface BackupTables {
   blocks: Block[];
@@ -35,7 +36,7 @@ export interface BackupTables {
   events: DomainEvent[];
   /** Added in version 2 (1b). */
   priorities: PriorityList[];
-  /** Added in version 3 (section 2). */
+  /** Added in version 3 (section 2). Closed reviews, kept as history with no screen (ADR-060). */
   reflections: Reflection[];
   settings: Settings[];
   /** Added in version 4 (section 3). */
@@ -136,6 +137,11 @@ function upgradeTables(tables: Record<string, unknown>, version: number, exporte
     upgraded.blocks = upgraded.blocks.map((row: unknown) => (isRecord(row) ? undateArchivedTask(row) : row));
   }
   if (version < 9) upgraded.people = []; // People cited with `@` (spec/pessoas.md).
+  // The reviews were removed (ADR-060): what was left for the Revisão de Foco goes back.
+  if (version < 10) {
+    if (Array.isArray(upgraded.blocks)) upgraded.blocks = upgraded.blocks.map((row: unknown) => (isRecord(row) ? dropAwaitingReflection(row) : row));
+    if (Array.isArray(upgraded.sections)) upgraded.sections = upgraded.sections.map((row: unknown) => (isRecord(row) ? keepDeferredNotes(row) : row));
+  }
   return upgraded;
 }
 

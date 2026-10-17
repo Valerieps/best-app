@@ -2,7 +2,6 @@ import { describe, expect, it } from 'vitest';
 import type { PriorityList, Project } from './entities';
 import type { DomainEvent } from './events';
 import {
-  focusListEmptied,
   focusProjectIds,
   focusProjectsOnDay,
   legacyListInEffect,
@@ -11,6 +10,8 @@ import {
   migrateToFocusList,
   recordedFocusProjects,
   withAddedProject,
+  withRemovedProject,
+  withSwappedProject,
 } from './focusProjects';
 import { weekOf } from './week';
 
@@ -23,7 +24,7 @@ function project(id: string, status: Project['status'] = 'active'): Project {
 }
 
 let eventId = 0;
-function change(type: 'priority.added' | 'priority.removed', at: string, itemIds: string[], reason?: 'review' | 'finished'): DomainEvent {
+function change(type: 'priority.added' | 'priority.removed', at: string, itemIds: string[], reason?: 'removed' | 'finished'): DomainEvent {
   return {
     id: `e${++eventId}`,
     type,
@@ -46,10 +47,21 @@ describe('projects in focus', () => {
     expect(recordedFocusProjects({ itemIds: ['a', 'a', 'b', 'c', 'd'] })).toEqual(['a', 'b', 'c']);
   });
 
-  it('adds a project outside the review only while there is a free slot', () => {
+  it('adds a project only while there is a free slot', () => {
     expect(withAddedProject(['a', 'b'], 'c')).toEqual(['a', 'b', 'c']);
     expect(withAddedProject(['a', 'b', 'c'], 'd')).toBeNull();
     expect(withAddedProject(['a'], 'a')).toBeNull();
+  });
+
+  it('removes a project in the list', () => {
+    expect(withRemovedProject(['a', 'b', 'c'], 'b')).toEqual(['a', 'c']);
+    expect(withRemovedProject(['a'], 'z')).toBeNull();
+  });
+
+  it('swaps a project in the list for one outside it, in the same place', () => {
+    expect(withSwappedProject(['a', 'b', 'c'], 'b', 'd')).toEqual(['a', 'd', 'c']);
+    expect(withSwappedProject(['a', 'b'], 'z', 'd')).toBeNull();
+    expect(withSwappedProject(['a', 'b'], 'a', 'b')).toBeNull();
   });
 });
 
@@ -66,24 +78,6 @@ describe('focusProjectsOnDay: the history for the raio-x', () => {
   it('falls back to the old week lists before the first change', () => {
     expect(focusProjectsOnDay('2026-10-05', events, legacy)).toEqual(['old']);
     expect(focusProjectsOnDay('2026-09-01', events, legacy)).toEqual([]);
-  });
-});
-
-describe('focusListEmptied', () => {
-  it('is true when finishing the last project emptied the list after the last review', () => {
-    const events = [change('priority.added', '2026-10-01T10:00:00Z', ['a']), change('priority.removed', '2026-10-05T10:00:00Z', [], 'finished')];
-    expect(focusListEmptied(events, null)).toBe(true);
-    expect(focusListEmptied(events, '2026-10-02T10:00:00Z')).toBe(true);
-    expect(focusListEmptied(events, '2026-10-06T10:00:00Z')).toBe(false);
-  });
-
-  it('is false when the review emptied it, when something is left, or when it was filled again', () => {
-    expect(focusListEmptied([change('priority.removed', '2026-10-05T10:00:00Z', [], 'review')], null)).toBe(false);
-    expect(focusListEmptied([change('priority.removed', '2026-10-05T10:00:00Z', ['b'], 'finished')], null)).toBe(false);
-    expect(
-      focusListEmptied([change('priority.removed', '2026-10-05T10:00:00Z', [], 'finished'), change('priority.added', '2026-10-06T10:00:00Z', ['c'])], null),
-    ).toBe(false);
-    expect(focusListEmptied([], null)).toBe(false);
   });
 });
 

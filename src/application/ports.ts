@@ -38,6 +38,7 @@ export interface StoreTransaction {
   projects: Repository<Project>;
   days: Repository<DayRecord>;
   priorities: Repository<PriorityList>;
+  /** Closed reviews: history only since ADR-060, kept so backups carry them. */
   reflections: Repository<Reflection>;
   settings: Repository<Settings>;
   reminders: Repository<Reminder>;
@@ -81,13 +82,9 @@ export interface Reader {
   priorityList(id: string): Promise<PriorityList | undefined>;
   sectionsWithStatus(decision: Section['whiteboardDecision']): Promise<Section[]>;
   sectionsWithNotesDestination(destination: Section['notesDestination']): Promise<Section[]>;
-  tasksAwaitingReflection(): Promise<Block[]>;
   eventsBetween(startDay: DayKey, endDay: DayKey): Promise<DomainEvent[]>;
   /** Every event about these entities, such as the finishes and reopenings of some tasks. */
   eventsOfEntities(ids: string[]): Promise<DomainEvent[]>;
-  reflection(id: string): Promise<Reflection | undefined>;
-  /** Every review, open or closed, including the weekly and monthly reflections from before. */
-  reflections(): Promise<Reflection[]>;
   settings(): Promise<Settings | undefined>;
   blocksOfProject(projectId: string): Promise<Block[]>;
   sectionsOfProject(projectId: string): Promise<Section[]>;

@@ -9,7 +9,6 @@ import {
   loadProjectList,
   loadSectionNotes,
 } from '../application/queries';
-import { loadFocusReview, loadReviewAvailability } from '../application/reviewQueries';
 import { addDays } from '../domain/day';
 import { activityGrid, CARD_MAP_WEEKS } from '../domain/projectActivity';
 import type { TaskRow } from '../domain/triage';
@@ -94,16 +93,6 @@ describe('synthetic data', () => {
     ]);
   });
 
-  it('leaves a task and notes for the Revisão de Foco', async () => {
-    const view = await loadFocusReview(reader, TODAY);
-    const deferred = view.deferred.map((row) => (row.type === 'task' ? row.task.text : row.section.title));
-    expect(deferred).toEqual(['Pedir orçamento de bancada de granito', 'Retrospectiva da sprint 40']);
-  });
-
-  it('has the Revisão de Foco available by the cadence', async () => {
-    expect((await loadReviewAvailability(reader, TODAY)).focus).toContainEqual({ kind: 'cadence', count: expect.any(Number) });
-  });
-
   it('keeps active tasks without a date for weeks', async () => {
     const undated = (await loadActiveTasks(reader)).filter((item) => item.task.intendedDate === null);
     expect(undated.map((item) => item.task.text)).toEqual(
@@ -115,6 +104,8 @@ describe('synthetic data', () => {
         'Avaliar Firebase no lugar do Postgres',
         'Prototipar a integração com o Google Agenda',
         'Página de status do sistema',
+        // Postponed too often, it went back to the task list at its closing.
+        'Pedir orçamento de bancada de granito',
       ]),
     );
     expect(taskNamed('Alugar uma caixa de som').postponeCount).toBe(1);

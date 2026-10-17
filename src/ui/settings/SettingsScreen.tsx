@@ -1,11 +1,9 @@
 import { useEffect, useState } from 'react';
-import { setReviewCadence } from '../../application/reviews';
 import { setActiveDays, setAppearance, setCleanupLimits, setForgottenTaskDays, setWarmupItems } from '../../application/settings';
 import { DEFAULT_FORGOTTEN_TASK_DAYS, normalizeForgottenTaskDays } from '../../domain/assistants';
 import { ASSISTANT_IDS, COUNTED_ASSISTANTS, limitsFor, withLimit, type AssistantId, type StatusLimits } from '../../domain/cleanupStatus';
 import { ALL_DAYS } from '../../domain/dayFlow';
 import type { Appearance, Settings, WarmupItem } from '../../domain/entities';
-import { DEFAULT_REVIEW_CADENCE } from '../../domain/reviews';
 import { ASSISTANT_INFO } from '../cleanup/assistantInfo';
 import { appContext, reader } from '../services';
 import { Icon } from '../components/Icon';
@@ -13,7 +11,6 @@ import { ScreenHeader } from '../components/ScreenHeader';
 import { Segmented, type SegmentOption } from '../components/Segmented';
 import { LoadingPage } from '../components/Skeleton';
 import { parseAppearance } from '../theme/appearance';
-import { directionReviewEnabled } from '../features';
 import { useLiveQuery } from '../useLiveQuery';
 
 const WEEKDAYS = ['domingo', 'segunda', 'terça', 'quarta', 'quinta', 'sexta', 'sábado'];
@@ -25,11 +22,10 @@ const APPEARANCES: readonly SegmentOption<Appearance>[] = [
   { value: 'system', label: 'Igual à do sistema' },
 ];
 
-/** User settings: review cadence (section 2), active days and warm up (section 3), appearance. */
+/** User settings: warm up and active days (section 3), the assistants, appearance. */
 export function SettingsScreen() {
   const settings = useLiveQuery(async () => (await reader.settings()) ?? null);
   if (settings === undefined) return <LoadingPage title="Configurações" />;
-  const cadence = { ...DEFAULT_REVIEW_CADENCE, ...settings?.reviewCadence };
   const activeDays = settings?.activeDays ?? [...ALL_DAYS];
 
   return (
@@ -62,29 +58,6 @@ export function SettingsScreen() {
             </label>
           ))}
         </div>
-      </section>
-
-      <section className="panel settings__panel">
-        <h2>Revisões</h2>
-        {directionReviewEnabled() ? (
-          <p className="muted">Cada revisão fica disponível depois destes intervalos, ou antes, se algo sair do lugar.</p>
-        ) : (
-          <p className="muted">Fica disponível depois deste intervalo, ou antes, se algo sair do lugar.</p>
-        )}
-        <CadenceField
-          label="Revisão de Foco a cada"
-          unit="dias fechados"
-          value={cadence.focusCheckouts}
-          onChange={(focusCheckouts) => void setReviewCadence(appContext, { focusCheckouts })}
-        />
-        {directionReviewEnabled() && (
-          <CadenceField
-            label="Revisão de Rumo a cada"
-            unit="Revisões de Foco"
-            value={cadence.directionFocusReviews}
-            onChange={(directionFocusReviews) => void setReviewCadence(appContext, { directionFocusReviews })}
-          />
-        )}
       </section>
 
       <section className="panel settings__panel">
@@ -308,30 +281,5 @@ function WarmupEditor({ items }: { items: WarmupItem[] }) {
         <button type="submit">Adicionar</button>
       </form>
     </>
-  );
-}
-
-/** A whole number from 1 to 99, saved when it is valid. */
-function CadenceField({ label, unit, value, onChange }: { label: string; unit: string; value: number; onChange(value: number): void }) {
-  const [text, setText] = useState(String(value));
-  useEffect(() => setText(String(value)), [value]);
-  return (
-    <label className="settings__row">
-      <span>{label}</span>
-      <input
-        className="text-input settings__number"
-        type="number"
-        min={1}
-        max={99}
-        value={text}
-        onChange={(event) => {
-          setText(event.target.value);
-          const next = Number(event.target.value);
-          if (Number.isInteger(next) && next >= 1 && next <= 99 && next !== value) onChange(next);
-        }}
-        onBlur={() => setText(String(value))}
-      />
-      <span>{unit}</span>
-    </label>
   );
 }

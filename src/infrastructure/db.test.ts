@@ -89,6 +89,39 @@ describe('database versions 6 to 8', () => {
   });
 });
 
+describe('database version 10', () => {
+  it('settles what a version 9 database left for the Revisão de Foco, and keeps the closed reviews', async () => {
+    const name = 'best-app-upgrade-test-10';
+    const old = new Dexie(name);
+    old.version(9).stores({
+      blocks: 'id, sectionId, status, intendedDate, projectId, deadline',
+      sections: 'id, day, projectId',
+      reflections: 'id',
+    });
+    await old.open();
+    await old.table('blocks').bulkPut([
+      { id: 't1', kind: 'task', status: 'active', intendedDate: null, awaitingReflection: true },
+      { id: 't2', kind: 'task', status: 'active', intendedDate: '2026-10-20' },
+    ]);
+    await old.table('sections').bulkPut([
+      { id: 's1', day: '2026-10-01', projectId: null, notesDestination: 'weeklyReflection' },
+      { id: 's2', day: '2026-10-02', projectId: null, notesDestination: 'pending' },
+    ]);
+    const review = { id: 'focus:r1', kind: 'focus', period: '', start: '', end: '2026-10-10', bestMoments: 'Bom', improvements: '', closedAt: '2026-10-10T20:00:00.000Z', updatedAt: '' };
+    await old.table('reflections').put(review);
+    old.close();
+
+    const db = new AppDatabase(name);
+    expect(await db.blocks.get('t1')).toEqual({ id: 't1', kind: 'task', status: 'active', intendedDate: null });
+    expect(await db.blocks.get('t2')).toEqual({ id: 't2', kind: 'task', status: 'active', intendedDate: '2026-10-20' });
+    expect((await db.sections.get('s1'))?.notesDestination).toBe('wiki');
+    expect((await db.sections.get('s2'))?.notesDestination).toBe('pending');
+    expect(await db.reflections.toArray()).toEqual([review]);
+    db.close();
+    await Dexie.delete(name);
+  });
+});
+
 describe('database version constant', () => {
   it('matches the last version declared', async () => {
     const name = 'best-app-version-constant';

@@ -1,6 +1,6 @@
 import { toDayKey } from '../domain/day';
 import type { PriorityList } from '../domain/entities';
-import { FOCUS_LIST_ID, recordedFocusProjects, withAddedProject } from '../domain/focusProjects';
+import { FOCUS_LIST_ID, recordedFocusProjects, withAddedProject, withRemovedProject, withSwappedProject } from '../domain/focusProjects';
 import { record } from './events';
 import type { AppContext, StoreTransaction } from './ports';
 
@@ -15,7 +15,9 @@ async function idsInFocus(tx: StoreTransaction): Promise<string[]> {
   return ids;
 }
 
-type Change = { added: string } | { removed: string; reason: 'review' | 'finished' };
+type Change =
+  | { added: string; replaced?: string }
+  | { removed: string; reason: 'removed' | 'finished' };
 
 /** Saves the whole list. The event carries it too, which is the history the raio-x reads. */
 async function save(ctx: AppContext, tx: StoreTransaction, itemIds: string[], change: Change) {
@@ -23,13 +25,14 @@ async function save(ctx: AppContext, tx: StoreTransaction, itemIds: string[], ch
   await tx.priorities.put(list);
   const day = toDayKey(ctx.clock.now());
   if ('added' in change) {
-    await record(ctx, tx, 'priority.added', 'priorities', FOCUS_LIST_ID, day, { projectId: change.added, itemIds });
+    const replaced = change.replaced ? { replaced: change.replaced } : {};
+    await record(ctx, tx, 'priority.added', 'priorities', FOCUS_LIST_ID, day, { projectId: change.added, itemIds, ...replaced });
   } else {
     await record(ctx, tx, 'priority.removed', 'priorities', FOCUS_LIST_ID, day, { projectId: change.removed, reason: change.reason, itemIds });
   }
 }
 
-/** Outside the review a project only takes a free slot. Returns whether it was added. */
+/** "Colocar em foco": an active project takes a free slot. Returns whether it was added. */
 export async function addFocusProject(ctx: AppContext, projectId: string): Promise<boolean> {
   return ctx.store.transaction(async (tx) => {
     if ((await tx.projects.get(projectId))?.status !== 'active') return false;
@@ -40,20 +43,27 @@ export async function addFocusProject(ctx: AppContext, projectId: string): Promi
   });
 }
 
+/** "Tirar do foco": frees the project's slot. Returns whether it was in the list. */
+export async function removeFocusProject(ctx: AppContext, projectId: string): Promise<boolean> {
+  return ctx.store.transaction(async (tx) => {
+    const next = withRemovedProject(await idsInFocus(tx), projectId);
+    if (!next) return false;
+    await save(ctx, tx, next, { removed: projectId, reason: 'removed' });
+    return true;
+  });
+}
+
 /**
- * In the Revisão de Foco the list can change freely: `on` takes a free slot, off frees one.
- * Swapping is taking one out and putting another in.
+ * "Colocar em foco no lugar de": an active project takes the place of one in focus, in a single
+ * change, so a full list can be swapped. Returns whether the list changed.
  */
-export async function setFocusProjectInReview(ctx: AppContext, projectId: string, on: boolean): Promise<void> {
-  await ctx.store.transaction(async (tx) => {
-    const ids = await idsInFocus(tx);
-    if (on) {
-      if ((await tx.projects.get(projectId))?.status !== 'active') return;
-      const next = withAddedProject(ids, projectId);
-      if (next) await save(ctx, tx, next, { added: projectId });
-    } else if (ids.includes(projectId)) {
-      await save(ctx, tx, ids.filter((id) => id !== projectId), { removed: projectId, reason: 'review' });
-    }
+export async function swapFocusProject(ctx: AppContext, outId: string, inId: string): Promise<boolean> {
+  return ctx.store.transaction(async (tx) => {
+    if ((await tx.projects.get(inId))?.status !== 'active') return false;
+    const next = withSwappedProject(await idsInFocus(tx), outId, inId);
+    if (!next) return false;
+    await save(ctx, tx, next, { added: inId, replaced: outId });
+    return true;
   });
 }
 

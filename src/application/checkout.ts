@@ -46,7 +46,7 @@ function laterOf(a: DayKey | null, b: DayKey): DayKey {
   return a !== null && a > b ? a : b;
 }
 
-/** Applies one task decision inside a transaction. Shared by the checkout and the weekly reflection. */
+/** Applies one task decision inside a transaction. Shared by the checkout and the assistants. */
 export async function applyTaskDecision(
   ctx: AppContext,
   tx: StoreTransaction,
@@ -70,9 +70,6 @@ export async function applyTaskDecision(
       // A task left untouched in the triage goes to the task list without counting as postponed.
       const quiet = decision.kind === 'undate' && decision.untouched === true;
       task = await moveIntendedDate(ctx, tx, task, to, day, 'checkout', { postpone: !quiet });
-    } else if (decision.kind === 'reflection') {
-      task = { ...task, awaitingReflection: true, updatedAt: nowIso(ctx) };
-      await record(ctx, tx, 'task.deferredToReflection', 'block', task.id, day);
     } else if (decision.kind === 'habit') {
       const habit = await addHabitIn(ctx, tx, { name: task.text || 'Hábito', criterion: '', weekdays: [], objectiveId: null });
       task = { ...task, status: 'converted', closedAt: nowIso(ctx), updatedAt: nowIso(ctx) };
@@ -82,9 +79,7 @@ export async function applyTaskDecision(
       await record(ctx, tx, 'task.abandoned', 'block', task.id, day);
     }
   }
-  // Any decision other than leaving it for the reflection settles a deferred task.
-  const awaitingReflection = decision.kind === 'reflection' ? true : undefined;
-  await tx.blocks.put({ ...task, awaitingReflection, lastTriagedDay: laterOf(task.lastTriagedDay, day) });
+  await tx.blocks.put({ ...task, lastTriagedDay: laterOf(task.lastTriagedDay, day) });
 }
 
 /** Links (or unlinks, with null) a task to a project during a triage. */
@@ -104,7 +99,6 @@ export async function applyTaskProject(
 const NOTES_EVENTS = {
   wiki: 'section.notesMovedToWiki',
   discarded: 'section.notesDiscarded',
-  weeklyReflection: 'section.notesDeferredToReflection',
 } as const;
 
 /** Section 4: links the notes of a section as a resource of an objective or project. */
@@ -119,7 +113,7 @@ export async function linkSectionNotesAsResource(
   });
 }
 
-/** Sets the destination of a section's notes. Shared by the checkout and the weekly reflection. */
+/** Sets the destination of a section's notes. */
 export async function applyNotesDecision(
   ctx: AppContext,
   tx: StoreTransaction,

@@ -1,6 +1,5 @@
 import type { AssistantId, StatusLimits } from './cleanupStatus';
 import type { DayKey } from './day';
-import type { ReviewCadence } from './reviews';
 
 /**
  * Entities stored by the app. Each block, section and project is its own record:
@@ -40,8 +39,6 @@ export interface Block {
   lastTriagedDay: DayKey | null;
   /** Prazo máximo (1b), optional. Absent in records saved before 1b. */
   deadline?: DayKey | null;
-  /** Section 2: left for the weekly reflection to decide ("decidir na reflexão semanal"). */
-  awaitingReflection?: boolean;
   /**
    * Order among the tasks carried into a day from other days (request 2). Counts only while
    * `day` is the intended date; absent until the task is reordered.
@@ -59,9 +56,10 @@ export type SectionKind = 'general' | 'meeting';
 /** Where a section's notes go at checkout. All notes of a section are triaged together. */
 /**
  * `wiki` means the day closed and the notes are kept: the name is historical, there is no wiki
- * (ADR-050). `discarded` only shows up in older data.
+ * (ADR-050). `discarded` only shows up in older data. Notes once left for the Revisão de Foco
+ * (`weeklyReflection`) became `wiki` in version 10 (ADR-060).
  */
-export type NotesDestination = 'pending' | 'wiki' | 'discarded' | 'weeklyReflection';
+export type NotesDestination = 'pending' | 'wiki' | 'discarded';
 
 /**
  * Checkout decision for a section still on whiteboard (no project). `keptUnlinked` means the
@@ -165,9 +163,9 @@ export interface PriorityList {
 }
 
 /**
- * A review (spec/rituais.md): `focus` (Revisão de Foco, section 2) or `direction` (Revisão de
- * Rumo, section 4). `week` (id `week:2026-W41`) and `month` (id `month:2026-10`) are the weekly
- * and monthly reflections from before the reviews, kept as history.
+ * A closed review, kept as history with no screen since the reviews were removed (ADR-060):
+ * `focus` (Revisão de Foco) or `direction` (Revisão de Rumo). `week` (id `week:2026-W41`) and
+ * `month` (id `month:2026-10`) are the weekly and monthly reflections from before them.
  */
 export interface Reflection {
   id: string;
@@ -196,12 +194,10 @@ export interface DayNoteFocus {
 
 export interface Settings {
   id: 'main';
-  /**
-   * How many checkouts and Revisões de Foco make each review available; absent numbers use the
-   * defaults. Records saved before the reviews may still carry `weeklyReflection` (weekday and
-   * hour of the weekly reflection), which nothing reads anymore.
+  /*
+   * Records saved before may still carry `reviewCadence` (the cadence of the reviews, removed in
+   * ADR-060) or `weeklyReflection` (the weekly reflection before them), which nothing reads.
    */
-  reviewCadence?: Partial<ReviewCadence>;
   /** Section 3: weekdays the user works (0 = Sunday). Absent means every day. */
   activeDays?: number[];
   /** Section 3: the warm-up checklist, in order. Empty or absent means no warm up. */

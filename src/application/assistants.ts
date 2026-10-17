@@ -87,7 +87,7 @@ export async function resolveForgottenTasks(ctx: AppContext, actions: ReadonlyMa
       const section = await tx.sections.get(task.sectionId);
       const keepsProject = section !== undefined && section.projectPage !== true && section.projectId === task.projectId;
       const sectionId = keepsProject || !task.projectId ? task.sectionId : (await addProjectNoteSection(ctx, tx, task.projectId)).id;
-      const { waiting: _waiting, awaitingReflection: _awaiting, carriedOrder: _order, deadline: _deadline, ...rest } = task;
+      const { waiting: _waiting, carriedOrder: _order, deadline: _deadline, ...rest } = task;
       const note: Block = {
         ...rest,
         kind: 'note',
@@ -120,8 +120,7 @@ export async function planForgottenTasks(
     for (const { taskId, date } of moves) {
       const task = await tx.blocks.get(taskId);
       if (!task || task.kind !== 'task' || task.status !== 'active' || task.intendedDate === date) continue;
-      const { awaitingReflection: _settled, ...rest } = await moveIntendedDate(ctx, tx, task, date, day, 'planning');
-      await tx.blocks.put(rest);
+      await tx.blocks.put(await moveIntendedDate(ctx, tx, task, date, day, 'planning'));
     }
     for (const [taskId, decision] of decisions) {
       const task = await tx.blocks.get(taskId);

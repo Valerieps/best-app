@@ -64,7 +64,7 @@ describe('parseBackup', () => {
     const v1 = { format: 'best-app-backup', schemaVersion: 1, exportedAt: '2026-10-11', tables: tables() } as Record<string, unknown>;
     for (const name of ['priorities', 'reflections', 'settings', 'reminders', 'objectives', 'resources', 'habits', 'habitLogs']) delete (v1.tables as Record<string, unknown>)[name];
     const result = parseBackup(v1);
-    expect(result).toMatchObject({ ok: true, backup: { schemaVersion: 9, tables: { priorities: [], reflections: [], settings: [], reminders: [], habits: [], habitLogs: [], people: [] } } });
+    expect(result).toMatchObject({ ok: true, backup: { schemaVersion: 10, tables: { priorities: [], reflections: [], settings: [], reminders: [], habits: [], habitLogs: [], people: [] } } });
   });
 
   it('upgrades a version 5 backup, turning month priority projects into week ones and then the list in focus', () => {
@@ -72,7 +72,7 @@ describe('parseBackup', () => {
     const day = { id: 'day:2026-10-11', scope: 'day' as const, period: '2026-10-11', itemIds: ['t1'], updatedAt: '' };
     const v5 = { format: 'best-app-backup', schemaVersion: 5, exportedAt: '2026-10-11', tables: { ...tables(), priorities: [month, day] } };
     const result = parseBackup(v5);
-    expect(result).toMatchObject({ ok: true, backup: { schemaVersion: 9 } });
+    expect(result).toMatchObject({ ok: true, backup: { schemaVersion: 10 } });
     expect(result.ok && result.backup.tables.priorities).toEqual([
       day,
       { id: 'weekProjects:2026-W40', scope: 'weekProjects', period: '2026-W40', itemIds: ['p1'], updatedAt: '2026-10-02T10:00:00.000Z' },
@@ -105,6 +105,21 @@ describe('parseBackup', () => {
       { ...archived, status: 'active', intendedDate: null, closedAt: null },
       done,
     ]);
+  });
+
+  it('settles what a version 9 backup left for the Revisão de Foco, and keeps its closed reviews', () => {
+    const deferred = { id: 't1', kind: 'task', status: 'active', intendedDate: null, awaitingReflection: true };
+    const notes = { id: 's1', day: '2026-10-01', notesDestination: 'weeklyReflection' };
+    const review = { id: 'focus:r1', kind: 'focus', period: '', start: '', end: '2026-10-10', bestMoments: '', improvements: '', closedAt: '2026-10-10T20:00:00.000Z', updatedAt: '' };
+    const result = parseBackup({
+      format: 'best-app-backup',
+      schemaVersion: 9,
+      exportedAt: '2026-10-11',
+      tables: { ...tables(), blocks: [deferred], sections: [notes], reflections: [review] },
+    });
+    expect(result.ok && result.backup.tables.blocks).toEqual([{ id: 't1', kind: 'task', status: 'active', intendedDate: null }]);
+    expect(result.ok && result.backup.tables.sections).toEqual([{ ...notes, notesDestination: 'wiki' }]);
+    expect(result.ok && result.backup.tables.reflections).toEqual([review]);
   });
 
   it('rejects a backup from a newer version of the app', () => {

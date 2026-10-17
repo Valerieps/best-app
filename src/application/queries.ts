@@ -341,16 +341,25 @@ export async function loadTaskListContext(reader: Reader): Promise<TaskListConte
   };
 }
 
-/** What the "⋯" of a project offers, in the list and on its page. */
+/** What the "⋯" of a project offers about the focus, in the list and on its page. */
 export interface ProjectActions {
+  /** In focus: "Tirar do foco". */
   isPriority: boolean;
-  /** Active, not in focus yet, and the list has a free slot. */
+  /** Active, not in focus yet, and the list has a free slot: "Colocar em foco". */
   canAddToPriorities: boolean;
+  /** Active, not in focus, and the list is full: the projects in focus it can take the place of. */
+  swapTargets: { id: string; name: string }[];
 }
 
-function projectActions(project: Project, priorityIds: readonly string[]): ProjectActions {
+function projectActions(project: Project, priorityIds: readonly string[], projects: readonly Project[]): ProjectActions {
   const isPriority = priorityIds.includes(project.id);
-  return { isPriority, canAddToPriorities: project.status === 'active' && !isPriority && hasFreeSlot(priorityIds) };
+  const candidate = project.status === 'active' && !isPriority;
+  const free = hasFreeSlot(priorityIds);
+  const swapTargets =
+    candidate && !free
+      ? priorityIds.flatMap((id) => projects.filter((other) => other.id === id).map((other) => ({ id: other.id, name: other.name })))
+      : [];
+  return { isPriority, canAddToPriorities: candidate && free, swapTargets };
 }
 
 export interface ProjectListItem extends ProjectActions {
@@ -423,7 +432,7 @@ export async function loadProjectList(reader: Reader, today: DayKey): Promise<Pr
       lastActivityDay: lastActivityDay(activity, today),
       stalledDays,
       activity,
-      ...projectActions(project, priorityIds),
+      ...projectActions(project, priorityIds, projects),
     };
   });
   const byName = (a: ProjectListItem, b: ProjectListItem) => a.project.name.localeCompare(b.project.name, 'pt-BR');
@@ -475,7 +484,7 @@ export async function loadProject(reader: Reader, projectId: string): Promise<Pr
     doneTasks: await withOrigins(reader, done),
     notes: kept.filter((entry) => entry.section.projectId === projectId),
     sections: sections.length,
-    ...projectActions(project, priorityIds),
+    ...projectActions(project, priorityIds, projects),
   };
 }
 

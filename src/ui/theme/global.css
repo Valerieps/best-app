@@ -1069,72 +1069,7 @@ button.priorities__pin[aria-pressed='true'] {
   width: 100%;
 }
 
-/* Section 2: weekly reflection, projects, settings */
-.banner--inline {
-  border: var(--border-width) solid var(--color-warning-border);
-  border-radius: var(--radius-md);
-  margin-bottom: var(--space-4);
-}
-
-.reflection__step {
-  background: var(--color-surface);
-  border: var(--border-width) solid var(--color-border);
-  border-radius: var(--radius-lg);
-  padding: var(--space-4) var(--space-5);
-  margin-bottom: var(--space-4);
-}
-
-.reflection__step-title {
-  display: flex;
-  align-items: center;
-  gap: var(--space-2);
-  font-size: var(--font-size-md);
-  font-weight: 600;
-  margin: 0 0 var(--space-3);
-}
-
-.reflection__step-number {
-  display: inline-grid;
-  place-items: center;
-  width: 24px;
-  height: 24px;
-  border-radius: var(--radius-pill);
-  background: var(--color-general-bg);
-  border: var(--border-width) solid var(--color-general-border);
-  font-size: var(--font-size-sm);
-}
-
-.reflection__texts {
-  display: grid;
-  gap: var(--space-3);
-}
-
-.metrics {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
-  gap: var(--space-3);
-}
-
-.metric {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-1);
-  padding: var(--space-3) var(--space-4);
-  background: var(--color-surface-soft);
-  border: var(--border-width) solid var(--color-border);
-  border-radius: var(--radius-md);
-}
-
-.metric__value {
-  font-size: var(--font-size-xl);
-  font-weight: 600;
-  font-variant-numeric: tabular-nums;
-}
-
-.metric__label {
-  color: var(--color-text-muted);
-  font-size: var(--font-size-sm);
-}
+/* Section 2: projects, settings */
 
 .field {
   display: flex;
@@ -1155,10 +1090,6 @@ button.priorities__pin[aria-pressed='true'] {
   background: var(--color-surface);
   color: var(--color-text);
   resize: vertical;
-}
-
-.triage-row__project {
-  max-width: 200px;
 }
 
 .list-link {
@@ -1305,7 +1236,7 @@ button.priorities__pin[aria-pressed='true'] {
   flex: 1;
 }
 
-/* Sections 4 and 6: objectives, resources, habits, monthly reflection */
+/* Sections 4 and 6: objectives, resources, habits */
 .resource__header {
   display: flex;
   align-items: center;
@@ -1340,16 +1271,6 @@ button.priorities__pin[aria-pressed='true'] {
   margin-left: 0;
 }
 
-.reflection__views {
-  justify-content: space-between;
-}
-
-.month__objective {
-  display: grid;
-  gap: var(--space-2);
-  margin-bottom: var(--space-4);
-}
-
 .card-list--flat {
   border: none;
   background: none;
@@ -1357,11 +1278,6 @@ button.priorities__pin[aria-pressed='true'] {
 
 .card-list--flat > .card-list__item {
   padding: 0;
-}
-
-.metrics__note,
-.reflection__habits {
-  margin-top: var(--space-3);
 }
 
 /* New sections, at the end of the day note */
@@ -1465,23 +1381,6 @@ button.priorities__pin[aria-pressed='true'] {
 }
 
 /* Triage */
-.triage-group {
-  border: var(--border-width) solid var(--color-border);
-  border-radius: var(--radius-md);
-  margin-bottom: var(--space-3);
-  overflow: hidden;
-}
-
-.triage-group__header {
-  display: flex;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: var(--space-2);
-  padding: var(--space-2) var(--space-4);
-  background: var(--color-surface-soft);
-  border-bottom: var(--border-width) solid var(--color-border);
-  font-size: var(--font-size-sm);
-}
 
 .triage-row {
   display: flex;
@@ -1497,13 +1396,6 @@ button.priorities__pin[aria-pressed='true'] {
 }
 
 .triage-row__label {
-  display: flex;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: var(--space-2);
-}
-
-.triage-row__controls {
   display: flex;
   align-items: center;
   flex-wrap: wrap;
@@ -2619,7 +2511,6 @@ button.sidebar__footer-item {
   font-weight: 600;
 }
 
-
 .badge {
   display: inline-block;
   min-width: 18px;
@@ -3450,7 +3341,6 @@ button.resource-card__toggle {
 .paste-link__input:focus {
   outline: none;
 }
-
 
 /* Project list (spec/projetos.md, "Projetos"): where projects are followed */
 .projects__group {
