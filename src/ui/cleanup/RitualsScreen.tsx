@@ -1,7 +1,6 @@
 import { useState } from 'react';
 import { keepProjectsSeparate, mergeProjects, resolveWhiteboardGroup } from '../../application/assistants';
 import { loadCleanupDashboard, type CleanupDashboard } from '../../application/queries';
-import type { ReviewAvailability } from '../../application/reviewQueries';
 import type { DuplicateGroup, WhiteboardGroup, WhiteboardGroupAction } from '../../domain/assistants';
 import type { AssistantId } from '../../domain/cleanupStatus';
 import type { DayKey } from '../../domain/day';
@@ -14,7 +13,8 @@ import { listDays, plural } from '../format';
 import { navigate } from '../hooks';
 import { appContext, reader } from '../services';
 import { useLiveQuery } from '../useLiveQuery';
-import { ageLabel, ASSISTANT_INFO, shortAgeLabel, AssistantIcon, FocusReviewIcon, focusReviewStatus, STATUS_LABELS } from './assistantInfo';
+import { ageLabel, ASSISTANT_INFO, cardStateLabel, shortAgeLabel, AssistantIcon, STATUS_LABELS } from './assistantInfo';
+import { ForgottenTasksAssistant } from './ForgottenTasksAssistant';
 import { RitualsCalendar } from './RitualsCalendar';
 
 interface Props {
@@ -22,46 +22,27 @@ interface Props {
   /** The assistant whose details are open; omitted shows the "Rituais" screen. */
   assistant?: AssistantId;
   pendingDays: DayKey[];
-  /** Which reviews are available, loaded by the app. */
-  reviews: ReviewAvailability | undefined;
 }
 
 /**
  * The "Rituais" screen (spec/assistentes.md, "A tela Rituais"): a small calendar of the days
  * without a closing, then the "Assistentes" grid, with one card per assistant colored by how long
- * its oldest item has been waiting, and the Revisão de Foco. The details and suggested actions of
- * an assistant only show after opening its card.
+ * its oldest item has been waiting (or, for "Tarefas esquecidas", by how many there are). The
+ * details and actions of an assistant only show after opening its card.
  */
-export function RitualsScreen({ today, assistant, pendingDays, reviews }: Props) {
+export function RitualsScreen({ today, assistant, pendingDays }: Props) {
   const dashboard = useLiveQuery(() => loadCleanupDashboard(reader, today), [today]);
   const projects = useLiveQuery(() => reader.projects()) ?? [];
   if (!dashboard) return <LoadingPage title={assistant ? undefined : 'Rituais'} />;
   return assistant ? (
     <AssistantScreen id={assistant} dashboard={dashboard} projects={projects} today={today} />
   ) : (
-    <Rituals
-      dashboard={dashboard}
-      today={today}
-      pendingDays={pendingDays}
-      focusAvailable={(reviews?.focus.length ?? 0) > 0}
-    />
+    <Rituals dashboard={dashboard} today={today} pendingDays={pendingDays} />
   );
 }
 
-function Rituals({
-  dashboard,
-  today,
-  pendingDays,
-  focusAvailable,
-}: {
-  dashboard: CleanupDashboard;
-  today: DayKey;
-  pendingDays: DayKey[];
-  focusAvailable: boolean;
-}) {
+function Rituals({ dashboard, today, pendingDays }: { dashboard: CleanupDashboard; today: DayKey; pendingDays: DayKey[] }) {
   const [closing, setClosing] = useState(false);
-  const focusStatus = focusReviewStatus(focusAvailable);
-  const focusLabel = focusAvailable ? 'disponível' : STATUS_LABELS[focusStatus];
   return (
     <main className="page">
       <ScreenHeader title="Rituais" />
@@ -84,27 +65,12 @@ function Rituals({
           <h2 className="rituals-section__title">Assistentes</h2>
         </div>
         <ul className="cleanup-grid">
-          <li>
-            <button
-              type="button"
-              className={`cleanup-card status--${focusStatus}`}
-              title={focusLabel}
-              aria-label={`Revisão de Foco, ${focusLabel}`}
-              onClick={() => navigate({ name: 'focusReview' })}
-            >
-              {focusAvailable && <span className="cleanup-card__flag">disponível</span>}
-              <span className="status-icon">
-                <FocusReviewIcon />
-              </span>
-              Revisão de Foco
-            </button>
-          </li>
           {/* The calendar above does the job of "Dias em aberto". */}
           {dashboard.cards
             .filter(({ id }) => id !== 'pendingDays')
-            .map(({ id, status, ageInDays }) => {
+            .map(({ id, status, count, ageInDays }) => {
               const { name, description } = ASSISTANT_INFO[id];
-              const age = ageLabel(ageInDays);
+              const age = cardStateLabel(id, count, ageInDays);
               const state = [STATUS_LABELS[status], age].filter(Boolean).join(', ');
               return (
                 <li key={id}>
@@ -147,7 +113,8 @@ function AssistantScreen({
   const age = card.count > 0 ? ageLabel(card.ageInDays) : null;
 
   return (
-    <main className="page">
+    // "Tarefas esquecidas" ends on the board of "Fechar o dia", which needs the width.
+    <main className={id === 'forgottenTasks' ? 'page page--wide' : 'page'}>
       <ScreenHeader
         back={{ label: 'Rituais', onSelect: backToDashboard }}
         title={
@@ -178,6 +145,9 @@ function AssistantScreen({
             <WhiteboardsAssistant groups={dashboard.whiteboards} projects={projects} onDone={backToDashboard} />
           )}
           {id === 'duplicates' && <DuplicatesAssistant groups={dashboard.duplicates} onDone={backToDashboard} />}
+          {id === 'forgottenTasks' && (
+            <ForgottenTasksAssistant items={dashboard.forgottenTasks} today={today} onDone={backToDashboard} />
+          )}
         </>
       )}
     </main>

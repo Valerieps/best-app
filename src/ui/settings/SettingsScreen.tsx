@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react';
 import { setReviewCadence } from '../../application/reviews';
-import { setActiveDays, setAppearance, setCleanupLimits, setWarmupItems } from '../../application/settings';
-import { ASSISTANT_IDS, limitsFor, withLimit, type AssistantId, type StatusLimits } from '../../domain/cleanupStatus';
+import { setActiveDays, setAppearance, setCleanupLimits, setForgottenTaskDays, setWarmupItems } from '../../application/settings';
+import { DEFAULT_FORGOTTEN_TASK_DAYS, normalizeForgottenTaskDays } from '../../domain/assistants';
+import { ASSISTANT_IDS, COUNTED_ASSISTANTS, limitsFor, withLimit, type AssistantId, type StatusLimits } from '../../domain/cleanupStatus';
 import { ALL_DAYS } from '../../domain/dayFlow';
 import type { Appearance, Settings, WarmupItem } from '../../domain/entities';
 import { DEFAULT_REVIEW_CADENCE } from '../../domain/reviews';
@@ -88,8 +89,11 @@ export function SettingsScreen() {
 
       <section className="panel settings__panel">
         <h2>Assistentes</h2>
-        <p className="muted">Dias de espera do item mais antigo para o cartão mudar de cor.</p>
+        <p className="muted">
+          Dias de espera do item mais antigo para o cartão mudar de cor. Em “Tarefas esquecidas”, conta a quantidade de tarefas.
+        </p>
         <CleanupLimitsEditor saved={settings?.cleanupAgeLimits} />
+        <ForgottenTaskDaysField saved={settings?.forgottenTaskDays} />
       </section>
 
       <section className="panel settings__panel">
@@ -140,6 +144,7 @@ function CleanupLimitsEditor({ saved }: { saved: Settings['cleanupAgeLimits'] })
 
 function CleanupLimitsRow({ id, limits, custom }: { id: AssistantId; limits: StatusLimits; custom: boolean }) {
   const { name } = ASSISTANT_INFO[id];
+  const counted = COUNTED_ASSISTANTS.has(id);
   const [draft, setDraft] = useState(limits.map(String));
   // Follow saved changes, including the normalization done when saving.
   const savedKey = limits.join();
@@ -166,9 +171,9 @@ function CleanupLimitsRow({ id, limits, custom }: { id: AssistantId; limits: Sta
             value={draft[index]}
             onChange={(event) => setDraft(draft.map((value, i) => (i === index ? event.target.value : value)))}
             onBlur={() => save(index as 0 | 1 | 2)}
-            aria-label={`${name}: ${label.toLowerCase()} a partir de quantos dias de espera`}
+            aria-label={`${name}: ${label.toLowerCase()} a partir de quantos ${counted ? 'itens' : 'dias de espera'}`}
           />{' '}
-          <span className="muted">{Number(draft[index]) === 1 ? 'dia' : 'dias'}</span>
+          <span className="muted">{counted ? (Number(draft[index]) === 1 ? 'tarefa' : 'tarefas') : Number(draft[index]) === 1 ? 'dia' : 'dias'}</span>
         </td>
       ))}
       <td>
@@ -179,6 +184,45 @@ function CleanupLimitsRow({ id, limits, custom }: { id: AssistantId; limits: Sta
         )}
       </td>
     </tr>
+  );
+}
+
+/** After how many days without a date, counted from creation, a task shows up in "Tarefas esquecidas". */
+function ForgottenTaskDaysField({ saved }: { saved: number | undefined }) {
+  const days = normalizeForgottenTaskDays(saved);
+  const [draft, setDraft] = useState(String(days));
+  useEffect(() => setDraft(String(days)), [days]);
+
+  const save = () => {
+    const typed = draft.trim();
+    if (typed === '' || normalizeForgottenTaskDays(Number(typed)) === days) setDraft(String(days));
+    else void setForgottenTaskDays(appContext, Number(typed));
+  };
+
+  return (
+    <p>
+      <label>
+        Tarefa sem data entra em “Tarefas esquecidas” depois de{' '}
+        <input
+          type="number"
+          min={1}
+          step={1}
+          className="text-input limits__input"
+          value={draft}
+          onChange={(event) => setDraft(event.target.value)}
+          onBlur={save}
+        />{' '}
+        {days === 1 ? 'dia' : 'dias'} da criação
+      </label>
+      {saved !== undefined && days !== DEFAULT_FORGOTTEN_TASK_DAYS && (
+        <>
+          {' '}
+          <button type="button" className="link" onClick={() => void setForgottenTaskDays(appContext, null)}>
+            Voltar ao padrão
+          </button>
+        </>
+      )}
+    </p>
   );
 }
 

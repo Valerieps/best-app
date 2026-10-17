@@ -212,6 +212,11 @@ export interface Settings {
    */
   cleanupAgeLimits?: Partial<Record<AssistantId, StatusLimits>>;
   /**
+   * Days without a date, counted from creation, after which a task shows up in "Tarefas
+   * esquecidas". Absent means the default (`DEFAULT_FORGOTTEN_TASK_DAYS`).
+   */
+  forgottenTaskDays?: number;
+  /**
    * Limits by number of items, from before the colors measured age. Nothing reads them anymore:
    * a count would make no sense as days.
    */

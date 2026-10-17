@@ -1,4 +1,5 @@
-import type { AssistantId, CleanupStatus } from '../../domain/cleanupStatus';
+import { COUNTED_ASSISTANTS, type AssistantId, type CleanupStatus } from '../../domain/cleanupStatus';
+import { plural } from '../format';
 
 /** Name, description and icon of each cleanup assistant, as the user sees them. */
 export const ASSISTANT_INFO: Record<AssistantId, { name: string; description: string }> = {
@@ -13,6 +14,10 @@ export const ASSISTANT_INFO: Record<AssistantId, { name: string; description: st
   duplicates: {
     name: 'Projetos repetidos',
     description: 'Projetos com nomes parecidos. Juntar move as seções e tarefas para o projeto mais antigo.',
+  },
+  forgottenTasks: {
+    name: 'Tarefas esquecidas',
+    description: 'Tarefas sem data há muito tempo, contado desde a criação, em risco de abandono.',
   },
 };
 
@@ -45,24 +50,20 @@ export function AssistantIcon({ id }: { id: AssistantId }) {
           <path d="M16 8V5a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h3" />
         </>
       )}
+      {id === 'forgottenTasks' && (
+        <>
+          <path d="M12 21a9 9 0 1 1 0-18 9 9 0 0 1 0 18z" />
+          <path d="M12 7v5l3 2" />
+        </>
+      )}
     </svg>
   );
 }
 
-/** Green while the Revisão de Foco is not available, yellow ("atenção") once it is (spec/assistentes.md). */
-export function focusReviewStatus(available: boolean): CleanupStatus {
-  return available ? 1 : 0;
-}
-
-/** The Revisão de Foco's card on the "Rituais" screen: a target. */
-export function FocusReviewIcon() {
-  return (
-    <svg className="assistant-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
-      <circle cx="12" cy="12" r="8" />
-      <circle cx="12" cy="12" r="4" />
-      <path d="M12 2v3M12 19v3M2 12h3M19 12h3" />
-    </svg>
-  );
+/** What a card says after its color: how long the oldest item waits, or how many there are. */
+export function cardStateLabel(id: AssistantId, count: number, ageInDays: number | null): string | null {
+  if (COUNTED_ASSISTANTS.has(id)) return count > 0 ? plural(count, 'tarefa', 'tarefas') : null;
+  return ageLabel(ageInDays);
 }
 
 /** "o mais antigo espera há 3 dias", for the cards and the assistant header. */

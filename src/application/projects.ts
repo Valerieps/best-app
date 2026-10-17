@@ -145,6 +145,30 @@ export async function createProjectTask(ctx: AppContext, projectId: string, text
   });
 }
 
+/** The empty section of a note on a project page's timeline, written today, inside a transaction. */
+export async function addProjectNoteSection(ctx: AppContext, tx: StoreTransaction, projectId: string): Promise<Section> {
+  const project = await tx.projects.get(projectId);
+  if (!project) throw new Error('Project not found');
+  const now = ctx.clock.now();
+  const at = now.toISOString();
+  const day = toDayKey(now);
+  const section: Section = {
+    id: ctx.ids.next(),
+    kind: 'general',
+    day,
+    createdAt: at,
+    updatedAt: at,
+    title: null,
+    projectId: project.id,
+    notesDestination: 'wiki',
+    whiteboardDecision: 'pending',
+    projectNote: true,
+  };
+  await tx.sections.put(section);
+  await record(ctx, tx, 'section.created', 'section', section.id, day, { kind: section.kind, projectNote: true, projectId: project.id });
+  return section;
+}
+
 /**
  * "Nova nota" on the project page's timeline: the lines become the notes of a new section of the
  * project, written today. The section belongs to no day note, so the note shows only on the
@@ -157,25 +181,9 @@ export async function createProjectNote(ctx: AppContext, projectId: string, text
     .filter((line) => line.trim() !== '');
   if (lines.length === 0) return null;
   return ctx.store.transaction(async (tx) => {
-    const project = await tx.projects.get(projectId);
-    if (!project) throw new Error('Project not found');
-    const now = ctx.clock.now();
-    const at = now.toISOString();
-    const day = toDayKey(now);
-    const section: Section = {
-      id: ctx.ids.next(),
-      kind: 'general',
-      day,
-      createdAt: at,
-      updatedAt: at,
-      title: null,
-      projectId: project.id,
-      notesDestination: 'wiki',
-      whiteboardDecision: 'pending',
-      projectNote: true,
-    };
-    await tx.sections.put(section);
-    await record(ctx, tx, 'section.created', 'section', section.id, day, { kind: section.kind, projectNote: true, projectId: project.id });
+    const section = await addProjectNoteSection(ctx, tx, projectId);
+    const at = section.createdAt;
+    const day = section.day;
     let position: string | null = null;
     for (const line of lines) {
       position = positionBetween(position, null);

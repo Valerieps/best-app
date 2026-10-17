@@ -1,12 +1,18 @@
 import { describe, expect, it } from 'vitest';
 import { positionBetween } from '../domain/position';
 import { createTestContext } from '../test/fixtures';
-import { keepProjectsSeparate, mergeProjects, resolveWhiteboardGroup } from './assistants';
+import {
+  keepProjectsSeparate,
+  mergeProjects,
+  planForgottenTasks,
+  resolveForgottenTasks,
+  resolveWhiteboardGroup,
+} from './assistants';
 import { createBlock, createSection, linkSectionToProject, setSectionTitle } from './notebook';
-import { createProject } from './projects';
+import { createProject, createProjectTask } from './projects';
 import { loadCleanup, loadCleanupDashboard } from './queries';
 import { applyTriage } from './checkout';
-import { setCleanupLimits } from './settings';
+import { setCleanupLimits, setForgottenTaskDays } from './settings';
 
 async function unlinkedSection(ctx: Parameters<typeof createSection>[0], title: string) {
   const section = await createSection(ctx, 'general');
@@ -73,6 +79,56 @@ describe('cleanup assistants', () => {
   });
 });
 
+describe('forgotten tasks', () => {
+  it('abandons a task', async () => {
+    const { ctx, db } = createTestContext();
+    const { task } = await unlinkedSection(ctx, 'Leituras');
+    await resolveForgottenTasks(ctx, new Map([[task.id, 'abandon']]));
+    expect(await db.blocks.get(task.id)).toMatchObject({ status: 'abandoned', closedAt: expect.any(String) });
+  });
+
+  it('converts a task into a note in the section where it was written', async () => {
+    const { ctx, db } = createTestContext();
+    const { section, task } = await unlinkedSection(ctx, 'Leituras');
+    await resolveForgottenTasks(ctx, new Map([[task.id, 'note']]));
+    expect(await db.blocks.get(task.id)).toMatchObject({ kind: 'note', status: null, sectionId: section.id, projectId: null });
+  });
+
+  it('turns a task of the project page into a note on that page, so it stays in the project', async () => {
+    const { ctx, db } = createTestContext();
+    const project = await createProject(ctx, 'Casa');
+    const task = (await createProjectTask(ctx, project.id, 'Trocar a lâmpada'))!;
+    await resolveForgottenTasks(ctx, new Map([[task.id, 'note']]));
+
+    const note = (await db.blocks.get(task.id))!;
+    expect(note).toMatchObject({ kind: 'note', status: null });
+    expect(await db.sections.get(note.sectionId)).toMatchObject({ projectNote: true, projectId: project.id });
+  });
+
+  it('dates, finishes and abandons the tasks of the board, without triaging them', async () => {
+    const { ctx, db } = createTestContext();
+    const project = await createProject(ctx, 'Casa');
+    const a = (await createProjectTask(ctx, project.id, 'A'))!;
+    const b = (await createProjectTask(ctx, project.id, 'B'))!;
+    const c = (await createProjectTask(ctx, project.id, 'C'))!;
+    const d = (await createProjectTask(ctx, project.id, 'D'))!;
+    await planForgottenTasks(
+      ctx,
+      new Map([
+        [a.id, { kind: 'schedule', date: '2026-10-13' }],
+        [b.id, { kind: 'finish' }],
+        [c.id, { kind: 'abandon' }],
+        [d.id, { kind: 'keep' }],
+      ]),
+      [],
+    );
+    expect(await db.blocks.get(a.id)).toMatchObject({ status: 'active', intendedDate: '2026-10-13', postponeCount: 0, lastTriagedDay: null });
+    expect((await db.blocks.get(b.id))?.status).toBe('done');
+    expect((await db.blocks.get(c.id))?.status).toBe('abandoned');
+    expect(await db.blocks.get(d.id)).toMatchObject({ status: 'active', intendedDate: null });
+  });
+});
+
 describe('cleanup dashboard', () => {
   it('colors each assistant by how long its oldest item has waited, most urgent first', async () => {
     const { ctx, reader } = createTestContext();
@@ -86,12 +142,15 @@ describe('cleanup dashboard', () => {
       ['pendingDays', 1, 1],
       ['whiteboards', 1, 0],
       ['duplicates', 1, 0],
+      ['forgottenTasks', 0, 0],
     ]);
+    // The task of the section is forgotten by then, but one task alone stays green.
     const later = await loadCleanupDashboard(reader, '2026-11-20');
     expect(later.cards.map((card) => [card.id, card.ageInDays, card.status])).toEqual([
       ['pendingDays', 40, 3],
       ['whiteboards', 40, 2],
       ['duplicates', 40, 2],
+      ['forgottenTasks', 40, 0],
     ]);
   });
 
@@ -109,6 +168,20 @@ describe('cleanup dashboard', () => {
     await setCleanupLimits(ctx, 'duplicates', null);
     expect(await statusOf()).toBe(0);
     expect((await reader.settings())?.cleanupAgeLimits).toEqual({ whiteboards: [2, 3, 4] });
+  });
+
+  it('finds forgotten tasks after the days saved in the settings, 15 by default', async () => {
+    const { ctx, reader } = createTestContext();
+    const project = await createProject(ctx, 'Casa');
+    await createProjectTask(ctx, project.id, 'Trocar a lâmpada');
+    const forgotten = async (today: string) => (await loadCleanupDashboard(reader, today)).forgottenTasks.map((item) => item.task.text);
+
+    expect(await forgotten('2026-10-25')).toEqual([]);
+    expect(await forgotten('2026-10-26')).toEqual(['Trocar a lâmpada']);
+    await setForgottenTaskDays(ctx, 30);
+    expect(await forgotten('2026-10-26')).toEqual([]);
+    await setForgottenTaskDays(ctx, null);
+    expect(await forgotten('2026-10-26')).toEqual(['Trocar a lâmpada']);
   });
 
   it('saves limits normalized', async () => {

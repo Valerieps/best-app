@@ -120,13 +120,18 @@ export type PlanningColumn = { kind: 'late' } | { kind: 'day'; day: DayKey };
 /**
  * The columns of the planning board. The late tasks (dated before today) come first, all in one
  * column, when there are any. Then today, when a task is dated for it and it is not the target
- * already, and the target day with the days after it, until there are three columns.
+ * already, and the target day with the days after it, until there are three columns (or `count`).
  */
-export function planningColumns(dates: readonly (DayKey | null)[], today: DayKey, target: DayKey): PlanningColumn[] {
+export function planningColumns(
+  dates: readonly (DayKey | null)[],
+  today: DayKey,
+  target: DayKey,
+  count: number = PLANNING_COLUMNS,
+): PlanningColumn[] {
   const columns: PlanningColumn[] = [];
   if (dates.some((date) => date !== null && date < today)) columns.push({ kind: 'late' });
   if (today < target && dates.includes(today)) columns.push({ kind: 'day', day: today });
-  for (let day = target; columns.length < PLANNING_COLUMNS; day = addDays(day, 1)) columns.push({ kind: 'day', day });
+  for (let day = target; columns.length < count; day = addDays(day, 1)) columns.push({ kind: 'day', day });
   return columns;
 }
 

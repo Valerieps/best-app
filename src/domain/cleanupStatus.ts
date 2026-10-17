@@ -8,8 +8,14 @@ import { daysBetween, type DayKey } from './day';
  */
 
 /** Assistants that exist so far. The others join the dashboard when they are built. */
-export const ASSISTANT_IDS = ['pendingDays', 'whiteboards', 'duplicates'] as const;
+export const ASSISTANT_IDS = ['pendingDays', 'whiteboards', 'duplicates', 'forgottenTasks'] as const;
 export type AssistantId = (typeof ASSISTANT_IDS)[number];
+
+/**
+ * Assistants whose color says how many items they hold, not how long the oldest waits: every
+ * forgotten task is already old by definition, so what grows is the pile (spec/assistentes.md).
+ */
+export const COUNTED_ASSISTANTS: ReadonlySet<AssistantId> = new Set(['forgottenTasks']);
 
 /** 0 em dia (green), 1 atenção (yellow), 2 acumulando (orange), 3 urgente (red). */
 export type CleanupStatus = 0 | 1 | 2 | 3;
@@ -24,6 +30,8 @@ export const DEFAULT_STATUS_LIMITS: Record<AssistantId, StatusLimits> = {
   whiteboards: [7, 30, 60],
   // Projects with similar names, counted from when the repeat appeared.
   duplicates: [7, 30, 60],
+  // Tasks at risk of being forgotten, counted (COUNTED_ASSISTANTS).
+  forgottenTasks: [5, 10, 15],
 };
 
 /** Whole numbers from 1 up, each limit at least the previous one. */
@@ -53,12 +61,15 @@ export function limitsFor(
   return saved?.[id] ? normalizeLimits(saved[id]) : DEFAULT_STATUS_LIMITS[id];
 }
 
-/** Green while the oldest item is younger than the yellow limit, and with nothing to clean. */
-export function cleanupStatus(ageInDays: number | null, limits: StatusLimits): CleanupStatus {
-  if (ageInDays === null) return 0;
-  if (ageInDays >= limits[2]) return 3;
-  if (ageInDays >= limits[1]) return 2;
-  if (ageInDays >= limits[0]) return 1;
+/**
+ * Green while the measure (days the oldest item waits, or items for COUNTED_ASSISTANTS) is below
+ * the yellow limit, and with nothing to clean.
+ */
+export function cleanupStatus(measure: number | null, limits: StatusLimits): CleanupStatus {
+  if (measure === null) return 0;
+  if (measure >= limits[2]) return 3;
+  if (measure >= limits[1]) return 2;
+  if (measure >= limits[0]) return 1;
   return 0;
 }
 
@@ -85,7 +96,8 @@ export function assistantCards(
   return ASSISTANT_IDS.map((id) => {
     const { count, oldest } = findings[id];
     const ageInDays = count > 0 && oldest !== null ? Math.max(0, daysBetween(oldest, today)) : null;
-    return { id, count, ageInDays, status: cleanupStatus(ageInDays, limitsFor(id, saved)) };
+    const measure = COUNTED_ASSISTANTS.has(id) ? count : ageInDays;
+    return { id, count, ageInDays, status: cleanupStatus(measure, limitsFor(id, saved)) };
   }).sort((a, b) => b.status - a.status);
 }
 
