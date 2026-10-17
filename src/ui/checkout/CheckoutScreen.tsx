@@ -114,8 +114,8 @@ export function CheckoutScreen({ day, today, from }: Props) {
   const current = plan.indexOf(step);
 
   return (
-    <main className="page page--wide">
-      <div className="card">
+    <main className="page page--full">
+      <div className="card card--plain">
         <header className="card__header">
           <BackButton
             action={{ label: from === 'rituals' ? 'Rituais' : 'a nota do dia', onSelect: () => navigate(origin) }}
