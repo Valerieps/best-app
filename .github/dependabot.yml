@@ -1,5 +1,5 @@
 # Weekly check of the npm dependencies (issue #23). Runs on GitHub, not in the app: it adds no
-# network call to the app (google-safe.md). Versions stay pinned; each update is a pull request
+# network call to the app (SEGURANCA.md). Versions stay pinned; each update is a pull request
 # to review, with the tests and the build run before merging.
 version: 2
 updates:

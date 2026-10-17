@@ -1,7 +1,7 @@
 import { Fragment } from 'react';
 
 /**
- * Renders text with clickable links, without ever inserting HTML (google-safe.md).
+ * Renders text with clickable links, without ever inserting HTML (SEGURANCA.md).
  * Only http(s) links and internal "go/" short links become anchors.
  */
 

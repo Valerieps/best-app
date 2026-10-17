@@ -3,7 +3,7 @@
 Proposta de layout para a tela do projeto (`src/ui/projects/ProjectScreens.tsx`, `ProjectScreen`), que hoje
 empilha formulário, lista, recursos e notas sem hierarquia. O rascunho navegável está em
 `rascunho-projeto-pagina_1.html`, nesta pasta. A avaliação geral de UX que motivou a proposta está em
-`AVALIACAO-UX.md`, na raiz do repositório.
+na avaliação de UX de 12/10/2026 (issue #19).
 
 Este documento é um brief para implementação. As regras de negócio decididas já estão em `spec/projetos.md`.
 
@@ -48,7 +48,7 @@ Conteúdo:
 - **Recursos**: cartões com ícone (link ou nota) e uma linha de apoio (domínio do link ou "nota · data").
   Para adicionar um link, uma área tracejada "Colar link" substitui os campos Título + Link + botão. O título
   é editável depois.
-- O domínio é tirado do texto da URL. Não se baixa favicon nem nada da internet (`google-safe.md`).
+- O domínio é tirado do texto da URL. Não se baixa favicon nem nada da internet (`SEGURANCA.md`).
 
 Três estados:
 
@@ -113,5 +113,5 @@ O rascunho HTML não foi atualizado com esses ajustes; este brief e o `SPEC.md` 
 
 ## Fora do escopo desta proposta
 
-A navegação global (barra lateral fixa, item N1 do `AVALIACAO-UX.md`) e o layout de celular (P8) afetam
+A navegação global (barra lateral fixa, item N1 da avaliação de UX) e o layout de celular (P8) afetam
 esta tela, mas são mudanças do app inteiro.

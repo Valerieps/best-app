@@ -73,9 +73,9 @@ Cada etapa é um commit (ou PR) com testes, e deixa o app funcionando.
 ### 6. Dados sintéticos e docs
 
 - `dev/syntheticData.ts`: cadência no lugar do agendamento, projetos em foco, e um cenário com a Revisão de Foco disponível (5 checkouts e um projeto em foco parado).
-- `ARQUITETURA.md` (modelo de dados, consultas, métricas), `DEBITO-TECNICO.md` (os itens de prioritários da semana que deixam de existir), `INCOERENCIAS.md` 2.11, `ROADMAP.md` (fases 2 e 4 e a lista do que falta) e o status deste brief no `rascunhos/README.md`.
+- `ARQUITETURA.md` (modelo de dados, consultas, métricas), as issues de débito técnico (os itens de prioritários da semana que deixam de existir), `ROADMAP.md` (fases 2 e 4 e a lista do que falta) e o status deste brief no `rascunhos/README.md`.
 
 ## Riscos
 
-- **Migração de dados reais.** As etapas 2 e 3 mexem em banco e backup. O backup automático guarda o estado anterior, mas a migração da versão 6 ainda não foi verificada num banco de verdade (`DEBITO-TECNICO.md`, seção 1); vale verificar as duas juntas.
+- **Migração de dados reais.** As etapas 2 e 3 mexem em banco e backup. O backup automático guarda o estado anterior, mas a migração da versão 6 ainda não foi verificada num banco de verdade (issue #151); vale verificar as duas juntas.
 - **Etapas 2 a 4 se tocam.** Entre elas, o app pode mostrar nomes novos com regras velhas por um commit. Por isso a ordem é domínio, dados, telas.

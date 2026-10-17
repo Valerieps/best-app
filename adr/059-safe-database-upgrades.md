@@ -1,5 +1,6 @@
 # ADR-059: Safe database upgrades: snapshot, version gate, no rollback
 
+**Status:** Accepted
 **Date:** 2026-10-16
 **Decision:** Every change to the IndexedDB schema follows these rules:
 1. **Snapshot first.** Every `upgrade` function in `src/infrastructure/db.ts` calls `snapshotBeforeUpgrade` before changing any row. It copies every user table, as the previous version left it, into `snapshots` under the id `beforeUpgrade`, in the same transaction. When several versions upgrade in one go, only the first copy is kept. A new database takes no copy.

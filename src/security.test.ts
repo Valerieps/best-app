@@ -4,7 +4,7 @@ import { describe, expect, it } from 'vitest';
 import { CONTENT_SECURITY_POLICY, LIBRARY_URLS, stripLibraryUrls } from '../vite.config';
 
 /**
- * Guards for google-safe.md: the app must never make outbound requests or inject HTML.
+ * Guards for SEGURANCA.md: the app must never make outbound requests or inject HTML.
  * Scans the app source (not tests) for APIs that would break those rules.
  */
 

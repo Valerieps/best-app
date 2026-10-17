@@ -1,5 +1,6 @@
 # ADR-060: The reviews are removed; database and backup version 10
 
+**Status:** Accepted
 **Date:** 2026-10-17
 **Decision:** The Revisão de Foco and the Revisão de Rumo leave the app (owner's decision, spec/prioridades.md, spec/checkout.md). The code goes with them: the screens (`ui/reviews/`), the routes `focusReview` and `directionReview`, the notice on the day note and its snooze, the reviews in the "Rituais" counter, the cadence in the settings, the availability (`application/reviewQueries.ts`, `domain/reviews.ts`), the use cases (`application/reviews.ts`), the metrics report (`domain/metrics.ts`, `domain/directionMetrics.ts`) and the history of the list in focus that only the raio-x read (`focusProjectsOnDay`). The triage option `{ kind: 'reflection' }` and the notes decision `weeklyReflection` are gone from `domain/triage.ts`, and with them the triage rows for notes, which only the review used.
 

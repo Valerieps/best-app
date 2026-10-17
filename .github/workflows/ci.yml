@@ -1,6 +1,7 @@
 # Runs the same build Cloudflare Pages runs (typecheck, unit tests, production build) on every
 # pull request, so a broken change is caught before it reaches main and not only before deploy
-# (ADR-058). Runs on GitHub, not in the app: it adds no network call to the app (google-safe.md).
+# (ADR-058), and checks the links between docs and each ADR's status line. Runs on GitHub, not
+# in the app: it adds no network call to the app (SEGURANCA.md).
 name: CI
 
 on:
@@ -27,3 +28,4 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npm run build
+      - run: npm run docs:check

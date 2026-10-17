@@ -3,9 +3,9 @@
 Um termo, uma definição. Use estes nomes, na interface e nos documentos, em vez de sinônimos.
 
 - **Entra aqui:** o que cada termo quer dizer, em uma ou duas frases, e onde está a regra.
-- **Não entra aqui:** as regras em si, que ficam no `SPEC.md`. Se uma definição daqui e uma regra do `SPEC.md` divergirem, vale o `SPEC.md`, e a divergência vai para o `INCOERENCIAS.md`.
+- **Não entra aqui:** as regras em si, que ficam no `SPEC.md`. Se uma definição daqui e uma regra do `SPEC.md` divergirem, vale o `SPEC.md`, e o termo daqui é corrigido.
 
-Os termos marcados com ⚠ ainda têm mais de um sentido nos documentos; o item do `INCOERENCIAS.md` diz onde.
+Os termos marcados com ⚠ ainda têm mais de um sentido nos documentos.
 
 ## Captura
 
@@ -22,7 +22,7 @@ Os termos marcados com ⚠ ainda têm mais de um sentido nos documentos; o item 
 - **Adiamento:** mudar a data de intenção para depois, ou tirar a data, inclusive no fechamento do dia. A tarefa deixada sem mexer na triagem do "Fechar o dia" não conta. (`spec/tarefas.md`)
 - **Tarefas:** a lista das tarefas abertas, ou seja, nem finalizadas nem abandonadas, que também mostra as finalizadas quando eu peço. Antes se chamava "tarefas ativas". (`spec/tarefas.md`)
 - **Tarefa esquecida:** tarefa aberta sem data de intenção criada há 15 dias ou mais (configurável), em risco de abandono. Quem cuida dela é o assistente "Tarefas esquecidas". (`spec/assistentes.md`)
-- **Tarefa travada:** tarefa de projeto adiada 3 vezes ou mais, ou com a data de intenção vencida. ⚠ Não confundir com o assistente "Prioridades travadas" (`INCOERENCIAS.md`, 2.10). (`spec/projetos.md`)
+- **Tarefa travada:** tarefa de projeto adiada 3 vezes ou mais, ou com a data de intenção vencida. ⚠ Não confundir com o assistente "Prioridades travadas". (`spec/projetos.md`)
 - **Pessoa:** alguém que eu cito com `@Nome`, de uma palavra só. Tem uma página com o que eu devo a ela e o que ela me deve. (`spec/pessoas.md`)
 - **Menção:** `@Nome` numa linha, que liga a linha à pessoa. Numa tarefa, quer dizer que eu devo aquilo à pessoa. (`spec/pessoas.md`)
 - **Aguardando:** uma tarefa que alguém me deve, criada com `[a] ` no começo da linha. Fica fora da lista de tarefas. (`spec/pessoas.md`)
@@ -40,7 +40,7 @@ Os termos marcados com ⚠ ainda têm mais de um sentido nos documentos; o item 
 
 ## Fechar o dia e triagem
 
-- **Fechar o dia:** o ritual diário e curto que dá destino ao que perece de um dia para o outro: as tarefas do dia, os lembretes ignorados e o planejamento do dia seguinte. As notas ficam onde foram escritas. Em texto corrido, "o fechamento do dia". Antes se chamava checkout, nome que o código ainda usa. ⚠ "Fechamento completo" tem três definições (`INCOERENCIAS.md`, 2.4). (`spec/checkout.md`)
+- **Fechar o dia:** o ritual diário e curto que dá destino ao que perece de um dia para o outro: as tarefas do dia, os lembretes ignorados e o planejamento do dia seguinte. As notas ficam onde foram escritas. Em texto corrido, "o fechamento do dia". Antes se chamava checkout, nome que o código ainda usa. ⚠ "Fechamento completo" tem três definições. (`spec/checkout.md`)
 - **Fechamento pendente:** um dia com algum item ainda sem destino. (`spec/checkout.md`)
 - **Auto-triagem:** as regras que decidem sozinhas (**automático**), pré-selecionam (**sugerido**) ou deixam para mim (**sempre manual**). (`spec/checkout.md`)
 - **Fechar dias pendentes:** aplica a auto-triagem a vários dias pendentes de uma vez; as tarefas não feitas voltam sem data. (`spec/checkout.md`)
@@ -67,9 +67,9 @@ Os termos marcados com ⚠ ainda têm mais de um sentido nos documentos; o item 
 - **Ritual:** warm up e "Fechar o dia" (`spec/abertura-do-dia.md`, "Rituais pulados"). A tela "Rituais" mostra o calendário dos dias a fechar e os "Assistentes" (`spec/assistentes.md`). A Revisão de Foco e a Revisão de Rumo, que substituíram as reflexões semanal e mensal, saíram do app em 17/10/2026; as revisões fechadas ficam guardadas no histórico e no backup, sem tela.
 - **Iniciar Dia:** a tela branca que abre o dia e começa o warm up. (`spec/abertura-do-dia.md`)
 - **Warm up:** o checklist que eu defino para começar o dia. (`spec/abertura-do-dia.md`)
-- **Dashboard:** a tela de boas-vindas depois do warm up, com os projetos em foco, mural e "Iniciar o Flow de Execução". ⚠ A `ARQUITETURA.md` e o código também chamam os "Assistentes" de dashboard (`INCOERENCIAS.md`, seção 3).
+- **Dashboard:** a tela de boas-vindas depois do warm up, com os projetos em foco, mural e "Iniciar o Flow de Execução". ⚠ A `ARQUITETURA.md` e o código também chamam os "Assistentes" de dashboard.
 - **Flow de Execução:** o trabalho na nota do dia, que começa pelo botão "Iniciar o Flow de Execução" do dashboard. (`spec/abertura-do-dia.md`)
-- **Mural:** as frases de mim para mim mesma que o dashboard mostra em rodízio. ⚠ O `spec/abertura-do-dia.md` também as chama de "lembretes" (`INCOERENCIAS.md`, 2.9).
+- **Mural:** as frases de mim para mim mesma que o dashboard mostra em rodízio. ⚠ O `spec/abertura-do-dia.md` também as chama de "lembretes".
 - **Lembrete:** um item que volta dentro do app depois de um horário, como no "perguntar de novo às XXh" do warm up. Nunca é uma notificação. ⚠ Veja "Mural". (`spec/abertura-do-dia.md`)
 
 ## Limpeza
@@ -80,5 +80,5 @@ Os termos marcados com ⚠ ainda têm mais de um sentido nos documentos; o item 
 ## Backup e avisos
 
 - **Backup automático:** o arquivo que o app regrava alguns segundos depois de cada mudança. (`spec/principios.md`)
-- **Backup pausado / bloqueado:** ⚠ os dois termos aparecem em `spec/principios.md` e `spec/navegacao.md` sem uma distinção clara (`INCOERENCIAS.md`, 2.6).
+- **Backup pausado / bloqueado:** ⚠ os dois termos aparecem em `spec/principios.md` e `spec/navegacao.md` sem uma distinção clara.
 - **Lembrar depois:** esconde um aviso até o dia seguinte. (`spec/navegacao.md`, "Navegação")
