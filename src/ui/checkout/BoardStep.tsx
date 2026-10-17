@@ -28,6 +28,15 @@ interface Props {
   /** Saves the board (`apply`) and moves on, or finishes the day on the last step. */
   onNext(apply: () => Promise<void>): void;
   primary: string;
+  /** Replaces the question above the board. */
+  question?: string;
+  /** How many columns of days; three by default. */
+  dayColumns?: number;
+  /**
+   * Saves the board instead of the checkout, which would mark the tasks as triaged on `day`
+   * ("Tarefas esquecidas" reuses the board). Untouched cards of the triage keep their suggestion.
+   */
+  onSave?(decisions: Map<string, TaskDecision>, changes: { taskId: string; date: DayKey | null }[]): Promise<void>;
 }
 
 /** A column of a board: the late tasks, the tasks of the day still to triage, or one day. */
@@ -50,12 +59,12 @@ export function taskProjectOf(row: TaskRow): string | null {
  * day, to "remover data de intenção", or to "abandonar" above the board, or in a batch. Nothing
  * is saved until I move on (spec/checkout.md, "Fechamento em etapas").
  */
-export function BoardStep({ mode, day, today, triage, projects, busy, onBack, onNext, primary }: Props) {
+export function BoardStep({ mode, day, today, triage, projects, busy, onBack, onNext, primary, question: customQuestion, dayColumns, onSave }: Props) {
   const target = triage.nextDay;
   const rowIds = triage.rows.map((row) => row.task.id);
   const view = useLiveQuery(
-    () => loadPlanning(reader, target, today, { exclude: new Set(rowIds), late: mode === 'late' }),
-    [target, today, mode, rowIds.join(' ')],
+    () => loadPlanning(reader, target, today, { exclude: new Set(rowIds), late: mode === 'late', columns: dayColumns }),
+    [target, today, mode, rowIds.join(' '), dayColumns],
   );
   const [dates, setDates] = useState<Map<string, DayKey | null>>(new Map());
   const [abandoned, setAbandoned] = useState<Set<string>>(new Set());
@@ -141,6 +150,7 @@ export function BoardStep({ mode, day, today, triage, projects, busy, onBack, on
     const cards = items.map((item) => ({ id: item.task.id, date: item.task.intendedDate, suggestion: suggestions.get(item.task.id) }));
     const { decisions, changes } = boardOutcome(cards, { dates, abandoned, finished });
     onNext(async () => {
+      if (onSave) return onSave(decisions, changes);
       if (changes.length > 0) await applyPlanning(appContext, day, changes);
       if (decisions.size > 0) await applyTriage(appContext, day, { ...noDecisions(), tasks: decisions });
     });
@@ -282,7 +292,8 @@ export function BoardStep({ mode, day, today, triage, projects, busy, onBack, on
   };
 
   const question =
-    mode === 'late' ? 'O que fazer com as tarefas atrasadas?' : `Para onde vão as tarefas ${day === today ? 'de hoje' : 'do dia'}?`;
+    customQuestion ??
+    (mode === 'late' ? 'O que fazer com as tarefas atrasadas?' : `Para onde vão as tarefas ${day === today ? 'de hoje' : 'do dia'}?`);
 
   return (
     <>

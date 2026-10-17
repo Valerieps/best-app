@@ -1,4 +1,5 @@
-import type { Project, Section } from './entities';
+import { daysBetween, toDayKey, type DayKey } from './day';
+import type { Block, Project, Section } from './entities';
 import { findCitedName, normalizeForMatch } from './text';
 
 /**
@@ -120,4 +121,29 @@ export function findDuplicateProjects(projects: readonly Project[]): DuplicateGr
       const sorted = [...group].sort((a, b) => (a.createdAt < b.createdAt ? -1 : 1));
       return { key: sorted.map((project) => project.id).join('+'), projects: sorted, keep: sorted[0] };
     });
+}
+
+/** Days without a date, counted from creation, after which a task is at risk of being forgotten. */
+export const DEFAULT_FORGOTTEN_TASK_DAYS = 15;
+
+/** Whole days from 1 up; anything else falls back to the default. */
+export function normalizeForgottenTaskDays(days: number | null | undefined): number {
+  return typeof days === 'number' && Number.isFinite(days) ? Math.max(1, Math.round(days)) : DEFAULT_FORGOTTEN_TASK_DAYS;
+}
+
+/**
+ * "Tarefas esquecidas": open tasks without an intended date created `days` days ago or more,
+ * the oldest first. Age counts from creation, not from when the date was removed. Tasks waiting
+ * for someone and tasks left for a review count too (spec/assistentes.md).
+ */
+export function findForgottenTasks(tasks: readonly Block[], today: DayKey, days: number): Block[] {
+  return tasks
+    .filter(
+      (task) =>
+        task.kind === 'task' &&
+        task.status === 'active' &&
+        task.intendedDate === null &&
+        daysBetween(toDayKey(new Date(task.createdAt)), today) >= days,
+    )
+    .sort((a, b) => (a.createdAt < b.createdAt ? -1 : a.createdAt > b.createdAt ? 1 : 0));
 }

@@ -1,3 +1,4 @@
+import { normalizeForgottenTaskDays } from '../domain/assistants';
 import { normalizeLimits, type AssistantId } from '../domain/cleanupStatus';
 import { toDayKey } from '../domain/day';
 import type { Appearance, AutoBackupInterval, DayNoteFocus, ProjectListGroup, Settings, WarmupItem } from '../domain/entities';
@@ -37,6 +38,11 @@ export function setCleanupLimits(ctx: AppContext, id: AssistantId, limits: reado
     const { [id]: _previous, ...others } = current.cleanupAgeLimits ?? {};
     return { cleanupAgeLimits: limits ? { ...others, [id]: normalizeLimits(limits) } : others };
   });
+}
+
+/** Days without a date before a task counts as forgotten; null brings back the default. */
+export function setForgottenTaskDays(ctx: AppContext, days: number | null): Promise<void> {
+  return updateSettings(ctx, { forgottenTaskDays: days === null ? undefined : normalizeForgottenTaskDays(days) });
 }
 
 /** Whether the project page's side column stays docked. One choice for every project. */

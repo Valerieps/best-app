@@ -22,6 +22,7 @@ Os termos marcados com ⚠ ainda têm mais de um sentido nos documentos; o item 
 - **Adiamento:** mudar a data de intenção para depois, ou tirar a data, inclusive no fechamento do dia. A tarefa deixada sem mexer na triagem do "Fechar o dia" não conta. (`spec/tarefas.md`)
 - **Precisão da data de intenção:** a parte das tarefas finalizadas com data de intenção que foram feitas no dia da intenção. (`spec/rituais.md`)
 - **Tarefas:** a lista das tarefas abertas, ou seja, nem finalizadas nem abandonadas, que também mostra as finalizadas quando eu peço. Antes se chamava "tarefas ativas". (`spec/tarefas.md`)
+- **Tarefa esquecida:** tarefa aberta sem data de intenção criada há 15 dias ou mais (configurável), em risco de abandono. Quem cuida dela é o assistente "Tarefas esquecidas". (`spec/assistentes.md`)
 - **Tarefa travada:** tarefa de projeto adiada 3 vezes ou mais, ou com a data de intenção vencida. ⚠ Não confundir com o assistente "Prioridades travadas" (`INCOERENCIAS.md`, 2.10). (`spec/projetos.md`)
 - **Pessoa:** alguém que eu cito com `@Nome`, de uma palavra só. Tem uma página com o que eu devo a ela e o que ela me deve. (`spec/pessoas.md`)
 - **Menção:** `@Nome` numa linha, que liga a linha à pessoa. Numa tarefa, quer dizer que eu devo aquilo à pessoa. (`spec/pessoas.md`)
@@ -66,7 +67,7 @@ Os termos marcados com ⚠ ainda têm mais de um sentido nos documentos; o item 
 
 ## Rituais e abertura do dia
 
-- **Ritual:** warm up, "Fechar o dia", Revisão de Foco e Revisão de Rumo (`spec/rituais.md`, "Rituais pulados"). A tela "Rituais" mostra o calendário dos dias a fechar e os "Assistentes", entre eles a Revisão de Foco (`spec/assistentes.md`).
+- **Ritual:** warm up, "Fechar o dia", Revisão de Foco e Revisão de Rumo (`spec/rituais.md`, "Rituais pulados"). A tela "Rituais" mostra o calendário dos dias a fechar e os "Assistentes" (`spec/assistentes.md`).
 - **Revisão de Foco:** a revisão frequente, dos projetos: "no que eu estou trabalhando agora?". Substitui a reflexão semanal. (`spec/rituais.md`)
 - **Revisão de Rumo:** a revisão rara, dos objetivos: "estou indo para onde eu quero ir?". Substitui a reflexão mensal. (`spec/rituais.md`)
 - **Cadência (de uma revisão):** quantos dias fechados (Foco) ou Revisões de Foco (Rumo) até a revisão ficar disponível. (`spec/rituais.md`)

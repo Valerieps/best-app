@@ -52,6 +52,7 @@ describe('cleanup status', () => {
         whiteboards: { count: 12, oldest: '2026-10-12' },
         // One old repeat: red.
         duplicates: { count: 1, oldest: '2026-08-01' },
+        forgottenTasks: { count: 0, oldest: null },
       },
       today,
       undefined,
@@ -60,7 +61,24 @@ describe('cleanup status', () => {
       ['duplicates', 3, 74],
       ['pendingDays', 0, null],
       ['whiteboards', 0, 2],
+      ['forgottenTasks', 0, null],
     ]);
+  });
+
+  it('colors "Tarefas esquecidas" by how many tasks there are, from 5, 10 and 15 by default', () => {
+    const statusFor = (count: number) =>
+      assistantCards(
+        {
+          pendingDays: { count: 0, oldest: null },
+          whiteboards: { count: 0, oldest: null },
+          duplicates: { count: 0, oldest: null },
+          // Very old, yet the age does not matter here.
+          forgottenTasks: { count, oldest: count > 0 ? '2026-01-01' : null },
+        },
+        '2026-10-14',
+        undefined,
+      ).find((card) => card.id === 'forgottenTasks')!.status;
+    expect([0, 4, 5, 9, 10, 14, 15].map(statusFor)).toEqual([0, 0, 1, 1, 2, 2, 3]);
   });
 
   it('finds the oldest of some days, ignoring the unknown ones', () => {

@@ -1,6 +1,8 @@
 import {
   findDuplicateProjects,
+  findForgottenTasks,
   findWhiteboardGroups,
+  normalizeForgottenTaskDays,
   type DuplicateGroup,
   type WhiteboardGroup,
 } from '../domain/assistants';
@@ -208,15 +210,15 @@ export interface PlanningView {
  * out. The late ones go from the oldest date, and the tasks of the projects in focus come first
  * in each column, in the order of the projects (spec/prioridades.md, "Projetos em foco").
  * `exclude` leaves out tasks shown elsewhere (the triage of the day), and `late: false` leaves
- * out the late tasks and their column.
+ * out the late tasks and their column. `columns` is how many columns of days, three by default.
  */
 export async function loadPlanning(
   reader: Reader,
   target: DayKey,
   today: DayKey,
-  options: { exclude?: ReadonlySet<string>; late?: boolean } = {},
+  options: { exclude?: ReadonlySet<string>; late?: boolean; columns?: number } = {},
 ): Promise<PlanningView> {
-  const { exclude, late = true } = options;
+  const { exclude, late = true, columns: count } = options;
   const items = (await loadActiveTasks(reader)).filter(
     (item) => !exclude?.has(item.task.id) && (late || item.task.intendedDate === null || item.task.intendedDate >= today),
   );
@@ -227,7 +229,7 @@ export async function loadPlanning(
   };
   // A stable sort keeps the usual order inside each project.
   const focusFirst = (list: TaskListItem[]) => list.map((item, index) => ({ item, index })).sort((a, b) => rank(a.item) - rank(b.item) || a.index - b.index).map(({ item }) => item);
-  const columns = planningColumns(items.map((item) => item.task.intendedDate), today, target);
+  const columns = planningColumns(items.map((item) => item.task.intendedDate), today, target, count);
   const byDate = (a: TaskListItem, b: TaskListItem) => ((a.task.intendedDate ?? '') < (b.task.intendedDate ?? '') ? -1 : a.task.intendedDate === b.task.intendedDate ? 0 : 1);
   return {
     target,
@@ -266,6 +268,8 @@ export async function loadCleanup(reader: Reader): Promise<CleanupView> {
 
 export interface CleanupDashboard extends CleanupView {
   pendingDays: DayKey[];
+  /** "Tarefas esquecidas", the oldest first, with where each one came from. */
+  forgottenTasks: TaskListItem[];
   /** One card per assistant, most urgent first. */
   cards: AssistantCard[];
 }
@@ -275,6 +279,12 @@ export async function loadCleanupDashboard(reader: Reader, today: DayKey): Promi
   const cleanup = await loadCleanup(reader);
   const pendingDays = await loadPendingDays(reader, today);
   const settings = await reader.settings();
+  const forgotten = findForgottenTasks(
+    await reader.tasksWithStatus('active'),
+    today,
+    normalizeForgottenTaskDays(settings?.forgottenTaskDays),
+  );
+  const forgottenTasks = await withOrigins(reader, forgotten);
   const findings = {
     pendingDays: { count: pendingDays.length, oldest: oldestDay(pendingDays) },
     whiteboards: {
@@ -286,8 +296,13 @@ export async function loadCleanupDashboard(reader: Reader, today: DayKey): Promi
       count: cleanup.duplicates.length,
       oldest: oldestDay(cleanup.duplicates.map((group) => group.projects[1] && toDayKey(new Date(group.projects[1].createdAt)))),
     },
+    // Colored by how many there are (COUNTED_ASSISTANTS); the age still shows on the card.
+    forgottenTasks: {
+      count: forgotten.length,
+      oldest: forgotten[0] ? toDayKey(new Date(forgotten[0].createdAt)) : null,
+    },
   };
-  return { ...cleanup, pendingDays, cards: assistantCards(findings, today, settings?.cleanupAgeLimits) };
+  return { ...cleanup, pendingDays, forgottenTasks, cards: assistantCards(findings, today, settings?.cleanupAgeLimits) };
 }
 
 export interface MenuCounts {

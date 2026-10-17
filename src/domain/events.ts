@@ -43,7 +43,8 @@ export interface EventData {
   'block.created': { kind: BlockKind; sectionId: string; projectId?: string };
   /** `text` when the line was deleted; `mergedInto` when it was joined into the previous one. */
   'block.deleted': { kind: BlockKind; text: string } | { kind: BlockKind; mergedInto: string };
-  'block.kindChanged': { from: BlockKind; to: BlockKind };
+  /** `sectionId` when the new note moved to a note on its project's page ("Tarefas esquecidas"). */
+  'block.kindChanged': { from: BlockKind; to: BlockKind; sectionId?: string };
   /** `projectId` null when a triage unlinks the task; `mergedFrom` when projects were merged. */
   'block.linkedToProject': { projectId: string | null; mergedFrom?: string };
   'task.intendedDateChanged': { from: DayKey | null; to: DayKey | null; reason: DateChangeReason };

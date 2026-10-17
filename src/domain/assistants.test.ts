@@ -1,6 +1,42 @@
 import { describe, expect, it } from 'vitest';
-import { project, section } from '../test/builders';
-import { areSimilarNames, findDuplicateProjects, findWhiteboardGroups } from './assistants';
+import { project, section, task } from '../test/builders';
+import {
+  areSimilarNames,
+  DEFAULT_FORGOTTEN_TASK_DAYS,
+  findDuplicateProjects,
+  findForgottenTasks,
+  findWhiteboardGroups,
+  normalizeForgottenTaskDays,
+} from './assistants';
+
+describe('forgotten tasks assistant', () => {
+  const today = '2026-10-17';
+  const created = (day: string, overrides = {}) => task('s', `de ${day}`, { createdAt: `${day}T12:00:00`, ...overrides });
+
+  it('finds open tasks without a date created at least the given days ago, the oldest first', () => {
+    const tasks = [
+      created('2026-10-02'),
+      created('2026-10-03'),
+      created('2026-09-01'),
+      created('2026-09-01', { intendedDate: '2026-10-20' }),
+      created('2026-09-01', { status: 'done' }),
+    ];
+    expect(findForgottenTasks(tasks, today, 15).map((each) => each.text)).toEqual(['de 2026-09-01', 'de 2026-10-02']);
+  });
+
+  it('counts tasks waiting for someone and tasks left for a review too', () => {
+    const tasks = [created('2026-09-01', { waiting: true }), created('2026-09-01', { awaitingReflection: true })];
+    expect(findForgottenTasks(tasks, today, 15)).toHaveLength(2);
+  });
+
+  it('keeps the days a whole number from 1 up, 15 by default', () => {
+    expect(normalizeForgottenTaskDays(undefined)).toBe(DEFAULT_FORGOTTEN_TASK_DAYS);
+    expect(DEFAULT_FORGOTTEN_TASK_DAYS).toBe(15);
+    expect(normalizeForgottenTaskDays(0)).toBe(1);
+    expect(normalizeForgottenTaskDays(20.4)).toBe(20);
+    expect(normalizeForgottenTaskDays(Number.NaN)).toBe(15);
+  });
+});
 
 describe('whiteboards assistant', () => {
   const unlinked = (title: string | null, createdAt = '2026-10-01T09:00:00Z') =>
