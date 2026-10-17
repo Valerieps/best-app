@@ -1,7 +1,7 @@
 # Princípios, primeiro uso e plataforma
 
 - **Entra aqui:** os princípios que valem para o app inteiro, como o app é usado nos primeiros dias, e as decisões de plataforma e dados que a pessoa sente (onde os dados ficam, backup, offline, notificações).
-- **Não entra aqui:** como isso é construído (`ARQUITETURA.md`) e as regras de segurança completas (`google-safe.md`).
+- **Não entra aqui:** como isso é construído (`ARQUITETURA.md`) e as regras de segurança completas (`SEGURANCA.md`).
 
 ## Princípios
 
@@ -22,7 +22,7 @@ Depois da pasta, não há onboarding: eu já saio usando o ciclo diário, e os r
 
 - Nesta primeira fase, o app roda só no Chrome do computador, como um web app instalável (PWA). O Android fica para uma fase posterior.
 - O app pode ser instalado no computador como PWA, pelas opções normais do Chrome (o ícone de instalar na barra de endereço); o app não tem botão próprio de instalar. A instalação no Android fica para a fase do Android. *(1b)*
-- Os dados ficam só no navegador (IndexedDB), sem nuvem, login nem conexões externas, por causa das regras de segurança do meu trabalho. As regras estão em `google-safe.md`.
+- Os dados ficam só no navegador (IndexedDB), sem nuvem, login nem conexões externas, por causa das regras de segurança do meu trabalho. As regras estão em `SEGURANCA.md`.
 - O app é publicado como arquivos estáticos no Cloudflare Pages, para que outras pessoas também possam usar. Cada pessoa tem os próprios dados no próprio navegador, e nenhum dado passa pelo servidor.
 - O app funciona sem internet.
 - Não há servidor nem banco relacional, então as métricas são calculadas no próprio app, a partir do histórico. O volume de dados de uma pessoa só é pequeno o bastante para isso.

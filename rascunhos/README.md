@@ -17,4 +17,4 @@ Rascunhos de tela feitos antes do código. Valem como referência visual, não c
 | Tela "Rituais" | `rascunho-rituais_1.html` | Base da tela decidida em 15/10/2026 (`spec/assistentes.md`, "A tela Rituais"), ainda sem código: "Rituais" vira uma tela com o calendário dos dias sem fechamento e a grade "Assistentes" (o antigo "Colocar ordem na casa"), com a Revisão de Foco como um assistente (a revisão saiu do app em 17/10/2026) |
 | Revisões de Foco e de Rumo | `plano-revisoes-foco-e-rumo.md` (brief, sem tela) | Construído (ADR-038, ADR-039) e retirado em 17/10/2026 (ADR-060). O plano fica como histórico |
 
-O rascunho original da nota do dia (`nota-do-dia-rascunho.png` e `.html`, de antes do 1a) não está no repositório; veja `DECISOES.md`, "Origem".
+O rascunho original da nota do dia (`nota-do-dia-rascunho.png` e `.html`, de antes do 1a) não está no repositório; a Valeria tem as cópias.

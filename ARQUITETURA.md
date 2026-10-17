@@ -1,229 +1,123 @@
 # Arquitetura
 
-Atualizado em Oct 12, 2026
+Atualizado em 17/10/2026
 
-O desenho técnico do app para a spec inteira, seções 1a a 6. A spec (`SPEC.md`) diz o que o app faz; este documento diz como ele é construído. As decisões pontuais e o porquê de cada uma estão em `architecture-decision-records.md`, e o que ficou para trás está nas issues do GitHub (labels `t:bug` e `t:debito-tecnico`).
+O desenho técnico que o código não mostra sozinho. A spec (`SPEC.md`) diz o que o app faz; este documento diz as regras que o código precisa manter verdadeiras.
 
-Este documento descreve o desenho, não o andamento: o que está feito e o que falta por fase fica no `ROADMAP.md`. Aqui, **planejado** marca só o desenho do que ainda não existe no código.
+- **Entra aqui:** as restrições que moldam tudo, as camadas e o caminho de uma gravação e de uma leitura, as invariantes, o modelo de dados, o histórico de eventos e as migrações.
+- **Não entra aqui:** um passeio pelos arquivos e componentes (o código mostra), o porquê de cada decisão (ADRs em `adr/`, achadas com Grep), o que falta construir (`ROADMAP.md`), as regras de produto (`spec/`) e o débito técnico (issues `t:bug` e `t:debito-tecnico`). **Planejado** marca só o desenho do que ainda não existe no código.
 
 ## 1. Restrições que moldam tudo
 
-- **Local-only.** Os dados ficam só no navegador (IndexedDB). Não há servidor, login, nuvem, telemetria nem chamadas de rede. As regras completas estão em `google-safe.md`.
-- **Só Chrome no computador nesta fase.** O Android e a sincronização ficam para depois. O modelo de dados já está preparado para juntar dados de aparelhos diferentes: ids são UUIDs, todo registro tem `updatedAt` e toda mudança fica no histórico de eventos.
-- **Arquivos estáticos.** O app é HTML, CSS e JavaScript publicados no Cloudflare Pages. Cada pessoa que abre o endereço tem um banco próprio no próprio navegador.
-- **Avisar em vez de bloquear.** Vale também para a parte técnica: backup pausado, armazenamento não persistente e checkout pendente aparecem como avisos, nunca como telas que impedem o uso. Quando há mais de um aviso, a interface escolhe um só para o topo (ADR-029).
+- **Local-only.** Os dados ficam só no navegador (IndexedDB, pelo Dexie). Não há servidor, login, nuvem, telemetria nem chamadas de rede (`SEGURANCA.md`).
+- **Só Chrome no computador nesta fase.** O modelo já está pronto para juntar dados de aparelhos diferentes: ids são UUIDs, todo registro tem `updatedAt` e toda mudança fica no histórico de eventos.
+- **Arquivos estáticos** no Cloudflare Pages. Cada pessoa tem um banco próprio no próprio navegador.
+- **Avisar em vez de bloquear**, também na parte técnica: backup pausado, armazenamento não persistente e checkout pendente são avisos, nunca telas que impedem o uso. Com mais de um aviso, a interface escolhe um só para o topo (ADR-029). As exceções são a pasta do backup no primeiro uso (ADR-056) e um banco mais novo que o código (ADR-059).
+- **Dependências mínimas:** só React, React DOM, Dexie e a fonte Inter vão para o app (ADR-001, ADR-054).
 
-## 2. Stack (implementado)
+## 2. Camadas
 
-| Parte | Escolha |
-| --- | --- |
-| Linguagem e interface | TypeScript (estrito), React |
-| Banco | IndexedDB, pela biblioteca Dexie |
-| Reatividade | `liveQuery` do Dexie: uma tela se atualiza sozinha quando os dados que ela leu mudam, inclusive em outra aba |
-| Rotas | Pelo hash da URL (`#/projeto/…`), sem biblioteca (`ui/hooks.ts`) |
-| Build | Vite, com a CSP injetada no `index.html` de produção. O `tsc` só confere os tipos (`noEmit`) |
-| Offline | Service worker próprio (`public/sw.js`) |
-| Testes | Vitest, com `fake-indexeddb` |
-| Hospedagem | Cloudflare Pages |
+`ui` → `application` → `domain`; a `infrastructure` implementa as portas da `application`. O `domain` não importa nada de fora, nem React nem Dexie.
 
-As únicas dependências que vão para o app são React, React DOM e Dexie, com versões travadas (ADR-001).
-
-## 3. Camadas (implementado)
-
-```
-src/
-  domain/          regras puras: entidades, datas, semanas e meses, tipos de evento,
-                   auto-triagem, prioridades, métricas, atividade dos projetos, assistentes
-  application/     casos de uso (um arquivo por área), portas, consultas, formato do backup
-  infrastructure/  Dexie (banco, Store, Reader), backup automático e arquivos, APIs do navegador
-  dev/             dados sintéticos, só no `npm run dev` (ADR-027)
-  ui/              React, uma pasta por área; cores, fontes e espaçamentos só em ui/theme/tokens.css
-```
-
-- As dependências só apontam para dentro: `ui` → `application` → `domain`. O `domain` não importa nada de fora, nem React nem Dexie. A `infrastructure` implementa as portas da `application`.
-- **Portas** (`application/ports.ts`): `Store` (gravação), `Reader` (leitura), `Clock` e `IdGenerator`. Os casos de uso recebem um `AppContext` (`store`, `clock`, `ids`); as consultas recebem um `Reader`. Assim os testes controlam a data e os ids e usam um banco em memória.
-- **Raiz de composição:** `ui/services.ts` cria o banco, o `DexieStore`, o `DexieReader` e o backup automático, uma vez só para o app rodando. Os testes montam os seus em `test/fixtures.ts`.
+- **Portas** (`application/ports.ts`): `Store` (gravação), `Reader` (leitura), `Clock` e `IdGenerator`. Os casos de uso recebem um `AppContext` (`store`, `clock`, `ids`); as consultas recebem um `Reader`. Os testes controlam a data e os ids e usam um banco em memória (`test/fixtures.ts`).
+- **Raiz de composição:** `ui/services.ts` cria o banco, o `DexieStore`, o `DexieReader` e o backup automático, uma vez só.
+- **Desvios conhecidos:** o backup chamado pela interface direto na infraestrutura, os serviços globais e a interface lendo `new Date()` em vez do `Clock` ([#53](https://github.com/Valerieps/best-app/issues/53), [#54](https://github.com/Valerieps/best-app/issues/54), [#59](https://github.com/Valerieps/best-app/issues/59)).
 
 ### Caminho de uma gravação
 
 1. A tela chama um caso de uso, por exemplo `postponeTask(appContext, …)`.
-2. O caso de uso roda dentro de `Store.transaction`, que grava a mudança e o evento correspondente de forma atômica: ou os dois, ou nenhum (ADR-003).
-3. Ao fim de cada transação, o `DexieStore` agenda o backup automático (seção 10).
+2. O caso de uso roda dentro de `Store.transaction`, que grava a mudança e o evento dela de forma atômica: os dois ou nenhum (ADR-003).
+3. Ao fim da transação, o `DexieStore` agenda o backup automático (seção 7).
 4. O `liveQuery` percebe a mudança e as telas abertas releem o que mudou.
+
+As gravações do editor passam por uma fila (`ui/writeQueue.ts`) e rodam uma depois da outra; importar e desfazer a importação entram na mesma fila (ADR-014).
 
 ### Caminho de uma leitura
 
-As telas montam o que mostram com as funções de `application/queries.ts` (`loadDayNote`, `loadProjectList`, …), chamadas dentro de `useLiveQuery` (`ui/useLiveQuery.ts`). Cada consulta lê pelo `Reader` e entrega os dados ao domínio, que calcula a visão. A reatividade funciona porque o Dexie rastreia as leituras feitas durante a consulta; por isso uma consulta não deve esperar nada que não venha do `Reader`.
+As telas chamam as funções de `application/queries.ts` dentro de `useLiveQuery`. Cada consulta lê pelo `Reader` e entrega os dados ao domínio, que calcula a visão.
 
-Uma consulta que falha não finge que está carregando: `useLiveQuery` registra o erro no console e o lança, e o error boundary da tela mostra "Algo deu errado nesta tela" no lugar dela, com a barra lateral funcionando. O que fica em volta das telas (barra lateral, avisos, "Dados e backup") usa `useLiveQueryState`, que registra o erro e segue sem o dado (ADR-042).
+- **Uma consulta só espera o que vem do `Reader`:** a reatividade depende de o Dexie rastrear as leituras feitas durante ela.
+- **Uma consulta que falha não finge que carrega:** o erro vai para o error boundary da tela, e a barra lateral continua funcionando (ADR-042).
 
-### Desvios conhecidos
+## 3. Invariantes
 
-Alguns pontos ainda não seguem essas regras: o fluxo de backup é chamado pela interface direto na infraestrutura, os serviços são globais em vez de entregues por contexto, e a interface lê o relógio com `new Date()` em vez do `Clock`. Estão nas issues [#53](https://github.com/Valerieps/best-app/issues/53), [#54](https://github.com/Valerieps/best-app/issues/54) e [#59](https://github.com/Valerieps/best-app/issues/59).
+- **Um registro por entidade.** Um bloco existe uma vez só; a nota do dia, os projetos e os recursos apontam para ele, sem cópias (ADR-002). A seção "De outros dias" só existe na tela: as tarefas com a data do dia aparecem ali sem sair da seção onde foram escritas.
+- **O que dá para calcular não é guardado.** Se um dia está pendente, a etapa do dia (ADR-023), a nota do dia, as listas de tarefas, a página do projeto, a cor dos assistentes (ADR-045) e o mapa de atividade (ADR-034) são calculados das tabelas e dos eventos. `days` guarda só o que não dá para calcular.
+- **Atalhos recalculáveis.** `postponeCount` e as listas de prioridades podem ser refeitos a partir do histórico.
+- **Datas** de calendário são `AAAA-MM-DD` no fuso local, e o dia vira à meia-noite (ADR-005). Semanas são ISO, como `2026-W42` (ADR-020).
+- **Ordem sem reescrever vizinhos.** `position` é um índice fracionário; a ordem das partes do dia fica em `days.sectionOrder` (ADR-040).
+- **O editor tem um campo de texto por bloco** (`ui/dayNote/BlockLine.tsx`), não um editor de documento único como ProseMirror, para manter um registro por bloco. Seleção de várias linhas e listas são feitas por cima disso (ADR-051).
+- **O texto do bloco guarda o Markdown cru**, sem campo novo; a formatação é só na tela (ADR-048).
+- **Texto do usuário nunca vira HTML**, e links abrem só `http`, `https` e `mailto`, com `rel="noopener noreferrer"` (`SEGURANCA.md`).
+- **Abandonar esconde, não apaga**, para o histórico continuar íntegro.
+- **Nenhuma tarefa muda de data sozinha** na triagem: `domain/triage.ts` é uma função pura que devolve decisões, e só a tela as grava (ADR-012, ADR-044).
 
 ## 4. Modelo de dados
 
-Cada entidade é um registro separado. Um bloco existe uma vez só: a nota do dia, os projetos e os recursos apontam para ele, sem cópias. Datas de calendário são `AAAA-MM-DD` no fuso local, e o dia vira à meia-noite (ADR-005). Semanas são semanas ISO, como `2026-W42` (ADR-020). Os ids são UUIDs, e todo registro tem `createdAt` e `updatedAt`. Os tipos estão em `src/domain/entities.ts`.
-
-### Tabelas implementadas (versão 10 do banco)
+Os tipos estão em `src/domain/entities.ts`. Todo registro tem `id` (UUID), `createdAt` e `updatedAt`. Versão 10 do banco.
 
 **`blocks`**: tarefas e notas.
 
-| Campo | Uso |
+| Campo | O que significa |
 | --- | --- |
-| `id`, `kind` | `task` ou `note`; `appointment` entra na seção 5 |
-| `text` | Conteúdo da linha |
-| `sectionId` | Seção onde o bloco foi escrito, com o título e o horário dela |
-| `position` | Índice fracionário: ordena os blocos dentro da seção sem reescrever os vizinhos |
-| `projectId` | Projeto vinculado, herdado da seção ou escolhido no checkout |
-| `status` | Só tarefas: `active`, `done`, `abandoned` ou `converted` (virou hábito). Abandonar esconde, não apaga. `archived` deixou de existir: a versão 8 do banco e do backup transforma as arquivadas em `active` sem data (ADR-049) |
-| `intendedDate` | Dia em que a tarefa aparece na nota do dia |
+| `kind` | `task` ou `note`; `appointment` entra na seção 5 |
+| `sectionId` | Seção onde o bloco foi escrito |
+| `projectId` | Projeto vinculado, herdado da seção ou escolhido no fechamento |
+| `status` | Só tarefas: `active`, `done`, `abandoned` ou `converted` (virou hábito) |
+| `intendedDate` | Dia em que a tarefa aparece na nota do dia; numa tarefa `waiting`, a data para cobrar (ADR-052) |
 | `firstIntendedDate` | Primeira data de intenção, para medir a distância até a ação final |
-| `postponeCount` | Atalho de leitura; dá para recalcular a partir dos eventos |
-| `lastTriagedDay` | Último dia cujo checkout decidiu a tarefa; é o que diz se ela está pendente (ADR-011) |
-| `deadline` | Prazo máximo (1b) |
+| `lastTriagedDay` | Último dia cujo fechamento decidiu a tarefa; é o que diz se ela está pendente (ADR-011) |
+| `deadline` | Prazo máximo |
 | `carriedOrder` | `{ day, position }`: ordem entre as tarefas de outros dias, só enquanto `day` é a data de intenção (ADR-040) |
-| `waiting` | Tarefa aguardando, que alguém me deve; a `intendedDate` dela é a data para cobrar (ADR-052) |
-| `closedAt`, `createdAt`, `updatedAt` | Datas e horários |
 
-O antigo `awaitingReflection` (tarefa deixada para a Revisão de Foco) saiu: a versão 10 do banco e do backup o tira das tarefas, que voltam a ser tarefas sem data (ADR-060).
+**`sections`**: `kind` (`general` ou `meeting`), `day`, `title`, `projectId` (`null` = quadro branco), `notesDestination` (`pending` com o dia aberto; `wiki` com o dia fechado, nome histórico, ADR-050), `whiteboardDecision`. Duas seções nunca aparecem numa nota do dia: `projectPage`, que guarda as tarefas escritas na página do projeto (ADR-031), e `projectNote`, uma por nota escrita na aba "Notas" do projeto.
 
-**`sections`**: as seções da nota do dia.
+**`projects`**: `name`, `status` (`active`, `finished` ou `merged`), `mergedInto`, `keepSeparateFrom`, `objectiveId`, `icon`.
 
-| Campo | Uso |
-| --- | --- |
-| `kind` | `general` ou `meeting` |
-| `day`, `createdAt`, `title` | Dia, horário de criação e título opcional |
-| `projectId` | Projeto vinculado; `null` quer dizer quadro branco |
-| `notesDestination` | Estado das notas da seção: `pending` (dia aberto), `wiki` (dia fechado: as notas ficam guardadas; o nome é histórico, ADR-050), ou `discarded` (só em dados antigos). As notas deixadas para a Revisão de Foco (`weeklyReflection`) viraram `wiki` na versão 10 (ADR-060) |
-| `whiteboardDecision` | `pending`, `leftUnlinked` (checkout) ou `keptUnlinked` (assistente de seções soltas) |
-| `participants`, `docLink` | Só reuniões (1b); guardados, mas sem campo na nota do dia desde 15/10/2026 |
-| `projectPage` | Seção escondida que guarda as tarefas escritas na página do projeto; não aparece em nenhuma nota do dia (ADR-031) |
-| `projectNote` | Seção de uma nota escrita na aba "Notas" do projeto (`createProjectNote`), uma por nota nova, já com `notesDestination: 'wiki'`; não aparece em nenhuma nota do dia nem no fechamento, mas conta como atividade do projeto |
+**`people`**: `name` (uma palavra), `status` (`active`, `archived` ou `merged`), `mergedInto`. A menção não é gravada à parte: fica no texto do bloco; renomear e juntar reescrevem o texto (ADR-052).
 
-**`projects`**: `name`, `status` (`active`, `finished` ou `merged`), `finishedAt`, `mergedInto` e `keepSeparateFrom` (assistente de projetos repetidos), `objectiveId` (4) e `icon` (2).
+**`days`**: `lastCheckoutAt`, `startedAt`, `warmup`, `executionStartedAt` e `sectionOrder`.
 
-**`people`**: as pessoas citadas com `@Nome`: `name` (uma palavra), `status` (`active`, `archived` ou `merged`) e `mergedInto`. A menção não é gravada à parte: fica no texto do bloco e é lida de novo a cada consulta; renomear e juntar reescrevem o texto das linhas (ADR-052).
+**`priorities`**: listas com id `escopo:período`. `day:AAAA-MM-DD` guarda as tarefas escolhidas à mão; as com prazo no dia entram na leitura (ADR-017). `focusProjects` é a lista única de até 3 projetos em foco, e cada mudança grava um evento com a lista inteira (ADR-038).
 
-**`days`**: `day` (chave), `lastCheckoutAt` e, a partir da seção 3, `startedAt`, `warmup` (resultado de cada item do dia) e `executionStartedAt`; `sectionOrder`, a ordem das partes da nota do dia quando eu a mudo (ADR-040). Se o checkout está pendente é sempre calculado a partir dos blocos; esta tabela só guarda o que não dá para calcular. A etapa do dia também é calculada (ADR-023).
+**`settings`**: um registro só, id `main`, que entra no backup.
 
-**`priorities`**: listas ordenadas, com id `escopo:período`. `day:2026-10-11` guarda as tarefas escolhidas à mão para o dia; as tarefas com prazo no dia entram na leitura (ADR-017). `focusProjects` guarda a lista única de até 3 projetos em foco; cada mudança (colocar, trocar ou tirar, a qualquer momento, ADR-060) grava um evento com a lista inteira, o histórico da lista (ADR-038). As listas `weekProjects:2026-W42`, de antes da lista única, ficam como histórico, sem leitura.
+**`reminders`** (lembretes que voltam dentro do app, sem notificação, ADR-024), **`objectives`** e **`resources`** (4), **`habits`** e **`habitLogs`** (6, id `hábito:dia`).
 
-**`reflections`**: as revisões fechadas, `kind` `focus` ou `direction` (ADR-039), e os registros `week:2026-W41` e `month:2026-10` das reflexões de antes delas, com os textos livres (melhores momentos, o que pode melhorar). As revisões saíram do app (ADR-060): a tabela fica só como histórico, sem tela e sem quem grave nela, e continua no backup.
+**Só histórico:** `reflections` (revisões e reflexões fechadas; ninguém grava nem lê desde ADR-060) e as listas `weekProjects:…` em `priorities`.
 
-**`settings`**: um registro só, id `main`: dias ativos, checklist do warm up, limites das cores dos "Assistentes", em dias de espera, ou em tarefas para "Tarefas esquecidas" (`cleanupAgeLimits`, ADR-045; o antigo `cleanupLimits`, por quantidade, não é mais lido), os dias sem data até uma tarefa ser esquecida (`forgottenTaskDays`, padrão 15), coluna fixada da página do projeto e grupos abertos da lista de projetos (ADR-036). Entra no backup. A cadência das revisões (`reviewCadence`) pode continuar em registros antigos, sem leitura (ADR-060).
-
-**`reminders`**: lembretes que voltam dentro do app (3): origem, texto, `dueAt` e `status` (`pending`, `done` ou `dropped`). O app nunca manda notificação (ADR-024).
-
-**`objectives`** e **`resources`** (4): meta, motivação, `status` e `achieved`; recursos de um objetivo ou projeto, que são as notas de uma seção ou um link.
-
-**`habits`** e **`habitLogs`** (6): dias da semana, critério de feito e `objectiveId`; um registro por hábito e dia, com id `hábito:dia`, sim ou não.
-
-**`events`**: o histórico (seção 6 deste documento).
-
-**`meta`** e **`snapshots`**: configurações internas (pasta do backup, ou o arquivo escolhido antes das pastas, e data do último backup) e a cópia para desfazer uma importação. Não entram no backup.
+**Fora do backup:** `meta` (pasta do backup e data do último) e `snapshots` (a cópia para desfazer uma importação e a de antes de uma atualização do banco, ADR-059).
 
 ### Planejado
 
 | Fase | Mudança |
 | --- | --- |
-| 3 | Tabela `muralPhrases`: texto e frequência (`low`, `medium` ou `high`). As frases escolhidas para o dia (abertura e 13h) ficam em `days`. Espera a pergunta em aberto do mural |
+| 3 | Tabela `muralPhrases`: texto e frequência; as frases do dia ficam em `days`. Espera a pergunta em aberto do mural |
 | 5 | `blocks.kind = 'appointment'`, com `appointmentAt` e `migratedAt` |
 
-### Mudanças de esquema
+## 5. Histórico de eventos
 
-Cada mudança no esquema sobe a versão do banco no Dexie (`infrastructure/db.ts`) e a `BACKUP_SCHEMA_VERSION`, que andam juntas, e o `parseBackup` aprende a converter backups antigos (`upgradeTables`). Uma migração que transforma dados, como a da versão 6, usa uma função pura do domínio, testada sem banco. Cada versão tem a sua ADR (016, 019, 022, 025, 035, 038, 049 e 052).
+- Cada mudança estrutural grava um evento: `type`, `entityType`, `entityId`, `at`, `day` e `data`. A lista completa está em `src/domain/events.ts`.
+- **Só acrescentar.** Os eventos nunca são editados nem apagados; a gravação usa `add`. A exceção é importar um backup ou desfazer a importação, que substituem o histórico inteiro e deixam `backup.imported` ou `backup.importUndone` no histórico novo (ADR-006).
+- **Editar o texto de um bloco não gera evento** (ADR-004); criar, apagar e mudar o tipo geram.
+- **Exclusões deixam rastro:** um bloco apagado ou um recurso removido sai da tabela, mas deixa `block.deleted` ou `resource.removed`. É assim que o backup automático distingue um registro apagado de um perdido (seção 7).
+- **Formato dos detalhes:** cada tipo tem o seu `data` em `EventData`, e `record` só aceita esse formato. Um formato já gravado nunca muda: os antigos ficam em `LegacyEventData`, e uma mudança incompatível sobe a versão do evento (`v`, ausente = 1). Quem lê confere o valor, porque um backup importado pode trazer qualquer coisa (ADR-043).
+- **Adiamento:** gera `task.postponed` e soma 1 em `postponeCount` quando a data de intenção muda para depois, ou quando "Fechar dias pendentes" devolve a tarefa sem data. A tarefa deixada sem mexer no "Fechar o dia" fica sem data e sem contar adiamento.
+- **Métricas** são funções puras do domínio sobre os eventos de um período; uma métrica nova não exige migração.
 
-## 5. Consultas derivadas (implementado)
+## 6. Migrações
 
-Nada disso é guardado: é calculado a partir das tabelas, por funções de `application/queries.ts` que leem pelo `Reader` e passam os dados ao domínio.
+As regras completas estão na ADR-059. Em resumo:
 
-| Visão | Como é montada |
-| --- | --- |
-| Nota do dia | Seções com `day` igual ao dia, mais as tarefas `active` com `intendedDate` igual ao dia, na seção "De outros dias", que só existe na tela. A tarefa não é copiada; ela só aparece ali. Depois de fechar hoje, a nota de hoje mostra só o que foi escrito depois de `days.lastCheckoutAt` e as tarefas com a data de hoje (`isShownAfterClosing`, `domain/dayNote.ts`); os dias passados mostram tudo. As partes (seções, "De outros dias" e prioridades) seguem `days.sectionOrder` por `orderDayParts` (`domain/order.ts`, ADR-040) |
-| Dia pendente | Tem tarefa com `lastTriagedDay` anterior ao dia, ou seção sem destino |
-| Tarefas (não concluídas, concluídas ou todas) | Blocos `task` por `status` (`active` e `done`) |
-| Notas de um projeto | Seções do projeto com `notesDestination = 'wiki'`, cada entrada com as notas da seção, da mais recente para a mais antiga (`loadSectionNotes`) |
-| Projeto | Seções, tarefas e notas com o `projectId` dele, agrupadas em travadas, próximos dias, sem data e feitas |
-| Lista de projetos | Projetos por status, projetos em foco e mapa de atividade calculado dos eventos (ADR-034) |
-| Tela "Rituais" | Dias pendentes e dias com nota do mês, para o calendário (`domain/ritualsCalendar.ts`, ADR-053) |
-| "Assistentes" (antes "Colocar ordem na casa") | Contagens de cada assistente e a cor pela idade do item mais antigo, com os limites das configurações (ADR-045); em "Tarefas esquecidas", a cor pela quantidade (`COUNTED_ASSISTANTS`), e o quadro do "Fechar o dia" (`BoardStep`) reaproveitado com `onSave`, que grava sem marcar as tarefas como triadas |
-| Abertura do dia | Etapa do dia (iniciar, warm up, dashboard, execução) e lembretes vencidos (ADR-023) |
+- A versão do banco (`infrastructure/db.ts`) e a `BACKUP_SCHEMA_VERSION` andam juntas. Cada `upgrade` do Dexie tem o seu gêmeo em `upgradeTables` (`application/backup.ts`), para um backup antigo importar para o mesmo resultado, e cada um tem teste a partir da versão anterior.
+- Antes de mudar qualquer linha, o `upgrade` copia as tabelas para `snapshots` (`beforeUpgrade`).
+- Uma versão só acrescenta tabelas, índices ou campos opcionais. Remover ou renomear um campo leva duas versões. Um evento nunca muda de sentido; um formato novo é um tipo novo.
+- Um banco mais novo que o código fecha o app com "O app foi atualizado"; nunca se volta uma versão do banco.
+- Uma migração que transforma dados usa uma função pura do domínio, testada sem banco, e não grava eventos (ADR-049, ADR-060).
 
-## 6. Histórico de eventos (implementado)
+## 7. Backup
 
-- Cada mudança estrutural grava um evento: `id`, `type`, `entityType`, `entityId`, `at` (horário), `day` (dia a que pertence) e `data` (detalhes, como `{ from, to }`).
-- Os eventos são só acrescentados, nunca editados nem apagados. A gravação usa `add`, então um evento existente não pode ser sobrescrito. A exceção é importar um backup ou desfazer a importação, que substituem o histórico inteiro. Cada uma deixa um evento no histórico que põe no lugar, `backup.imported` ou `backup.importUndone`, para o histórico mostrar que os dados vieram de um arquivo (ADR-006).
-- Editar o texto de um bloco não gera evento (ADR-004).
-- Campos como `postponeCount` são atalhos que dá para recalcular a partir do histórico.
-- **Exclusões.** Um bloco apagado (linha esvaziada ou juntada com a de cima) e um recurso removido saem da tabela, mas deixam `block.deleted` e `resource.removed` no histórico. É por esses eventos que o backup automático sabe que um registro ausente foi apagado de propósito e não perdido (seção 10).
-
-**Tipos** (a lista completa está em `src/domain/events.ts`):
-
-| Área | Eventos |
-| --- | --- |
-| Blocos e tarefas | criado, apagado, tipo trocado, vinculado a projeto; data de intenção e prazo trocados, adiada, feita, reaberta, abandonada (arquivada e reativada só no histórico antigo, ADR-049), convertida em hábito; deixada para a Revisão de Foco só no histórico antigo (ADR-060) |
-| Seções | criada, título e detalhes trocados, vinculada a projeto, deixada ou mantida sem vínculo, notas guardadas no fim do dia, descartadas (só no histórico antigo), reabertas; deixadas para a Revisão de Foco só no histórico antigo (ADR-060) |
-| Projetos | criado, renomeado, ícone trocado, finalizado, reaberto, juntado, vinculado a objetivo |
-| Dia e rituais | dia iniciado, execução iniciada, item do warm up respondido, checkout concluído, prioridade adicionada e retirada (nos projetos em foco, com o motivo da retirada e o projeto que saiu numa troca), configuração trocada; revisão fechada só no histórico antigo (ADR-060) |
-| Lembretes | criado, respondido, adiado |
-| Objetivos e recursos | objetivo criado, atualizado, finalizado e reaberto; recurso adicionado, renomeado e removido |
-| Hábitos | criado, atualizado, arquivado, registrado |
-
-**Planejado:** compromisso migrado (5).
-
-**Formato dos detalhes.** Cada tipo de evento tem o formato do seu `data` em `EventData` (`src/domain/events.ts`), e `record` só aceita esse formato: um campo com nome errado não compila. Os formatos que o app gravou antes e não grava mais ficam em `LegacyEventData`, e quem lê trata os dois. Um formato já gravado nunca muda; uma mudança incompatível sobe a versão do evento (`v`, ausente quer dizer 1). Como um backup importado de arquivo pode trazer qualquer coisa, quem lê um campo ainda confere o valor (ADR-043).
-
-### Adiamento
-
-Um adiamento gera `task.postponed` e soma 1 em `postponeCount`. Ele acontece em dois casos:
-
-1. A data de intenção muda para depois.
-2. As tarefas que o "Fechar dias pendentes" devolve sem data. No "Fechar o dia", a tarefa deixada sem mexer vai para a lista sem data e sem contar adiamento; o "sem data" escolhido conta pelo caso 1.
-
-Reativar uma tarefa arquivada limpa a data sem contar adiamento (ADR-015).
-
-## 7. Editor de blocos (implementado)
-
-- É um editor próprio, com um campo de texto por bloco (`ui/dayNote/BlockLine.tsx`), e não um editor de documento único como TipTap ou ProseMirror. Ele precisa respeitar a regra de um registro por bloco.
-- **Enter** cria um bloco logo abaixo, com uma `position` entre os vizinhos. **Backspace** no começo de uma linha transforma uma tarefa em nota; numa nota, junta com a linha de cima da mesma seção, ou apaga o bloco se ele estiver vazio e for o primeiro da seção.
-- A primeira seção do dia existe só na tela até alguém escrever nela (ADR-013).
-- O tipo do bloco é detectado por uma lista de detectores no domínio (`domain/blockKind.ts`), testados em ordem. O primeiro que reconhece o texto decide o tipo, e o que nenhum reconhece vira nota. Hoje há um detector só (`[] ` vira tarefa). A seção 5 acrescenta o de compromisso, sem mexer no editor. Uma correção manual do tipo, que é pergunta em aberto da seção 5, vira um campo que tem prioridade sobre os detectores.
-- **Reordenar** (ADR-040): a alça de cada linha e de cada parte usa eventos de ponteiro (`ui/dayNote/lineDrag.ts`), para funcionar também com o dedo. Alt + ↑/↓ move a linha e Ctrl + Shift + ↑/↓ move a parte. Mover uma linha grava só a `position` dela entre as vizinhas; mover uma parte grava a lista do dia em `days.sectionOrder`. A nova ordem aparece antes de ser gravada e sai da fila de escrita depois das gravações já pedidas.
-- **Modo foco** (ADR-046): a parte em foco fica nas configurações (`dayNoteFocus`), com a chave que a nota já usa para ordenar as partes. Com ela, `App` mostra a nota daquele dia só com a parte, sem as telas de abertura e sem avisos, mesmo depois da meia-noite. Entrar e sair é uma View Transition (`ui/dayNote/focusTransition.ts`, ADR-051): a parte leva o mesmo `view-transition-name` nas duas telas, e a troca espera a tela mostrar o foco novo, até 800 ms. Sem View Transitions, fica o fade em CSS.
-- **Seleção de linhas** (ADR-051): como cada linha é um campo de texto, a seleção do navegador não passa de uma linha para outra. `ui/dayNote/useLineSelection.ts` seleciona as linhas inteiras: arrastar o ponteiro até outra linha, Shift + clique ou o segundo Ctrl + A. Enquanto há linhas selecionadas, a nota (`.note`, com `tabIndex=-1`) fica com o foco e recebe as teclas. A ordem das linhas vem do DOM, para valer também no modo foco. Apagar usa `deleteBlock`, só nas linhas livres.
-- **Digitação rápida** (ADR-014): uma linha nova aparece na tela antes de ser gravada, e as gravações do editor rodam uma depois da outra numa fila (`ui/writeQueue.ts`), para que salvar o texto nunca procure um bloco que ainda está sendo criado. Importar um backup e desfazer a importação passam pela mesma fila, depois das gravações já pedidas, para uma linha salva ao perder o foco não ser gravada por cima dos dados importados.
-- O texto é salvo 400 ms depois da última tecla, ao perder o foco e ao sair da tela, sem gerar evento. A criação, a exclusão e a mudança de tipo geram evento.
-- Fora do editor (página do projeto, listas, checkout), links no texto viram `<a target="_blank" rel="noopener noreferrer">`, só para `http` e `https`, e o texto nunca é inserido como HTML (`google-safe.md`).
-- **Markdown** (ADR-048): o texto do bloco guarda o Markdown cru, sem campo novo no banco. `ui/dayNote/markdown.ts` tem funções puras que leem a linha (cabeçalho, item de lista, negrito, itálico, links) e que a editam (`applyFormat`, com texto e seleção). Fora do cursor, `BlockLine` mostra a linha formatada (`MarkdownText`, só elementos React) e esconde o campo de texto, que continua lá para receber o foco. Num item de lista, o campo guarda só o texto depois do marcador, que é desenhado ao lado mesmo com o cursor na linha (ADR-051); cursores e seleções continuam contados na linha inteira, e `BlockLine` e `useFocusTarget` descontam o marcador. A barra de formatação no cabeçalho da seção manda um evento DOM (`line-format`) para a linha com o cursor, que aplica o formato como se fosse digitação. Links formatados só abrem `http`, `https` e `mailto`.
-
-## 8. Checkout e auto-triagem (implementado)
-
-- A auto-triagem é uma função pura no domínio (`domain/triage.ts`). Ela recebe um dia (seções, blocos e projetos) e devolve as decisões automáticas (notas guardadas, quadros brancos sem vínculo, tarefas resolvidas durante o dia), as tarefas que pedem decisão (abertas, sem data futura, e as aguardando) e a lista das tarefas abertas na ordem da nota, seguindo `spec/checkout.md`. Nenhuma tarefa muda de data sozinha. `defaultClosingDecisions` (`application/checkout.ts`) transforma isso nas decisões que o fechamento grava quando nada é mudado: "sem data" marcado como `untouched`, que não conta adiamento, e "deixar como está" para as aguardando.
-- A tela do "Fechar o dia" (no código, ainda `checkout`) é feita de etapas (`domain/checkoutSteps.ts` decide quais existem e a ordem; cada etapa é um componente em `ui/checkout/`). Ela carrega a triagem como uma foto, para que nada mude enquanto a pessoa escolhe, e cada etapa grava só as suas decisões com `applyTriage`, numa transação, ao avançar. Na etapa "Tarefas", cada ação em lote grava na hora e a tela relê a triagem sem sair da etapa; ao seguir, as sugestões que sobram e as decisões automáticas são gravadas numa transação só (ADR-012). Depois de gravar, a tela relê a triagem e pula as etapas que ficaram vazias (ADR-044). "Finalizar meu dia" grava de novo o que ainda estiver em aberto antes de marcar o dia como fechado, e volta para a origem guardada na rota (`#/checkout/<dia>/rituais` volta para "Rituais").
-- O planejamento é um quadro de 3 colunas: `planningColumns` (`domain/checkoutSteps.ts`) decide as colunas (atrasadas, hoje quando tem tarefa, o dia seguinte e os dias depois dele) e `planningColumnOf` a coluna de cada tarefa. Ele grava a data de cada tarefa mudada (`applyPlanning`), inclusive das já agendadas; arrastar um card, mudar o campo dele e a seleção em lote só existem na tela, até "Finalizar meu dia".
-- "Fechar dias pendentes" usa a mesma função para vários dias. A diferença é que as tarefas não feitas voltam sem data.
-- O mesmo mecanismo de lote serve aos assistentes de limpeza (`spec/assistentes.md`): cada assistente só fornece a busca (`domain/assistants.ts`) e as ações (`application/assistants.ts`). A sugestão de vincular uma seção solta a um projeto citado no texto dela mora em "Seções soltas", que recebe o texto das seções.
-- Editar, apagar e vincular como recurso as notas de um dia fechado acontecem na aba "Notas" da página do projeto (`updateBlockText`, `splitKeptNote`, `mergeKeptNote`, `deleteKeptNote` e `linkSectionNotesAsResource`), porque as notas não passam mais pelo fechamento. Não existe wiki (ADR-050).
-- "Dia seguinte" num checkout atrasado é o próximo dia ativo depois do dia triado, mas nunca antes de hoje.
-- A triagem segue a ordem da nota do dia: as partes por `days.sectionOrder` e as tarefas de outros dias por `carriedOrder` (ADR-040).
-
-## 9. Métricas (implementado em parte)
-
-- São funções puras no domínio que recebem os eventos de um período (`projectActivity.ts`, `habits.ts`). Ficam testáveis sem banco, e uma métrica nova não exige migração.
-- O report de métricas da Revisão de Foco e o raio-x da Revisão de Rumo saíram com as revisões (ADR-060). Os eventos que eles liam continuam no histórico, então dá para calculá-los de novo se voltarem.
-- O volume de dados de uma pessoa é pequeno o bastante para calcular tudo no navegador. A lista de projetos é o primeiro ponto onde isso já pesa (issue [#81](https://github.com/Valerieps/best-app/issues/81)).
-
-| Fase | Métricas | Função |
-| --- | --- | --- |
-| 2 | Atividade por dia de cada projeto (ADR-033, ADR-034) | `projectActivity.ts` |
-| 6 | Maior sequência de um hábito, percentual de completude | `habits.ts` |
-
-## 10. Backup e segurança (implementado)
-
-- **Backup automático** numa pasta escolhida pela pessoa, com cópias datadas na subpasta `copias` (ADR-047; as regras ficam em `application/backupCopies.ts`). A pasta é escolhida antes de o app abrir, numa tela sem como pular (ADR-056). O arquivo `best-app-backup.json` é regravado conforme a frequência das configurações: no padrão, 3 segundos depois da última mudança e ao esconder ou fechar a aba; com 15 minutos ou uma hora, uma vez por intervalo, contando da primeira mudança, e o que faltou é gravado ao abrir o app (ADR-056). Antes de cada gravação, o app lê o arquivo e não grava por cima de dados que o navegador não tem (ADR-008): eventos que só o arquivo tem, registros em versão mais nova no arquivo, ou registros que sumiram do navegador sem um evento de exclusão.
-- **Importar** substitui tudo, com aviso em destaque do que vai se perder e uma cópia para desfazer, gravada na mesma transação (ADR-006).
-- **CSP** com `connect-src 'none'` no build de produção (ADR-009). O `src/security.test.ts` procura no código chamadas de rede e inserção de HTML.
-- **Offline** pelo service worker, que só guarda os arquivos do próprio app (ADR-010).
-- **Armazenamento persistente** é pedido ao Chrome ao abrir o app; se ele negar, o app só avisa.
-
+- **Automático,** numa pasta obrigatória escolhida pela pessoa, com cópias datadas na subpasta `copias` (ADR-047, ADR-056).
+- **Nunca grava por cima de dados que o navegador não tem** (ADR-008): antes de gravar, o app lê o arquivo e para se ele tem eventos que o navegador não tem, registros numa versão mais nova, ou registros que sumiram do navegador sem um evento de exclusão.
+- **Importar substitui tudo,** com aviso do que vai se perder e uma cópia para desfazer, gravada na mesma transação (ADR-006).
+- **Offline** pelo service worker, que só guarda os arquivos do próprio app (ADR-010). A CSP fica no build de produção (ADR-009).

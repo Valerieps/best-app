@@ -86,7 +86,7 @@ interface Props {
   notesOnly?: boolean;
 }
 
-/** Hint on an empty line, shown only while the line is being written (P3 in AVALIACAO-UX.md). */
+/** Hint on an empty line, shown only while the line is being written (P3 in the UX review of 2026-10-12, issue #19). */
 export const NOTE_HINT = 'Escreva, ou comece com [] e espaço para criar uma tarefa';
 
 /** A hidden date field opened by a button: a shortcut, or the chip of a date already set. */

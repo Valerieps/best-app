@@ -24,7 +24,7 @@ A spec é a fonte da verdade do produto. Este arquivo é o índice: as regras fi
 | [`spec/habitos.md`](spec/habitos.md) | Hábitos e onde eles entram nos flows |
 | [`spec/assistentes.md`](spec/assistentes.md) | A tela "Rituais": calendário dos dias sem fechamento e os "Assistentes" de limpeza |
 
-Os termos estão definidos em `GLOSSARIO.md`, e o porquê das decisões, em `DECISOES.md`.
+Os termos estão definidos em `GLOSSARIO.md`.
 
 ## Como ler
 

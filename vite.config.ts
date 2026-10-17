@@ -5,7 +5,7 @@ import type { Plugin } from 'vite';
 import { defineConfig } from 'vitest/config';
 import react from '@vitejs/plugin-react';
 
-// Strict CSP from google-safe.md, plus object-src/base-uri/form-action hardening.
+// Strict CSP from SEGURANCA.md, plus object-src/base-uri/form-action hardening.
 // Injected only in production builds: the dev server needs a websocket for hot reload,
 // which `connect-src 'none'` would block.
 export const CONTENT_SECURITY_POLICY = [

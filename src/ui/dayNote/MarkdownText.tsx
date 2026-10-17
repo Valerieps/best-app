@@ -51,7 +51,7 @@ export function ListMarker({ list }: { list: ListItem }) {
 
 /**
  * A line's Markdown shown formatted, while the line is not being edited. The text is rendered as
- * React elements, never as HTML (google-safe.md).
+ * React elements, never as HTML (SEGURANCA.md).
  */
 export function MarkdownText({ text }: { text: string }) {
   const people = usePeople();

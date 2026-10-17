@@ -1,5 +1,5 @@
 /**
- * Line icons drawn inline, so nothing is downloaded (google-safe.md). Paths are on a 24 × 24
+ * Line icons drawn inline, so nothing is downloaded (SEGURANCA.md). Paths are on a 24 × 24
  * grid, in the style of Tabler Icons (MIT).
  */
 const PATHS = {

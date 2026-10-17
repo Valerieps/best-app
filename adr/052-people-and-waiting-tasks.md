@@ -1,5 +1,6 @@
 # ADR-052: People are records, mentions are read from the text, and a waiting task reuses the intended date
 
+**Status:** Accepted
 **Date:** 2026-10-15
 **Decision:** A person (`spec/pessoas.md`) is a record of its own in a new `people` table (`id`, `name`, `status` `active` | `archived` | `merged`, `mergedInto`), which takes database and backup version 9. A mention is not stored apart: `@Nome` stays in the block's `text`, and `domain/people.ts` reads it every time (one word of letters, digits and `_`, after the start or a character that cannot be part of a name, so an e-mail is no mention; case-insensitive, accent-sensitive). Renaming or merging people rewrites the text of every line that cites them, found by `blocksWithMentions()` (every block whose text has an `@`), with no event per line (ADR-004). A task's person is the first person it cites. People are created when I leave a line, or choose "Criar a pessoa…", never on each save, so a half-typed name never becomes a person; only names typed since the line got the focus are created, so a deleted person does not come back by just clicking an old line.
 

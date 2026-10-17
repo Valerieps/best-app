@@ -10,5 +10,6 @@ vite.config.js
 backup*.json
 best-app-backup*.json
 
-# Security guidelines stay local only: they describe where the app is used.
+# The context of where the app is used stays local only (the rules are in SEGURANCA.md).
 google-safe.md
+google-safe.md.bak
