@@ -14,7 +14,7 @@ export type SidebarPlace =
 
 /**
  * Which place of the sidebar is marked as current. A project page belongs to "Projetos", and the
- * rituals opened from the "Rituais" screen (a closing, a review, an assistant) belong to it.
+ * rituals opened from the "Rituais" screen (a closing, an assistant) belong to it.
  */
 export function sidebarPlace(route: Route): SidebarPlace {
   switch (route.name) {
@@ -25,8 +25,6 @@ export function sidebarPlace(route: Route): SidebarPlace {
     case 'person':
       return 'people';
     case 'checkout':
-    case 'focusReview':
-    case 'directionReview':
       return 'rituals';
     default:
       return route.name;

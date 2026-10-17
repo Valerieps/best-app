@@ -20,15 +20,12 @@ export type TaskDecision =
    */
   | { kind: 'undate'; untouched?: boolean }
   | { kind: 'abandon' }
-  /** Section 2: "decidir na reflexão semanal". */
-  | { kind: 'reflection' }
   /** Section 6: the task becomes a habit. */
   | { kind: 'habit' }
   /** A waiting task stays as it is, without a new follow-up date (spec/pessoas.md). */
   | { kind: 'keep' };
 
-/** `weeklyReflection` (section 2) leaves the notes for the weekly reflection. */
-export type NotesDecision = 'wiki' | 'discarded' | 'weeklyReflection';
+export type NotesDecision = 'wiki' | 'discarded';
 
 export type WhiteboardDecision =
   | { kind: 'leaveUnlinked' }
@@ -44,17 +41,6 @@ export interface TaskRow {
   /** Postponed too often, or with a deadline before "dia seguinte": highlighted, never moved. */
   attention: boolean;
 }
-
-export interface NotesRow {
-  type: 'notes';
-  section: Section;
-  noteCount: number;
-  suggestion: NotesDecision;
-  attention: false;
-}
-
-/** Notes rows exist only in the Revisão de Foco, for notes deferred to it before the closing shrank. */
-export type TriageRow = TaskRow | NotesRow;
 
 /**
  * What the app settles on its own. Notes and whiteboards no longer pass through the closing (the

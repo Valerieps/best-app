@@ -1,4 +1,3 @@
-import type { ReviewAvailability } from '../application/reviewQueries';
 import type { Route } from './hooks';
 
 /**
@@ -10,9 +9,6 @@ export const FEATURES: { objectives: boolean; habits: boolean } = {
   habits: false,
 };
 
-/** The Revisão de Rumo revolves around the objectives, so it is shown only with them. */
-export const directionReviewEnabled = (): boolean => FEATURES.objectives;
-
 /** The route to show: a hidden feature's screen opens the day note instead. */
 export function enabledRoute(route: Route): Route {
   switch (route.name) {
@@ -21,15 +17,7 @@ export function enabledRoute(route: Route): Route {
       return FEATURES.objectives ? route : { name: 'day' };
     case 'habits':
       return FEATURES.habits ? route : { name: 'day' };
-    case 'directionReview':
-      return directionReviewEnabled() ? route : { name: 'day' };
     default:
       return route;
   }
-}
-
-/** Review availability without the hidden reviews, for the "Rituais" counter and the notice. */
-export function visibleReviews(availability: ReviewAvailability | undefined): ReviewAvailability | undefined {
-  if (!availability || directionReviewEnabled()) return availability;
-  return { ...availability, direction: [] };
 }

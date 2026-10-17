@@ -134,7 +134,7 @@ export function normalizeForgottenTaskDays(days: number | null | undefined): num
 /**
  * "Tarefas esquecidas": open tasks without an intended date created `days` days ago or more,
  * the oldest first. Age counts from creation, not from when the date was removed. Tasks waiting
- * for someone and tasks left for a review count too (spec/assistentes.md).
+ * for someone count too (spec/assistentes.md).
  */
 export function findForgottenTasks(tasks: readonly Block[], today: DayKey, days: number): Block[] {
   return tasks

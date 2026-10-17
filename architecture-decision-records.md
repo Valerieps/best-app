@@ -46,10 +46,10 @@ Read only the ADRs your task touches: find them in this table or by grepping `ad
 | [ADR-035](adr/035-priority-projects-belong-to-the-week-database-and.md) | Priority projects belong to the week; database and backup version 6 | 2026-10-12 | Superseded by ADR-038 |
 | [ADR-036](adr/036-the-project-list-remembers-its-open-groups-in-the.md) | The project list remembers its open groups in the settings | 2026-10-12 | Accepted |
 | [ADR-037](adr/037-the-sidebar-remembers-whether-it-is-collapsed-in-the.md) | The sidebar remembers whether it is collapsed in the settings | 2026-10-12 | Accepted |
-| [ADR-038](adr/038-a-single-list-of-projects-in-focus-database-and.md) | A single list of projects in focus; database and backup version 7 | 2026-10-12 | Accepted |
-| [ADR-039](adr/039-reviews-without-a-calendar-open-record-cadence-and.md) | Reviews without a calendar: open record, cadence and signals | 2026-10-12 | Accepted |
+| [ADR-038](adr/038-a-single-list-of-projects-in-focus-database-and.md) | A single list of projects in focus; database and backup version 7 | 2026-10-12 | Accepted, updated by ADR-060 |
+| [ADR-039](adr/039-reviews-without-a-calendar-open-record-cadence-and.md) | Reviews without a calendar: open record, cadence and signals | 2026-10-12 | Superseded by ADR-060 |
 | [ADR-040](adr/040-reordering-lines-and-day-parts-without-events.md) | Reordering lines and the parts of a day, without events or a schema version | 2026-10-13 | Accepted |
-| [ADR-041](adr/041-objectives-and-habits-hidden-behind-a-code-flag.md) | Objectives and habits hidden behind a code flag | 2026-10-13 | Accepted |
+| [ADR-041](adr/041-objectives-and-habits-hidden-behind-a-code-flag.md) | Objectives and habits hidden behind a code flag | 2026-10-13 | Accepted, updated by ADR-060 |
 | [ADR-042](adr/042-screens-fail-alone-and-queries-report-errors.md) | Screens fail alone, and live queries report their errors | 2026-10-13 | Accepted |
 | [ADR-043](adr/043-typed-event-details-with-legacy-shapes-and-version.md) | Typed event details, with legacy shapes and a version | 2026-10-14 | Accepted |
 | [ADR-044](adr/044-the-checkout-saves-each-step-when-moving-on.md) | The checkout saves each step when moving on | 2026-10-14 | Accepted |
@@ -68,3 +68,4 @@ Read only the ADRs your task touches: find them in this table or by grepping `ad
 | [ADR-057](adr/057-ctrl-k-place-palette.md) | Ctrl + K place palette; the day note keeps Ctrl + K for links | 2026-10-16 | Accepted |
 | [ADR-058](adr/058-ci-build-on-pull-requests.md) | CI runs the build on pull requests; no dev branch | 2026-10-16 | Accepted |
 | [ADR-059](adr/059-safe-database-upgrades.md) | Safe database upgrades: snapshot, version gate, no rollback | 2026-10-16 | Accepted |
+| [ADR-060](adr/060-reviews-removed-database-and-backup-version-10.md) | The reviews are removed; database and backup version 10 | 2026-10-17 | Accepted |

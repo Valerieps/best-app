@@ -14,7 +14,7 @@ import { Simulation } from './simulation';
  *   free slot. "Festa de fim-de-ano" has had no
  *   activity for 22 days, so it shows as stalled.
  * - Pending days: the last 3 days have no checkout. Day -3 has a task postponed 3 times
- *   (attention, "decidir na Revisão de Foco") and a whiteboard that cites a project (link
+ *   (attention, "sem data") and a whiteboard that cites a project (link
  *   suggestion); day -2 has a task whose deadline passed; day -1 has a whiteboard with notes.
  * - Whiteboards assistant: "Daily do App de agendamento" left unlinked 3 times (link),
  *   "Ideias de decoração" twice (convert), "Orçamentos marcenaria" twice with different
@@ -23,10 +23,8 @@ import { Simulation } from './simulation';
  * - Duplicates assistant: "Reforma da cozinha" / "Reforma da cosinha" (typo), "Festa de fim de
  *   ano" / "Festa de fim-de-ano" (punctuation), and "Sprint 41" / "Sprint 42", a false
  *   positive for "Manter separados". The finished "Sprint 40" stays out.
- * - Revisão de Foco: available, since there was none and dozens of checkouts were done; a task
- *   left for it and the notes of a retrospective.
- * - Active tasks without a date for weeks, for the future stale tasks assistant, among them
- *   ideas left for some day 31, 10 and 5 days ago.
+ * - Active tasks without a date for weeks, for the "Tarefas esquecidas" assistant, among them
+ *   a countertop quote postponed too often and ideas left for some day 31, 10 and 5 days ago.
  * - Today: a task planned for today as a priority, and a task whose deadline is today.
  * - People (spec/pessoas.md): Ana, Rafael, Jorge, Paula and Marcão, cited with `@`. Rafael owes
  *   an estimate to follow up today, Jorge a schedule in 3 days, and Ana and Paula things with
@@ -211,7 +209,7 @@ export async function buildSyntheticData(now: Date, ids: IdGenerator): Promise<S
   );
   await sim.checkout();
 
-  // Day -24: the countertop quote was postponed 3 times and goes to the Revisão de Foco.
+  // Day -24: the countertop quote was postponed 3 times and goes back to the task list, without a date.
   sim.on(-24);
   await sim.keepWhiteboard(groceries);
   await sim.done(availabilityApi, barbecue);
@@ -362,7 +360,7 @@ export async function buildSyntheticData(now: Date, ids: IdGenerator): Promise<S
   await englishClass('Inglês: small talk', 'Small talk antes de reunião: clima, viagem, fim de semana.');
   await sim.checkout({ tasks: [[calendarSync, { kind: 'undate' }]] });
 
-  // Day -8: the retrospective goes to the Revisão de Foco; a review is planned for today.
+  // Day -8: the retrospective notes are kept; a code review is planned for today.
   sim.on(-8);
   await sim.done(reminderEmail);
   const retro = await sim.section('meeting', 'Retrospectiva da sprint 40', team);
@@ -377,10 +375,7 @@ export async function buildSyntheticData(now: Date, ids: IdGenerator): Promise<S
   await sim.link(codeReview, app);
   const [cancellationReview] = await sim.write(codeReview, '[] Revisar o PR do fluxo de cancelamento');
   await sim.intend(cancellationReview, 0);
-  await sim.checkout({
-    notes: [[retro, 'weeklyReflection']],
-    tasks: [[apiDocs, { kind: 'schedule', date: sim.day(-4) }]],
-  });
+  await sim.checkout({ tasks: [[apiDocs, { kind: 'schedule', date: sim.day(-4) }]] });
 
   // Day -7: sprint 42 and the party invitations, with a deadline.
   sim.on(-7);
@@ -482,7 +477,7 @@ export async function buildSyntheticData(now: Date, ids: IdGenerator): Promise<S
     '[] Alugar a tenda',
   );
 
-  // Today: the week's plan, with the planned review as a priority.
+  // Today: the week's plan, with the planned code review as a priority.
   sim.on(0);
   const week = await sim.section('general', 'Planejamento da semana');
   const [, dishes] = await sim.write(

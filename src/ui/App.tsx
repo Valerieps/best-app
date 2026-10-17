@@ -21,11 +21,7 @@ import { useDueReminders, useReminderSignals } from './opening/Reminders';
 import { ProjectsScreen } from './projects/ProjectListScreen';
 import { ProjectScreen } from './projects/ProjectScreens';
 import { PeopleScreen, PersonScreen } from './people/PeopleScreens';
-import { loadReviewAvailability } from '../application/reviewQueries';
-import { backupNoticeLevel, needsBackupSetup, pickTopNotice, useReviewSnooze, useSnoozedNotices } from './notices';
-import { DirectionReviewScreen } from './reviews/DirectionReviewScreen';
-import { FocusReviewScreen } from './reviews/FocusReviewScreen';
-import { isReviewSnoozed, pickReviewNotice } from './reviews/reviewNotice';
+import { backupNoticeLevel, needsBackupSetup, pickTopNotice, useSnoozedNotices } from './notices';
 import { autoBackup, db, reader } from './services';
 import { SettingsScreen } from './settings/SettingsScreen';
 import { Sidebar } from './Sidebar';
@@ -35,7 +31,7 @@ import { ErrorBoundary } from './components/ErrorBoundary';
 import { ScreenError } from './components/ErrorScreens';
 import { SaveErrorNotice } from './components/SaveErrorNotice';
 import { reportSaveError } from './saveErrors';
-import { enabledRoute, visibleReviews } from './features';
+import { enabledRoute } from './features';
 import { applyAppearance, parseAppearance } from './theme/appearance';
 
 export function App() {
@@ -94,16 +90,12 @@ export function App() {
   useReminderSignals(dueReminders.length);
   // One warning at a time at the top; reminders that came back are not in this queue.
   const [snoozed, snooze] = useSnoozedNotices(today);
-  const reviews = visibleReviews(useLiveQueryState(() => loadReviewAvailability(reader, today), [today]).value);
-  const [reviewSnoozedAt, snoozeReview] = useReviewSnooze();
-  const reviewNotice = isReviewSnoozed(reviewSnoozedAt, reviews?.lastCheckoutAt ?? null) ? null : pickReviewNotice(reviews);
   const backupLevel = backupNoticeLevel(backupState, hasData, lastBackupAt, new Date());
   const notice = pickTopNotice({
     backup: backupLevel,
     pendingCheckout: onToday && stage === 'execution' && pendingDays.length > 0,
     onDataScreen: route.name === 'data',
     snoozed,
-    reviewAvailable: onToday && stage === 'execution' && reviewNotice !== null,
   });
 
   // Nothing opens before there is a backup folder (spec/principios.md, "Primeiro uso").
@@ -117,7 +109,7 @@ export function App() {
 
   return (
     <div className="shell">
-      <Sidebar route={route} pendingDays={pendingDays} reviews={reviews} backupState={backupState} />
+      <Sidebar route={route} pendingDays={pendingDays} backupState={backupState} />
       <PlacePalette />
       <div className="shell__main">
         {!focus && (notice === 'backupProblem' || notice === 'backupSetup') && (
@@ -151,8 +143,6 @@ export function App() {
               reminders={dueReminders}
               showPendingNotice={notice === 'pendingCheckout'}
               onSnoozePending={() => snooze('pendingCheckout')}
-              reviewNotice={notice === 'reviewAvailable' ? reviewNotice : null}
-              onSnoozeReview={snoozeReview}
               focus={focus}
             />
           )}
@@ -161,7 +151,6 @@ export function App() {
           {route.name === 'rituals' && (
             <RitualsScreen today={today} assistant={route.assistant} pendingDays={pendingDays} />
           )}
-          {route.name === 'focusReview' && <FocusReviewScreen today={today} />}
           {route.name === 'projects' && <ProjectsScreen today={today} />}
           {route.name === 'project' && <ProjectScreen key={route.id} id={route.id} tab={route.tab ?? 'tasks'} today={today} />}
           {route.name === 'settings' && <SettingsScreen />}
@@ -170,7 +159,6 @@ export function App() {
           {route.name === 'objectives' && <ObjectivesScreen />}
           {route.name === 'objective' && <ObjectiveScreen id={route.id} />}
           {route.name === 'habits' && <HabitsScreen today={today} />}
-          {route.name === 'directionReview' && <DirectionReviewScreen today={today} />}
           {route.name === 'data' && (
             <main className="page">
               <ScreenHeader title="Dados e backup" />

@@ -29,8 +29,6 @@ export type Route =
   /** The "Rituais" screen, or one of its assistants when `assistant` is set. */
   | { name: 'rituals'; assistant?: AssistantId }
   | { name: 'data' }
-  /** Section 2: the Revisão de Foco, always the one in progress. */
-  | { name: 'focusReview' }
   | { name: 'projects' }
   /** `tab` opens the notes tab; omitted shows the tasks. */
   | { name: 'project'; id: string; tab?: 'notes' }
@@ -41,9 +39,7 @@ export type Route =
   /** Sections 4 and 6. */
   | { name: 'objectives' }
   | { name: 'objective'; id: string }
-  | { name: 'habits' }
-  /** Section 4: the Revisão de Rumo, always the one in progress. */
-  | { name: 'directionReview' };
+  | { name: 'habits' };
 
 /** Portuguese paths for the cleanup assistants, as the user reads them in the address bar. */
 const ASSISTANT_SLUGS: Record<AssistantId, string> = {
@@ -73,9 +69,12 @@ export function parseRoute(hash: string): Route {
     }
     case 'dados':
       return { name: 'data' };
+    // The reviews and the reflections before them are gone; their old addresses open "Rituais".
     case 'foco':
-    case 'reflexao': // the weekly reflection, before the reviews
-      return { name: 'focusReview' };
+    case 'reflexao':
+    case 'rumo':
+    case 'mes':
+      return { name: 'rituals' };
     case 'projetos':
       return { name: 'projects' };
     case 'projeto':
@@ -95,9 +94,6 @@ export function parseRoute(hash: string): Route {
       return parts[1] ? { name: 'objective', id: decodeURIComponent(parts[1]) } : { name: 'objectives' };
     case 'habitos':
       return { name: 'habits' };
-    case 'rumo':
-    case 'mes': // the monthly reflection, before the reviews
-      return { name: 'directionReview' };
     default:
       return { name: 'day' };
   }
@@ -115,8 +111,6 @@ export function routeHash(route: Route): string {
       return route.assistant ? `#/rituais/${ASSISTANT_SLUGS[route.assistant]}` : '#/rituais';
     case 'data':
       return '#/dados';
-    case 'focusReview':
-      return '#/foco';
     case 'projects':
       return '#/projetos';
     case 'project':
@@ -133,8 +127,6 @@ export function routeHash(route: Route): string {
       return `#/objetivo/${encodeURIComponent(route.id)}`;
     case 'habits':
       return '#/habitos';
-    case 'directionReview':
-      return '#/rumo';
   }
 }
 

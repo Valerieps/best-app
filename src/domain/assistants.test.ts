@@ -24,9 +24,9 @@ describe('forgotten tasks assistant', () => {
     expect(findForgottenTasks(tasks, today, 15).map((each) => each.text)).toEqual(['de 2026-09-01', 'de 2026-10-02']);
   });
 
-  it('counts tasks waiting for someone and tasks left for a review too', () => {
-    const tasks = [created('2026-09-01', { waiting: true }), created('2026-09-01', { awaitingReflection: true })];
-    expect(findForgottenTasks(tasks, today, 15)).toHaveLength(2);
+  it('counts tasks waiting for someone too', () => {
+    const tasks = [created('2026-09-01', { waiting: true })];
+    expect(findForgottenTasks(tasks, today, 15)).toHaveLength(1);
   });
 
   it('keeps the days a whole number from 1 up, 15 by default', () => {

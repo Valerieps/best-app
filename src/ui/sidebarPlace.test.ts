@@ -12,7 +12,5 @@ describe('sidebar place', () => {
     expect(sidebarPlace({ name: 'rituals' })).toBe('rituals');
     expect(sidebarPlace({ name: 'rituals', assistant: 'whiteboards' })).toBe('rituals');
     expect(sidebarPlace({ name: 'checkout', day: '2026-10-11' })).toBe('rituals');
-    expect(sidebarPlace({ name: 'focusReview' })).toBe('rituals');
-    expect(sidebarPlace({ name: 'directionReview' })).toBe('rituals');
   });
 });

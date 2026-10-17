@@ -211,7 +211,7 @@ export function ProjectScreen({ id, tab, today }: { id: string; tab: 'tasks' | '
                 <Icon name="star" size="sm" filled />
               </span>
             )}
-            <ProjectActionsMenu project={project} objectives={objectives} canAddToPriorities={view.canAddToPriorities} />
+            <ProjectActionsMenu project={project} objectives={objectives} focus={view} />
           </header>
 
 

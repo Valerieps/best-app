@@ -191,8 +191,8 @@ export class Simulation {
 
   /**
    * The day's checkout at 18:00, with some choices changed. Open tasks go to the next work day
-   * of the script, as a batch "dia seguinte" would, and the ones postponed too often wait for the
-   * Revisão de Foco.
+   * of the script, as a batch "dia seguinte" would, and the ones postponed too often go back to
+   * the task list, without a date.
    */
   async checkout(choices: CheckoutChoices = {}): Promise<void> {
     const day = this.day(this.offset);
@@ -205,7 +205,7 @@ export class Simulation {
     for (const row of triage.rows) {
       if (row.suggestion.kind !== 'undate') continue;
       const often = row.task.postponeCount >= POSTPONE_ATTENTION_THRESHOLD;
-      decisions.tasks.set(row.task.id, often ? { kind: 'reflection' } : { kind: 'schedule', date: next });
+      decisions.tasks.set(row.task.id, often ? { kind: 'undate' } : { kind: 'schedule', date: next });
     }
     for (const [task, decision] of choices.tasks ?? []) decisions.tasks.set(task.id, decision);
     for (const [section, decision] of choices.notes ?? []) decisions.notes.set(section.id, decision);

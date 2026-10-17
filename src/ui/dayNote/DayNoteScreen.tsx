@@ -51,8 +51,6 @@ import { SkeletonLines } from '../components/Skeleton';
 import { formatLongDate } from '../format';
 import { navigate } from '../hooks';
 import { RemindersBanner } from '../opening/Reminders';
-import { ReviewBanner } from '../reviews/ReviewBanner';
-import type { ReviewNotice } from '../reviews/reviewNotice';
 import { opensLineBelow } from './lineBelow';
 import { SectionHeader } from './SectionHeader';
 import { FormatToolbar } from './FormatToolbar';
@@ -70,10 +68,6 @@ interface Props {
   showPendingNotice?: boolean;
   /** "Lembrar depois" on the pending checkout band. */
   onSnoozePending?(): void;
-  /** The available review, when its band is the one warning shown now. */
-  reviewNotice?: ReviewNotice | null;
-  /** "Lembrar depois" on the review band. */
-  onSnoozeReview?(): void;
   /** Focus mode: only this part of the note shows, without the header or the notices. */
   focus?: DayNoteFocus | null;
 }
@@ -168,8 +162,6 @@ export function DayNoteScreen({
   reminders = [],
   showPendingNotice = false,
   onSnoozePending = () => {},
-  reviewNotice = null,
-  onSnoozeReview,
   focus = null,
 }: Props) {
   const isToday = day === today;
@@ -814,10 +806,9 @@ export function DayNoteScreen({
     <>
       <main className={`page page--note ${fromFocus ? 'page--from-focus' : ''}`}>
         {header}
-        {isToday && (showPendingNotice || reviewNotice || reminders.length > 0) && (
+        {isToday && (showPendingNotice || reminders.length > 0) && (
           <div className="screen-notices">
             {showPendingNotice && <PendingDaysBanner days={pendingDays} today={today} onSnooze={onSnoozePending} />}
-            {reviewNotice && <ReviewBanner notice={reviewNotice} onSnooze={() => onSnoozeReview?.()} />}
             <RemindersBanner reminders={reminders} />
           </div>
         )}

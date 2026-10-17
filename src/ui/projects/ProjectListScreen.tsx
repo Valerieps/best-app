@@ -86,7 +86,7 @@ export function ProjectsScreen({ today }: { today: DayKey }) {
                 <span className={`project-row__state ${item.stalledDays !== null ? 'project-row__state--warning' : ''}`}>
                   {item.stalledDays !== null ? `Parado há ${item.stalledDays} dias` : plural(item.activeTasks, 'ativa', 'ativas')}
                 </span>
-                <ProjectActionsMenu project={item.project} objectives={view.objectives} canAddToPriorities={item.canAddToPriorities} />
+                <ProjectActionsMenu project={item.project} objectives={view.objectives} focus={item} />
               </li>
             ))}
           </ul>
@@ -105,7 +105,7 @@ export function ProjectsScreen({ today }: { today: DayKey }) {
                 <span className="project-row__state">
                   {item.project.finishedAt ? `Finalizado em ${formatShortDate(toDayKey(new Date(item.project.finishedAt)))}` : 'Finalizado'}
                 </span>
-                <ProjectActionsMenu project={item.project} objectives={view.objectives} canAddToPriorities={false} />
+                <ProjectActionsMenu project={item.project} objectives={view.objectives} focus={item} />
               </li>
             ))}
           </ul>
@@ -124,7 +124,7 @@ function PriorityCard({ item, view, today }: { item: ProjectListItem; view: Proj
           <ProjectIconBadge project={project} size="md" />
           <span className="priority-card__label">{project.name}</span>
         </a>
-        <ProjectActionsMenu project={project} objectives={view.objectives} canAddToPriorities={false} />
+        <ProjectActionsMenu project={project} objectives={view.objectives} focus={item} />
       </header>
       <ActivityMap activity={item.activity} today={today} weeks={CARD_MAP_WEEKS} name={project.name} />
       <div className="priority-card__stats">

@@ -13,7 +13,6 @@ describe('routes', () => {
     { name: 'rituals', assistant: 'whiteboards' },
     { name: 'rituals', assistant: 'duplicates' },
     { name: 'data' },
-    { name: 'focusReview' },
     { name: 'projects' },
     { name: 'project', id: 'p-1' },
     { name: 'project', id: 'p-1', tab: 'notes' },
@@ -21,7 +20,6 @@ describe('routes', () => {
     { name: 'objectives' },
     { name: 'objective', id: 'o-1' },
     { name: 'habits' },
-    { name: 'directionReview' },
   ])('round-trips %o', (route) => {
     expect(parseRoute(routeHash(route))).toEqual(route);
   });
@@ -38,8 +36,7 @@ describe('routes', () => {
     expect(parseRoute('#/ordem/secoes-soltas')).toEqual({ name: 'rituals', assistant: 'whiteboards' });
   });
 
-  it('takes the old reflection links to the reviews', () => {
-    expect(parseRoute('#/reflexao/2026-W41')).toEqual({ name: 'focusReview' });
-    expect(parseRoute('#/mes/2026-09')).toEqual({ name: 'directionReview' });
+  it('takes the old review and reflection links to the "Rituais" screen', () => {
+    for (const hash of ['#/foco', '#/rumo', '#/reflexao/2026-W41', '#/mes/2026-09']) expect(parseRoute(hash)).toEqual({ name: 'rituals' });
   });
 });

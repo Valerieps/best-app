@@ -1,7 +1,7 @@
 # Abertura do dia e lembretes
 
-- **Entra aqui:** "Iniciar Dia", warm up, dashboard, mural e lembretes. *(3)*
-- **Não entra aqui:** o que acontece quando um ritual é pulado (`rituais.md`) e as perguntas que um lembrete ignorado vira no "Fechar o dia" (`checkout.md`).
+- **Entra aqui:** "Iniciar Dia", warm up, dashboard, mural, lembretes e o que acontece quando um ritual é pulado. *(3)* Os rituais pulados ficavam em `rituais.md`, que saiu junto com as revisões.
+- **Não entra aqui:** as perguntas que um lembrete ignorado vira no "Fechar o dia" (`checkout.md`).
 
 ## Em aberto
 
@@ -11,7 +11,7 @@
 ## Warm up
 
 - O app abre em uma tela branca com o botão "Iniciar Dia", que triga a rotina de warm up. Enquanto o checklist de warm up estiver vazio, o app pula essa tela e o warm up.
-- O checklist de warm up é definido manualmente por mim. Isso pode ser feito a qualquer momento ou sugerido na primeira Revisão de Foco.
+- O checklist de warm up é definido manualmente por mim, a qualquer momento, nas configurações.
 - O que eu não quero realizar agora, eu posso "pular hoje" ou "perguntar de novo às XXh".
 - Ao terminar o warm up, o app segue para o dashboard (veja "Dashboard").
 - Se eu reabrir o app depois de já ter iniciado o dia, caio na nota do dia.
@@ -36,3 +36,14 @@ A tela de boas-vindas mostra:
 - Ao voltar para o app, uma faixa discreta no topo da nota do dia mostra o que voltou, com três ações: feito, mais tarde e largar. Ela não cobre o texto. No Android, essa faixa é o único sinal: lá, o ícone de um app instalado pelo navegador só ganha um ponto quando há notificações, e o app não envia notificações.
 - Se eu ignorar a faixa, ela continua ali até o fechamento, onde o item vira uma pergunta (`checkout.md`, "Destinos").
 - Um lembrete de warm up marcado como feito marca o item como feito naquele dia.
+
+## Rituais pulados
+
+Pular um ritual não bloqueia o app, e qualquer ritual pode ser acionado depois, a qualquer hora.
+
+| O que foi pulado | O que acontece |
+| --- | --- |
+| Item do warm up | Posso "pular hoje" ou pedir para "perguntar de novo às XXh" |
+| Fechamento do dia anterior | O dashboard mostra o botão "Fechar o dia", e o dia pode começar sem prioridades |
+| Dias não ativos | Não contam como pulados: eu configuro os dias ativos e, na sexta-feira, por exemplo, o dia seguinte é a segunda |
+| Vários dias úteis sem abrir o app | Aparece a sugestão de "Fechar dias pendentes", que aplica a auto-triagem a todos os dias pendentes de uma vez (`checkout.md`) |

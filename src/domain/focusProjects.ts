@@ -1,12 +1,10 @@
 import type { DayKey } from './day';
 import type { PriorityList, Project } from './entities';
-import type { DomainEvent, EventOf } from './events';
 import { weekKey, type WeekKey } from './week';
 
 /**
- * Section 2: "Projetos em foco" (spec/prioridades.md). Up to 3 projects, chosen in the Revisão de
- * Foco and valid until the next one. Outside it a project can only take a free slot; swapping or
- * removing happens in the review. There is a single list, stored with id `focusProjects`.
+ * Section 2: "Projetos em foco" (spec/prioridades.md). Up to 3 projects, which I add, swap and
+ * remove at any time. There is a single list, stored with id `focusProjects`.
  */
 
 export const FOCUS_PROJECT_LIMIT = 3;
@@ -29,62 +27,37 @@ export function hasFreeSlot(ids: readonly string[]): boolean {
 }
 
 /**
- * Outside the review a project only takes a free slot. Returns the new list, or null when
- * nothing changes (the list is full or already has the project).
+ * Adding takes a free slot, at the end. Returns the new list, or null when nothing changes (the
+ * list is full or already has the project).
  */
 export function withAddedProject(ids: readonly string[], projectId: string): string[] | null {
   if (ids.includes(projectId) || !hasFreeSlot(ids)) return null;
   return [...ids, projectId];
 }
 
-/** Events that changed the list in focus, oldest first. */
-function focusListEvents(events: readonly DomainEvent[]): FocusListEvent[] {
-  return events
-    .filter((event): event is FocusListEvent => event.entityId === FOCUS_LIST_ID && (event.type === 'priority.added' || event.type === 'priority.removed'))
-    .sort((a, b) => (a.at < b.at ? -1 : a.at > b.at ? 1 : 0));
-}
-
-type FocusListEvent = EventOf<'priority.added'> | EventOf<'priority.removed'>;
-
-/** The list after the change. Checked, since a backup from a file may carry anything. */
-function itemIdsOf(event: FocusListEvent): string[] {
-  const ids = event.data.itemIds;
-  return Array.isArray(ids) ? ids.filter((id): id is string => typeof id === 'string') : [];
+/** Removing frees a slot. Returns the new list, or null when the project is not in it. */
+export function withRemovedProject(ids: readonly string[], projectId: string): string[] | null {
+  return ids.includes(projectId) ? ids.filter((id) => id !== projectId) : null;
 }
 
 /**
- * The projects in focus at the end of a day, as recorded then, for the raio-x. Every change of
- * the list is an event that carries the whole list, so the history comes from the events. Days
- * before the first change use the week lists from before the reviews (`legacyLists`).
+ * Swapping puts a project in the place of one in the list, keeping its position, so a full list
+ * can change in one step. Returns the new list, or null when nothing changes (the project to
+ * take out is not in the list, or the one to put in already is).
  */
-export function focusProjectsOnDay(day: DayKey, events: readonly DomainEvent[], legacyLists: readonly PriorityList[]): string[] {
-  const changes = focusListEvents(events).filter((event) => event.day <= day);
-  if (changes.length > 0) return recordedFocusProjects({ itemIds: itemIdsOf(changes[changes.length - 1]) });
-  return recordedFocusProjects(legacyListInEffect(legacyLists, weekKey(day)));
+export function withSwappedProject(ids: readonly string[], outId: string, inId: string): string[] | null {
+  if (!ids.includes(outId) || ids.includes(inId)) return null;
+  return ids.map((id) => (id === outId ? inId : id));
 }
 
-/**
- * Whether the last project in focus was finished after `since`, leaving the list empty: a signal
- * for the Revisão de Foco. Removing a project in the review does not count.
- */
-export function focusListEmptied(events: readonly DomainEvent[], since: string | null): boolean {
-  const changes = focusListEvents(events);
-  const last = changes[changes.length - 1];
-  if (!last || (since !== null && last.at <= since)) return false;
-  return last.type === 'priority.removed' && 'reason' in last.data && last.data.reason === 'finished' && itemIdsOf(last).length === 0;
-}
-
-// Before the reviews (versions 6 and earlier), the priority projects belonged to a week.
+// Before the single list (versions 6 and earlier), the priority projects belonged to a week.
 
 const LEGACY_WEEK_PREFIX = 'weekProjects:';
 
-/** Id of a week's list from before the reviews, like `weekProjects:2026-W42`. */
+/** Id of a week's list from before the single list, like `weekProjects:2026-W42`. */
 export function legacyWeekListId(week: WeekKey): string {
   return `${LEGACY_WEEK_PREFIX}${week}`;
 }
-
-/** Bounds for a range read of every week list from before the reviews, both ends included. */
-export const LEGACY_WEEK_LISTS_RANGE: [from: string, to: string] = [LEGACY_WEEK_PREFIX, `${LEGACY_WEEK_PREFIX}￿`];
 
 /**
  * A week without a list of its own used the latest earlier one (ADR-035). ISO week keys sort as
@@ -147,7 +120,7 @@ function isMonthList(row: unknown): row is StoredList & { id: string } {
 /**
  * Version 7: the week lists give way to the single list in focus, which starts as the list in
  * effect on `today`'s week (a list a reflection already set for the next week is dropped). The
- * week lists stay, untouched, as the history of the raio-x. A list in focus already present is
+ * week lists stay, untouched, as history. A list in focus already present is
  * kept as it is.
  */
 export function migrateToFocusList<T>(rows: readonly T[], today: DayKey): T[] {

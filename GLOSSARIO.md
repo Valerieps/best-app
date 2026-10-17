@@ -20,7 +20,6 @@ Os termos marcados com ⚠ ainda têm mais de um sentido nos documentos; o item 
 - **Data de intenção (de execução):** o dia em que a tarefa aparece na nota do dia. (`spec/tarefas.md`)
 - **Prazo máximo:** a segunda data, opcional. No dia do prazo, a tarefa vira prioridade do dia. (`spec/tarefas.md`)
 - **Adiamento:** mudar a data de intenção para depois, ou tirar a data, inclusive no fechamento do dia. A tarefa deixada sem mexer na triagem do "Fechar o dia" não conta. (`spec/tarefas.md`)
-- **Precisão da data de intenção:** a parte das tarefas finalizadas com data de intenção que foram feitas no dia da intenção. (`spec/rituais.md`)
 - **Tarefas:** a lista das tarefas abertas, ou seja, nem finalizadas nem abandonadas, que também mostra as finalizadas quando eu peço. Antes se chamava "tarefas ativas". (`spec/tarefas.md`)
 - **Tarefa esquecida:** tarefa aberta sem data de intenção criada há 15 dias ou mais (configurável), em risco de abandono. Quem cuida dela é o assistente "Tarefas esquecidas". (`spec/assistentes.md`)
 - **Tarefa travada:** tarefa de projeto adiada 3 vezes ou mais, ou com a data de intenção vencida. ⚠ Não confundir com o assistente "Prioridades travadas" (`INCOERENCIAS.md`, 2.10). (`spec/projetos.md`)
@@ -29,7 +28,7 @@ Os termos marcados com ⚠ ainda têm mais de um sentido nos documentos; o item 
 - **Aguardando:** uma tarefa que alguém me deve, criada com `[a] ` no começo da linha. Fica fora da lista de tarefas. (`spec/pessoas.md`)
 - **Data para cobrar:** a data de intenção de uma tarefa aguardando: o dia em que ela aparece na nota do dia para eu cobrar. Mudá-la não conta como adiamento. (`spec/pessoas.md`)
 - **Dia seguinte:** num fechamento do dia, o próximo dia ativo depois do dia triado, nunca antes de hoje. (`spec/checkout.md`)
-- **Dias ativos:** os dias da semana em que o app espera uso; os outros não contam como pulados. (`spec/rituais.md`)
+- **Dias ativos:** os dias da semana em que o app espera uso; os outros não contam como pulados. (`spec/abertura-do-dia.md`, "Rituais pulados")
 
 ## Destinos
 
@@ -38,7 +37,6 @@ Os termos marcados com ⚠ ainda têm mais de um sentido nos documentos; o item 
 - **Descartar:** só para compromissos (seção 5). Notas não são mais descartadas: eu apago a nota. Não existe mais **wiki**. (`spec/checkout.md`; `spec/nota-do-dia.md`)
 - **Largar:** um lembrete sai de circulação. (`spec/abertura-do-dia.md`)
 - **Migrar:** marcar que um compromisso foi criado no Google Agenda. Conta como concluído. (`spec/compromissos.md`)
-- **Decidir na Revisão de Foco:** deixar uma tarefa para ser triado na Revisão de Foco. (`spec/checkout.md`)
 
 ## Fechar o dia e triagem
 
@@ -51,7 +49,7 @@ Os termos marcados com ⚠ ainda têm mais de um sentido nos documentos; o item 
 ## Prioridades
 
 - **Prioridades do dia:** até 3 tarefas em destaque dentro das tarefas do dia. (`spec/prioridades.md`)
-- **Projetos em foco:** até 3 projetos, escolhidos na Revisão de Foco e válidos até a próxima. Antes se chamavam "projetos prioritários da semana". (`spec/prioridades.md`)
+- **Projetos em foco:** até 3 projetos, que eu coloco, troco e tiro a qualquer momento; valem até eu mudá-los. Antes se chamavam "projetos prioritários da semana". (`spec/prioridades.md`)
 
 ## Projetos e objetivos
 
@@ -62,15 +60,11 @@ Os termos marcados com ⚠ ainda têm mais de um sentido nos documentos; o item 
 - **Meta:** a frase que digo se atingi ou não. (`spec/objetivos.md`)
 - **Motivação:** o que me faz querer engajar com o objetivo. Nome provisório. (`spec/objetivos.md`)
 - **Recurso:** pensamento, anotação ou link que dá suporte a um objetivo ou projeto. (`spec/objetivos.md`)
-- **Raio-x / métricas de desconexão:** as métricas da Revisão de Rumo que mostram o quanto o dia a dia se desconecta dos objetivos. (`spec/rituais.md`)
 - **Hábito:** uma ação com recorrência e critério de "feito", registrada como sim ou não. (`spec/habitos.md`)
 
 ## Rituais e abertura do dia
 
-- **Ritual:** warm up, "Fechar o dia", Revisão de Foco e Revisão de Rumo (`spec/rituais.md`, "Rituais pulados"). A tela "Rituais" mostra o calendário dos dias a fechar e os "Assistentes" (`spec/assistentes.md`).
-- **Revisão de Foco:** a revisão frequente, dos projetos: "no que eu estou trabalhando agora?". Substitui a reflexão semanal. (`spec/rituais.md`)
-- **Revisão de Rumo:** a revisão rara, dos objetivos: "estou indo para onde eu quero ir?". Substitui a reflexão mensal. (`spec/rituais.md`)
-- **Cadência (de uma revisão):** quantos dias fechados (Foco) ou Revisões de Foco (Rumo) até a revisão ficar disponível. (`spec/rituais.md`)
+- **Ritual:** warm up e "Fechar o dia" (`spec/abertura-do-dia.md`, "Rituais pulados"). A tela "Rituais" mostra o calendário dos dias a fechar e os "Assistentes" (`spec/assistentes.md`). A Revisão de Foco e a Revisão de Rumo, que substituíram as reflexões semanal e mensal, saíram do app em 17/10/2026; as revisões fechadas ficam guardadas no histórico e no backup, sem tela.
 - **Iniciar Dia:** a tela branca que abre o dia e começa o warm up. (`spec/abertura-do-dia.md`)
 - **Warm up:** o checklist que eu defino para começar o dia. (`spec/abertura-do-dia.md`)
 - **Dashboard:** a tela de boas-vindas depois do warm up, com os projetos em foco, mural e "Iniciar o Flow de Execução". ⚠ A `ARQUITETURA.md` e o código também chamam os "Assistentes" de dashboard (`INCOERENCIAS.md`, seção 3).

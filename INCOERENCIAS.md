@@ -9,7 +9,7 @@ Regras que se contradizem ou ficaram ambíguas entre `SPEC.md`, `spec/checkout.m
 
 Quando um item for decidido, a regra vai para o `SPEC.md` e o item sai daqui.
 
-Já resolvidos e retirados desta lista: a fonte da verdade (o `SPEC.md`; o `prompt.md` foi apagado), o aviso de reflexão (contador e nota do dia), quando o dashboard aparece, o `HANDOFF.md` (dividido entre `CLAUDE.md` e `DECISOES.md`), a lista de documentos do `CLAUDE.md`, os nomes dos assistentes no `DEBITO-TECNICO.md` a fase 1b da `ARQUITETURA.md` (o estado das fases foi para o `ROADMAP.md`) as seções 6 e 7 do `google-safe.md`, que citavam Firebase, Vercel e funções que o app não usa, e quantas são as prioridades da semana (elas deixaram de existir).
+Já resolvidos e retirados desta lista: a fonte da verdade (o `SPEC.md`; o `prompt.md` foi apagado), o aviso de reflexão (contador e nota do dia), quando o dashboard aparece, o `HANDOFF.md` (dividido entre `CLAUDE.md` e `DECISOES.md`), a lista de documentos do `CLAUDE.md`, os nomes dos assistentes no `DEBITO-TECNICO.md` a fase 1b da `ARQUITETURA.md` (o estado das fases foi para o `ROADMAP.md`) as seções 6 e 7 do `google-safe.md`, que citavam Firebase, Vercel e funções que o app não usa, e quantas são as prioridades da semana (elas deixaram de existir), a sugestão de projetos com IA na Revisão de Foco, o warm up sugerido pela primeira Revisão de Foco, a revisita das arquivadas e a troca de projetos em foco só na revisão (as revisões saíram do app em 17/10/2026).
 
 ## 1. Em decisão
 
@@ -24,8 +24,6 @@ Já resolvidos e retirados desta lista: a fonte da verdade (o `SPEC.md`; o `prom
 Remover a frase tira a contradição do texto, mas não resolve os casos concretos, e ela sustenta outras regras.
 
 - **Onde a frase é contrariada hoje:**
-  - Arquivar e abandonar só aparecem como destinos do checkout e da Revisão de Foco.
-  - Trocar ou tirar um projeto em foco só é possível na Revisão de Foco (`spec/prioridades.md`, "Projetos em foco").
   - Tarefas criadas na página do projeto não entram no checkout e, por isso, não têm como sair de circulação (issue [#76](https://github.com/Valerieps/best-app/issues/76)).
 - **Onde a frase sustenta regras:** finalizar uma tarefa a qualquer momento, promover uma prioridade a qualquer momento, converter um quadro branco a qualquer momento, criar tarefas na página do projeto.
 - **Ambiguidade que continua sem ela:** o `spec/nota-do-dia.md` ("Execução") diz que, para tirar de circulação uma tarefa que veio de outro dia, "eu arquivo ou abandono", sem dizer se isso é possível durante o dia.
@@ -43,7 +41,7 @@ Remover a frase tira a contradição do texto, mas não resolve os casos concret
 
 ### 2.3 Pergunta em aberto que o princípio já responde
 
-- "O checkout pendente bloqueia o 'Iniciar o Flow de Execução'?" (`spec/abertura-do-dia.md`, "Em aberto") já é respondido por "o app sempre avisa em vez de bloquear" e pela tabela "Rituais pulados" (`spec/rituais.md`). Sobra a segunda metade: o que mostrar quando há vários dias pendentes.
+- "O checkout pendente bloqueia o 'Iniciar o Flow de Execução'?" (`spec/abertura-do-dia.md`, "Em aberto") já é respondido por "o app sempre avisa em vez de bloquear" e pela tabela "Rituais pulados" (`spec/abertura-do-dia.md`). Sobra a segunda metade: o que mostrar quando há vários dias pendentes.
 
 ### 2.4 Três definições de "checkout completo"
 
@@ -69,7 +67,6 @@ As fases do `SPEC.md` deveriam poder ser construídas em ordem, mas:
 
 - O 1b ("Próximos dias") usa os dias ativos, que só existem na seção 3.
 - A seção 2 ("Projetos") usa objetivo e recursos, que são da seção 4.
-- A primeira Revisão de Foco (seção 2) sugere o checklist de warm up, que é da seção 3 ("Primeiro uso").
 
 ### 2.8 "Primeiros dias sem projetos"
 
@@ -90,11 +87,6 @@ As fases do `SPEC.md` deveriam poder ser construídas em ordem, mas:
 
 - Juntar projetos repetidos com um projeto em foco: o destino não herda a vaga, e não há regra para isso (issue [#83](https://github.com/Valerieps/best-app/issues/83)).
 
-### 2.12 Sugestão de projetos na Revisão de Foco
-
-- Uma das opções da pergunta em aberto do `spec/rituais.md` é sugerir "com IA", o que contradiz o local-only (`spec/principios.md`, "Plataforma e dados"; `google-safe.md`).
-- A terceira opção (converter títulos de quadro branco repetidos) já existe como o assistente "Seções soltas" (`spec/assistentes.md`).
-
 ### 2.13 Pessoal ou para outras pessoas
 
 - O `SPEC.md` abre dizendo que este é "um app pessoal", escrito para o uso da Valeria.
@@ -111,9 +103,8 @@ As fases do `SPEC.md` deveriam poder ser construídas em ordem, mas:
 
 ### 2.16 Detalhes
 
-- "Vários dias úteis sem abrir o app" (`spec/rituais.md`, "Rituais pulados") contra "mais de um dia com checkout pendente" (`spec/checkout.md`) para sugerir "Fechar dias pendentes".
+- "Vários dias úteis sem abrir o app" (`spec/abertura-do-dia.md`, "Rituais pulados") contra "mais de um dia com checkout pendente" (`spec/checkout.md`) para sugerir "Fechar dias pendentes".
 - O objetivo é "meta, motivação, projetos e recursos" (`spec/objetivos.md`), mas o `spec/habitos.md` diz que um hábito faz parte de um objetivo.
-- A revisita da Revisão de Foco mostra todas as arquivadas, mas o assistente que ela reaproveita ("Arquivo antigo") só encontra as arquivadas "há meses" (`spec/assistentes.md`).
 
 ## 3. Produto contra técnica
 

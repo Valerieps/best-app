@@ -70,11 +70,6 @@ export class DexieReader implements Reader {
     return this.db.sections.filter((section) => section.notesDestination === destination).toArray();
   }
 
-  async tasksAwaitingReflection() {
-    const active = await this.db.blocks.where('status').equals('active').toArray();
-    return active.filter((task) => task.awaitingReflection === true);
-  }
-
   eventsOfEntities(ids: string[]): Promise<DomainEvent[]> {
     if (ids.length === 0) return Promise.resolve([]);
     return this.db.events.where('entityId').anyOf(ids).toArray();
@@ -82,14 +77,6 @@ export class DexieReader implements Reader {
 
   eventsBetween(startDay: DayKey, endDay: DayKey) {
     return this.db.events.where('day').between(startDay, endDay, true, true).toArray();
-  }
-
-  reflection(id: string) {
-    return this.db.reflections.get(id);
-  }
-
-  reflections() {
-    return this.db.reflections.toArray();
   }
 
   settings() {

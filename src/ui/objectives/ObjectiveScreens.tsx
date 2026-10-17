@@ -44,7 +44,7 @@ export function ObjectivesScreen() {
   return (
     <main className="page">
       <ScreenHeader title="Objetivos" />
-      {active.length === 0 ? <p className="muted">Nenhum objetivo ativo. A Revisão de Rumo sugere objetivos a partir dos projetos.</p> : list(active)}
+      {active.length === 0 ? <p className="muted">Nenhum objetivo ativo.</p> : list(active)}
       {finished.length > 0 && (
         <>
           <button type="button" className="link projects__toggle" onClick={() => setShowFinished(!showFinished)}>

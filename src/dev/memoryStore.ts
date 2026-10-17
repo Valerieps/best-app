@@ -10,7 +10,6 @@ import type {
   Person,
   PriorityList,
   Project,
-  Reflection,
   Reminder,
   Resource,
   Section,
@@ -147,9 +146,6 @@ export class MemoryStore implements Store, Reader {
     return this.sections().filter((section) => section.notesDestination === destination);
   }
 
-  async tasksAwaitingReflection() {
-    return this.blocks().filter((block) => block.status === 'active' && block.awaitingReflection === true);
-  }
 
   async eventsOfEntities(ids: string[]) {
     const wanted = new Set(ids);
@@ -160,14 +156,6 @@ export class MemoryStore implements Store, Reader {
     return this.rows<DomainEvent>('events').filter(
       (event) => event.day >= startDay && event.day <= endDay,
     );
-  }
-
-  async reflection(id: string) {
-    return this.repository<Reflection>('reflections').get(id);
-  }
-
-  async reflections() {
-    return this.rows<Reflection>('reflections');
   }
 
   async settings() {

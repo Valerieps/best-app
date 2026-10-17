@@ -16,7 +16,7 @@ Os assistentes de limpeza colocam ordem na casa: cada um encontra o que está fo
 O item "Rituais" da barra lateral abre esta tela, com duas partes, nesta ordem *(1b)*. O rascunho é o `rascunhos/rascunho-rituais_1.html`.
 
 - **Fechar o dia:** um calendário pequeno, de um mês, com setas para os meses anteriores. Os dias sem fechamento ficam destacados, todos com a mesma cor, sem escala de idade. Hoje tem só um contorno. Os dias fechados ganham um ponto verde, e os dias sem nota ficam apagados. Clicar num dia destacado, ou em hoje, abre o "Fechar o dia" daquele dia; clicar num dia fechado não faz nada. Ao lado do título fica "Fechar dias pendentes", que fecha todos de uma vez, com as regras da auto-triagem (`checkout.md`).
-- **Assistentes:** a grade de cartões descrita abaixo. A Revisão de Foco não tem mais cartão na grade.
+- **Assistentes:** a grade de cartões descrita abaixo.
 - O assistente "Dias em aberto" não tem cartão na grade, porque o calendário faz o papel dele.
 
 ## Como funcionam
@@ -24,11 +24,10 @@ O item "Rituais" da barra lateral abre esta tela, com duas partes, nesta ordem *
 - A grade "Assistentes" lista só os assistentes que têm algo a limpar, cada um com o número de itens.
 - A cor de cada assistente diz há quanto tempo o item mais antigo dele está esperando, e não quantos itens são, porque o custo de limpar cresce com a idade: quanto mais tempo passa, menos eu lembro do contexto. Eu escolho o que limpar olhando as cores. A exceção é "Tarefas esquecidas", descrito abaixo.
 - Cada assistente mostra os itens encontrados com uma ação pré-selecionada e o botão "Aceitar sugestões". Eu posso trocar qualquer ação antes. A exceção também é "Tarefas esquecidas".
-- As Revisões de Foco e de Rumo reaproveitam os assistentes como etapas. A passada pelos projetos ativos na Revisão de Foco, por exemplo, é o assistente de projetos parados.
 - No 1a, só o "Fechar dias pendentes" tem tela, pelo aviso de fechamento pendente. A grade de assistentes e os outros assistentes entram a partir do 1b, para manter o núcleo enxuto.
 - O mural não tem assistente, porque os lembretes dele não vencem.
 - Seções soltas: seções sem título ficam de fora, porque não há como agrupá-las nem dar nome a um projeto. "Deixar como está" faz o assistente parar de sugerir aquelas seções.
-- Tarefas esquecidas: entra toda tarefa aberta sem data de intenção criada há 15 dias ou mais, contados desde a criação da tarefa, e não desde que ela ficou sem data. Entram também as tarefas da página do projeto, as tarefas aguardando sem data para cobrar e as que esperam a Revisão de Foco. Eu mudo os 15 dias nas configurações.
+- Tarefas esquecidas: entra toda tarefa aberta sem data de intenção criada há 15 dias ou mais, contados desde a criação da tarefa, e não desde que ela ficou sem data. Entram também as tarefas da página do projeto e as tarefas aguardando sem data para cobrar. As tarefas que esperavam a Revisão de Foco, que saiu do app, voltaram a ser tarefas sem data e entram como as outras. Eu mudo os 15 dias nas configurações.
 - A cor de "Tarefas esquecidas" diz quantas tarefas estão em risco de abandono, e não a idade da mais antiga, porque todas já são antigas: amarelo a partir de 5, laranja a partir de 10 e vermelho a partir de 15. Eu mudo os limites nas configurações, como os dos outros assistentes.
 - Em "Tarefas esquecidas", nenhuma ação vem escolhida, porque essa triagem precisa ser muito intencional. Para cada tarefa eu escolho "Colocar data", "Converter em nota" ou "Abandonar", e clicar de novo na ação escolhida desfaz a escolha. A tarefa sem escolha fica como está e continua no assistente.
 - Ao clicar em "Seguir", as tarefas marcadas para abandonar e converter em nota são gravadas. A tarefa convertida em nota fica onde foi escrita, na mesma seção e no mesmo projeto; uma tarefa da página do projeto vira uma nota na página do projeto, com a data de hoje.
