@@ -19,7 +19,7 @@ type Change =
   | { added: string; replaced?: string }
   | { removed: string; reason: 'removed' | 'finished' };
 
-/** Saves the whole list. The event carries it too, which is the history the raio-x reads. */
+/** Saves the whole list. The event carries it too, which is the history of the list. */
 async function save(ctx: AppContext, tx: StoreTransaction, itemIds: string[], change: Change) {
   const list: PriorityList = { id: FOCUS_LIST_ID, scope: 'focusProjects', period: '', itemIds, updatedAt: ctx.clock.now().toISOString() };
   await tx.priorities.put(list);

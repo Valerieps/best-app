@@ -1,6 +1,5 @@
 import type { DayKey } from './day';
 import type { PriorityList, Project } from './entities';
-import type { DomainEvent, EventOf } from './events';
 import { weekKey, type WeekKey } from './week';
 
 /**
@@ -51,32 +50,6 @@ export function withSwappedProject(ids: readonly string[], outId: string, inId: 
   return ids.map((id) => (id === outId ? inId : id));
 }
 
-/** Events that changed the list in focus, oldest first. */
-function focusListEvents(events: readonly DomainEvent[]): FocusListEvent[] {
-  return events
-    .filter((event): event is FocusListEvent => event.entityId === FOCUS_LIST_ID && (event.type === 'priority.added' || event.type === 'priority.removed'))
-    .sort((a, b) => (a.at < b.at ? -1 : a.at > b.at ? 1 : 0));
-}
-
-type FocusListEvent = EventOf<'priority.added'> | EventOf<'priority.removed'>;
-
-/** The list after the change. Checked, since a backup from a file may carry anything. */
-function itemIdsOf(event: FocusListEvent): string[] {
-  const ids = event.data.itemIds;
-  return Array.isArray(ids) ? ids.filter((id): id is string => typeof id === 'string') : [];
-}
-
-/**
- * The projects in focus at the end of a day, as recorded then, for the raio-x. Every change of
- * the list is an event that carries the whole list, so the history comes from the events. Days
- * before the first change use the week lists of ADR-035 (`legacyLists`).
- */
-export function focusProjectsOnDay(day: DayKey, events: readonly DomainEvent[], legacyLists: readonly PriorityList[]): string[] {
-  const changes = focusListEvents(events).filter((event) => event.day <= day);
-  if (changes.length > 0) return recordedFocusProjects({ itemIds: itemIdsOf(changes[changes.length - 1]) });
-  return recordedFocusProjects(legacyListInEffect(legacyLists, weekKey(day)));
-}
-
 // Before the single list (versions 6 and earlier), the priority projects belonged to a week.
 
 const LEGACY_WEEK_PREFIX = 'weekProjects:';
@@ -85,9 +58,6 @@ const LEGACY_WEEK_PREFIX = 'weekProjects:';
 export function legacyWeekListId(week: WeekKey): string {
   return `${LEGACY_WEEK_PREFIX}${week}`;
 }
-
-/** Bounds for a range read of every week list from before the single list, both ends included. */
-export const LEGACY_WEEK_LISTS_RANGE: [from: string, to: string] = [LEGACY_WEEK_PREFIX, `${LEGACY_WEEK_PREFIX}￿`];
 
 /**
  * A week without a list of its own used the latest earlier one (ADR-035). ISO week keys sort as
@@ -150,7 +120,7 @@ function isMonthList(row: unknown): row is StoredList & { id: string } {
 /**
  * Version 7: the week lists give way to the single list in focus, which starts as the list in
  * effect on `today`'s week (a list a reflection already set for the next week is dropped). The
- * week lists stay, untouched, as the history of the raio-x. A list in focus already present is
+ * week lists stay, untouched, as history. A list in focus already present is
  * kept as it is.
  */
 export function migrateToFocusList<T>(rows: readonly T[], today: DayKey): T[] {

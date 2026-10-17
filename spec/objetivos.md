@@ -1,7 +1,7 @@
 # Objetivos e recursos
 
 - **Entra aqui:** objetivo, meta, motivação e recursos. *(4)*
-- **Não entra aqui:** a Revisão de Rumo e o raio-x (`rituais.md`) e o fechamento do dia (`checkout.md`).
+- **Não entra aqui:** o fechamento do dia (`checkout.md`). A Revisão de Rumo e o raio-x da desconexão saíram do app.
 
 ## Em aberto
 
@@ -14,7 +14,7 @@
 - Motivação é um campo descritivo do objetivo: o que me faz querer engajar com aquilo tudo (nome provisório).
 - Recursos são pensamentos, anotações e links que dão suporte a um objetivo ou projeto.
 - Um projeto pode existir sem objetivo e se vincula a no máximo um objetivo.
-- Projetos sem objetivo não são proibidos: viram métrica na Revisão de Rumo.
+- Projetos sem objetivo não são proibidos.
 - Objetivos só são finalizados manualmente: eu abro o objetivo e finalizo, dizendo se atingi a meta ou não. Um objetivo finalizado pode ser reaberto.
 - A aba "Notas" da página do projeto não oferece mais vincular as notas de uma seção como recurso (`projetos.md`, "Página do projeto").
 - Links entram como recurso direto na página do objetivo ou do projeto.

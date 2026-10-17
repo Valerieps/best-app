@@ -1,7 +1,7 @@
 # Fechar o dia e auto-triagem
 
 - **Entra aqui:** o "Fechar o dia", o ritual diário que antes se chamava checkout; os destinos de cada tipo de item; o planejamento do dia seguinte; a auto-triagem; e o "Fechar dias pendentes". Antes, a auto-triagem tinha um arquivo próprio (`AUTO-TRIAGEM.md`).
-- **Não entra aqui:** o que acontece com o item depois do destino, como um hábito criado a partir de uma tarefa (`habitos.md`); a triagem da Revisão de Foco (`rituais.md`), que reaproveita esta; e o que não perece de um dia para o outro, como seções sem projeto e tarefas esquecidas, que fica nos "Assistentes" da tela "Rituais" (`assistentes.md`).
+- **Não entra aqui:** o que acontece com o item depois do destino, como um hábito criado a partir de uma tarefa (`habitos.md`); e o que não perece de um dia para o outro, como seções sem projeto e tarefas esquecidas, que fica nos "Assistentes" da tela "Rituais" (`assistentes.md`).
 
 ## Em aberto
 
@@ -36,7 +36,8 @@ O "Fechar o dia" é curto, de cerca de um minuto: ele cuida só do que perece de
 - Abandonar tira a tarefa de circulação sem que ela tenha sido realizada, como se eu a apagasse: ela some de todas as telas e não gera log de execução, mas o histórico de eventos guarda o abandono.
 - Não existe mais arquivar: para deixar uma tarefa para algum dia, eu tiro a data dela.
 - Num fechamento atrasado, "dia seguinte" é o dia depois do dia triado, mas nunca antes de hoje.
-- O vínculo da tarefa com um projeto serve de cold start para os projetos e objetivos da Revisão de Rumo. *(2)*
+- O vínculo da tarefa com um projeto serve de cold start para os projetos e os objetivos. *(2)*
+- O fechamento não tem mais a opção "Decidir na Revisão de Foco": a revisão saiu do app. As tarefas que esperavam por ela voltaram a ser tarefas sem data, e as notas deixadas para ela ficaram guardadas, como as de um dia fechado. Uma tarefa sem data há muito tempo aparece em "Tarefas esquecidas" (`assistentes.md`). *(2)*
 - A tarefa que eu não mexo na triagem vai para a lista de tarefas, sem data, quando eu sigo para a próxima etapa, e isso não conta como adiamento. "Sem data" escolhido por mim numa tarefa que tinha data conta, como em qualquer mudança de data (`tarefas.md`). Uma tarefa aguardando que eu não mexo fica como está.
 - As notas vinculadas como recurso continuam na página do projeto, porque as notas não moram num lugar só. *(4)*
 - Um lembrete ignorado continua na faixa da nota do dia até o fechamento, onde o item vira pergunta: manter, mudar ou largar. "Manter" vem pré-selecionado, porque largar tira o item de circulação. *(3)*

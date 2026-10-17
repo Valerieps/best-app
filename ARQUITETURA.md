@@ -65,7 +65,7 @@ Alguns pontos ainda não seguem essas regras: o fluxo de backup é chamado pela 
 
 Cada entidade é um registro separado. Um bloco existe uma vez só: a nota do dia, os projetos e os recursos apontam para ele, sem cópias. Datas de calendário são `AAAA-MM-DD` no fuso local, e o dia vira à meia-noite (ADR-005). Semanas são semanas ISO, como `2026-W42` (ADR-020). Os ids são UUIDs, e todo registro tem `createdAt` e `updatedAt`. Os tipos estão em `src/domain/entities.ts`.
 
-### Tabelas implementadas (versão 9 do banco)
+### Tabelas implementadas (versão 10 do banco)
 
 **`blocks`**: tarefas e notas.
 
@@ -82,10 +82,11 @@ Cada entidade é um registro separado. Um bloco existe uma vez só: a nota do di
 | `postponeCount` | Atalho de leitura; dá para recalcular a partir dos eventos |
 | `lastTriagedDay` | Último dia cujo checkout decidiu a tarefa; é o que diz se ela está pendente (ADR-011) |
 | `deadline` | Prazo máximo (1b) |
-| `awaitingReflection` | Deixada para "decidir na Revisão de Foco" (2; o nome gravado é antigo, ADR-039) |
 | `carriedOrder` | `{ day, position }`: ordem entre as tarefas de outros dias, só enquanto `day` é a data de intenção (ADR-040) |
 | `waiting` | Tarefa aguardando, que alguém me deve; a `intendedDate` dela é a data para cobrar (ADR-052) |
 | `closedAt`, `createdAt`, `updatedAt` | Datas e horários |
+
+O antigo `awaitingReflection` (tarefa deixada para a Revisão de Foco) saiu: a versão 10 do banco e do backup o tira das tarefas, que voltam a ser tarefas sem data (ADR-060).
 
 **`sections`**: as seções da nota do dia.
 
@@ -94,7 +95,7 @@ Cada entidade é um registro separado. Um bloco existe uma vez só: a nota do di
 | `kind` | `general` ou `meeting` |
 | `day`, `createdAt`, `title` | Dia, horário de criação e título opcional |
 | `projectId` | Projeto vinculado; `null` quer dizer quadro branco |
-| `notesDestination` | Estado das notas da seção: `pending` (dia aberto), `wiki` (dia fechado: as notas ficam guardadas; o nome é histórico, ADR-050), `discarded` (só em dados antigos) ou `weeklyReflection` |
+| `notesDestination` | Estado das notas da seção: `pending` (dia aberto), `wiki` (dia fechado: as notas ficam guardadas; o nome é histórico, ADR-050), ou `discarded` (só em dados antigos). As notas deixadas para a Revisão de Foco (`weeklyReflection`) viraram `wiki` na versão 10 (ADR-060) |
 | `whiteboardDecision` | `pending`, `leftUnlinked` (checkout) ou `keptUnlinked` (assistente de seções soltas) |
 | `participants`, `docLink` | Só reuniões (1b); guardados, mas sem campo na nota do dia desde 15/10/2026 |
 | `projectPage` | Seção escondida que guarda as tarefas escritas na página do projeto; não aparece em nenhuma nota do dia (ADR-031) |
@@ -106,11 +107,11 @@ Cada entidade é um registro separado. Um bloco existe uma vez só: a nota do di
 
 **`days`**: `day` (chave), `lastCheckoutAt` e, a partir da seção 3, `startedAt`, `warmup` (resultado de cada item do dia) e `executionStartedAt`; `sectionOrder`, a ordem das partes da nota do dia quando eu a mudo (ADR-040). Se o checkout está pendente é sempre calculado a partir dos blocos; esta tabela só guarda o que não dá para calcular. A etapa do dia também é calculada (ADR-023).
 
-**`priorities`**: listas ordenadas, com id `escopo:período`. `day:2026-10-11` guarda as tarefas escolhidas à mão para o dia; as tarefas com prazo no dia entram na leitura (ADR-017). `focusProjects` guarda a lista única de até 3 projetos em foco; cada mudança grava um evento com a lista inteira, que é o histórico lido pelo raio-x (ADR-038). As listas `weekProjects:2026-W42`, de antes das revisões, ficam como histórico dos dias anteriores à primeira mudança.
+**`priorities`**: listas ordenadas, com id `escopo:período`. `day:2026-10-11` guarda as tarefas escolhidas à mão para o dia; as tarefas com prazo no dia entram na leitura (ADR-017). `focusProjects` guarda a lista única de até 3 projetos em foco; cada mudança (colocar, trocar ou tirar, a qualquer momento, ADR-060) grava um evento com a lista inteira, o histórico da lista (ADR-038). As listas `weekProjects:2026-W42`, de antes da lista única, ficam como histórico, sem leitura.
 
-**`reflections`**: as revisões, `kind` `focus` ou `direction`. A revisão em andamento tem id fixo (`focus:open`, `direction:open`); ao fechar, vira `kind:id` com `start`, `end` e `closedAt`, e não reabre (ADR-039). Textos livres (melhores momentos, o que pode melhorar). Os registros `week:2026-W41` e `month:2026-10`, das reflexões antigas, contam como a última revisão de cada tipo.
+**`reflections`**: as revisões fechadas, `kind` `focus` ou `direction` (ADR-039), e os registros `week:2026-W41` e `month:2026-10` das reflexões de antes delas, com os textos livres (melhores momentos, o que pode melhorar). As revisões saíram do app (ADR-060): a tabela fica só como histórico, sem tela e sem quem grave nela, e continua no backup.
 
-**`settings`**: um registro só, id `main`: cadência das revisões (`reviewCadence`, ADR-039), dias ativos, checklist do warm up, limites das cores dos "Assistentes", em dias de espera, ou em tarefas para "Tarefas esquecidas" (`cleanupAgeLimits`, ADR-045; o antigo `cleanupLimits`, por quantidade, não é mais lido), os dias sem data até uma tarefa ser esquecida (`forgottenTaskDays`, padrão 15), coluna fixada da página do projeto e grupos abertos da lista de projetos (ADR-036). Entra no backup.
+**`settings`**: um registro só, id `main`: dias ativos, checklist do warm up, limites das cores dos "Assistentes", em dias de espera, ou em tarefas para "Tarefas esquecidas" (`cleanupAgeLimits`, ADR-045; o antigo `cleanupLimits`, por quantidade, não é mais lido), os dias sem data até uma tarefa ser esquecida (`forgottenTaskDays`, padrão 15), coluna fixada da página do projeto e grupos abertos da lista de projetos (ADR-036). Entra no backup. A cadência das revisões (`reviewCadence`) pode continuar em registros antigos, sem leitura (ADR-060).
 
 **`reminders`**: lembretes que voltam dentro do app (3): origem, texto, `dueAt` e `status` (`pending`, `done` ou `dropped`). O app nunca manda notificação (ADR-024).
 
@@ -148,7 +149,6 @@ Nada disso é guardado: é calculado a partir das tabelas, por funções de `app
 | Tela "Rituais" | Dias pendentes e dias com nota do mês, para o calendário (`domain/ritualsCalendar.ts`, ADR-053) |
 | "Assistentes" (antes "Colocar ordem na casa") | Contagens de cada assistente e a cor pela idade do item mais antigo, com os limites das configurações (ADR-045); em "Tarefas esquecidas", a cor pela quantidade (`COUNTED_ASSISTANTS`), e o quadro do "Fechar o dia" (`BoardStep`) reaproveitado com `onSave`, que grava sem marcar as tarefas como triadas |
 | Abertura do dia | Etapa do dia (iniciar, warm up, dashboard, execução) e lembretes vencidos (ADR-023) |
-| Revisões e métricas | Eventos desde a última revisão de cada tipo passados às funções de métricas (seção 9); disponibilidade de cada revisão por cadência e sinais (`application/reviewQueries.ts`, ADR-039) |
 
 ## 6. Histórico de eventos (implementado)
 
@@ -162,10 +162,10 @@ Nada disso é guardado: é calculado a partir das tabelas, por funções de `app
 
 | Área | Eventos |
 | --- | --- |
-| Blocos e tarefas | criado, apagado, tipo trocado, vinculado a projeto; data de intenção e prazo trocados, adiada, feita, reaberta, abandonada (arquivada e reativada só no histórico antigo, ADR-049), deixada para a Revisão de Foco, convertida em hábito |
-| Seções | criada, título e detalhes trocados, vinculada a projeto, deixada ou mantida sem vínculo, notas guardadas no fim do dia, descartadas (só no histórico antigo), reabertas ou deixadas para a Revisão de Foco |
+| Blocos e tarefas | criado, apagado, tipo trocado, vinculado a projeto; data de intenção e prazo trocados, adiada, feita, reaberta, abandonada (arquivada e reativada só no histórico antigo, ADR-049), convertida em hábito; deixada para a Revisão de Foco só no histórico antigo (ADR-060) |
+| Seções | criada, título e detalhes trocados, vinculada a projeto, deixada ou mantida sem vínculo, notas guardadas no fim do dia, descartadas (só no histórico antigo), reabertas; deixadas para a Revisão de Foco só no histórico antigo (ADR-060) |
 | Projetos | criado, renomeado, ícone trocado, finalizado, reaberto, juntado, vinculado a objetivo |
-| Dia e rituais | dia iniciado, execução iniciada, item do warm up respondido, checkout concluído, prioridade adicionada e retirada (com o motivo, nos projetos em foco), revisão fechada, configuração trocada |
+| Dia e rituais | dia iniciado, execução iniciada, item do warm up respondido, checkout concluído, prioridade adicionada e retirada (nos projetos em foco, com o motivo da retirada e o projeto que saiu numa troca), configuração trocada; revisão fechada só no histórico antigo (ADR-060) |
 | Lembretes | criado, respondido, adiado |
 | Objetivos e recursos | objetivo criado, atualizado, finalizado e reaberto; recurso adicionado, renomeado e removido |
 | Hábitos | criado, atualizado, arquivado, registrado |
@@ -210,18 +210,14 @@ Reativar uma tarefa arquivada limpa a data sem contar adiamento (ADR-015).
 
 ## 9. Métricas (implementado em parte)
 
-- São funções puras no domínio que recebem os eventos de um período (`domain/metrics.ts`, `directionMetrics.ts`, `projectActivity.ts`, `habits.ts`, `reviews.ts`). Ficam testáveis sem banco, e uma métrica nova não exige migração.
-- As métricas da Revisão de Foco vêm só dos eventos, desde a última revisão, pelo momento do evento (ADR-021, ADR-039). As do raio-x que dependem de pergunta em aberto ficaram de fora (ADR-026).
+- São funções puras no domínio que recebem os eventos de um período (`projectActivity.ts`, `habits.ts`). Ficam testáveis sem banco, e uma métrica nova não exige migração.
+- O report de métricas da Revisão de Foco e o raio-x da Revisão de Rumo saíram com as revisões (ADR-060). Os eventos que eles liam continuam no histórico, então dá para calculá-los de novo se voltarem.
 - O volume de dados de uma pessoa é pequeno o bastante para calcular tudo no navegador. A lista de projetos é o primeiro ponto onde isso já pesa (issue [#81](https://github.com/Valerieps/best-app/issues/81)).
 
 | Fase | Métricas | Função |
 | --- | --- | --- |
-| 2 | Tarefas adiadas, precisão da data de intenção (feita no dia da intenção, com ou sem adiamentos), tarefas executadas | `metrics.ts` |
 | 2 | Atividade por dia de cada projeto (ADR-033, ADR-034) | `projectActivity.ts` |
-| 2 e 4 | Checkouts e revisões desde a última, sinais de cada revisão (ADR-039) | `reviews.ts` |
-| 4 | Prioridades do dia ligadas aos projetos em foco no dia em que caíram, projetos sem objetivo | `directionMetrics.ts` |
-| 4 | Blocos sem projeto, objetivos com pouco engajamento | Planejado |
-| 6 | Maior sequência de um hábito, percentual de completude, hábitos sem objetivo | `habits.ts` |
+| 6 | Maior sequência de um hábito, percentual de completude | `habits.ts` |
 
 ## 10. Backup e segurança (implementado)
 

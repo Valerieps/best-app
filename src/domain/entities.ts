@@ -149,7 +149,7 @@ export type WarmupResult = 'done' | 'skipped' | 'later';
 /**
  * Ordered priorities. Ids look like `day:2026-10-11` (the day's tasks) or `focusProjects` (section
  * 2, the single list of projects in focus). `weekProjects:2026-W42` lists are the week's priority
- * projects from before the reviews (ADR-035), kept as history for the raio-x; before version 6
+ * projects from before the single list (ADR-035), kept as history; before version 6
  * they were per month, with ids `month:AAAA-MM`.
  */
 export interface PriorityList {

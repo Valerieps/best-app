@@ -7,7 +7,7 @@
 
 - O app sempre avisa em vez de bloquear. A única exceção é a pasta do backup, que eu escolho antes de usar o app ("Primeiro uso").
 - Sempre dá para criar ou editar qualquer coisa fora dos rituais. Os rituais existem apenas para garantir que isso será feito em alguma hora.
-- Qualquer ritual pode ser acionado a qualquer hora, independente da cadência e dos sinais que deixam uma revisão disponível (`rituais.md`, "Quando uma revisão fica disponível").
+- Qualquer ritual pode ser acionado a qualquer hora (`abertura-do-dia.md`, "Rituais pulados").
 
 ## Primeiro uso
 
@@ -16,8 +16,7 @@ Antes de qualquer outra coisa, o app pede a pasta do backup, numa tela só, sem 
 Depois da pasta, não há onboarding: eu já saio usando o ciclo diário, e os rituais e conceitos entram aos poucos.
 
 - Primeiros dias: nota do dia, "Fechar o dia" e planejamento do dia seguinte, sem projetos nem objetivos.
-- Primeira Revisão de Foco: o app sugere agregar tarefas em projetos e definir o checklist de warm up.
-- Primeira Revisão de Rumo: o app sugere objetivos, a partir dos projetos que já existem.
+- Depois, os projetos, o warm up e os objetivos entram quando eu quiser, pelas telas deles e pelas configurações. As sugestões que a primeira Revisão de Foco e a primeira Revisão de Rumo fariam saíram com elas.
 
 ## Plataforma e dados
 

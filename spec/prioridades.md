@@ -1,9 +1,9 @@
 # Prioridades
 
 - **Entra aqui:** as prioridades do dia e os projetos em foco.
-- **Não entra aqui:** como a Revisão de Foco escolhe os projetos em foco (`rituais.md`) e as funcionalidades dos projetos (`projetos.md`).
+- **Não entra aqui:** as funcionalidades dos projetos (`projetos.md`).
 
-A Revisão de Foco escolhe projetos, e o fechamento do dia escolhe tarefas. Não há prioridades de tarefas fora do dia.
+Eu escolho os projetos em foco quando quiser, e o fechamento do dia escolhe tarefas. Não há prioridades de tarefas fora do dia.
 
 ## Prioridades do dia *(1b)*
 
@@ -18,6 +18,9 @@ A Revisão de Foco escolhe projetos, e o fechamento do dia escolhe tarefas. Não
 ## Projetos em foco *(2)*
 
 - Os projetos em foco são até 3 projetos e formam uma lista separada das prioridades do dia.
-- Eu os escolho na Revisão de Foco, e eles valem até a próxima. Fora dela, posso adicionar um projeto à lista a qualquer momento, enquanto houver vaga, pela lista de projetos ou pela página do projeto. Trocar ou tirar um projeto da lista só é possível na Revisão de Foco.
-- Finalizar um projeto em foco tira o projeto da lista e libera a vaga. Reabrir o projeto não o devolve à lista; se eu quiser, adiciono de novo enquanto houver vaga.
+- Eu adiciono, troco e tiro projetos da lista a qualquer momento, pela lista de projetos ou pela página do projeto, no "⋯" do projeto. A lista vale até eu mudá-la; o tempo sozinho não a muda. A Revisão de Foco, que antes era o único lugar para trocar ou tirar um projeto, saiu do app.
+- "Colocar em foco" põe um projeto ativo numa vaga livre, no fim da lista. Na lista de projetos, cada vaga livre também tem "Colocar em foco".
+- Com a lista cheia, "Colocar em foco no lugar de…" troca um projeto ativo por um dos 3 em foco, numa mudança só: o novo fica na posição do que saiu.
+- "Tirar do foco", no "⋯" de um projeto em foco, tira o projeto da lista e libera a vaga.
+- Finalizar um projeto em foco tira o projeto da lista e libera a vaga. Reabrir o projeto não o devolve à lista; se eu quiser, adiciono de novo.
 - No planejamento do dia seguinte, o fechamento mostra as tarefas dos projetos em foco primeiro, para eu escolher entre elas as tarefas do dia seguinte (`checkout.md`, "Quadros do fechamento e fim do dia").

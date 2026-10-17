@@ -1,9 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import type { PriorityList, Project } from './entities';
-import type { DomainEvent } from './events';
 import {
   focusProjectIds,
-  focusProjectsOnDay,
   legacyListInEffect,
   legacyWeekListId,
   migrateMonthPriorityLists,
@@ -21,19 +19,6 @@ function weekList(week: string, itemIds: string[]): PriorityList {
 
 function project(id: string, status: Project['status'] = 'active'): Project {
   return { id, name: id, status, createdAt: '', updatedAt: '', finishedAt: null };
-}
-
-let eventId = 0;
-function change(type: 'priority.added' | 'priority.removed', at: string, itemIds: string[], reason?: 'removed' | 'finished'): DomainEvent {
-  return {
-    id: `e${++eventId}`,
-    type,
-    entityType: 'priorities',
-    entityId: 'focusProjects',
-    at,
-    day: at.slice(0, 10),
-    data: reason ? { projectId: 'p', itemIds, reason } : { projectId: 'p', itemIds },
-  } as DomainEvent;
 }
 
 describe('projects in focus', () => {
@@ -62,22 +47,6 @@ describe('projects in focus', () => {
     expect(withSwappedProject(['a', 'b', 'c'], 'b', 'd')).toEqual(['a', 'd', 'c']);
     expect(withSwappedProject(['a', 'b'], 'z', 'd')).toBeNull();
     expect(withSwappedProject(['a', 'b'], 'a', 'b')).toBeNull();
-  });
-});
-
-describe('focusProjectsOnDay: the history for the raio-x', () => {
-  const legacy = [weekList('2026-W40', ['old'])];
-  const events = [change('priority.added', '2026-10-10T10:00:00Z', ['a']), change('priority.added', '2026-10-12T10:00:00Z', ['a', 'b'])];
-
-  it('uses the latest change up to the end of the day', () => {
-    expect(focusProjectsOnDay('2026-10-10', events, legacy)).toEqual(['a']);
-    expect(focusProjectsOnDay('2026-10-11', events, legacy)).toEqual(['a']);
-    expect(focusProjectsOnDay('2026-10-12', events, legacy)).toEqual(['a', 'b']);
-  });
-
-  it('falls back to the old week lists before the first change', () => {
-    expect(focusProjectsOnDay('2026-10-05', events, legacy)).toEqual(['old']);
-    expect(focusProjectsOnDay('2026-09-01', events, legacy)).toEqual([]);
   });
 });
 

@@ -129,7 +129,7 @@ export class AppDatabase extends Dexie {
         await table.bulkPut(migrated);
       });
     // Section 2: the Revisão de Foco replaces the week lists with a single list in focus. The
-    // week lists stay as the history of the raio-x.
+    // week lists stay as history.
     this.version(7)
       .stores({ priorities: 'id' })
       .upgrade(async (tx) => {
