@@ -123,5 +123,6 @@ branch's Cloudflare preview is the staging.
   unilaterally when asking genuinely isn't possible (e.g. a non-interactive/autonomous run). Once
   resolved - by the user's answer or, failing that, your own decision - record it as an amendment
   to the right file in `spec/` itself, not an ADR - the spec should stay authoritative for
-  anything a product/business decision would settle. When you decided it yourself, also list it
-  under "Revisar as lacunas que o agente decidiu" in `ROADMAP.md`, so the owner can review it.
+  anything a product/business decision would settle. When you decided it yourself, also add it
+  as a new unchecked item to issue #164 ("Revisar as lacunas do spec que o agente decidiu"), so
+  the owner can review it.
