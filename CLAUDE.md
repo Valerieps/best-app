@@ -73,6 +73,25 @@ Portuguese; ADRs, code and this file in English.
   voice, as in "triga" and "plim".
 - When she asks what you think of the app, she wants a frank assessment, including the risks.
 
+### Fewer rounds, fewer tokens
+Each step rereads the whole conversation, so long sessions and back-and-forth cost the most.
+- One session per task. When a task ends and the next one is unrelated, offer a new session
+  instead of continuing here.
+- Briefs for sessions you start are self-contained, so the child never needs this conversation.
+  Start mechanical work (docs, small UI fixes, issues) on Sonnet; keep Opus for design and
+  architecture.
+- A question ("o que acha", "me ajude a decidir", "vale a pena") gets an answer, not an
+  implementation.
+- Design or naming choices: show three or four directions side by side in the first round, not
+  one at a time.
+- Steps she does by hand in a console (Cloudflare, Google Cloud, GitHub settings): give the whole
+  checklist at once, with where to click, so she comes back only when stuck.
+- Fix what she named. Other problems you notice go in a list at the end, unfixed, unless she
+  asked you to fix them too.
+- When an artifact comment arrives, read every open thread on that artifact and answer them all
+  in one pass.
+- In the browser, check only what she asked; prefer page text over screenshots.
+
 ## Architecture Overview
 - Clean Architecture + Domain Driven Design (DDD)
 - Local-only: data lives in the browser (IndexedDB via Dexie). No backend, no login, no
