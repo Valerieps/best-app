@@ -134,6 +134,21 @@ describe('planning columns', () => {
     ]);
   });
 
+  it('skips the days that are not active, unless a task is dated for one', () => {
+    const friday = '2026-10-16';
+    const weekdays = [1, 2, 3, 4, 5];
+    expect(planningColumns([], '2026-10-15', friday, 3, weekdays)).toEqual([
+      { kind: 'day', day: friday },
+      { kind: 'day', day: '2026-10-19' },
+      { kind: 'day', day: '2026-10-20' },
+    ]);
+    expect(planningColumns(['2026-10-17'], '2026-10-15', friday, 3, weekdays)).toEqual([
+      { kind: 'day', day: friday },
+      { kind: 'day', day: '2026-10-17' },
+      { kind: 'day', day: '2026-10-19' },
+    ]);
+  });
+
   it('has no column for today when it is the target', () => {
     expect(planningColumns([today], today, today)).toEqual([
       { kind: 'day', day: today },

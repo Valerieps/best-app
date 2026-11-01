@@ -229,7 +229,8 @@ export async function loadPlanning(
   };
   // A stable sort keeps the usual order inside each project.
   const focusFirst = (list: TaskListItem[]) => list.map((item, index) => ({ item, index })).sort((a, b) => rank(a.item) - rank(b.item) || a.index - b.index).map(({ item }) => item);
-  const columns = planningColumns(items.map((item) => item.task.intendedDate), today, target, count);
+  const activeDays = (await reader.settings())?.activeDays;
+  const columns = planningColumns(items.map((item) => item.task.intendedDate), today, target, count, activeDays);
   const byDate = (a: TaskListItem, b: TaskListItem) => ((a.task.intendedDate ?? '') < (b.task.intendedDate ?? '') ? -1 : a.task.intendedDate === b.task.intendedDate ? 0 : 1);
   return {
     target,
