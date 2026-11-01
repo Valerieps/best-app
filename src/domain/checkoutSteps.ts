@@ -1,4 +1,5 @@
-import { addDays, type DayKey } from './day';
+import { addDays, fromDayKey, type DayKey } from './day';
+import { ALL_DAYS } from './dayFlow';
 import type { TaskDecision } from './triage';
 
 /**
@@ -120,18 +121,23 @@ export type PlanningColumn = { kind: 'late' } | { kind: 'day'; day: DayKey };
 /**
  * The columns of the planning board. The late tasks (dated before today) come first, all in one
  * column, when there are any. Then today, when a task is dated for it and it is not the target
- * already, and the target day with the days after it, until there are three columns (or `count`).
+ * already, and the target day with the active days after it, until there are three columns (or
+ * `count`). A day that is not active only gets a column when a task is dated for it.
  */
 export function planningColumns(
   dates: readonly (DayKey | null)[],
   today: DayKey,
   target: DayKey,
   count: number = PLANNING_COLUMNS,
+  activeDays: readonly number[] = ALL_DAYS,
 ): PlanningColumn[] {
+  const active = activeDays.length > 0 ? activeDays : ALL_DAYS;
   const columns: PlanningColumn[] = [];
   if (dates.some((date) => date !== null && date < today)) columns.push({ kind: 'late' });
   if (today < target && dates.includes(today)) columns.push({ kind: 'day', day: today });
-  for (let day = target; columns.length < count; day = addDays(day, 1)) columns.push({ kind: 'day', day });
+  for (let day = target, i = 0; columns.length < count && i < 366; day = addDays(day, 1), i++) {
+    if (day === target || active.includes(fromDayKey(day).getDay()) || dates.includes(day)) columns.push({ kind: 'day', day });
+  }
   return columns;
 }
 
