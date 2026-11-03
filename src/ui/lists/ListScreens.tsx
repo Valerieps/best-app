@@ -6,6 +6,7 @@ import { rangeBetween } from '../../domain/checkoutSteps';
 import { addDays, type DayKey } from '../../domain/day';
 import type { Project } from '../../domain/entities';
 import { TASK_LIST_KEYS, groupTasks, inFocusProjects, type TaskGroupBy, type TaskListKey } from '../../domain/taskList';
+import { AbandonAction } from '../components/AbandonAction';
 import { ProjectChip } from '../components/Chips';
 import { Icon } from '../components/Icon';
 import { DatePicker } from '../dayNote/BlockLine';
@@ -178,12 +179,10 @@ function TaskGroupSection({
 function BatchBar({ selected, today, onDone }: { selected: Set<string>; today: DayKey; onDone(message: string): void }) {
   const [intended, setIntended] = useState<DayKey>(addDays(today, 1));
   const [deadline, setDeadlineDate] = useState<DayKey>(addDays(today, 7));
-  const [confirming, setConfirming] = useState(false);
   const ids = [...selected];
   const none = ids.length === 0;
   const count = plural(ids.length, 'tarefa', 'tarefas');
   const run = (work: Promise<void>, message: string) => {
-    setConfirming(false);
     void work.then(() => onDone(message));
   };
   return (
@@ -232,22 +231,17 @@ function BatchBar({ selected, today, onDone }: { selected: Set<string>; today: D
           Tirar prazo
         </button>
       </span>
-      <button
-        type="button"
+      <AbandonAction
+        count={count}
         disabled={none}
-        className={confirming ? 'active-tasks__abandon--confirm' : ''}
-        onClick={() => (confirming ? run(abandonTasks(appContext, ids), `${count} abandonada${ids.length === 1 ? '' : 's'}`) : setConfirming(true))}
-        onBlur={() => setConfirming(false)}
-      >
-        {confirming ? `Confirmar abandono de ${count}` : 'Abandonar'}
-      </button>
+        onAbandon={() => run(abandonTasks(appContext, ids), `${count} abandonada${ids.length === 1 ? '' : 's'}`)}
+      />
     </div>
   );
 }
 
 /** On hover: change the two dates, or abandon the task, with a second click to confirm. */
 function ActiveTaskActions({ item, today, projects }: { item: TaskListItem; today: DayKey; projects: Project[] }) {
-  const [confirming, setConfirming] = useState(false);
   const { task } = item;
   return (
     <span className="active-tasks__actions">
@@ -286,15 +280,7 @@ function ActiveTaskActions({ item, today, projects }: { item: TaskListItem; toda
       >
         Prazo
       </DatePicker>
-      <button
-        type="button"
-        className={`line__action ${confirming ? 'active-tasks__abandon--confirm' : ''}`}
-        onClick={() => (confirming ? void abandonTask(appContext, task.id) : setConfirming(true))}
-        onBlur={() => setConfirming(false)}
-        title="Tirar a tarefa de circulação sem fazer. O histórico guarda o abandono."
-      >
-        {confirming ? 'Confirmar abandono' : 'Abandonar'}
-      </button>
+      <AbandonAction onAbandon={() => void abandonTask(appContext, task.id)} />
     </span>
   );
 }

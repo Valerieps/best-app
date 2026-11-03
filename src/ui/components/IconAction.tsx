@@ -11,10 +11,15 @@ export function IconAction({
   disabled,
   pressed,
   className,
+  onBlur,
+  title,
 }: {
   icon: IconName;
   label: string;
   onClick(): void;
+  onBlur?(): void;
+  /** A longer explanation than the tooltip's label, read on hover by assistive tools. */
+  title?: string;
   disabled?: boolean;
   pressed?: boolean;
   className?: string;
@@ -27,6 +32,8 @@ export function IconAction({
       aria-pressed={pressed}
       data-tip={label}
       onClick={onClick}
+      onBlur={onBlur}
+      title={title}
       disabled={disabled}
     >
       <Icon name={icon} />
