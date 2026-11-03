@@ -11,6 +11,12 @@
 - `@Nome` numa tarefa quer dizer que eu devo aquilo à pessoa. `@Nome` numa nota é só uma menção.
 - Cada pendência envolve uma pessoa só: se a linha cita mais de uma, vale a primeira.
 
+## Reunião com pessoas
+
+- Numa seção de reunião, se o título começa com `@`, a reunião é com pessoas: eu escrevo `@Ana @Rafael` e o `@` sugere as pessoas, como numa linha. Nesse caso o app não sugere nem cria projeto, e a seção não aparece nas seções soltas do "Fechar o dia".
+- Tudo o que escrevo nessa reunião vai para a página das pessoas do título: as tarefas contam como se citassem a primeira pessoa (eu devo; ou me deve, se aguardando), a menos que a linha cite outra, e as notas aparecem na aba "Notas" de cada uma.
+- Se eu vinculo a seção a um projeto, ela passa a ser do projeto e deixa de aparecer nas pessoas.
+
 ## Aguardando
 
 - Uma tarefa aguardando é algo que a pessoa me deve. Eu crio uma começando a linha com `[a]` e espaço (a de aguardando), como o `[]` da tarefa comum, ou marco uma tarefa já escrita com "Aguardando", no hover.
@@ -29,6 +35,6 @@
 ## Página da pessoa
 
 - A página da pessoa tem duas listas, "Eu devo" e "Me deve", com as tarefas ativas que citam a pessoa. Cada item mostra há quanto tempo está aberto, e os mais antigos vêm primeiro.
-- Embaixo, as menções: as notas que citam a pessoa, das mais novas para as mais antigas, com o dia e a seção.
-- Não há página de reunião: a reunião é só um lugar para escrever, e as pessoas aparecem pelas menções.
-- Na página da pessoa, eu posso renomear a pessoa, e o nome muda em todas as linhas que a citam. Posso juntar duas pessoas que são a mesma: as menções passam a citar a que fica. Posso arquivar a pessoa, que sai das sugestões do `@` e vai para o grupo das arquivadas, e reativar depois. E posso apagar a pessoa: o texto das linhas continua como está, só deixa de ser uma menção.
+- Embaixo, duas abas, como na página do projeto. "Tarefas": as tarefas ativas, das mais antigas para as mais novas, e as feitas, recolhidas. "Notas": as notas que citam a pessoa e as escritas em reuniões com ela, das mais novas para as mais antigas, com o dia e a seção.
+- Não há página de reunião: a reunião é só um lugar para escrever, e as pessoas aparecem pelas menções e pelo título da reunião.
+- Na página da pessoa, eu posso renomear a pessoa, e o nome muda em todas as linhas e em todos os títulos de reunião que a citam. Posso juntar duas pessoas que são a mesma: as menções passam a citar a que fica. Posso arquivar a pessoa, que sai das sugestões do `@` e vai para o grupo das arquivadas, e reativar depois. E posso apagar a pessoa: o texto das linhas continua como está, só deixa de ser uma menção.

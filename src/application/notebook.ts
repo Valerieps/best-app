@@ -1,6 +1,7 @@
 import { detectKind } from '../domain/blockKind';
 import { toDayKey, type DayKey } from '../domain/day';
 import type { Block, BlockKind, Section, SectionKind } from '../domain/entities';
+import { isPeopleTitle } from '../domain/people';
 import { adoptFirstPart, carriedPosition, placeInOrder, type Ordered } from '../domain/order';
 import { canEditFreely, lastTriagedDayAfterReopen } from '../domain/tasks';
 import { record } from './events';
@@ -71,7 +72,15 @@ export async function setSectionTitle(ctx: AppContext, sectionId: string, title:
   await ctx.store.transaction(async (tx) => {
     const section = await getOrThrow(tx.sections.get(sectionId), 'Section');
     if (section.title === next) return;
-    await tx.sections.put({ ...section, title: next, updatedAt: nowIso(ctx) });
+    // A meeting titled with people belongs to them, not to a project: no whiteboard to settle.
+    const withPeople =
+      section.kind === 'meeting' && section.projectId === null && next !== null && isPeopleTitle(next) && section.whiteboardDecision === 'pending';
+    await tx.sections.put({
+      ...section,
+      title: next,
+      ...(withPeople ? { whiteboardDecision: 'keptUnlinked' as const } : {}),
+      updatedAt: nowIso(ctx),
+    });
     await record(ctx, tx, 'section.titleChanged', 'section', section.id, section.day, { from: section.title, to: next });
   });
 }
