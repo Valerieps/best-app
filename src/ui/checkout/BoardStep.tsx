@@ -322,8 +322,11 @@ export function BoardStep({ mode, day, today, triage, projects, busy, onBack, on
           <div
             className={`plan-drop plan-drop--danger ${dropOn === 'abandon' ? 'plan-drop--on' : ''}`}
             {...dropTarget('abandon', abandon)}
+            role="img"
+            aria-label="Abandonar tarefa"
+            title="Abandonar tarefa"
           >
-            <Icon name="ban" /> Abandonar tarefa
+            <Icon name="trash" />
           </div>
         </div>
         <div className="plan-board" style={{ gridTemplateColumns: `repeat(${columns.length}, minmax(0, 1fr))` }}>

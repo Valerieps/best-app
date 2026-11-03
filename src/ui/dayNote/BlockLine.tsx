@@ -3,6 +3,7 @@ import { detectKind } from '../../domain/blockKind';
 import type { DayKey } from '../../domain/day';
 import type { Block } from '../../domain/entities';
 import { completeMention, mentionAt, personOptions, unknownNames, type PersonOption } from '../../domain/people';
+import { AbandonAction } from '../components/AbandonAction';
 import { relativeDay } from '../format';
 import { usePeople } from '../people/PeopleContext';
 import { useSaveOnPageLeave } from '../pageLeave';
@@ -45,6 +46,8 @@ export interface LineHandlers {
   onSetDate(block: Block, date: DayKey | null): void;
   onSetDeadline(block: Block, date: DayKey | null): void;
   onTogglePriority(block: Block, on: boolean): void;
+  /** Takes an active task out of circulation (trash icon, confirmed with a second click). Absent hides the action. */
+  onAbandon?(block: Block): void;
   /** Alt + ↑/↓: moves the line inside its group (request 2). Absent where lines keep their order. */
   onMove?(block: Block, direction: 'up' | 'down'): void;
   /** Ctrl + A with the line's whole text already selected: selects every line. Absent where lines are not selectable. */
@@ -554,6 +557,7 @@ export function BlockLine({ block, free, day, today, isPriority, allowNewLines, 
                 {waiting ? 'Não é aguardando' : 'Aguardando'}
               </button>
             )}
+            {open && handlers.onAbandon && <AbandonAction onAbandon={() => handlers.onAbandon?.(block)} />}
             {convertible && (
               <button type="button" className="line__action" onClick={() => handlers.onMakeTask(block, text)}>
                 Converter em tarefa
