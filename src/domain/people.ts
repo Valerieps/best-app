@@ -70,8 +70,22 @@ export function unknownNames(text: string, people: readonly Person[]): string[] 
  * The person a task is about: the first one it cites. Each pending item involves one person
  * only (spec/pessoas.md).
  */
-export function taskPerson(task: Block, people: readonly Person[]): Person | null {
-  return mentionedPeople(task.text, people)[0] ?? null;
+export function taskPerson(task: Block, people: readonly Person[], section?: Section | null): Person | null {
+  return mentionedPeople(task.text, people)[0] ?? meetingPeople(section, people)[0] ?? null;
+}
+
+/**
+ * The people a meeting section is with: the ones its title cites, as in "@Ana @Rafael". A
+ * section linked to a project is that project's, whatever its title says.
+ */
+export function meetingPeople(section: Section | null | undefined, people: readonly Person[]): Person[] {
+  if (!section || section.kind !== 'meeting' || section.projectId !== null || !section.title) return [];
+  return mentionedPeople(section.title, people);
+}
+
+/** Whether the title is made of mentions only, which makes the section a meeting with people. */
+export function isPeopleTitle(title: string): boolean {
+  return /^\s*@/u.test(title);
 }
 
 /** The mention being typed at the caret: from the `@` to the end of the word. */
@@ -145,8 +159,12 @@ export interface PersonPage {
   iOwe: PersonItem[];
   /** Active waiting tasks citing the person: what they owe me. Oldest first. */
   theyOwe: PersonItem[];
-  /** Notes citing the person, newest first. */
+  /** Notes citing the person or written in a meeting with them, newest first. */
   mentions: PersonMention[];
+  /** Every active task of the two lists above, oldest first. */
+  active: PersonItem[];
+  /** Finished tasks citing the person or from a meeting with them, latest first. */
+  done: PersonItem[];
 }
 
 function openDays(task: Block, today: DayKey): number {
@@ -168,17 +186,28 @@ export function buildPersonPage(
 ): PersonPage {
   const iOwe: PersonItem[] = [];
   const theyOwe: PersonItem[] = [];
+  const done: PersonItem[] = [];
   const mentions: PersonMention[] = [];
   for (const block of blocks) {
+    const section = sectionsById.get(block.sectionId) ?? null;
     if (block.kind === 'task') {
-      if (!isOpenTask(block) || taskPerson(block, people)?.id !== person.id) continue;
-      (block.waiting ? theyOwe : iOwe).push({ task: block, openDays: openDays(block, today) });
-    } else if (block.text.trim() !== '' && mentionedPeople(block.text, people).some((each) => each.id === person.id)) {
-      mentions.push({ note: block, section: sectionsById.get(block.sectionId) ?? null });
+      if (taskPerson(block, people, section)?.id !== person.id) continue;
+      const item = { task: block, openDays: openDays(block, today) };
+      if (block.status === 'done') done.push(item);
+      else if (isOpenTask(block)) (block.waiting ? theyOwe : iOwe).push(item);
+    } else if (
+      block.text.trim() !== '' &&
+      (mentionedPeople(block.text, people).some((each) => each.id === person.id) ||
+        meetingPeople(section, people).some((each) => each.id === person.id))
+    ) {
+      mentions.push({ note: block, section });
     }
   }
   mentions.sort((a, b) => (a.note.createdAt < b.note.createdAt ? 1 : a.note.createdAt > b.note.createdAt ? -1 : 0));
-  return { person, iOwe: iOwe.sort(oldestFirst), theyOwe: theyOwe.sort(oldestFirst), mentions };
+  done.sort((a, b) => ((a.task.closedAt ?? '') < (b.task.closedAt ?? '') ? 1 : -1));
+  iOwe.sort(oldestFirst);
+  theyOwe.sort(oldestFirst);
+  return { person, iOwe, theyOwe, mentions, active: [...iOwe, ...theyOwe].sort(oldestFirst), done };
 }
 
 export interface PersonSummary {
@@ -203,7 +232,12 @@ export interface PeopleOverview {
 }
 
 /** The "Pessoas" screen: each person with what is open between us, and everything I am waiting for. */
-export function buildPeopleOverview(people: readonly Person[], blocks: readonly Block[], today: DayKey): PeopleOverview {
+export function buildPeopleOverview(
+  people: readonly Person[],
+  blocks: readonly Block[],
+  today: DayKey,
+  sectionsById: ReadonlyMap<string, Section> = new Map(),
+): PeopleOverview {
   const summaries = new Map<string, PersonSummary>();
   for (const person of people) {
     if (person.status !== 'merged') summaries.set(person.id, { person, iOwe: 0, theyOwe: 0, oldestOpenDays: null });
@@ -211,7 +245,7 @@ export function buildPeopleOverview(people: readonly Person[], blocks: readonly 
   const waiting: WaitingItem[] = [];
   for (const block of blocks) {
     if (!isOpenTask(block)) continue;
-    const person = taskPerson(block, people);
+    const person = taskPerson(block, people, sectionsById.get(block.sectionId));
     const days = openDays(block, today);
     if (block.waiting) waiting.push({ task: block, openDays: days, person });
     const summary = person ? summaries.get(person.id) : undefined;

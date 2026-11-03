@@ -3,7 +3,7 @@ import { positionBetween } from '../domain/position';
 import { createTestContext } from '../test/fixtures';
 import { applyTriage, closePendingDays, defaultClosingDecisions } from './checkout';
 import { setIntendedDate } from './dayTools';
-import { changeBlockKind, createBlock, setTaskDone, setTaskWaiting } from './notebook';
+import { changeBlockKind, createBlock, createSection, setSectionTitle, setTaskDone, setTaskWaiting } from './notebook';
 import { createPerson, deletePerson, ensurePeople, mergePeople, renamePerson, setPersonArchived } from './people';
 import { loadActiveTasks, loadDayNote, loadDayTriage, loadPeople, loadPeopleView, loadPendingTriages, loadPersonView } from './queries';
 
@@ -125,5 +125,18 @@ describe('waiting tasks', () => {
     await setTaskDone(ctx, waiting.id, true);
     const [finished] = await db.events.where('type').equals('task.finished').toArray();
     expect(finished.data).toMatchObject({ waiting: true });
+  });
+
+  it('keeps a meeting titled with people off the whiteboards, and renames them in its title', async () => {
+    const { ctx, db, reader } = createTestContext();
+    const ana = await createPerson(ctx, 'Ana');
+    const section = await createSection(ctx, 'meeting');
+    await setSectionTitle(ctx, section.id, '@Ana');
+    expect(await db.sections.get(section.id)).toMatchObject({ title: '@Ana', projectId: null, whiteboardDecision: 'keptUnlinked' });
+    const line = await createBlock(ctx, { sectionId: section.id, position: at() }, '[] Mandar o relatório');
+    const view = await loadPersonView(reader, ana.id, SUNDAY);
+    expect(view?.iOwe.map((item) => item.task.id)).toEqual([line.id]);
+    await renamePerson(ctx, ana.id, 'Aninha');
+    expect((await db.sections.get(section.id))?.title).toBe('@Aninha');
   });
 });

@@ -50,6 +50,8 @@ export interface StoreTransaction {
   allPeople(): Promise<Person[]>;
   /** Blocks whose text has an `@`: the ones that may cite someone (spec/pessoas.md). */
   blocksWithMentions(): Promise<Block[]>;
+  /** Sections whose title has an `@`: the meetings that may be with someone (spec/pessoas.md). */
+  sectionsWithMentions(): Promise<Section[]>;
   blocksInSection(sectionId: string): Promise<Block[]>;
   blocksOfProject(projectId: string): Promise<Block[]>;
   sectionsOfProject(projectId: string): Promise<Section[]>;
@@ -99,6 +101,8 @@ export interface Reader {
   people(): Promise<Person[]>;
   /** Blocks whose text has an `@`: the ones that may cite someone (spec/pessoas.md). */
   blocksWithMentions(): Promise<Block[]>;
+  /** Sections whose title has an `@`: the meetings that may be with someone (spec/pessoas.md). */
+  sectionsWithMentions(): Promise<Section[]>;
 }
 
 export interface AppContext {

@@ -155,7 +155,7 @@ export function App() {
           {route.name === 'project' && <ProjectScreen key={route.id} id={route.id} tab={route.tab ?? 'tasks'} today={today} />}
           {route.name === 'settings' && <SettingsScreen />}
           {route.name === 'people' && <PeopleScreen today={today} />}
-          {route.name === 'person' && <PersonScreen key={route.id} id={route.id} today={today} />}
+          {route.name === 'person' && <PersonScreen key={route.id} id={route.id} tab={route.tab ?? 'tasks'} today={today} />}
           {route.name === 'objectives' && <ObjectivesScreen />}
           {route.name === 'objective' && <ObjectiveScreen id={route.id} />}
           {route.name === 'habits' && <HabitsScreen today={today} />}

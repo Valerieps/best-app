@@ -126,4 +126,8 @@ export class DexieReader implements Reader {
   blocksWithMentions() {
     return this.db.blocks.filter((block) => block.text.includes('@')).toArray();
   }
+
+  sectionsWithMentions() {
+    return this.db.sections.filter((section) => section.title?.includes('@') ?? false).toArray();
+  }
 }
