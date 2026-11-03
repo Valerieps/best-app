@@ -13,7 +13,7 @@ export function AbandonAction({
 }: {
   onAbandon(): void;
   /** Several tasks at once (the selection bar): the labels say how many. */
-  count?: number;
+  count?: string;
   disabled?: boolean;
   className?: string;
 }) {
