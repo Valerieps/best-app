@@ -35,7 +35,8 @@ export type Route =
   | { name: 'settings' }
   /** People cited with `@` (spec/pessoas.md). */
   | { name: 'people' }
-  | { name: 'person'; id: string }
+  /** `tab` opens the notes tab; omitted shows the tasks. */
+  | { name: 'person'; id: string; tab?: 'notes' }
   /** Sections 4 and 6. */
   | { name: 'objectives' }
   | { name: 'objective'; id: string }
@@ -87,7 +88,10 @@ export function parseRoute(hash: string): Route {
     case 'pessoas':
       return { name: 'people' };
     case 'pessoa':
-      return parts[1] ? { name: 'person', id: decodeURIComponent(parts[1]) } : { name: 'people' };
+      if (!parts[1]) return { name: 'people' };
+      return parts[2] === 'notas'
+        ? { name: 'person', id: decodeURIComponent(parts[1]), tab: 'notes' }
+        : { name: 'person', id: decodeURIComponent(parts[1]) };
     case 'objetivos':
       return { name: 'objectives' };
     case 'objetivo':
@@ -120,7 +124,7 @@ export function routeHash(route: Route): string {
     case 'people':
       return '#/pessoas';
     case 'person':
-      return `#/pessoa/${encodeURIComponent(route.id)}`;
+      return `#/pessoa/${encodeURIComponent(route.id)}${route.tab === 'notes' ? '/notas' : ''}`;
     case 'objectives':
       return '#/objetivos';
     case 'objective':
