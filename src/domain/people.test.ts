@@ -6,7 +6,9 @@ import {
   buildPersonPage,
   completeMention,
   findPerson,
+  isPeopleTitle,
   isPersonName,
+  meetingPeople,
   mentionAt,
   mentionedNames,
   mentionStartingAt,
@@ -138,6 +140,51 @@ describe('person page and overview', () => {
     expect(overview.waiting.map((item) => [item.task.id, item.person?.name])).toEqual([
       [waiting.id, 'Ana'],
       [other.id, 'Rafael'],
+    ]);
+  });
+});
+
+describe('meetings with people', () => {
+  const meeting = section({ kind: 'meeting', day: '2026-10-05', title: '@Ana @Rafael' });
+  const sectionsById = new Map([[meeting.id, meeting]]);
+  const plain = task(meeting.id, 'Mandar o relatório', { createdAt: '2026-10-05T09:00:00.000Z' });
+  const waiting = task(meeting.id, 'Enviar o contrato', { waiting: true, createdAt: '2026-10-04T09:00:00.000Z' });
+  const cited = task(meeting.id, 'Ligar para o @Rafael', { createdAt: '2026-10-03T09:00:00.000Z' });
+  const finished = task(meeting.id, 'Já fiz', { status: 'done', closedAt: '2026-10-06T09:00:00.000Z' });
+  const notes = note(meeting.id, 'Decidimos adiar', { createdAt: '2026-10-05T10:00:00.000Z' });
+  const blocks = [plain, waiting, cited, finished, notes];
+
+  it('reads the people from the title of a meeting that is not linked to a project', () => {
+    expect(meetingPeople(meeting, people)).toEqual([ana, rafael]);
+    expect(meetingPeople({ ...meeting, projectId: 'p1' }, people)).toEqual([]);
+    expect(meetingPeople({ ...meeting, kind: 'general' }, people)).toEqual([]);
+    expect(isPeopleTitle(' @Ana')).toBe(true);
+    expect(isPeopleTitle('Daily')).toBe(false);
+  });
+
+  it('makes the first person of the title the one a task is about, unless the task cites someone', () => {
+    expect(taskPerson(plain, people, meeting)).toBe(ana);
+    expect(taskPerson(cited, people, meeting)).toBe(rafael);
+    expect(taskPerson(plain, people, null)).toBeNull();
+  });
+
+  it('puts the tasks and notes of the meeting on the page of each person', () => {
+    const page = buildPersonPage(ana, blocks, people, sectionsById, '2026-10-11');
+    expect(page.iOwe.map((item) => item.task.id)).toEqual([plain.id]);
+    expect(page.theyOwe.map((item) => item.task.id)).toEqual([waiting.id]);
+    expect(page.active.map((item) => item.task.id)).toEqual([waiting.id, plain.id]);
+    expect(page.done.map((item) => item.task.id)).toEqual([finished.id]);
+    expect(page.mentions.map((each) => each.note.id)).toEqual([notes.id]);
+    const other = buildPersonPage(rafael, blocks, people, sectionsById, '2026-10-11');
+    expect(other.iOwe.map((item) => item.task.id)).toEqual([cited.id]);
+    expect(other.mentions.map((each) => each.note.id)).toEqual([notes.id]);
+  });
+
+  it('counts them on the overview', () => {
+    const overview = buildPeopleOverview(people, blocks, '2026-10-11', sectionsById);
+    expect(overview.active.map((each) => [each.person.name, each.iOwe, each.theyOwe])).toEqual([
+      ['Ana', 1, 1],
+      ['Rafael', 1, 0],
     ]);
   });
 });

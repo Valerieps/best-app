@@ -24,6 +24,7 @@ import {
 } from '../../application/notebook';
 import { moveDayPriority, setDayPriority, setDeadline, setIntendedDate } from '../../application/dayTools';
 import { ensurePeople } from '../../application/people';
+import { usePeople } from '../people/PeopleContext';
 import { setDayNoteFocus } from '../../application/settings';
 import { loadDayNote, loadDayPriorities } from '../../application/queries';
 import { detectKind } from '../../domain/blockKind';
@@ -524,6 +525,7 @@ export function DayNoteScreen({
   const lineProps = { day, today, allowNewLines: writable, handlers };
   const partKeys = parts.map((part) => part.key);
   const projects = view.projects;
+  const people = usePeople();
   const onlyPriorities = parts.every((part) => part.kind === 'priorities');
 
   /** Creates a line at the end of a section: its first line, or the one typed after clicking below the lines. */
@@ -694,11 +696,13 @@ export function DayNoteScreen({
           section={section}
           kind={kind}
           projects={projects}
+          people={people}
           onSaveTitle={(title) => section && write(() => setSectionTitle(ctx, section.id, title))}
           onLinkProject={(project) => section && write(() => titleSectionWithProject(ctx, section.id, project.id))}
           onCreateProject={(name) => section && write(() => convertSectionToProject(ctx, section.id, name))}
           onUnlink={(title) => section && write(() => unlinkSection(ctx, section.id, title))}
           onRenameProject={(name) => section && write(() => renameSectionProject(ctx, section.id, name))}
+          onEnsurePeople={(names) => write(() => ensurePeople(ctx, names))}
           trailing={
             <>
               <FormatToolbar />

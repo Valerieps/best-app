@@ -32,7 +32,7 @@ import { buildDayPriorities, dayPriorityListId, type DayPriority } from '../doma
 import { FOCUS_LIST_ID, focusProjectIds, hasFreeSlot } from '../domain/focusProjects';
 import { activityByDay, lastActivityDay, recentlyFinished, stalledDays, type ActivityByDay } from '../domain/projectActivity';
 import { isDaySection, isStuckTask } from '../domain/projectPage';
-import { buildPeopleOverview, buildPersonPage, type PeopleOverview, type PersonPage } from '../domain/people';
+import { buildPeopleOverview, buildPersonPage, meetingPeople, type PeopleOverview, type PersonPage } from '../domain/people';
 import { buildDayTriage, findPendingDays, isTriagePending, type DayTriage } from '../domain/triage';
 import type { Reader } from './ports';
 
@@ -620,7 +620,10 @@ export async function loadHabits(reader: Reader, today: DayKey): Promise<HabitVi
 /** Blocks that may cite someone, with the sections they were written in (spec/pessoas.md). */
 async function mentionContext(reader: Reader) {
   const people = await reader.people();
-  const blocks = await reader.blocksWithMentions();
+  // Meetings titled with people count as a mention of them for everything written inside.
+  const meetings = (await reader.sectionsWithMentions()).filter((section) => meetingPeople(section, people).length > 0);
+  const inMeetings = await reader.blocksInSections(meetings.map((section) => section.id));
+  const blocks = [...new Map([...(await reader.blocksWithMentions()), ...inMeetings].map((block) => [block.id, block])).values()];
   const sections = await reader.sectionsByIds([...new Set(blocks.map((block) => block.sectionId))]);
   return { people, blocks, sectionsById: new Map(sections.map((section) => [section.id, section])) };
 }
@@ -637,7 +640,7 @@ export interface PeopleView extends PeopleOverview {
 /** The "Pessoas" screen. */
 export async function loadPeopleView(reader: Reader, today: DayKey): Promise<PeopleView> {
   const { people, blocks, sectionsById } = await mentionContext(reader);
-  return { ...buildPeopleOverview(people, blocks, today), sectionsById };
+  return { ...buildPeopleOverview(people, blocks, today, sectionsById), sectionsById };
 }
 
 export interface PersonView extends PersonPage {
