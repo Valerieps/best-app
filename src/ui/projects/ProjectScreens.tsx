@@ -1,6 +1,6 @@
 import { useEffect, useState, type KeyboardEvent, type ReactNode } from 'react';
 import { setDayPriority, setDeadline, setIntendedDate } from '../../application/dayTools';
-import { setTaskDone, setTaskWaiting, updateBlockText } from '../../application/notebook';
+import { abandonTask, setTaskDone, setTaskWaiting, updateBlockText } from '../../application/notebook';
 import { ensurePeople } from '../../application/people';
 import { createProjectTask, renameProject, setProjectIcon } from '../../application/projects';
 import { loadDayPriorities, loadProject, loadProjectResources } from '../../application/queries';
@@ -168,6 +168,7 @@ export function ProjectScreen({ id, tab, today }: { id: string; tab: 'tasks' | '
     onSetDeadline: (block, date) => write(() => setDeadline(appContext, block.id, date)),
     onTogglePriority: (block, on) => write(() => setDayPriority(appContext, block.id, on)),
     onSetWaiting: (block, waiting) => write(() => setTaskWaiting(appContext, block.id, waiting)),
+    onAbandon: (block) => write(() => abandonTask(appContext, block.id)),
     onEnsurePeople: (names) => write(() => ensurePeople(appContext, names)),
   };
 
