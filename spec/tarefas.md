@@ -24,7 +24,7 @@
 - O título do grupo de um dia usa "Hoje", "Amanhã" e "Ontem" quando é o caso, e a data curta nos outros dias.
 - Um seletor "Só projetos em foco" deixa na lista só as tarefas dos projetos em foco (`projetos.md`), e combina com agrupar e ordenar.
 - A escolha de agrupar, ordenar e do seletor fica guardada neste navegador. Os grupos sempre abrem abertos, e um botão recolhe ou abre todos de uma vez.
-- No hover de uma tarefa, eu posso mudar a data de intenção e o prazo máximo, como na nota do dia, e abandonar a tarefa. Uma tarefa sem projeto também ganha "Projeto", que a vincula a um dos projetos ativos. Abandonar pede um segundo clique para confirmar, e a tarefa sai da lista. A linha mostra o prazo, quando tem.
+- No hover de uma tarefa, eu posso mudar a data de intenção e o prazo máximo, como na nota do dia, e abandonar a tarefa. Uma tarefa sem projeto também ganha "Projeto", que a vincula a um dos projetos ativos. Abandonar é um ícone de lixeira, em todas as telas onde existe: nesta lista, na seleção de várias tarefas, na tela de um projeto (no hover de qualquer tarefa ativa) e na área de soltar do quadro do fechamento. Na lista e na tela do projeto ele pede um segundo clique para confirmar, e a tarefa sai da tela. A linha mostra o prazo, quando tem.
 - Em "Selecionar várias", como no planejamento do fechamento do dia, a caixa de seleção some e eu clico na linha para selecionar, que fica destacada (Shift + clique pega um intervalo, e cada grupo tem "selecionar grupo") e, na barra de baixo, dou a todas a mesma data de intenção ou o mesmo prazo, tiro a data ou o prazo de todas, ou abandono todas, também com um segundo clique para confirmar. Esc ou "Pronto" sai da seleção.
 
 ## Prazo máximo e origem *(1b)*
