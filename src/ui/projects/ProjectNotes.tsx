@@ -1,5 +1,6 @@
 import { useEffect, useState, type KeyboardEvent } from 'react';
-import { deleteKeptNote, mergeKeptNote, splitKeptNote, updateBlockText } from '../../application/notebook';
+import { deleteKeptNote, mergeKeptNote, pasteLines, splitKeptNote, updateBlockText } from '../../application/notebook';
+import { chainedPositions } from '../dayNote/paste';
 import { createProjectNote } from '../../application/projects';
 import type { SectionNotes } from '../../application/queries';
 import type { DayKey } from '../../domain/day';
@@ -135,6 +136,13 @@ function SectionEditor({ section, today }: { section: Section; today: DayKey }) 
       const id = appContext.ids.next();
       requestFocus(id, newCaret);
       write(() => splitKeptNote(appContext, block.id, text, caret, positionBetween(block.position, next?.position ?? null), id));
+    },
+    onPasteLines: (block, pasted, options) => {
+      const index = lines.findIndex((line) => line.id === block.id);
+      const positions = chainedPositions(block.position, lines[index + 1]?.position ?? null, pasted.length - 1, positionBetween);
+      const targets = positions.map((position) => ({ sectionId: block.sectionId, position, blockId: appContext.ids.next() }));
+      requestFocus(targets[targets.length - 1].blockId, options.caret);
+      write(() => pasteLines(appContext, block.id, pasted, targets, { detectFirst: false, detectRest: false, kept: true }));
     },
     onBackspaceAtStart: (block, text) => {
       const index = lines.findIndex((line) => line.id === block.id);

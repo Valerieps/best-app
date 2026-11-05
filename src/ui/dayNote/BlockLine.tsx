@@ -1,4 +1,4 @@
-import { useCallback, useContext, useEffect, useLayoutEffect, useRef, useState, type KeyboardEvent, type MouseEvent, type PointerEvent, type ReactNode } from 'react';
+import { useCallback, useContext, useEffect, useLayoutEffect, useRef, useState, type ClipboardEvent, type KeyboardEvent, type MouseEvent, type PointerEvent, type ReactNode } from 'react';
 import { detectKind } from '../../domain/blockKind';
 import type { DayKey } from '../../domain/day';
 import type { Block } from '../../domain/entities';
@@ -26,6 +26,8 @@ import {
   type LineEdit,
 } from './markdown';
 import { ListMarker, MarkdownText } from './MarkdownText';
+import { emptyHistory, recordEdit, redo, undo, type History } from './lineHistory';
+import { applyPaste, linkOverSelection, pastedLines, splits } from './paste';
 
 /** Wait after the last keystroke before saving the text. */
 const SAVE_DELAY_MS = 400;
@@ -50,6 +52,12 @@ export interface LineHandlers {
   onAbandon?(block: Block): void;
   /** Alt + ↑/↓: moves the line inside its group (request 2). Absent where lines keep their order. */
   onMove?(block: Block, direction: 'up' | 'down'): void;
+  /**
+   * Text with line breaks was pasted (ADR-062): `lines[0]` is the new text of this line, each other
+   * line becomes a line after it, and the caret goes to `caret` on the last one. Absent where lines
+   * cannot be created: the paste is then joined into this line.
+   */
+  onPasteLines?(block: Block, lines: string[], options: { detectFirst: boolean; detectRest: boolean; caret: number }): void;
   /** Ctrl + A with the line's whole text already selected: selects every line. Absent where lines are not selectable. */
   onSelectAll?(block: Block): void;
 }
@@ -160,6 +168,10 @@ export function BlockLine({ block, free, day, today, isPriority, allowNewLines, 
   const [entering] = useState(() => entersWithMotion(settled, pendingFocusId(), block.id));
   // The selection to restore once a formatted text renders.
   const selectionAfter = useRef<[number, number] | null>(null);
+  // Undo and redo of this line's text (ADR-063).
+  const history = useRef<History>(emptyHistory());
+  const lastSelection = useRef<[number, number]>([0, 0]);
+  const pasting = useRef(false);
   // The `@` suggestions follow the caret; Escape closes them for the mention being typed.
   const people = usePeople();
   const [caret, setCaret] = useState<number | null>(null);
@@ -177,6 +189,32 @@ export function BlockLine({ block, free, day, today, isPriority, allowNewLines, 
   function readEdit(element: HTMLTextAreaElement): LineEdit {
     const prefix = latest.current.text.slice(0, prefixOf());
     return { text: prefix + element.value, start: element.selectionStart + prefix.length, end: element.selectionEnd + prefix.length };
+  }
+
+  /** Remembers the line as it is, to come back to with Ctrl + Z, before an edit that replaces it. */
+  function remember(kind: 'typing' | 'step') {
+    const [start, end] = lastSelection.current;
+    history.current = recordEdit(history.current, { text: latest.current.text, start, end }, kind, Date.now());
+  }
+
+  /** Puts `next` on the line and saves it like typing. */
+  function putEdit(next: LineEdit) {
+    setText(next.text);
+    latest.current.text = next.text;
+    selectionAfter.current = [next.start, next.end];
+    lastSelection.current = [next.start, next.end];
+    if (saveTimer.current) clearTimeout(saveTimer.current);
+    saveTimer.current = setTimeout(flush, SAVE_DELAY_MS);
+  }
+
+  function stepHistory(direction: 'undo' | 'redo') {
+    const element = ref.current;
+    if (!element) return;
+    const edit = readEdit(element);
+    const result = (direction === 'undo' ? undo : redo)(history.current, edit);
+    if (!result) return;
+    history.current = result.history;
+    putEdit(result.snapshot);
   }
 
   // Follow changes made elsewhere (another tab, a merge) unless there are unsaved local edits.
@@ -213,12 +251,12 @@ export function BlockLine({ block, free, day, today, isPriority, allowNewLines, 
       const edit = readEdit(element);
       const next = applyFormat(command, edit);
       if (next.text === edit.text && next.start === edit.start && next.end === edit.end) return;
-      setText(next.text);
-      latest.current.text = next.text;
-      selectionAfter.current = [next.start, next.end];
-      if (saveTimer.current) clearTimeout(saveTimer.current);
-      saveTimer.current = setTimeout(flush, SAVE_DELAY_MS);
+      lastSelection.current = [edit.start, edit.end];
+      remember('step');
+      putEdit(next);
     },
+    // The helpers read refs only.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     [flush],
   );
   useLayoutEffect(() => {
@@ -237,6 +275,22 @@ export function BlockLine({ block, free, day, today, isPriority, allowNewLines, 
     return () => element.removeEventListener(FORMAT_EVENT, listener);
   }, [format]);
 
+  // Undo and redo from the browser's menu or the system are the same as the shortcuts.
+  const historyRef = useRef(stepHistory);
+  historyRef.current = stepHistory;
+  useEffect(() => {
+    const element = ref.current;
+    if (!element) return;
+    const listener = (event: Event) => {
+      const type = (event as InputEvent).inputType;
+      if (type !== 'historyUndo' && type !== 'historyRedo') return;
+      event.preventDefault();
+      historyRef.current(type === 'historyUndo' ? 'undo' : 'redo');
+    };
+    element.addEventListener('beforeinput', listener);
+    return () => element.removeEventListener('beforeinput', listener);
+  }, []);
+
   const mention = editing && caret !== null ? mentionAt(text, caret) : null;
   const options: PersonOption[] = mention && mention.start !== dismissedAt ? personOptions(mention.query, people) : [];
   const active = Math.min(highlight, Math.max(options.length - 1, 0));
@@ -245,13 +299,10 @@ export function BlockLine({ block, free, day, today, isPriority, allowNewLines, 
     if (!mention) return;
     const name = option.type === 'person' ? option.person.name : option.name;
     const next = completeMention(text, mention, name);
-    setText(next.text);
-    latest.current.text = next.text;
-    selectionAfter.current = [next.caret, next.caret];
+    remember('step');
+    putEdit({ text: next.text, start: next.caret, end: next.caret });
     setCaret(next.caret);
     if (option.type === 'create') handlers.onEnsurePeople?.([name]);
-    if (saveTimer.current) clearTimeout(saveTimer.current);
-    saveTimer.current = setTimeout(flush, SAVE_DELAY_MS);
   }
 
   /** Leaving the line without choosing anyone creates the people typed there (spec/pessoas.md). */
@@ -272,6 +323,7 @@ export function BlockLine({ block, free, day, today, isPriority, allowNewLines, 
     if (block.kind === 'note' && free && !notesOnly) {
       const detected = detectKind(value);
       if (detected.kind === 'task') {
+        history.current = emptyHistory();
         setText(detected.text);
         if (saveTimer.current) clearTimeout(saveTimer.current);
         handlers.onMakeTask(block, detected.text, detected.waiting);
@@ -282,6 +334,7 @@ export function BlockLine({ block, free, day, today, isPriority, allowNewLines, 
     if (block.kind === 'task' && block.status === 'active' && !block.waiting && handlers.onSetWaiting) {
       const detected = detectKind(value);
       if (detected.waiting) {
+        history.current = emptyHistory();
         setText(detected.text);
         latest.current.text = detected.text;
         handlers.onSetWaiting(block, true);
@@ -290,9 +343,45 @@ export function BlockLine({ block, free, day, today, isPriority, allowNewLines, 
         return;
       }
     }
+    remember(pasting.current ? 'step' : 'typing');
+    pasting.current = false;
     setText(value);
     if (saveTimer.current) clearTimeout(saveTimer.current);
     saveTimer.current = setTimeout(flush, SAVE_DELAY_MS);
+  }
+
+  /** Pasted text: one line per line of text (ADR-062), or an address over selected text, a link. */
+  function onPaste(event: ClipboardEvent<HTMLTextAreaElement>) {
+    const raw = event.clipboardData.getData('text/plain');
+    const edit = readEdit(event.currentTarget);
+    lastSelection.current = [edit.start, edit.end];
+    const link = linkOverSelection(edit, raw);
+    if (link) {
+      event.preventDefault();
+      remember('step');
+      putEdit(link);
+      return;
+    }
+    const pasted = pastedLines(raw);
+    if (!pasted) {
+      pasting.current = true;
+      return;
+    }
+    // Text with line breaks never goes into the field as it is: a line has no line breaks.
+    event.preventDefault();
+    if (pasted.length === 0) return;
+    const split = splits(pasted.length, allowNewLines && !!handlers.onPasteLines);
+    const result = applyPaste(edit, pasted, split);
+    if (result.lines.length === 1) {
+      remember('step');
+      putEdit({ text: result.lines[0], start: result.caret, end: result.caret });
+      return;
+    }
+    if (saveTimer.current) clearTimeout(saveTimer.current);
+    history.current = emptyHistory();
+    setText(result.lines[0]);
+    latest.current.text = result.lines[0];
+    handlers.onPasteLines?.(block, result.lines, { detectFirst: block.kind === 'note' && free && !notesOnly, detectRest: !notesOnly, caret: result.caret });
   }
 
   function onKeyDown(event: KeyboardEvent<HTMLTextAreaElement>) {
@@ -326,6 +415,14 @@ export function BlockLine({ block, free, day, today, isPriority, allowNewLines, 
       handlers.onSelectAll(block);
       return;
     }
+    if ((event.ctrlKey || event.metaKey) && !event.altKey && !event.nativeEvent.isComposing) {
+      const key = event.key.toLowerCase();
+      if (key === 'z' || key === 'y') {
+        event.preventDefault();
+        stepHistory(key === 'y' || event.shiftKey ? 'redo' : 'undo');
+        return;
+      }
+    }
     const command = event.nativeEvent.isComposing ? null : formatShortcut(event);
     // Tab only indents a list item; elsewhere it still moves the focus.
     if (command && (event.key !== 'Tab' || list)) {
@@ -350,6 +447,7 @@ export function BlockLine({ block, free, day, today, isPriority, allowNewLines, 
       // In a list, the new line continues it; Enter on an empty item leaves the list instead.
       const next = edit.end === caret ? listOnEnter(value, caret) : null;
       if (next?.type === 'exit') {
+        remember('step');
         setText(next.text);
         latest.current.text = next.text;
         flush();
@@ -357,6 +455,7 @@ export function BlockLine({ block, free, day, today, isPriority, allowNewLines, 
       }
       if (next?.type === 'continue') value = value.slice(0, caret) + next.prefix + value.slice(caret);
       // The rest of the line moves to the new line right away; the split is saved after.
+      history.current = emptyHistory();
       setText(value.slice(0, caret));
       latest.current.text = value.slice(0, caret);
       handlers.onEnter(block, value, caret, next?.type === 'continue' ? next.prefix.length : 0);
@@ -423,7 +522,7 @@ export function BlockLine({ block, free, day, today, isPriority, allowNewLines, 
 
   const structure = parseLine(text);
   const prefixLength = structure.list ? structure.prefixLength : 0;
-  const headingClass = structure.heading ? `line--h${structure.heading}` : '';
+  const headingClass = structure.heading ? `line--h${structure.heading}` : structure.quote ? 'line--quote' : '';
   const preview = !editing && hasMarkdown(text);
 
   /** A click on the formatted text edits the line, unless it lands on a link, which opens. */
@@ -480,7 +579,11 @@ export function BlockLine({ block, free, day, today, isPriority, allowNewLines, 
             onChange(event.target);
           }}
           onKeyDown={onKeyDown}
-          onSelect={(event) => setCaret(event.currentTarget.selectionStart + prefixLength)}
+          onPaste={onPaste}
+          onSelect={(event) => {
+            setCaret(event.currentTarget.selectionStart + prefixLength);
+            lastSelection.current = [event.currentTarget.selectionStart + prefixLength, event.currentTarget.selectionEnd + prefixLength];
+          }}
           onFocus={(event) => {
             setEditing(true);
             setCaret(event.currentTarget.selectionStart + prefixLength);
@@ -580,13 +683,15 @@ interface GhostProps {
   onCreate(text: string, caret?: number): void;
   /** Called when the focus leaves the line before anything was typed. */
   onLeave?(): void;
+  /** Text with line breaks was pasted: one line per line of text, the caret at the end of the last. Absent: joined into one line. */
+  onPasteLines?(lines: string[], caret: number): void;
 }
 
 /**
  * Empty line that is not saved yet: the first line of a section with no blocks, or a new line
  * at the end of a section. Typing in it creates the block.
  */
-export function GhostLine({ id, placeholder, onCreate, onLeave }: GhostProps) {
+export function GhostLine({ id, placeholder, onCreate, onLeave, onPasteLines }: GhostProps) {
   const ref = useRef<HTMLTextAreaElement>(null);
   useFocusTarget(id, ref);
   const latestCreate = useRef(onCreate);
@@ -619,6 +724,14 @@ export function GhostLine({ id, placeholder, onCreate, onLeave }: GhostProps) {
           if (!command || event.key === 'Tab') return;
           event.preventDefault();
           formatEmpty(command);
+        }}
+        onPaste={(event) => {
+          const pasted = pastedLines(event.clipboardData.getData('text/plain'));
+          if (!pasted) return;
+          event.preventDefault();
+          const result = applyPaste({ text: '', start: 0, end: 0 }, pasted, splits(pasted.length, !!onPasteLines));
+          if (result.lines.length > 1) onPasteLines?.(result.lines, result.caret);
+          else if (result.lines[0]) onCreate(result.lines[0], result.caret);
         }}
         onBlur={onLeave}
         aria-label="Nova linha"

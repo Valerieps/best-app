@@ -348,24 +348,86 @@ async function requireFreeBlock(ctx: AppContext, tx: StoreTransaction, blockId: 
 export async function changeBlockKind(ctx: AppContext, blockId: string, kind: BlockKind, text: string, waiting = false): Promise<void> {
   await ctx.store.transaction(async (tx) => {
     const { block, section } = await requireFreeBlock(ctx, tx, blockId);
-    if (block.kind === kind) {
-      if (block.text !== text) await tx.blocks.put({ ...block, text, updatedAt: nowIso(ctx) });
-      return;
+    await changeKindIn(ctx, tx, block, section, kind, text, waiting);
+  });
+}
+
+async function changeKindIn(
+  ctx: AppContext,
+  tx: StoreTransaction,
+  block: Block,
+  section: Section,
+  kind: BlockKind,
+  text: string,
+  waiting: boolean,
+): Promise<void> {
+  if (block.kind === kind) {
+    if (block.text !== text) await tx.blocks.put({ ...block, text, updatedAt: nowIso(ctx) });
+    return;
+  }
+  const { waiting: _wasWaiting, ...rest } = block;
+  const changed: Block = {
+    ...rest,
+    kind,
+    text,
+    status: kind === 'task' ? 'active' : null,
+    projectId: kind === 'task' ? section.projectId : null,
+    ...(kind === 'task' && waiting ? { waiting: true } : {}),
+    updatedAt: nowIso(ctx),
+  };
+  await tx.blocks.put(changed);
+  await record(ctx, tx, 'block.kindChanged', 'block', block.id, today(ctx), { from: block.kind, to: kind });
+  if (kind === 'task' && waiting) await record(ctx, tx, 'task.waitingChanged', 'block', block.id, today(ctx), { waiting: true });
+  if (kind === 'note') await reopenNotesIfTriaged(ctx, tx, section);
+}
+
+export interface PasteOptions {
+  /** The first line goes through kind detection ("[] " makes the line a task): a free note, not a project note. */
+  detectFirst: boolean;
+  /** The new lines go through kind detection; false for notes kept on a project page. */
+  detectRest: boolean;
+  /** Lines of a kept note on a project page: created like `splitKeptNote` does, without reopening a triage. */
+  kept?: boolean;
+}
+
+/**
+ * Pasting text with line breaks into a line (ADR-062): `lines[0]` is the new text of the line
+ * and each other line becomes a block at the matching target, in order. One transaction, so a
+ * paste is saved whole or not at all.
+ */
+export async function pasteLines(ctx: AppContext, blockId: string, lines: string[], targets: NewBlockTarget[], options: PasteOptions): Promise<void> {
+  await ctx.store.transaction(async (tx) => {
+    const block = await getOrThrow(tx.blocks.get(blockId), 'Block');
+    const first = options.detectFirst && block.kind === 'note' ? detectKind(lines[0]) : { kind: block.kind, text: lines[0], waiting: undefined };
+    if (first.kind === 'task' && block.kind === 'note') {
+      const { block: free, section } = await requireFreeBlock(ctx, tx, blockId);
+      await changeKindIn(ctx, tx, free, section, 'task', first.text, first.waiting === true);
+    } else if (block.text !== lines[0]) {
+      await tx.blocks.put({ ...block, text: lines[0], updatedAt: nowIso(ctx) });
     }
-    const { waiting: _wasWaiting, ...rest } = block;
-    const changed: Block = {
-      ...rest,
-      kind,
-      text,
-      status: kind === 'task' ? 'active' : null,
-      projectId: kind === 'task' ? section.projectId : null,
-      ...(kind === 'task' && waiting ? { waiting: true } : {}),
-      updatedAt: nowIso(ctx),
-    };
-    await tx.blocks.put(changed);
-    await record(ctx, tx, 'block.kindChanged', 'block', block.id, today(ctx), { from: block.kind, to: kind });
-    if (kind === 'task' && waiting) await record(ctx, tx, 'task.waitingChanged', 'block', block.id, today(ctx), { waiting: true });
-    if (kind === 'note') await reopenNotesIfTriaged(ctx, tx, section);
+    for (let i = 1; i < lines.length; i += 1) {
+      const target = targets[i - 1];
+      const section = await targetSection(ctx, tx, target);
+      const detected = options.detectRest ? detectKind(lines[i]) : { kind: 'note' as BlockKind, text: lines[i], waiting: undefined };
+      if (options.kept) {
+        const note = newBlock(ctx, section, 'note', lines[i], target.position, target.blockId);
+        await tx.blocks.put(note);
+        await record(ctx, tx, 'block.created', 'block', note.id, today(ctx), { kind: 'note', sectionId: section.id });
+      } else {
+        await addBlock(ctx, tx, section, detected.kind, detected.text, target.position, target.blockId, detected.waiting);
+      }
+    }
+  });
+}
+
+/** Pasting text with line breaks into an empty line that is not saved yet: one block per line. */
+export async function createBlocks(ctx: AppContext, targets: NewBlockTarget[], typed: string[]): Promise<void> {
+  await ctx.store.transaction(async (tx) => {
+    for (let i = 0; i < typed.length; i += 1) {
+      const section = await targetSection(ctx, tx, targets[i]);
+      const { kind, text, waiting } = detectKind(typed[i]);
+      await addBlock(ctx, tx, section, kind, text, targets[i].position, targets[i].blockId, waiting);
+    }
   });
 }
 

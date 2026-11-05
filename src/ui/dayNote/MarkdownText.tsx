@@ -17,6 +17,10 @@ function renderNodes(nodes: InlineNode[], people: readonly Person[]): ReactNode[
         return <strong key={index}>{renderNodes(node.children, people)}</strong>;
       case 'italic':
         return <em key={index}>{renderNodes(node.children, people)}</em>;
+      case 'strike':
+        return <del key={index}>{renderNodes(node.children, people)}</del>;
+      case 'code':
+        return <code key={index}>{node.text}</code>;
       case 'link':
         return (
           <a key={index} href={node.href} target="_blank" rel="noopener noreferrer" title={node.href}>

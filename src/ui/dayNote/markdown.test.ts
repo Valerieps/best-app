@@ -233,3 +233,62 @@ describe('list markers while editing', () => {
     expect(normalizeBullet('a * b')).toBe('a * b');
   });
 });
+
+describe('inline code, strikethrough, escapes', () => {
+  it('renders inline code literally, without reading Markdown inside', () => {
+    expect(parseInline('use `a *b* _c_ [d](https://x.com) @Ana` now')).toEqual([
+      { type: 'text', text: 'use ' },
+      { type: 'code', text: 'a *b* _c_ [d](https://x.com) @Ana' },
+      { type: 'text', text: ' now' },
+    ]);
+    expect(parseInline('a ` b')).toEqual([{ type: 'text', text: 'a ` b' }]);
+    expect(parseInline('empty `` here')).toEqual([{ type: 'text', text: 'empty `` here' }]);
+  });
+
+  it('renders strikethrough, with formatting inside', () => {
+    expect(parseInline('~~old **bold**~~')).toEqual([
+      { type: 'strike', children: [{ type: 'text', text: 'old ' }, { type: 'bold', children: [{ type: 'text', text: 'bold' }] }] },
+    ]);
+    expect(parseInline('~~ not ~~')).toEqual([{ type: 'text', text: '~~ not ~~' }]);
+  });
+
+  it('writes a marker literally after a backslash', () => {
+    expect(parseInline('\\*not italic\\*')).toEqual([{ type: 'text', text: '*not italic*' }]);
+    expect(parseInline('\\_a\\_ \\[b\\] \\`c\\` \\~\\~d\\~\\~ \\\\')).toEqual([{ type: 'text', text: '_a_ [b] `c` ~~d~~ \\' }]);
+    expect(parseInline('**a \\** b**')).toEqual([{ type: 'bold', children: [{ type: 'text', text: 'a ** b' }] }]);
+    expect(parseInline('c:\\dir')).toEqual([{ type: 'text', text: 'c:\\dir' }]);
+  });
+
+  it('shows a line with an escape formatted, so the backslash goes away', () => {
+    expect(hasMarkdown('\\*x\\*')).toBe(true);
+    expect(hasMarkdown('plain')).toBe(false);
+  });
+
+  it('toggles code and strikethrough around the selection', () => {
+    expect(applyFormat('code', at('a b', 0, 1))).toEqual({ text: '`a` b', start: 1, end: 2 });
+    expect(applyFormat('strike', at('~~a~~ b', 2, 3))).toEqual({ text: 'a b', start: 0, end: 1 });
+  });
+});
+
+describe('blockquote', () => {
+  it('reads a line starting with "> "', () => {
+    expect(parseLine('> quoted')).toMatchObject({ quote: true, content: 'quoted', prefixLength: 2, heading: null, list: null });
+    expect(parseLine('>no space').quote).toBe(false);
+    expect(parseLine('plain').quote).toBe(false);
+  });
+
+  it('toggles the prefix, replacing a heading or list marker', () => {
+    expect(applyFormat('quote', at('text', 2))).toEqual({ text: '> text', start: 4, end: 4 });
+    expect(applyFormat('quote', at('> text', 4))).toEqual({ text: 'text', start: 2, end: 2 });
+    expect(applyFormat('quote', at('## text', 5)).text).toBe('> text');
+    expect(applyFormat('h1', at('> text', 5)).text).toBe('# text');
+  });
+
+  it('has shortcuts for quote, code and strikethrough', () => {
+    const base = { key: '', ctrlKey: true, metaKey: false, shiftKey: false, altKey: false };
+    expect(formatShortcut({ ...base, code: 'KeyE' })).toBe('code');
+    expect(formatShortcut({ ...base, code: 'KeyX', shiftKey: true })).toBe('strike');
+    expect(formatShortcut({ ...base, code: 'Digit9', shiftKey: true })).toBe('quote');
+    expect(formatShortcut({ ...base, code: 'KeyX' })).toBeNull();
+  });
+});

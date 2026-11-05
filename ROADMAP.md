@@ -48,6 +48,9 @@ Os que faltam, pela tabela do `spec/assistentes.md`:
 
 - **Converter em hábito no "Fechar o dia"** (fase 6, `spec/checkout.md`, "Destinos"): saiu do código junto com a etapa "Pedem atenção" (16/10/2026). Volta como uma ação da etapa "Tarefas" quando os hábitos voltarem a aparecer (veja "Adiado de propósito").
 
+- **Desfazer de operações que mudam linhas** (`spec/nota-do-dia.md`, "Formatação"; ADR-063): Ctrl + Z desfaz só o texto da linha. Dividir, juntar, apagar uma linha e colar várias linhas ainda não se desfazem; precisam de uma pilha da nota inteira com a operação inversa de cada uma.
+- **Formatar várias linhas selecionadas de uma vez**, o fechamento automático de pares (`**`, `` ` ``, `[]`) e o botão da barra que formata a última linha quando nenhuma tem o cursor: avaliados e deixados como estão (ADR-064); voltam se a Valeria sentir falta.
+
 ## Antes de outras pessoas usarem
 
 Decisões de produto que dependem da Valeria:
