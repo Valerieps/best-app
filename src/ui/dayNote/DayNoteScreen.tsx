@@ -21,7 +21,10 @@ import {
   splitKind,
   updateBlockText,
   type NewBlockTarget,
+  createBlocks,
+  pasteLines,
 } from '../../application/notebook';
+import { chainedPositions } from './paste';
 import { moveDayPriority, setDayPriority, setDeadline, setIntendedDate } from '../../application/dayTools';
 import { ensurePeople } from '../../application/people';
 import { usePeople } from '../people/PeopleContext';
@@ -486,6 +489,22 @@ export function DayNoteScreen({
       requestFocus(target.blockId!, newCaret);
       write(() => splitBlock(ctx, block.id, text, caret, target));
     },
+    onPasteLines: (block, pasted, options) => {
+      const slot = slotOf(block);
+      if (!slot) return;
+      const own = slot.entry.blocks;
+      const carried = slot.ownIndex === -1;
+      const lower = carried ? null : slot.block.position;
+      const upper = (carried ? own[0] : own[slot.ownIndex + 1])?.position ?? null;
+      const positions = chainedPositions(lower, upper, pasted.length - 1, positionBetween);
+      const targets = positions.map((position) => newLineTarget(slot.entry, position));
+      targets.forEach((target, index) => {
+        const detected = options.detectRest ? detectKind(pasted[index + 1]) : { kind: 'note' as const, text: pasted[index + 1], waiting: undefined };
+        showDraft(slot.entry, target, detected.kind, detected.text, detected.waiting);
+      });
+      requestFocus(targets[targets.length - 1].blockId!, options.caret);
+      write(() => pasteLines(ctx, block.id, pasted, targets, { detectFirst: options.detectFirst, detectRest: options.detectRest }));
+    },
     onBackspaceAtStart: (block, text) => {
       if (block.kind === 'task') {
         write(() => changeBlockKind(ctx, block.id, 'note', text));
@@ -527,6 +546,19 @@ export function DayNoteScreen({
   const projects = view.projects;
   const people = usePeople();
   const onlyPriorities = parts.every((part) => part.kind === 'priorities');
+
+  /** Text with line breaks pasted into an empty line at the end of a section: one line per line of text. */
+  function createPastedLines(entry: Entry, pasted: string[], caret: number) {
+    setAppendingTo(null);
+    const positions = chainedPositions(entry.blocks.at(-1)?.position ?? null, null, pasted.length, positionBetween);
+    const targets = positions.map((position) => newLineTarget(entry, position));
+    targets.forEach((target, index) => {
+      const { kind, text, waiting } = detectKind(pasted[index]);
+      showDraft(entry, target, kind, text, waiting);
+    });
+    requestFocus(targets[targets.length - 1].blockId!, caret);
+    write(() => createBlocks(ctx, targets, pasted));
+  }
 
   /** Creates a line at the end of a section: its first line, or the one typed after clicking below the lines. */
   function createFirstLine(entry: Entry, typed: string, caret?: number) {
@@ -727,6 +759,7 @@ export function DayNoteScreen({
             id={`ghost:${section?.id ?? DAY_ENTRY}`}
             placeholder={NOTE_HINT}
             onCreate={(text, caret) => createFirstLine(entry, text, caret)}
+            onPasteLines={(pasted, caret) => createPastedLines(entry, pasted, caret)}
           />
         )}
         {writable && !isCollapsed(part.key) && entry.blocks.length > 0 && appendingTo === entry.key && (
@@ -734,6 +767,7 @@ export function DayNoteScreen({
             id={`ghost:end:${entry.key}`}
             placeholder={NOTE_HINT}
             onCreate={(text, caret) => createFirstLine(entry, text, caret)}
+            onPasteLines={(pasted, caret) => createPastedLines(entry, pasted, caret)}
             onLeave={() => setAppendingTo(null)}
           />
         )}

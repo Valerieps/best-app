@@ -19,4 +19,13 @@ describe('detectKind', () => {
     expect(detectKind(' [] com espaço antes')).toEqual({ kind: 'note', text: ' [] com espaço antes' });
     expect(detectKind('texto com [] no meio')).toEqual({ kind: 'note', text: 'texto com [] no meio' });
   });
+
+  it('turns the Markdown checklist "- [ ] " and "- [x] " into a task', () => {
+    expect(detectKind('- [ ] Pagar')).toEqual({ kind: 'task', text: 'Pagar' });
+    expect(detectKind('- [x] Pagar')).toEqual({ kind: 'task', text: 'Pagar' });
+    expect(detectKind('  * [X] Pagar')).toEqual({ kind: 'task', text: 'Pagar' });
+    expect(detectKind('[ ] Pagar')).toEqual({ kind: 'task', text: 'Pagar' });
+    expect(detectKind('- [y] Pagar').kind).toBe('note');
+    expect(detectKind('- [ ]Pagar').kind).toBe('note');
+  });
 });

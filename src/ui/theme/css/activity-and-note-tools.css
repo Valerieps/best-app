@@ -879,3 +879,21 @@ button:not(.link, .day-part__handle):active:not(:disabled) {
 .line--task.line--done .line__rendered {
   text-decoration-color: currentColor;
 }
+
+/* Blockquote line: a bar at the left, muted text; the text field gets it too, so writing one already looks like it */
+.line--quote .line__field,
+.line--quote .line__rendered {
+  border-left: 3px solid var(--color-border-strong);
+  padding-left: var(--space-3);
+  color: var(--color-text-muted);
+}
+
+/* Inline code and strikethrough on the formatted line */
+.line__rendered code {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 0.9em;
+  background: var(--color-surface-soft);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm, 4px);
+  padding: 0 0.3em;
+}

@@ -12,7 +12,11 @@ export interface KindDetector {
   match(text: string): string | null;
 }
 
-const TASK_MARKER = /^\[\]\s/;
+/**
+ * "[] ", or the Markdown checklist "- [ ] " / "- [x] " (spec/nota-do-dia.md, "Formatação"). The
+ * `x` does not finish the task: finishing is the checkbox's job.
+ */
+const TASK_MARKER = /^(?: *[-*+] )?\[[ xX]?\]\s/;
 /** "[a] ": a task someone owes me, "a" de aguardando (spec/pessoas.md). */
 const WAITING_MARKER = /^\[[aA]\]\s/;
 

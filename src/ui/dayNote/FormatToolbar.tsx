@@ -5,10 +5,13 @@ import { FORMAT_EVENT, FORMAT_SHORTCUTS, type FormatCommand } from './markdown';
 const BUTTONS: { command: FormatCommand; label: string; content: ReactNode }[] = [
   { command: 'bold', label: 'Negrito', content: <Icon name="bold" size="sm" /> },
   { command: 'italic', label: 'Itálico', content: <Icon name="italic" size="sm" /> },
+  { command: 'strike', label: 'Tachado', content: <del>S</del> },
+  { command: 'code', label: 'Código', content: '</>' },
   { command: 'h1', label: 'Título 1', content: 'H1' },
   { command: 'h2', label: 'Título 2', content: 'H2' },
   { command: 'h3', label: 'Título 3', content: 'H3' },
   { command: 'h4', label: 'Título 4', content: 'H4' },
+  { command: 'quote', label: 'Citação', content: '❝' },
   { command: 'bullet', label: 'Lista', content: <Icon name="list" size="sm" /> },
   { command: 'numbered', label: 'Lista numerada', content: <Icon name="listNumbers" size="sm" /> },
   { command: 'outdent', label: 'Diminuir o recuo da lista', content: <Icon name="indentDecrease" size="sm" /> },
@@ -48,7 +51,7 @@ export function FormatToolbar() {
         <button
           key={command}
           type="button"
-          className={`format-toolbar__button ${typeof content === 'string' ? 'format-toolbar__button--text' : ''}`}
+          className={`format-toolbar__button ${typeof content === 'string' || command === 'strike' ? 'format-toolbar__button--text' : ''}`}
           title={`${label} (${FORMAT_SHORTCUTS[command]})`}
           aria-label={label}
           // Keeps the focus, and the selection, on the line being edited.
