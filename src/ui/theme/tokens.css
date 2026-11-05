@@ -84,13 +84,15 @@
   --color-status0-strong: #3d7a35;
   --color-status1-bg: #fbf5dc;
   --color-status1-border: #eedf9f;
-  --color-status1-strong: #b38900;
+  /* 4.6:1 on --color-status1-bg, so it can be text; the dots keep the lighter --color-dot-attention */
+  --color-status1-strong: #8a6a00;
   --color-status2-bg: #fcecdc;
   --color-status2-border: #f1c9a0;
   --color-status2-strong: #c4570e;
-  --color-status3-bg: #fdecea;
-  --color-status3-border: #f0a8a0;
-  --color-status3-strong: #b42318;
+  /* Urgent is the danger color, so the two never drift apart (dark theme included) */
+  --color-status3-bg: var(--color-danger-bg);
+  --color-status3-border: var(--color-danger-border);
+  --color-status3-strong: var(--color-danger);
 
   /* Activity map of the projects: empty, then four tints of the project lilac */
   --color-activity-0: #ebe8e1;
@@ -221,9 +223,6 @@
     --color-status2-bg: #33231a;
     --color-status2-border: #64401f;
     --color-status2-strong: #f09a55;
-    --color-status3-bg: #3a1f1d;
-    --color-status3-border: #7a3a33;
-    --color-status3-strong: #ff8a7a;
 
     /* Activity map: from the empty cell up to the lightest lilac, so more activity stands out more */
     --color-activity-0: #2a2830;
@@ -300,9 +299,6 @@
   --color-status2-bg: #33231a;
   --color-status2-border: #64401f;
   --color-status2-strong: #f09a55;
-  --color-status3-bg: #3a1f1d;
-  --color-status3-border: #7a3a33;
-  --color-status3-strong: #ff8a7a;
 
   /* Activity map: from the empty cell up to the lightest lilac, so more activity stands out more */
   --color-activity-0: #2a2830;

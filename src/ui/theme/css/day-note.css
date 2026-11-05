@@ -1,0 +1,519 @@
+/* Day note: like a note in Obsidian, it spans the white main area (see .shell__main).
+   Each part is marked only by its colored bar and a thin line below. */
+.page--note {
+  max-width: none;
+  /* Room on the left for the parts' drag handles */
+  padding: var(--space-5) var(--space-6) var(--space-7) var(--space-7);
+}
+
+/* A readable line length on wide monitors; the page itself still spans the main area */
+.note {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  max-width: 110ch;
+}
+
+/* The note takes the focus while lines are selected; it shows no outline of its own */
+.note:focus {
+  outline: none;
+}
+
+/* Dragging across lines selects the lines, not their text */
+.note--selecting,
+.note--selecting .line__text {
+  user-select: none;
+}
+
+.line--selected {
+  background: var(--color-select-bg);
+  border-radius: var(--radius-sm);
+}
+
+.section {
+  border-left: var(--section-bar-width) solid var(--color-general-bar);
+  border-bottom: var(--border-width) solid var(--color-border);
+  padding: var(--space-3) var(--space-4) var(--space-4);
+}
+
+/* Room below the lines, as if a few were already written: more breathing room, and a click
+   there opens a new line at the end of the section (spec/nota-do-dia.md, "Execução") */
+.section:not(.section--carried) {
+  padding-bottom: 3lh;
+}
+
+.section--project {
+  border-left-color: var(--color-project-bar);
+}
+
+.section__header {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  margin-bottom: var(--space-2);
+}
+
+/* A section linked to a project shows a link icon after its title */
+.section__link {
+  display: inline-flex;
+  align-items: center;
+  color: var(--color-mark);
+}
+
+.title-field {
+  position: relative;
+}
+
+.section__title {
+  font: inherit;
+  font-weight: 500;
+  border: var(--border-width) solid transparent;
+  border-radius: var(--radius-sm);
+  padding: 1px var(--space-2);
+  background: transparent;
+  color: var(--color-text);
+  min-width: 8ch;
+  field-sizing: content;
+}
+
+.section__title:hover:not(:disabled),
+.section__title:focus {
+  border-color: var(--color-border-strong);
+  outline: none;
+}
+
+.section__title::placeholder {
+  color: var(--color-text-muted);
+  font-weight: 400;
+}
+
+.suggestions {
+  position: absolute;
+  z-index: 5;
+  top: calc(100% + var(--space-1));
+  left: 0;
+  min-width: 280px;
+  margin: 0;
+  padding: var(--space-1);
+  list-style: none;
+  background: var(--color-surface);
+  border: var(--border-width) solid var(--color-border);
+  border-radius: var(--radius-md);
+  box-shadow: 0 6px 24px var(--color-shadow-soft);
+}
+
+.suggestions__item {
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+}
+
+.suggestions__item--active {
+  background: var(--color-surface-soft);
+}
+
+.line {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-3);
+  padding: 2px 0;
+}
+
+.line__check {
+  margin-top: 5px;
+}
+
+.line__text {
+  flex: 0 1 auto;
+  min-width: 2ch;
+  max-width: 100%;
+  font: inherit;
+  line-height: var(--line-height);
+  color: inherit;
+  border: none;
+  background: transparent;
+  resize: none;
+  padding: 0;
+  field-sizing: content;
+  min-height: calc(1em * var(--line-height));
+  overflow: hidden;
+}
+
+.line__text:focus {
+  outline: none;
+}
+
+.line--done .line__text {
+  text-decoration: line-through;
+  color: var(--color-text-muted);
+}
+
+.active-tasks__row--done .task-row__text {
+  text-decoration: line-through;
+  color: var(--color-text-muted);
+}
+
+.line__text::placeholder {
+  color: var(--color-text-muted);
+}
+
+/* The hint of an empty line only shows on the line being written; the ghost line of an empty
+   section shows it on hover too. */
+.line:not(.line--ghost) .line__text:not(:focus)::placeholder,
+.section:not(:hover) .line--ghost .line__text:not(:focus)::placeholder {
+  color: transparent;
+}
+
+/* Line shortcuts (1b): shown on hover or while the line is being edited */
+.line {
+  position: relative;
+}
+
+.line__meta {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  flex-shrink: 0;
+  padding-top: 2px;
+  font-size: var(--font-size-sm);
+}
+
+.line__meta:empty {
+  display: none;
+}
+
+/* Dates already set are chips on the line; clicking one changes the date. */
+.line__chip {
+  border: var(--border-width) solid transparent;
+  border-radius: var(--radius-pill);
+  background: var(--color-general-bg);
+  color: var(--color-text-muted);
+  font-size: var(--font-size-sm);
+  line-height: 1.4;
+  padding: 1px var(--space-2);
+  white-space: nowrap;
+}
+
+.line__chip:hover {
+  color: var(--color-text);
+  border-color: var(--color-border-strong);
+}
+
+/* One star: the indicator of a day priority and the button that toggles it. */
+.line__star {
+  border: none;
+  background: none;
+  padding: 0 var(--space-1);
+  font-size: var(--font-size-md);
+  line-height: 1.5;
+  color: var(--color-text-muted);
+}
+
+.line__star:hover,
+.line__star--on {
+  color: var(--color-firework-1);
+}
+
+/* Right after the text and as wide as nothing: the shortcuts float from here over what follows,
+   so showing them never changes the width left to the text. Lines that have shortcuts keep room
+   for them at the right, so they still fit after a line that fills the row. */
+.line:has(> .line__tail) {
+  padding-right: var(--line-actions-room);
+}
+
+.line__tail {
+  position: relative;
+  align-self: stretch;
+  width: 0;
+  flex-shrink: 0;
+}
+
+.line__actions {
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: 1;
+  display: flex;
+  visibility: hidden;
+  align-items: center;
+  gap: var(--space-1);
+  padding-top: 2px;
+  white-space: nowrap;
+}
+
+/* Hidden but still taking its place, so revealing it moves nothing. */
+.line__reveal {
+  visibility: hidden;
+}
+
+.line:hover .line__actions,
+.line:focus-within .line__actions,
+.priorities__item:hover .line__actions,
+.priorities__item:focus-within .line__actions,
+.line:hover .line__reveal,
+.line:focus-within .line__reveal,
+.priorities__item:hover .line__reveal,
+.priorities__item:focus-within .line__reveal {
+  visibility: visible;
+}
+
+/* In the priorities block the shortcuts keep their own place in the row. */
+.priorities__item .line__actions {
+  position: static;
+}
+
+.line__action {
+  border: var(--border-width) solid var(--color-border);
+  background: var(--color-surface);
+  color: var(--color-text-muted);
+  font-size: var(--font-size-xs);
+  padding: 0 var(--space-2);
+  border-radius: var(--radius-sm);
+  line-height: 1.8;
+}
+
+.line__action:hover {
+  color: var(--color-text);
+  border-color: var(--color-border-strong);
+}
+
+.line__picker {
+  position: relative;
+}
+
+.line__date-input {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* Reordering (request 2): a handle in the section's left padding, shown like the shortcuts */
+.line__handle {
+  position: absolute;
+  left: calc(-1 * var(--space-4));
+  top: 2px;
+  width: var(--space-4);
+  text-align: center;
+  color: var(--color-text-muted);
+  font-size: var(--font-size-sm);
+  line-height: 1.6;
+  cursor: grab;
+  touch-action: none;
+  user-select: none;
+  visibility: hidden;
+}
+
+.line:hover .line__handle,
+.line--dragging .line__handle {
+  visibility: visible;
+}
+
+.line--dragging {
+  opacity: 0.5;
+}
+
+.line--dragging .line__handle {
+  cursor: grabbing;
+}
+
+.line--drop-before::before,
+.line--drop-after::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 2px;
+  border-radius: var(--radius-pill);
+  background: var(--color-focus);
+  pointer-events: none;
+}
+
+.line--drop-before::before {
+  top: -1px;
+}
+
+.line--drop-after::after {
+  bottom: -1px;
+}
+
+/* Day priorities (1b), filled with the sidebar's color */
+.priorities {
+  background: var(--color-surface-soft);
+  border: var(--border-width) solid var(--color-border);
+  border-radius: var(--radius-lg);
+  padding: var(--space-3) var(--space-5);
+  margin-bottom: var(--space-4);
+}
+
+.priorities--pinned {
+  position: sticky;
+  top: var(--space-2);
+  z-index: 5;
+}
+
+.priorities__header {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+/* Pins the block to the top; shows on hover, and always while pinned */
+button.priorities__pin {
+  margin-left: auto;
+  padding: 2px;
+  color: var(--color-text-muted);
+  opacity: 0;
+}
+
+.priorities:hover button.priorities__pin,
+.priorities:focus-within button.priorities__pin,
+button.priorities__pin[aria-pressed='true'] {
+  opacity: 1;
+}
+
+button.priorities__pin:hover,
+button.priorities__pin[aria-pressed='true'] {
+  color: var(--color-text);
+}
+
+.priorities__title {
+  margin: 0;
+  font-size: var(--font-size-md);
+  font-weight: 600;
+}
+
+.priorities__empty {
+  margin: var(--space-2) 0 0;
+}
+
+.priorities__list {
+  margin: var(--space-2) 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.priorities__item {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: 2px 0;
+}
+
+/* A priority going to another date: a short countdown, which I can cancel, before it leaves */
+.priorities__item--moving .priorities__text {
+  color: var(--color-text-muted);
+}
+
+.priorities__moving {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin-left: auto;
+  font-size: var(--font-size-sm);
+  color: var(--color-text-muted);
+}
+
+.countdown {
+  width: 80px;
+  height: 3px;
+  overflow: hidden;
+  border-radius: var(--radius-pill);
+  background: var(--color-border);
+}
+
+.countdown__fill {
+  display: block;
+  height: 100%;
+  background: var(--color-focus);
+  transform-origin: left;
+  animation: countdown-shrink linear forwards;
+}
+
+@keyframes countdown-shrink {
+  from {
+    transform: scaleX(1);
+  }
+  to {
+    transform: scaleX(0);
+  }
+}
+
+.priorities__text {
+  flex: 1;
+}
+
+/* An automatic priority whose deadline is today: a red icon at the left of the task, outside
+   the block (in the page's left padding, like the drag handles). With no top, it keeps the
+   height of its row. */
+.priorities:not(.priorities--pinned) {
+  position: relative;
+}
+
+.priorities__due-today {
+  position: absolute;
+  left: calc(-1 * var(--space-5) - var(--border-width));
+  width: var(--space-5);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--color-danger);
+}
+
+.day-part--priorities .priorities__due-today {
+  left: calc(-1 * var(--space-5) - var(--section-bar-width));
+}
+
+.topbar__date {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.topbar__arrow {
+  font-size: var(--font-size-xl);
+  color: var(--color-text-muted);
+}
+
+.topbar__arrow:disabled {
+  opacity: 0.25;
+}
+
+/* Wiki toolbar (1b) */
+.toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  margin-bottom: var(--space-3);
+}
+
+.toolbar__search {
+  flex: 1;
+  min-width: 200px;
+}
+
+.card-list__item--focus {
+  background: var(--color-warning-bg);
+}
+
+/* Cleanup assistants (1b) */
+.assistant {
+  margin-bottom: var(--space-6);
+}
+
+.assistant__title {
+  font-size: var(--font-size-lg);
+  font-weight: 500;
+  margin: 0 0 var(--space-1);
+}
+
+.assistant__actions {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: var(--space-3);
+}
+
+.assistant__select {
+  align-self: flex-start;
+}
