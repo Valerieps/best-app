@@ -40,6 +40,8 @@ Por quê: na hora de executar, eu não sabia no que focar, e a única forma de p
 - Próximo passo não é data: a tarefa continua com a data que tinha, ou sem data. Finalizar ou abandonar a tarefa a tira dos próximos passos, e o app não me pede outra.
 - Na página do projeto, os próximos passos ficam num grupo "Próximos passos", logo depois das travadas (`projetos.md`, "Página do projeto"). Uma tarefa travada que também é próximo passo fica só nas travadas, com a marca de próximo.
 - Na lista de tarefas, a tarefa marcada mostra a marca de próximo, e um seletor "Só próximos passos" deixa só elas na lista, combinando com agrupar, ordenar e "Só projetos em foco".
+- Uma tarefa aguardando (`pessoas.md`) não é minha para fazer e não ganha "Próximo". Se a tarefa muda de projeto ou perde o projeto, ela sai dos próximos passos do projeto antigo e não entra nos do novo; juntar projetos faz o mesmo com as tarefas que mudam. Reabrir uma tarefa finalizada não a devolve aos próximos passos.
+- Um próximo passo que não está travado sai de "Próximos dias" e de "Sem data" na página do projeto e aparece só em "Próximos passos", com a data na linha: a tarefa nunca aparece duas vezes na página.
 
 ## Tela "Executar" *(7)*
 

@@ -5,6 +5,7 @@ import { isPeopleTitle } from '../domain/people';
 import { adoptFirstPart, carriedPosition, placeInOrder, type Ordered } from '../domain/order';
 import { canEditFreely, lastTriagedDayAfterReopen } from '../domain/tasks';
 import { record } from './events';
+import { releaseNextStep } from './nextSteps';
 import type { AppContext, StoreTransaction } from './ports';
 import { addProject, renameProjectIn } from './projects';
 import { followTag } from './projectTags';
@@ -101,8 +102,9 @@ export async function linkSection(
   await record(ctx, tx, 'section.linkedToProject', 'section', section.id, day, { projectId });
   const projects = await tx.allProjects();
   for (const block of await tx.blocksInSection(section.id)) {
-    // A tagged task stays in its tag's project (ADR-065).
+    // A tagged task stays in its tag's project (ADR-066).
     if (block.kind !== 'task' || block.projectId === projectId || tagProject(block.text, projects)) continue;
+    await releaseNextStep(ctx, tx, block, 'moved', day);
     await tx.blocks.put({ ...block, projectId, updatedAt: at });
     await record(ctx, tx, 'block.linkedToProject', 'block', block.id, day, { projectId });
   }
@@ -193,6 +195,7 @@ export async function unlinkSection(ctx: AppContext, sectionId: string, title: s
     const projects = await tx.allProjects();
     for (const block of await tx.blocksInSection(section.id)) {
       if (block.kind !== 'task' || block.projectId !== projectId || tagProject(block.text, projects)) continue;
+      await releaseNextStep(ctx, tx, block, 'moved', day);
       await tx.blocks.put({ ...block, projectId: null, updatedAt: at });
       await record(ctx, tx, 'block.linkedToProject', 'block', block.id, day, { projectId: null });
     }
@@ -287,7 +290,7 @@ export async function createBlock(ctx: AppContext, target: NewBlockTarget, typed
   });
 }
 
-/** Saves a block's new text, and the project its tag says (ADR-065). */
+/** Saves a block's new text, and the project its tag says (ADR-066). */
 async function putText(ctx: AppContext, tx: StoreTransaction, block: Block, text: string): Promise<Block> {
   const saved: Block = { ...block, text, updatedAt: nowIso(ctx) };
   await tx.blocks.put(saved);
@@ -391,7 +394,7 @@ async function changeKindIn(
   await record(ctx, tx, 'block.kindChanged', 'block', block.id, today(ctx), { from: block.kind, to: kind });
   if (kind === 'task' && waiting) await record(ctx, tx, 'task.waitingChanged', 'block', block.id, today(ctx), { waiting: true });
   if (kind === 'note') await reopenNotesIfTriaged(ctx, tx, section);
-  // The new kind starts from the section's project; a tag still wins (ADR-065).
+  // The new kind starts from the section's project; a tag still wins (ADR-066).
   await followTag(ctx, tx, changed, null);
 }
 
@@ -519,6 +522,7 @@ export async function mergeIntoPrevious(ctx: AppContext, blockId: string, fullTe
 export async function finishTaskIn(ctx: AppContext, tx: StoreTransaction, task: Block, day: DayKey): Promise<Block> {
   const finished: Block = { ...task, status: 'done', closedAt: nowIso(ctx), updatedAt: nowIso(ctx) };
   await tx.blocks.put(finished);
+  await releaseNextStep(ctx, tx, task, 'finished', day);
   await record(ctx, tx, 'task.finished', 'block', task.id, day, {
     intendedDate: task.intendedDate,
     firstIntendedDate: task.firstIntendedDate,
@@ -577,6 +581,7 @@ export async function abandonTasks(ctx: AppContext, taskIds: readonly string[]):
       const task = await tx.blocks.get(taskId);
       if (!task || task.kind !== 'task' || task.status !== 'active') continue;
       await tx.blocks.put({ ...task, status: 'abandoned', closedAt: nowIso(ctx), updatedAt: nowIso(ctx) });
+      await releaseNextStep(ctx, tx, task, 'abandoned');
       await record(ctx, tx, 'task.abandoned', 'block', task.id, today(ctx));
     }
   });

@@ -1,4 +1,4 @@
-# ADR-065: The project tag lives in the text by name, and the block's projectId follows it when it changes
+# ADR-066: The project tag lives in the text by name, and the block's projectId follows it when it changes
 
 **Status:** Accepted
 **Date:** 2026-11-10

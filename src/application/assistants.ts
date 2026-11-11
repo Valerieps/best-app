@@ -4,6 +4,7 @@ import type { Block } from '../domain/entities';
 import type { TaskDecision } from '../domain/triage';
 import type { PlanningChange } from './checkout';
 import { record } from './events';
+import { releaseNextStep } from './nextSteps';
 import { moveIntendedDate } from './intendedDate';
 import { finishTaskIn, linkSection } from './notebook';
 import type { AppContext } from './ports';
@@ -51,13 +52,14 @@ export async function mergeProjects(ctx: AppContext, keepId: string, mergeIds: r
       if (id === keepId) continue;
       const project = await tx.projects.get(id);
       if (!project || project.status === 'merged') continue;
-      // The lines tagged with the merged project now carry the kept one's tag (ADR-065).
+      // The lines tagged with the merged project now carry the kept one's tag (ADR-066).
       await rewriteTags(ctx, tx, id, keep.name, await tx.allProjects());
       for (const section of await tx.sectionsOfProject(id)) {
         await tx.sections.put({ ...section, projectId: keepId, updatedAt: at });
         await record(ctx, tx, 'section.linkedToProject', 'section', section.id, day, { projectId: keepId, mergedFrom: id });
       }
       for (const block of await tx.blocksOfProject(id)) {
+        await releaseNextStep(ctx, tx, block, 'moved', day);
         await tx.blocks.put({ ...block, projectId: keepId, updatedAt: at });
         await record(ctx, tx, 'block.linkedToProject', 'block', block.id, day, { projectId: keepId, mergedFrom: id });
       }
@@ -85,6 +87,7 @@ export async function resolveForgottenTasks(ctx: AppContext, actions: ReadonlyMa
       if (!task || task.kind !== 'task' || task.status !== 'active') continue;
       if (action === 'abandon') {
         await tx.blocks.put({ ...task, status: 'abandoned', closedAt: at, updatedAt: at });
+        await releaseNextStep(ctx, tx, task, 'abandoned', day);
         await record(ctx, tx, 'task.abandoned', 'block', task.id, day);
         continue;
       }
@@ -132,6 +135,7 @@ export async function planForgottenTasks(
       if (decision.kind === 'finish') await finishTaskIn(ctx, tx, task, day);
       if (decision.kind === 'abandon') {
         await tx.blocks.put({ ...task, status: 'abandoned', closedAt: at, updatedAt: at });
+        await releaseNextStep(ctx, tx, task, 'abandoned', day);
         await record(ctx, tx, 'task.abandoned', 'block', task.id, day);
       }
     }

@@ -752,7 +752,7 @@ a.mention:hover {
   background: none;
 }
 
-/* The project tag in a line (ADR-065), in the project's colors. */
+/* The project tag in a line (ADR-066), in the project's colors. */
 .project-tag {
   color: var(--color-project-text);
   background: var(--color-project-bg);
@@ -910,4 +910,10 @@ button:not(.link, .day-part__handle):active:not(:disabled) {
   border: 1px solid var(--color-border);
   border-radius: var(--radius-sm, 4px);
   padding: 0 0.3em;
+}
+
+/* Mark of a task chosen as one of its project's next steps. */
+.chip--next {
+  background: var(--color-accent);
+  color: var(--color-accent-text);
 }

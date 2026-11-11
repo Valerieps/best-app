@@ -53,7 +53,7 @@ export interface StoreTransaction {
   /** Sections whose title has an `@`: the meetings that may be with someone (spec/pessoas.md). */
   sectionsWithMentions(): Promise<Section[]>;
   allProjects(): Promise<Project[]>;
-  /** Blocks whose text has a `#`: the ones that may carry a project tag (ADR-065). */
+  /** Blocks whose text has a `#`: the ones that may carry a project tag (ADR-066). */
   blocksWithTags(): Promise<Block[]>;
   blocksInSection(sectionId: string): Promise<Block[]>;
   blocksOfProject(projectId: string): Promise<Block[]>;

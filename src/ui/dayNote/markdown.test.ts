@@ -79,7 +79,7 @@ describe('parseInline', () => {
     expect(hasMarkdown('com a @Ana')).toBe(true);
   });
 
-  it('reads the project tag, but not a heading, an escape or code (ADR-065)', () => {
+  it('reads the project tag, but not a heading, an escape or code (ADR-066)', () => {
     expect(parseInline('ver #App e #[Data Studios]')).toEqual([
       { type: 'text', text: 'ver ' },
       { type: 'tag', name: 'App', raw: '#App' },

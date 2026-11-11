@@ -41,7 +41,7 @@ export async function renameProjectIn(ctx: AppContext, tx: StoreTransaction, pro
   if (!trimmed) return null;
   const project = await tx.projects.get(projectId);
   if (!project || project.name === trimmed) return null;
-  // The tags are found by the old name, so they are rewritten before the project changes (ADR-065).
+  // The tags are found by the old name, so they are rewritten before the project changes (ADR-066).
   await rewriteTags(ctx, tx, project.id, trimmed, await tx.allProjects());
   await tx.projects.put({ ...project, name: trimmed, updatedAt: ctx.clock.now().toISOString() });
   await record(ctx, tx, 'project.renamed', 'project', project.id, toDayKey(ctx.clock.now()), {

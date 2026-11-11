@@ -1,5 +1,7 @@
 import { describe, expect, it } from 'vitest';
+import { nextStepsListId } from '../domain/nextSteps';
 import { positionBetween } from '../domain/position';
+import { setNextStep } from './nextSteps';
 import { createTestContext } from '../test/fixtures';
 import { mergeProjects } from './assistants';
 import { closePendingDays } from './checkout';
@@ -16,7 +18,7 @@ function at() {
   return position;
 }
 
-describe('project tag on a line (ADR-065)', () => {
+describe('project tag on a line (ADR-066)', () => {
   it('links a task to the tagged project, over its section, and back when the tag goes', async () => {
     const { ctx, db } = createTestContext();
     const reforma = await createProject(ctx, 'Reforma');
@@ -62,6 +64,17 @@ describe('project tag on a line (ADR-065)', () => {
     expect((await db.blocks.get(note.id))?.projectId).toBe(app.id);
     const onPage = await createProjectTask(ctx, reforma.id, 'Pedir ajuda no #App');
     expect((await db.blocks.get(onPage!.id))?.projectId).toBe(app.id);
+  });
+
+  it('takes a next step out of its old project when a tag moves it', async () => {
+    const { ctx, db } = createTestContext();
+    const reforma = await createProject(ctx, 'Reforma');
+    await createProject(ctx, 'App');
+    const task = await createProjectTask(ctx, reforma.id, 'Comprar o piso');
+    await setNextStep(ctx, task!.id, true);
+    expect((await db.priorities.get(nextStepsListId(reforma.id)))?.itemIds).toEqual([task!.id]);
+    await updateBlockText(ctx, task!.id, 'Comprar o piso #App');
+    expect((await db.priorities.get(nextStepsListId(reforma.id)))?.itemIds).toEqual([]);
   });
 
   it('shows a tagged note in the tagged project, not in its section project', async () => {

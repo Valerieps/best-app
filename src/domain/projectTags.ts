@@ -2,7 +2,7 @@ import type { Block, Project } from './entities';
 import { normalizeForMatch } from './text';
 
 /**
- * The project tag on a line (spec/nota-do-dia.md, "Tag de projeto na linha"; ADR-065): `#Nome`
+ * The project tag on a line (spec/nota-do-dia.md, "Tag de projeto na linha"; ADR-066): `#Nome`
  * for a one-word name, `#[Nome com espaços]` for any other. Read from the text every time, like
  * the mention; the block's `projectId` follows the tag when it changes.
  */
@@ -131,7 +131,7 @@ export function tagProject(text: string, projects: readonly Project[]): Project 
 
 /**
  * The block's `projectId` after its text changed from `previousText` (null for a new block) to
- * `block.text` (ADR-065). Only a change of tag moves it: a new tag gives the tagged project, a
+ * `block.text` (ADR-066). Only a change of tag moves it: a new tag gives the tagged project, a
  * tag taken off gives back the section's project (a task) or none (a note). With the same tag,
  * the current `projectId` stays, so a project chosen at the closing is not undone by an edit.
  */

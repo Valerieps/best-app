@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import type { Block, Project } from './entities';
-import { creationDay, groupTasks, inFocusProjects, sortTasks, type TaskListEntry } from './taskList';
+import { creationDay, groupTasks, inFocusProjects, onlyNextSteps, sortTasks, type TaskListEntry } from './taskList';
 
 function project(id: string, name: string): Project {
   return { id, name, status: 'active', createdAt: '', updatedAt: '', finishedAt: null };
@@ -93,6 +93,14 @@ describe('projects in focus', () => {
   it('keeps only tasks of the projects in focus', () => {
     expect(ids(inFocusProjects(all, ['p1']))).toEqual(['a', 'd']);
     expect(inFocusProjects(all, [])).toEqual([]);
+  });
+});
+
+describe('next steps only', () => {
+  it('keeps only the tasks marked, and combines with the focus filter', () => {
+    expect(ids(onlyNextSteps(all, ['a', 'b']))).toEqual(['a', 'b']);
+    expect(onlyNextSteps(all, [])).toEqual([]);
+    expect(ids(onlyNextSteps(inFocusProjects(all, ['p1']), ['a', 'b']))).toEqual(['a']);
   });
 });
 

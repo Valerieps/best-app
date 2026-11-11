@@ -2,9 +2,10 @@ import { toDayKey } from '../domain/day';
 import type { Block, Project } from '../domain/entities';
 import { projectAfterText, renameTags } from '../domain/projectTags';
 import { record } from './events';
+import { releaseNextStep } from './nextSteps';
 import type { AppContext, StoreTransaction } from './ports';
 
-/** The project tag on a line (spec/nota-do-dia.md, "Tag de projeto na linha"; ADR-065). */
+/** The project tag on a line (spec/nota-do-dia.md, "Tag de projeto na linha"; ADR-066). */
 
 /**
  * Gives `block` the project its tag says, after its text changed from `previousText` (null for a
@@ -16,6 +17,8 @@ export async function followTag(ctx: AppContext, tx: StoreTransaction, block: Bl
   const section = await tx.sections.get(block.sectionId);
   const projectId = projectAfterText(block, previousText, section?.projectId ?? null, await tx.allProjects());
   if (projectId === block.projectId) return block;
+  // Leaving a project takes the task out of its next steps, as any change of project does.
+  if (block.kind === 'task') await releaseNextStep(ctx, tx, block, 'moved');
   const moved: Block = { ...block, projectId, updatedAt: ctx.clock.now().toISOString() };
   await tx.blocks.put(moved);
   await record(ctx, tx, 'block.linkedToProject', 'block', block.id, toDayKey(ctx.clock.now()), { projectId, byTag: true });

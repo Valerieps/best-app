@@ -92,7 +92,7 @@ export type InlineNode =
   | { type: 'link'; href: string; children: InlineNode[] }
   /** `@Nome`, a person cited in the line (spec/pessoas.md). */
   | { type: 'mention'; name: string }
-  /** `#Projeto` or `#[Nome do projeto]`, the project tag (ADR-065); `raw` is the text as typed. */
+  /** `#Projeto` or `#[Nome do projeto]`, the project tag (ADR-066); `raw` is the text as typed. */
   | { type: 'tag'; name: string; raw: string };
 
 /** Only web and mail links open; anything else (javascript:, data:...) stays plain text. */

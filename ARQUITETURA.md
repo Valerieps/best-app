@@ -62,7 +62,7 @@ Os tipos estão em `src/domain/entities.ts`. Todo registro tem `id` (UUID), `cre
 | --- | --- |
 | `kind` | `task` ou `note`; `appointment` entra na seção 5 |
 | `sectionId` | Seção onde o bloco foi escrito |
-| `projectId` | Projeto vinculado: herdado da seção, escolhido no fechamento ou dado pela tag `#projeto` no texto, que vence a seção. Numa nota, só a tag o preenche; sem ela, a nota segue a seção (ADR-065) |
+| `projectId` | Projeto vinculado: herdado da seção, escolhido no fechamento ou dado pela tag `#projeto` no texto, que vence a seção. Numa nota, só a tag o preenche; sem ela, a nota segue a seção (ADR-066) |
 | `status` | Só tarefas: `active`, `done`, `abandoned` ou `converted` (virou hábito) |
 | `intendedDate` | Dia em que a tarefa aparece na nota do dia; numa tarefa `waiting`, a data para cobrar (ADR-052) |
 | `firstIntendedDate` | Primeira data de intenção, para medir a distância até a ação final |
@@ -76,11 +76,11 @@ Os tipos estão em `src/domain/entities.ts`. Todo registro tem `id` (UUID), `cre
 
 **`people`**: `name` (uma palavra), `status` (`active`, `archived` ou `merged`), `mergedInto`. A menção não é gravada à parte: fica no texto do bloco; renomear e juntar reescrevem o texto (ADR-052).
 
-**Tag de projeto:** também fica só no texto, pelo nome (`#App` ou `#[Data Studios]`). O `projectId` do bloco muda só quando a tag muda, em toda gravação de texto (`followTag`); renomear e juntar projetos reescrevem as tags (ADR-065).
+**Tag de projeto:** também fica só no texto, pelo nome (`#App` ou `#[Data Studios]`). O `projectId` do bloco muda só quando a tag muda, em toda gravação de texto (`followTag`); renomear e juntar projetos reescrevem as tags (ADR-066).
 
 **`days`**: `lastCheckoutAt`, `startedAt`, `warmup`, `executionStartedAt` e `sectionOrder`.
 
-**`priorities`**: listas com id `escopo:período`. `day:AAAA-MM-DD` guarda as tarefas escolhidas à mão; as com prazo no dia entram na leitura (ADR-017). `focusProjects` é a lista única de até 3 projetos em foco, e cada mudança grava um evento com a lista inteira (ADR-038).
+**`priorities`**: listas com id `escopo:período`. `day:AAAA-MM-DD` guarda as tarefas escolhidas à mão; as com prazo no dia entram na leitura (ADR-017). `focusProjects` é a lista única de até 3 projetos em foco, e cada mudança grava um evento com a lista inteira (ADR-038). `next:<projectId>` é a lista dos até 3 próximos passos de um projeto, com o mesmo desenho (ADR-065): quem lê só mostra as tarefas ainda abertas e ainda no projeto, e finalizar, abandonar ou trocar de projeto tiram a tarefa da lista.
 
 **`settings`**: um registro só, id `main`, que entra no backup.
 
@@ -96,7 +96,6 @@ Os tipos estão em `src/domain/entities.ts`. Todo registro tem `id` (UUID), `cre
 | --- | --- |
 | 3 | Tabela `muralPhrases`: texto e frequência; as frases do dia ficam em `days`. Espera a pergunta em aberto do mural |
 | 5 | `blocks.kind = 'appointment'`, com `appointmentAt` e `migratedAt` |
-| 7 | Próximos passos: uma lista por projeto em `priorities` (id `next:<projectId>`), como os projetos em foco, com um evento por mudança. A ADR do passo 1 confirma |
 | 7 | `blocks.kind = 'idea'`, com a contagem de "ainda não" e o destino |
 
 ## 5. Histórico de eventos

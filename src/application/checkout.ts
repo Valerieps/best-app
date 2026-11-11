@@ -2,6 +2,7 @@ import { toDayKey, type DayKey } from '../domain/day';
 import type { Section } from '../domain/entities';
 import type { DayTriage, NotesDecision, TaskDecision, WhiteboardDecision } from '../domain/triage';
 import { record } from './events';
+import { releaseNextStep } from './nextSteps';
 import { addHabitIn } from './habits';
 import { moveIntendedDate } from './intendedDate';
 import { addResourceIn } from './objectives';
@@ -73,9 +74,11 @@ export async function applyTaskDecision(
     } else if (decision.kind === 'habit') {
       const habit = await addHabitIn(ctx, tx, { name: task.text || 'Hábito', criterion: '', weekdays: [], objectiveId: null });
       task = { ...task, status: 'converted', closedAt: nowIso(ctx), updatedAt: nowIso(ctx) };
+      await releaseNextStep(ctx, tx, task, 'abandoned', day);
       await record(ctx, tx, 'task.convertedToHabit', 'block', task.id, day, { habitId: habit.id });
     } else {
       task = { ...task, status: 'abandoned', closedAt: nowIso(ctx), updatedAt: nowIso(ctx) };
+      await releaseNextStep(ctx, tx, task, 'abandoned', day);
       await record(ctx, tx, 'task.abandoned', 'block', task.id, day);
     }
   }
@@ -92,6 +95,7 @@ export async function applyTaskProject(
 ): Promise<void> {
   const task = await tx.blocks.get(taskId);
   if (!task || task.kind !== 'task' || task.projectId === projectId) return;
+  await releaseNextStep(ctx, tx, task, 'moved', day);
   await tx.blocks.put({ ...task, projectId, updatedAt: nowIso(ctx) });
   await record(ctx, tx, 'block.linkedToProject', 'block', task.id, day, { projectId });
 }

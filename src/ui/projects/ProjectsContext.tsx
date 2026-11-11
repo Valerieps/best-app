@@ -8,7 +8,7 @@ const NO_PROJECTS: readonly Project[] = [];
 const ProjectsContext = createContext<readonly Project[]>(NO_PROJECTS);
 
 /**
- * The projects the `#` tag suggests and recognizes on every line (ADR-065). A failed query leaves
+ * The projects the `#` tag suggests and recognizes on every line (ADR-066). A failed query leaves
  * the lines working, only without the suggestions.
  */
 export function ProjectsProvider({ children }: { children: ReactNode }) {
