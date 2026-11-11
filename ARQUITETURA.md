@@ -78,7 +78,7 @@ Os tipos estão em `src/domain/entities.ts`. Todo registro tem `id` (UUID), `cre
 
 **`days`**: `lastCheckoutAt`, `startedAt`, `warmup`, `executionStartedAt` e `sectionOrder`.
 
-**`priorities`**: listas com id `escopo:período`. `day:AAAA-MM-DD` guarda as tarefas escolhidas à mão; as com prazo no dia entram na leitura (ADR-017). `focusProjects` é a lista única de até 3 projetos em foco, e cada mudança grava um evento com a lista inteira (ADR-038).
+**`priorities`**: listas com id `escopo:período`. `day:AAAA-MM-DD` guarda as tarefas escolhidas à mão; as com prazo no dia entram na leitura (ADR-017). `focusProjects` é a lista única de até 3 projetos em foco, e cada mudança grava um evento com a lista inteira (ADR-038). `next:<projectId>` é a lista dos até 3 próximos passos de um projeto, com o mesmo desenho (ADR-065): quem lê só mostra as tarefas ainda abertas e ainda no projeto, e finalizar, abandonar ou trocar de projeto tiram a tarefa da lista.
 
 **`settings`**: um registro só, id `main`, que entra no backup.
 
@@ -94,7 +94,6 @@ Os tipos estão em `src/domain/entities.ts`. Todo registro tem `id` (UUID), `cre
 | --- | --- |
 | 3 | Tabela `muralPhrases`: texto e frequência; as frases do dia ficam em `days`. Espera a pergunta em aberto do mural |
 | 5 | `blocks.kind = 'appointment'`, com `appointmentAt` e `migratedAt` |
-| 7 | Próximos passos: uma lista por projeto em `priorities` (id `next:<projectId>`), como os projetos em foco, com um evento por mudança. A ADR do passo 1 confirma |
 | 7 | `blocks.kind = 'idea'`, com a contagem de "ainda não" e o destino; a tag de projeto dá ao bloco um `projectId` diferente do da seção (ADR a escrever no passo 2) |
 
 ## 5. Histórico de eventos

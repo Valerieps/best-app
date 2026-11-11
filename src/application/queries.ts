@@ -30,6 +30,7 @@ import { weekOf } from '../domain/week';
 import { comparePositions } from '../domain/position';
 import { buildDayPriorities, dayPriorityListId, type DayPriority } from '../domain/priorities';
 import { FOCUS_LIST_ID, focusProjectIds, hasFreeSlot } from '../domain/focusProjects';
+import { nextStepIds, nextStepsListId } from '../domain/nextSteps';
 import { activityByDay, lastActivityDay, recentlyFinished, stalledDays, type ActivityByDay } from '../domain/projectActivity';
 import { isDaySection, isStuckTask } from '../domain/projectPage';
 import { buildPeopleOverview, buildPersonPage, meetingPeople, type PeopleOverview, type PersonPage } from '../domain/people';
@@ -330,6 +331,8 @@ export async function loadFocusProjectIds(reader: Reader, projects: readonly Pro
 export interface TaskListContext {
   activeProjects: Project[];
   focusIds: string[];
+  /** Ids of the tasks marked "Próximo", across projects (spec/prioridades.md, "Próximos passos"). */
+  nextStepIds: string[];
 }
 
 export async function loadTaskListContext(reader: Reader): Promise<TaskListContext> {
@@ -339,7 +342,14 @@ export async function loadTaskListContext(reader: Reader): Promise<TaskListConte
       .filter((project) => project.status === 'active')
       .sort((a, b) => a.name.localeCompare(b.name, 'pt-BR', { sensitivity: 'base' })),
     focusIds: await loadFocusProjectIds(reader, projects),
+    nextStepIds: await loadAllNextStepIds(reader, await myActiveTasks(reader)),
   };
+}
+
+/** The valid next steps of every project, given the open tasks. */
+async function loadAllNextStepIds(reader: Reader, tasks: Block[]): Promise<string[]> {
+  const lists = await reader.priorityListsBetween(nextStepsListId(''), `${nextStepsListId('')}￿`);
+  return lists.flatMap((list) => nextStepIds(list, tasks, list.id.slice(nextStepsListId('').length)));
 }
 
 /** What the "⋯" of a project offers about the focus, in the list and on its page. */
@@ -468,6 +478,8 @@ export interface ProjectView extends ProjectActions {
   notes: SectionNotes[];
   /** Day-note sections linked to the project. */
   sections: number;
+  /** The tasks marked "Próximo" (up to 3, in the order marked), still open and in the project. */
+  nextStepIds: string[];
 }
 
 export async function loadProject(reader: Reader, projectId: string): Promise<ProjectView | null> {
@@ -485,6 +497,7 @@ export async function loadProject(reader: Reader, projectId: string): Promise<Pr
     doneTasks: await withOrigins(reader, done),
     notes: kept.filter((entry) => entry.section.projectId === projectId),
     sections: sections.length,
+    nextStepIds: nextStepIds(await reader.priorityList(nextStepsListId(projectId)), tasks, projectId),
     ...projectActions(project, priorityIds, projects),
   };
 }

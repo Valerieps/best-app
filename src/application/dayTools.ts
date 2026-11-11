@@ -2,6 +2,7 @@ import { toDayKey, type DayKey } from '../domain/day';
 import { dayPriorityListId, demote, promote } from '../domain/priorities';
 import { record } from './events';
 import { moveIntendedDate } from './intendedDate';
+import { releaseNextStep } from './nextSteps';
 import type { AppContext } from './ports';
 
 /** 1b shortcuts of the day note: dates, deadlines, priorities and meeting details. */
@@ -51,6 +52,7 @@ export async function setTaskProject(ctx: AppContext, taskId: string, projectId:
     const task = await tx.blocks.get(taskId);
     if (!task || task.kind !== 'task' || task.status !== 'active' || task.projectId === projectId) return;
     if (projectId !== null && (await tx.projects.get(projectId))?.status !== 'active') return;
+    await releaseNextStep(ctx, tx, task, 'moved');
     await tx.blocks.put({ ...task, projectId, updatedAt: ctx.clock.now().toISOString() });
     await record(ctx, tx, 'block.linkedToProject', 'block', task.id, today(ctx), { projectId });
   });

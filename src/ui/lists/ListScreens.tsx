@@ -1,11 +1,12 @@
 import { useEffect, useState, type MouseEvent } from 'react';
 import { setDeadline, setDeadlines, setIntendedDate, setIntendedDates, setTaskProject } from '../../application/dayTools';
+import { setNextStep } from '../../application/nextSteps';
 import { abandonTask, abandonTasks, setTaskDone } from '../../application/notebook';
 import { loadActiveTasks, loadFinishedTasks, loadTaskListContext, type TaskListItem } from '../../application/queries';
 import { rangeBetween } from '../../domain/checkoutSteps';
 import { addDays, type DayKey } from '../../domain/day';
 import type { Project } from '../../domain/entities';
-import { TASK_LIST_KEYS, groupTasks, inFocusProjects, type TaskGroupBy, type TaskListKey } from '../../domain/taskList';
+import { TASK_LIST_KEYS, groupTasks, inFocusProjects, onlyNextSteps, type TaskGroupBy, type TaskListKey } from '../../domain/taskList';
 import { AbandonAction } from '../components/AbandonAction';
 import { ProjectChip } from '../components/Chips';
 import { Icon } from '../components/Icon';
@@ -30,12 +31,15 @@ function ListPage({ title, className = '', children }: { title: string; classNam
 function TaskRow({
   item,
   today,
+  isNext = false,
   action,
   extra,
   selection,
 }: {
   item: TaskListItem;
   today: DayKey;
+  /** Marked "Próximo" in its project. */
+  isNext?: boolean;
   action?: React.ReactNode;
   /** Shown on hover, after the meta. */
   extra?: React.ReactNode;
@@ -63,6 +67,7 @@ function TaskRow({
             <Linkified text={task.text || '(tarefa sem texto)'} />
           </span>
         )}
+        {isNext && active && <span className="chip chip--next" title="Um dos próximos passos do projeto">próximo</span>}
         {meta && (
           <span className="list-meta">
             <span className="muted">{meta}</span>
@@ -90,9 +95,11 @@ interface TaskListView {
   sortBy: TaskListKey;
   /** Only the tasks of the projects in focus. */
   focusOnly: boolean;
+  /** Only the tasks marked "Próximo" in their projects. */
+  nextOnly: boolean;
 }
 
-const DEFAULT_VIEW: TaskListView = { groupBy: 'none', sortBy: 'intendedDate', focusOnly: false };
+const DEFAULT_VIEW: TaskListView = { groupBy: 'none', sortBy: 'intendedDate', focusOnly: false, nextOnly: false };
 
 /** Which tasks the list shows. Not remembered: the screen always opens on the open tasks. */
 type TaskShow = 'open' | 'done' | 'all';
@@ -111,6 +118,7 @@ function readView(): TaskListView {
       groupBy: saved.groupBy === 'none' || isKey(saved.groupBy) ? saved.groupBy : DEFAULT_VIEW.groupBy,
       sortBy: isKey(saved.sortBy) ? saved.sortBy : DEFAULT_VIEW.sortBy,
       focusOnly: saved.focusOnly === true,
+      nextOnly: saved.nextOnly === true,
     };
   } catch {
     return DEFAULT_VIEW;
@@ -241,10 +249,21 @@ function BatchBar({ selected, today, onDone }: { selected: Set<string>; today: D
 }
 
 /** On hover: change the two dates, or abandon the task, with a second click to confirm. */
-function ActiveTaskActions({ item, today, projects }: { item: TaskListItem; today: DayKey; projects: Project[] }) {
+function ActiveTaskActions({ item, today, projects, isNext }: { item: TaskListItem; today: DayKey; projects: Project[]; isNext: boolean }) {
   const { task } = item;
   return (
     <span className="active-tasks__actions">
+      {item.project && !task.waiting && (
+        <button
+          type="button"
+          className="line__action"
+          aria-pressed={isNext}
+          title={isNext ? 'Tirar dos próximos passos do projeto' : 'Marcar como um dos próximos passos do projeto'}
+          onClick={() => void setNextStep(appContext, task.id, !isNext)}
+        >
+          {isNext ? 'Não é próximo' : 'Próximo'}
+        </button>
+      )}
       {!item.project && projects.length > 0 && (
         <select
           className="line__action active-tasks__project"
@@ -348,6 +367,14 @@ function TaskListControls({
         />
         Só projetos em foco
       </label>
+      <label>
+        <input
+          type="checkbox"
+          checked={view.nextOnly}
+          onChange={(event) => onChange({ ...view, nextOnly: event.target.checked })}
+        />
+        Só próximos passos
+      </label>
       <span className="active-tasks__controls-end">{children}</span>
     </div>
   );
@@ -383,11 +410,13 @@ export function ActiveTasksScreen({ today }: { today: DayKey }) {
   }, [selecting]);
 
   if (!openItems || !doneItems || !context) return <LoadingPage title="Tarefas" />;
-  const { groupBy, sortBy, focusOnly } = view;
+  const { groupBy, sortBy, focusOnly, nextOnly } = view;
   const allItems = show === 'open' ? openItems : show === 'done' ? doneItems : [...openItems, ...doneItems];
-  const items = focusOnly ? inFocusProjects(allItems, context.focusIds) : allItems;
+  const focused = focusOnly ? inFocusProjects(allItems, context.focusIds) : allItems;
+  const items = nextOnly ? onlyNextSteps(focused, context.nextStepIds) : focused;
   const groups = groupTasks(items, groupBy, sortBy);
   const groupId = (key: string | null) => `${groupBy}:${key ?? ''}`;
+  const nextSet = new Set(context.nextStepIds);
   const isOpen = (item: TaskListItem) => item.task.status === 'active';
   // Only open tasks can be selected: the batch actions are for them.
   const shownIds = groups.flatMap((group) => group.items.filter(isOpen).map((item) => item.task.id));
@@ -449,6 +478,7 @@ export function ActiveTasksScreen({ today }: { today: DayKey }) {
             key={id}
             item={item}
             today={today}
+            isNext={nextSet.has(id)}
             action={
               selecting && open ? undefined : (
                 <input
@@ -461,7 +491,7 @@ export function ActiveTasksScreen({ today }: { today: DayKey }) {
               )
             }
             selection={selecting && open ? { on: selected.has(id), onPick: (event) => pick(id, event) } : undefined}
-            extra={selecting || !open ? undefined : <ActiveTaskActions item={item} today={today} projects={context.activeProjects} />}
+            extra={selecting || !open ? undefined : <ActiveTaskActions item={item} today={today} projects={context.activeProjects} isNext={nextSet.has(id)} />}
           />
         );
       })}
@@ -499,9 +529,11 @@ export function ActiveTasksScreen({ today }: { today: DayKey }) {
                 ? show === 'done'
                   ? 'Nenhuma tarefa concluída.'
                   : 'Nenhuma tarefa por fazer.'
-                : context.focusIds.length === 0
-                  ? 'Nenhum projeto em foco.'
-                  : 'Nenhuma tarefa nos projetos em foco.'}
+                : nextOnly && (!focusOnly || context.focusIds.length > 0)
+                  ? 'Nenhum próximo passo marcado.'
+                  : context.focusIds.length === 0
+                    ? 'Nenhum projeto em foco.'
+                    : 'Nenhuma tarefa nos projetos em foco.'}
             </p>
           )}
           {groupBy === 'none'
