@@ -9,7 +9,8 @@ import { releaseNextStep } from './nextSteps';
 import type { AppContext, StoreTransaction } from './ports';
 import { addProject, renameProjectIn } from './projects';
 import { followTag } from './projectTags';
-import { tagProject } from '../domain/projectTags';
+import { followsSection, tagProject } from '../domain/projectTags';
+import { newIdeaFields } from '../domain/ideas';
 
 /** Use cases of the day note: sections, blocks and checking tasks off. */
 
@@ -103,7 +104,7 @@ export async function linkSection(
   const projects = await tx.allProjects();
   for (const block of await tx.blocksInSection(section.id)) {
     // A tagged task stays in its tag's project (ADR-066).
-    if (block.kind !== 'task' || block.projectId === projectId || tagProject(block.text, projects)) continue;
+    if (!followsSection(block.kind) || block.projectId === projectId || tagProject(block.text, projects)) continue;
     await releaseNextStep(ctx, tx, block, 'moved', day);
     await tx.blocks.put({ ...block, projectId, updatedAt: at });
     await record(ctx, tx, 'block.linkedToProject', 'block', block.id, day, { projectId });
@@ -194,7 +195,7 @@ export async function unlinkSection(ctx: AppContext, sectionId: string, title: s
     await record(ctx, tx, 'section.unlinkedFromProject', 'section', section.id, day, { projectId });
     const projects = await tx.allProjects();
     for (const block of await tx.blocksInSection(section.id)) {
-      if (block.kind !== 'task' || block.projectId !== projectId || tagProject(block.text, projects)) continue;
+      if (!followsSection(block.kind) || block.projectId !== projectId || tagProject(block.text, projects)) continue;
       await releaseNextStep(ctx, tx, block, 'moved', day);
       await tx.blocks.put({ ...block, projectId: null, updatedAt: at });
       await record(ctx, tx, 'block.linkedToProject', 'block', block.id, day, { projectId: null });
@@ -224,12 +225,13 @@ function newBlock(
   const at = nowIso(ctx);
   return {
     ...(kind === 'task' && waiting ? { waiting: true } : {}),
+    ...(kind === 'idea' ? newIdeaFields() : {}),
     id: id ?? ctx.ids.next(),
     kind,
     text,
     sectionId: section.id,
     position,
-    projectId: kind === 'task' ? section.projectId : null,
+    projectId: followsSection(kind) ? section.projectId : null,
     createdAt: at,
     updatedAt: at,
     status: kind === 'task' ? 'active' : null,
@@ -380,14 +382,15 @@ async function changeKindIn(
     if (block.text !== text) await putText(ctx, tx, block, text);
     return;
   }
-  const { waiting: _wasWaiting, ...rest } = block;
+  const { waiting: _wasWaiting, ideaStatus: _s, notYetCount: _n, lastNotYetAt: _l, ideaSectionId: _i, ...rest } = block;
   const changed: Block = {
     ...rest,
     kind,
     text,
     status: kind === 'task' ? 'active' : null,
-    projectId: kind === 'task' ? section.projectId : null,
+    projectId: followsSection(kind) ? section.projectId : null,
     ...(kind === 'task' && waiting ? { waiting: true } : {}),
+    ...(kind === 'idea' ? newIdeaFields() : {}),
     updatedAt: nowIso(ctx),
   };
   await tx.blocks.put(changed);
@@ -416,9 +419,9 @@ export async function pasteLines(ctx: AppContext, blockId: string, lines: string
   await ctx.store.transaction(async (tx) => {
     const block = await getOrThrow(tx.blocks.get(blockId), 'Block');
     const first = options.detectFirst && block.kind === 'note' ? detectKind(lines[0]) : { kind: block.kind, text: lines[0], waiting: undefined };
-    if (first.kind === 'task' && block.kind === 'note') {
+    if (first.kind !== 'note' && block.kind === 'note') {
       const { block: free, section } = await requireFreeBlock(ctx, tx, blockId);
-      await changeKindIn(ctx, tx, free, section, 'task', first.text, first.waiting === true);
+      await changeKindIn(ctx, tx, free, section, first.kind, first.text, first.waiting === true);
     } else if (block.text !== lines[0]) {
       await putText(ctx, tx, block, lines[0]);
     }

@@ -165,6 +165,10 @@ export class MemoryStore implements Store, Reader {
     return this.repository<Settings>('settings').get('main');
   }
 
+  async ideas() {
+    return this.blocks().filter((block) => block.kind === 'idea');
+  }
+
   async blocksOfProject(projectId: string) {
     return this.blocks().filter((block) => block.projectId === projectId);
   }

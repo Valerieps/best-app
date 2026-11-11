@@ -93,6 +93,8 @@ export interface Reader {
   settings(): Promise<Settings | undefined>;
   blocksOfProject(projectId: string): Promise<Block[]>;
   sectionsOfProject(projectId: string): Promise<Section[]>;
+  /** Every idea, whatever its status (spec/ideias.md). */
+  ideas(): Promise<Block[]>;
   pendingReminders(): Promise<Reminder[]>;
   dayRecord(day: DayKey): Promise<DayRecord | undefined>;
   objectives(): Promise<Objective[]>;

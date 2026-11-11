@@ -54,6 +54,7 @@ import { ScreenHeader } from '../components/ScreenHeader';
 import { SkeletonLines } from '../components/Skeleton';
 import { formatLongDate } from '../format';
 import { navigate } from '../hooks';
+import { newIdeaFields } from '../../domain/ideas';
 import { RemindersBanner } from '../opening/Reminders';
 import { opensLineBelow } from './lineBelow';
 import { SectionHeader } from './SectionHeader';
@@ -136,6 +137,7 @@ function draftBlock(id: string, sectionId: string, kind: BlockKind, text: string
   const at = new Date().toISOString();
   return {
     ...(kind === 'task' && waiting ? { waiting: true } : {}),
+    ...(kind === 'idea' ? newIdeaFields() : {}),
     id,
     kind,
     text,
@@ -477,8 +479,8 @@ export function DayNoteScreen({
     onEnter: (block, text, caret, newCaret = 0) => {
       const slot = slotOf(block);
       if (!slot) return;
-      // Enter on an empty task line that is still free turns it into a note, like a checklist.
-      if (block.kind === 'task' && text === '' && isFree(block)) {
+      // Enter on an empty task or idea line that is still free turns it into a note, like a checklist.
+      if (block.kind !== 'note' && text === '' && isFree(block)) {
         write(() => changeBlockKind(ctx, block.id, 'note', ''));
         return;
       }
@@ -506,7 +508,7 @@ export function DayNoteScreen({
       write(() => pasteLines(ctx, block.id, pasted, targets, { detectFirst: options.detectFirst, detectRest: options.detectRest }));
     },
     onBackspaceAtStart: (block, text) => {
-      if (block.kind === 'task') {
+      if (block.kind === 'task' || (block.kind === 'idea' && isFree(block))) {
         write(() => changeBlockKind(ctx, block.id, 'note', text));
         return;
       }
@@ -521,7 +523,8 @@ export function DayNoteScreen({
         write(() => deleteBlock(ctx, block.id));
       }
     },
-    onMakeTask: (block, text, waiting) => write(() => changeBlockKind(ctx, block.id, 'task', text, waiting)),
+    onMakeTask: (block, text, waiting, kind = 'task') => write(() => changeBlockKind(ctx, block.id, kind, text, waiting)),
+    onOpenIdea: (block) => navigate({ name: 'idea', id: block.id }),
     onSetWaiting: (block, waiting) => write(() => setTaskWaiting(ctx, block.id, waiting)),
     onEnsurePeople: (names) => write(() => ensurePeople(ctx, names)),
     onToggleDone: (block, done) => write(() => setTaskDone(ctx, block.id, done)),

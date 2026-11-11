@@ -15,6 +15,7 @@ import type {
 } from '../domain/entities';
 import type { DomainEvent, EntityType, EventType } from '../domain/events';
 import { toDayKey } from '../domain/day';
+import { noteToIdea } from '../domain/ideas';
 import { migrateMonthPriorityLists, migrateToFocusList } from '../domain/focusProjects';
 import { dropAwaitingReflection, keepDeferredNotes } from '../domain/reviewsRemoved';
 import { undateArchivedTask } from '../domain/tasks';
@@ -26,7 +27,7 @@ import { undateArchivedTask } from '../domain/tasks';
  */
 
 export const BACKUP_FORMAT = 'best-app-backup';
-export const BACKUP_SCHEMA_VERSION = 10;
+export const BACKUP_SCHEMA_VERSION = 11;
 
 export interface BackupTables {
   blocks: Block[];
@@ -141,6 +142,17 @@ function upgradeTables(tables: Record<string, unknown>, version: number, exporte
   if (version < 10) {
     if (Array.isArray(upgraded.blocks)) upgraded.blocks = upgraded.blocks.map((row: unknown) => (isRecord(row) ? dropAwaitingReflection(row) : row));
     if (Array.isArray(upgraded.sections)) upgraded.sections = upgraded.sections.map((row: unknown) => (isRecord(row) ? keepDeferredNotes(row) : row));
+  }
+  // Ideas (ADR-067): notes written with `[?] ` before ideas existed become ideas.
+  if (version < 11 && Array.isArray(upgraded.blocks)) {
+    const sectionProjects = new Map<unknown, string | null>(
+      (Array.isArray(upgraded.sections) ? upgraded.sections : [])
+        .filter(isRecord)
+        .map((section) => [section.id, typeof section.projectId === 'string' ? section.projectId : null]),
+    );
+    upgraded.blocks = upgraded.blocks.map((row: unknown) =>
+      isRecord(row) ? noteToIdea(row, sectionProjects.get(row.sectionId) ?? null) : row,
+    );
   }
   return upgraded;
 }

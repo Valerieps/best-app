@@ -45,6 +45,8 @@ export function isTaskPendingOn(task: Block, originDay: DayKey | null, day: DayK
 export function canEditFreely(block: Block, section: Section | undefined, today: DayKey): boolean {
   if (!section || section.day !== today) return false;
   if (block.kind === 'note') return section.notesDestination === 'pending';
+  // An idea is plain text until I think about it or give it a destination.
+  if (block.kind === 'idea') return (block.ideaStatus ?? 'open') === 'open' && !block.notYetCount && !block.ideaSectionId;
   return block.status === 'active' && block.intendedDate === null && block.lastTriagedDay === null;
 }
 

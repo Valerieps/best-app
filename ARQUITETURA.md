@@ -54,25 +54,26 @@ As telas chamam as funções de `application/queries.ts` dentro de `useLiveQuery
 
 ## 4. Modelo de dados
 
-Os tipos estão em `src/domain/entities.ts`. Todo registro tem `id` (UUID), `createdAt` e `updatedAt`. Versão 10 do banco.
+Os tipos estão em `src/domain/entities.ts`. Todo registro tem `id` (UUID), `createdAt` e `updatedAt`. Versão 11 do banco.
 
-**`blocks`**: tarefas e notas.
+**`blocks`**: tarefas, notas e ideias.
 
 | Campo | O que significa |
 | --- | --- |
-| `kind` | `task` ou `note`; `appointment` entra na seção 5 |
+| `kind` | `task`, `note` ou `idea` (fase 7, indexado); `appointment` entra na seção 5 |
 | `sectionId` | Seção onde o bloco foi escrito |
-| `projectId` | Projeto vinculado: herdado da seção, escolhido no fechamento ou dado pela tag `#projeto` no texto, que vence a seção. Numa nota, só a tag o preenche; sem ela, a nota segue a seção (ADR-066) |
+| `projectId` | Projeto vinculado: herdado da seção, escolhido no fechamento ou dado pela tag `#projeto` no texto, que vence a seção. Numa nota, só a tag o preenche; sem ela, a nota segue a seção (ADR-066). A ideia segue a seção como a tarefa |
 | `status` | Só tarefas: `active`, `done`, `abandoned` ou `converted` (virou hábito) |
 | `intendedDate` | Dia em que a tarefa aparece na nota do dia; numa tarefa `waiting`, a data para cobrar (ADR-052) |
 | `firstIntendedDate` | Primeira data de intenção, para medir a distância até a ação final |
 | `lastTriagedDay` | Último dia cujo fechamento decidiu a tarefa; é o que diz se ela está pendente (ADR-011) |
 | `deadline` | Prazo máximo |
+| `ideaStatus`, `notYetCount`, `lastNotYetAt`, `ideaSectionId` | Só ideias: `open`, `becameProject` ou `dropped`; quantas vezes e quando eu disse "ainda não"; a seção da página da ideia (ADR-067). O `status` continua só das tarefas |
 | `carriedOrder` | `{ day, position }`: ordem entre as tarefas de outros dias, só enquanto `day` é a data de intenção (ADR-040) |
 
-**`sections`**: `kind` (`general` ou `meeting`), `day`, `title`, `projectId` (`null` = quadro branco), `notesDestination` (`pending` com o dia aberto; `wiki` com o dia fechado, nome histórico, ADR-050), `whiteboardDecision`. Duas seções nunca aparecem numa nota do dia: `projectPage`, que guarda as tarefas escritas na página do projeto (ADR-031), e `projectNote`, uma por nota escrita na aba "Notas" do projeto.
+**`sections`**: `kind` (`general` ou `meeting`), `day`, `title`, `projectId` (`null` = quadro branco), `notesDestination` (`pending` com o dia aberto; `wiki` com o dia fechado, nome histórico, ADR-050), `whiteboardDecision`. Duas seções nunca aparecem numa nota do dia: `projectPage`, que guarda as tarefas escritas na página do projeto (ADR-031), e `projectNote`, uma por nota escrita na aba "Notas" do projeto. A página de uma ideia também é uma seção escondida, com `ideaId`, sem projeto (ADR-067); quando a ideia vira projeto, ela vira uma `projectNote` do projeto novo.
 
-**`projects`**: `name`, `status` (`active`, `finished` ou `merged`), `mergedInto`, `keepSeparateFrom`, `objectiveId`, `icon`.
+**`projects`**: `name`, `status` (`active`, `finished` ou `merged`), `mergedInto`, `keepSeparateFrom`, `objectiveId`, `icon`, e `fromIdeaId` e `fromProjectId` no projeto que nasceu de uma ideia.
 
 **`people`**: `name` (uma palavra), `status` (`active`, `archived` ou `merged`), `mergedInto`. A menção não é gravada à parte: fica no texto do bloco; renomear e juntar reescrevem o texto (ADR-052).
 
@@ -96,7 +97,6 @@ Os tipos estão em `src/domain/entities.ts`. Todo registro tem `id` (UUID), `cre
 | --- | --- |
 | 3 | Tabela `muralPhrases`: texto e frequência; as frases do dia ficam em `days`. Espera a pergunta em aberto do mural |
 | 5 | `blocks.kind = 'appointment'`, com `appointmentAt` e `migratedAt` |
-| 7 | `blocks.kind = 'idea'`, com a contagem de "ainda não" e o destino |
 
 ## 5. Histórico de eventos
 
@@ -106,6 +106,7 @@ Os tipos estão em `src/domain/entities.ts`. Todo registro tem `id` (UUID), `cre
 - **Exclusões deixam rastro:** um bloco apagado ou um recurso removido sai da tabela, mas deixa `block.deleted` ou `resource.removed`. É assim que o backup automático distingue um registro apagado de um perdido (seção 7).
 - **Formato dos detalhes:** cada tipo tem o seu `data` em `EventData`, e `record` só aceita esse formato. Um formato já gravado nunca muda: os antigos ficam em `LegacyEventData`, e uma mudança incompatível sobe a versão do evento (`v`, ausente = 1). Quem lê confere o valor, porque um backup importado pode trazer qualquer coisa (ADR-043).
 - **Adiamento:** gera `task.postponed` e soma 1 em `postponeCount` quando a data de intenção muda para depois, ou quando "Fechar dias pendentes" devolve a tarefa sem data. A tarefa deixada sem mexer no "Fechar o dia" fica sem data e sem contar adiamento.
+- **Ideias:** cada destino grava o seu evento no bloco da ideia: `idea.becameTask`, `idea.becameProject`, `idea.dropped` e `idea.notYet`, com a contagem (ADR-067).
 - **Métricas** são funções puras do domínio sobre os eventos de um período; uma métrica nova não exige migração.
 
 ## 6. Migrações

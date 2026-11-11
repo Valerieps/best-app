@@ -7,7 +7,14 @@ import type { DayKey } from './day';
  * Timestamps are ISO 8601 strings.
  */
 
-export type BlockKind = 'task' | 'note';
+/** `idea` (phase 7): a line written with `[?] ` (spec/ideias.md). Not a task: no date, no triage. */
+export type BlockKind = 'task' | 'note' | 'idea';
+
+/**
+ * Idea only (spec/ideias.md, "Destinos"): `open` until it gets a destination; `becameProject` and
+ * `dropped` take it out of circulation. An idea that became a task is a task (`kind: 'task'`).
+ */
+export type IdeaStatus = 'open' | 'becameProject' | 'dropped';
 
 /** converted (section 6): the task became a habit at checkout and left circulation. */
 export type TaskStatus = 'active' | 'done' | 'abandoned' | 'converted';
@@ -49,6 +56,14 @@ export interface Block {
    * the day to follow up ("data para cobrar"). Absent in records saved before people existed.
    */
   waiting?: boolean;
+  /** Idea only (phase 7, ADR-067). Absent in other blocks. */
+  ideaStatus?: IdeaStatus;
+  /** Idea only: how many times I said "ainda não" to it. */
+  notYetCount?: number;
+  /** Idea only: when I last said "ainda não", or null. */
+  lastNotYetAt?: string | null;
+  /** Idea only: the hidden section where I write what I think about it, created on first use. */
+  ideaSectionId?: string | null;
 }
 
 export type SectionKind = 'general' | 'meeting';
@@ -92,6 +107,12 @@ export interface Section {
    * the project page. Its `day` is the day it was written. Absent in other sections.
    */
   projectNote?: boolean;
+  /**
+   * Phase 7: the idea whose page this section is; it holds what I write about the idea (ADR-067).
+   * It belongs to no day note and no project: its tasks get the idea's project when written.
+   * Absent in other sections.
+   */
+  ideaId?: string;
 }
 
 /** `merged` projects were joined into another one (`mergedInto`) by the duplicates assistant. */
@@ -111,6 +132,9 @@ export interface Project {
   objectiveId?: string | null;
   /** Section 2: one of `PROJECT_ICONS`; absent or null shows the name's initial. */
   icon?: string | null;
+  /** Phase 7: the idea this project grew from, and the idea's project then (spec/ideias.md). */
+  fromIdeaId?: string | null;
+  fromProjectId?: string | null;
 }
 
 /** Someone cited with `@Nome` (spec/pessoas.md). `merged` people were joined into `mergedInto`. */

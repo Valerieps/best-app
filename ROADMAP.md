@@ -1,6 +1,6 @@
 # Roadmap
 
-Atualizado em 17/10/2026
+Atualizado em 10/11/2026
 
 O que ainda não está pronto. É o único lugar que acompanha o progresso.
 
@@ -21,7 +21,7 @@ As fases seguem as seções do `SPEC.md`.
 | 4. Objetivos | Feita em parte | Nome do campo "motivação"; assistente "Objetivos soltos" |
 | 5. Tipos de bloco | Bloqueada | Tudo: compromissos e detecção de tipo |
 | 6. Hábitos | Feita em parte | "Agendar lembrete"; assistente "Hábitos sumidos" |
-| 7. Coletar, executar, incubar | Em andamento | Os próximos passos e a tela "Executar" já estão feitos. Faltam os passos 4 a 6 de "Fase 7: ordem de implementação" |
+| 7. Coletar, executar, incubar | Em andamento | Os próximos passos, a tela "Executar" e as ideias já estão feitos. Faltam os passos 5 e 6 de "Fase 7: ordem de implementação" |
 
 ## Esperando resposta a uma pergunta em aberto
 
@@ -32,7 +32,6 @@ As fases seguem as seções do `SPEC.md`.
 | Seção 5 inteira | `spec/compromissos.md`: formatos de cada tipo e como corrigir um tipo errado |
 | "Agendar lembrete" nos hábitos | `spec/habitos.md` |
 | Assistente "Hábitos sumidos" | `spec/assistentes.md`: os prazos de "parado" e "antigo" |
-| Lista e página das ideias | `spec/ideias.md`: onde fica a lista e onde eu escrevo o que penso |
 | Revisão das ideias | `spec/ideias.md`: assistente de triagem ou ritual "Revisar ideias" |
 | Notas do projeto na hora | `spec/projetos.md`: aparecer antes do fechamento do dia |
 | Redescobrir tarefas sem data | `spec/prioridades.md`: sugestões em rodízio no planejamento do "Fechar o dia" |
@@ -43,8 +42,7 @@ Decidida em 10/11/2026. Cada passo é um PR próprio, com testes; os que faltam 
 
 | # | Passo | O que entra | Depende de |
 | --- | --- | --- | --- |
-| 4 | Ideias: captura e destinos | `[?] ` vira ideia; vínculo com o projeto pela seção ou pela tag; grupo "Ideias" na página do projeto; virar tarefa, virar projeto (já ativo, levando as notas), largar, ainda não com contagem (`spec/ideias.md`) | As perguntas da lista e da página das ideias. A tag já existe (ADR-066): a ideia entra em `projectAfterText` como a nota |
-| 5 | Revisão das ideias | Triagem ou ritual, com o aviso no "Iniciar Dia"; sugerir largar depois de 3 "ainda não" sem nota nova | Passo 4 e a pergunta da revisão |
+| 5 | Revisão das ideias | Triagem ou ritual, com o aviso no "Iniciar Dia"; sugerir largar depois de 3 "ainda não" sem nota nova | A pergunta da revisão. A contagem e a data do último "ainda não" já ficam na ideia (ADR-067) |
 | 6 | Notas do projeto na hora | Notas vinculadas ou com tag na aba "Notas" antes do fechamento | A pergunta em `spec/projetos.md` |
 
 ## Assistentes

@@ -517,3 +517,22 @@ button.priorities__pin[aria-pressed='true'] {
 .assistant__select {
   align-self: flex-start;
 }
+
+/* An idea's line (spec/ideias.md): a bulb before the text opens the idea's page. */
+.line__idea {
+  display: inline-flex;
+  align-items: center;
+  margin-top: 4px;
+  padding: 0;
+  border: none;
+  background: transparent;
+  color: var(--color-whiteboard-text);
+}
+
+button.line__idea {
+  cursor: pointer;
+}
+
+button.line__idea:hover {
+  color: var(--color-brand);
+}

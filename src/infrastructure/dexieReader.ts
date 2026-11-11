@@ -91,6 +91,10 @@ export class DexieReader implements Reader {
     return this.db.sections.where('projectId').equals(projectId).toArray();
   }
 
+  ideas() {
+    return this.db.blocks.where('kind').equals('idea').toArray();
+  }
+
   pendingReminders() {
     return this.db.reminders.where('status').equals('pending').toArray();
   }

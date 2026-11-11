@@ -27,6 +27,7 @@ export const PLACE_ICONS: Record<SidebarPlace, IconName> = {
   habits: 'leaf',
   active: 'checklist',
   people: 'users',
+  ideas: 'bulb',
   data: 'database',
   settings: 'settings',
 };
@@ -68,6 +69,7 @@ export function sidebarGroups({ counts, dueCount, features }: Input): SidebarGro
       entries: [
         { place: 'active', route: { name: 'active' }, label: 'Tarefas', count: counts?.active },
         { place: 'people', route: { name: 'people' }, label: 'Pessoas', count: counts?.people },
+        { place: 'ideas', route: { name: 'ideas' }, label: 'Ideias', count: counts?.ideas },
       ],
     },
     {

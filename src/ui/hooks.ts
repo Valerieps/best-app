@@ -39,6 +39,9 @@ export type Route =
   | { name: 'people' }
   /** `tab` opens the notes tab; omitted shows the tasks. */
   | { name: 'person'; id: string; tab?: 'notes' }
+  /** The ideas without a destination, and one idea's page (spec/ideias.md). */
+  | { name: 'ideas' }
+  | { name: 'idea'; id: string }
   /** Sections 4 and 6. */
   | { name: 'objectives' }
   | { name: 'objective'; id: string }
@@ -96,6 +99,10 @@ export function parseRoute(hash: string): Route {
       return parts[2] === 'notas'
         ? { name: 'person', id: decodeURIComponent(parts[1]), tab: 'notes' }
         : { name: 'person', id: decodeURIComponent(parts[1]) };
+    case 'ideias':
+      return { name: 'ideas' };
+    case 'ideia':
+      return parts[1] ? { name: 'idea', id: decodeURIComponent(parts[1]) } : { name: 'ideas' };
     case 'objetivos':
       return { name: 'objectives' };
     case 'objetivo':
@@ -131,6 +138,10 @@ export function routeHash(route: Route): string {
       return '#/pessoas';
     case 'person':
       return `#/pessoa/${encodeURIComponent(route.id)}${route.tab === 'notes' ? '/notas' : ''}`;
+    case 'ideas':
+      return '#/ideias';
+    case 'idea':
+      return `#/ideia/${encodeURIComponent(route.id)}`;
     case 'objectives':
       return '#/objetivos';
     case 'objective':

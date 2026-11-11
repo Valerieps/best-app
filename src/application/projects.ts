@@ -7,8 +7,14 @@ import type { AppContext, StoreTransaction } from './ports';
 import { releaseFocusProject } from './focusProjects';
 import { followTag, rewriteTags } from './projectTags';
 
+/** Where a project grew from: an idea, and the idea's project then (spec/ideias.md). */
+export interface ProjectOrigin {
+  fromIdeaId: string;
+  fromProjectId: string | null;
+}
+
 /** Creates a project inside an existing transaction. */
-export async function addProject(ctx: AppContext, tx: StoreTransaction, name: string): Promise<Project> {
+export async function addProject(ctx: AppContext, tx: StoreTransaction, name: string, origin?: ProjectOrigin): Promise<Project> {
   const trimmed = name.trim();
   if (!trimmed) throw new Error('Project name must not be empty');
 
@@ -21,9 +27,13 @@ export async function addProject(ctx: AppContext, tx: StoreTransaction, name: st
     createdAt: at,
     updatedAt: at,
     finishedAt: null,
+    ...(origin ? { fromIdeaId: origin.fromIdeaId, fromProjectId: origin.fromProjectId } : {}),
   };
   await tx.projects.put(project);
-  await record(ctx, tx, 'project.created', 'project', project.id, toDayKey(now), { name: project.name });
+  await record(ctx, tx, 'project.created', 'project', project.id, toDayKey(now), {
+    name: project.name,
+    ...(origin ? { fromIdeaId: origin.fromIdeaId, ...(origin.fromProjectId ? { fromProjectId: origin.fromProjectId } : {}) } : {}),
+  });
   return project;
 }
 

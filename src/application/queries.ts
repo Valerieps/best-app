@@ -24,6 +24,7 @@ import type {
   WarmupItem,
 } from '../domain/entities';
 import { habitStats, isExpectedOn, type HabitStats } from '../domain/habits';
+import { isOpenIdea, sortIdeas } from '../domain/ideas';
 import { daysBetween as daysInRange, monthKey, monthRange, type MonthKey } from '../domain/month';
 import { dayStage, dueReminders, type DayStage } from '../domain/dayFlow';
 import { weekOf } from '../domain/week';
@@ -183,7 +184,8 @@ export interface SectionNotes {
  * any more (ADR-050): a project page shows the entries of its sections.
  */
 export async function loadSectionNotes(reader: Reader): Promise<SectionNotes[]> {
-  const sections = await reader.wikiSections();
+  // An idea's page is not a kept note: it shows only on the idea (ADR-067).
+  const sections = (await reader.wikiSections()).filter((section) => section.ideaId === undefined);
   const blocks = await reader.blocksInSections(sections.map((section) => section.id));
   const projects = await reader.projects();
   const projectById = new Map(projects.map((project) => [project.id, project]));
@@ -322,13 +324,16 @@ export interface MenuCounts {
   active: number;
   /** Active people. */
   people: number;
+  /** Ideas without a destination yet (spec/ideias.md). */
+  ideas: number;
 }
 
 export async function loadMenuCounts(reader: Reader): Promise<MenuCounts> {
   const active = (await myActiveTasks(reader)).length;
   const projects = (await reader.projects()).filter((project) => project.status === 'active').length;
   const people = (await reader.people()).filter((person) => person.status === 'active').length;
-  return { projects, active, people };
+  const ideas = (await reader.ideas()).filter(isOpenIdea).length;
+  return { projects, active, people, ideas };
 }
 
 /** The projects in focus, active ones only, in the order chosen. */
@@ -503,13 +508,16 @@ export interface ProjectView extends ProjectActions {
   sections: number;
   /** The tasks marked "Próximo" (up to 3, in the order marked), still open and in the project. */
   nextStepIds: string[];
+  /** The project's ideas without a destination, oldest first (spec/ideias.md). */
+  ideas: Block[];
 }
 
 export async function loadProject(reader: Reader, projectId: string): Promise<ProjectView | null> {
   const projects = await reader.projects();
   const project = projects.find((candidate) => candidate.id === projectId);
   if (!project) return null;
-  const tasks = (await reader.blocksOfProject(projectId)).filter((block) => block.kind === 'task');
+  const blocks = await reader.blocksOfProject(projectId);
+  const tasks = blocks.filter((block) => block.kind === 'task');
   const sections = (await reader.sectionsOfProject(projectId)).filter(isDaySection);
   const kept = await loadSectionNotes(reader);
   const done = tasks.filter((task) => task.status === 'done').sort((a, b) => ((a.closedAt ?? '') < (b.closedAt ?? '') ? 1 : -1));
@@ -521,6 +529,7 @@ export async function loadProject(reader: Reader, projectId: string): Promise<Pr
     notes: notesOfProject(kept, projectId),
     sections: sections.length,
     nextStepIds: nextStepIds(await reader.priorityList(nextStepsListId(projectId)), tasks, projectId),
+    ideas: sortIdeas(blocks.filter(isOpenIdea)),
     ...projectActions(project, priorityIds, projects),
   };
 }
@@ -694,4 +703,39 @@ export async function loadPersonView(reader: Reader, personId: string, today: Da
     .filter((each) => each.id !== person.id && each.status !== 'merged')
     .sort((a, b) => a.name.localeCompare(b.name, 'pt-BR'));
   return { ...buildPersonPage(person, blocks, people, sectionsById, today), sectionsById, others };
+}
+
+/** An idea in the list of ideas: its project, and the day it was written. */
+export interface IdeaItem {
+  idea: Block;
+  project: Project | null;
+  day: DayKey | null;
+}
+
+/** "Ideias": every idea without a destination, oldest first (spec/ideias.md). */
+export async function loadIdeas(reader: Reader): Promise<IdeaItem[]> {
+  const ideas = sortIdeas((await reader.ideas()).filter(isOpenIdea));
+  const projects = new Map((await reader.projects()).map((project) => [project.id, project]));
+  const sections = new Map((await reader.sectionsByIds([...new Set(ideas.map((idea) => idea.sectionId))])).map((section) => [section.id, section]));
+  return ideas.map((idea) => ({
+    idea,
+    project: idea.projectId ? (projects.get(idea.projectId) ?? null) : null,
+    day: sections.get(idea.sectionId)?.day ?? null,
+  }));
+}
+
+/** An idea's page: the idea, where it was written, and the lines I wrote about it. */
+export interface IdeaView extends IdeaItem {
+  /** The section it was written in: a day note's, or another idea's page. */
+  origin: Section | null;
+  lines: Block[];
+}
+
+export async function loadIdea(reader: Reader, ideaId: string): Promise<IdeaView | null> {
+  const [idea] = await reader.blocksByIds([ideaId]);
+  if (!idea || idea.kind !== 'idea') return null;
+  const [origin] = await reader.sectionsByIds([idea.sectionId]);
+  const project = idea.projectId ? ((await reader.projects()).find((candidate) => candidate.id === idea.projectId) ?? null) : null;
+  const lines = idea.ideaSectionId ? (await reader.blocksInSections([idea.ideaSectionId])).sort(comparePositions) : [];
+  return { idea, project, day: origin?.day ?? null, origin: origin ?? null, lines };
 }
