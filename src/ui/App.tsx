@@ -15,6 +15,7 @@ import { DayNoteScreen } from './dayNote/DayNoteScreen';
 import { HabitsScreen } from './habits/HabitsScreen';
 import { navigate, routeHash, useRoute, useToday } from './hooks';
 import { ActiveTasksScreen } from './lists/ListScreens';
+import { ExecuteScreen } from './execute/ExecuteScreen';
 import { ObjectiveScreen, ObjectivesScreen } from './objectives/ObjectiveScreens';
 import { DashboardScreen, StartDayScreen, WarmupScreen } from './opening/OpeningScreens';
 import { useDueReminders, useReminderSignals } from './opening/Reminders';
@@ -148,6 +149,7 @@ export function App() {
           )}
           {route.name === 'checkout' && <CheckoutScreen key={route.day} day={route.day} today={today} from={route.from} />}
           {route.name === 'active' && <ActiveTasksScreen today={today} />}
+          {route.name === 'execute' && <ExecuteScreen today={today} />}
           {route.name === 'rituals' && (
             <RitualsScreen today={today} assistant={route.assistant} pendingDays={pendingDays} />
           )}

@@ -20,6 +20,7 @@ export interface SidebarGroup {
 /** Every place has an icon before its label, as in most sidebars, so it is found at a glance. */
 export const PLACE_ICONS: Record<SidebarPlace, IconName> = {
   day: 'sun',
+  execute: 'bolt',
   rituals: 'repeat',
   projects: 'folder',
   objectives: 'target',
@@ -47,6 +48,7 @@ export function sidebarGroups({ counts, dueCount, features }: Input): SidebarGro
       key: 'start',
       entries: [
         { place: 'day', route: { name: 'day' }, label: 'Hoje' },
+        { place: 'execute', route: { name: 'execute' }, label: 'Executar' },
         { place: 'rituals', route: { name: 'rituals' }, label: 'Rituais', due: dueCount },
       ],
     },

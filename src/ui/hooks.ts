@@ -25,6 +25,8 @@ export type Route =
   /** `from` is where the closing goes back to when it ends: the day note, or "Rituais". */
   | { name: 'checkout'; day: DayKey; from?: 'rituals' }
   | { name: 'active' }
+  /** "Executar": what asks for attention now (spec/prioridades.md). */
+  | { name: 'execute' }
   /** `assistant` opens one assistant's details; omitted shows the dashboard. */
   /** The "Rituais" screen, or one of its assistants when `assistant` is set. */
   | { name: 'rituals'; assistant?: AssistantId }
@@ -60,6 +62,8 @@ export function parseRoute(hash: string): Route {
       return parts[2] === 'rituais' ? { name: 'checkout', day: parts[1], from: 'rituals' } : { name: 'checkout', day: parts[1] };
     case 'tarefas':
       return { name: 'active' };
+    case 'executar':
+      return { name: 'execute' };
     // The archived tasks list is gone (ADR-049); its old address opens the task list.
     case 'arquivadas':
       return { name: 'active' };
@@ -111,6 +115,8 @@ export function routeHash(route: Route): string {
       return `#/checkout/${route.day}${route.from === 'rituals' ? '/rituais' : ''}`;
     case 'active':
       return '#/tarefas';
+    case 'execute':
+      return '#/executar';
     case 'rituals':
       return route.assistant ? `#/rituais/${ASSISTANT_SLUGS[route.assistant]}` : '#/rituais';
     case 'data':

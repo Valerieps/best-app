@@ -917,3 +917,44 @@ button:not(.link, .day-part__handle):active:not(:disabled) {
   background: var(--color-accent);
   color: var(--color-accent-text);
 }
+
+/* "Executar": the day's priorities, what is due, the deadlines coming and the next steps */
+.execute__group + .execute__group {
+  margin-top: var(--space-5);
+}
+
+.execute__title {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: var(--font-size-md);
+  font-weight: 600;
+  margin: 0 0 var(--space-2);
+}
+
+.execute__controls {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin-bottom: var(--space-2);
+}
+
+.execute__project + .execute__project {
+  margin-top: var(--space-3);
+}
+
+.execute__project-name {
+  font-size: var(--font-size-sm);
+  font-weight: 600;
+  margin: 0 0 var(--space-1);
+}
+
+.execute__project-name a {
+  color: var(--color-text);
+}
+
+.execute__due-today {
+  display: inline-flex;
+  align-items: center;
+  color: var(--color-danger);
+}

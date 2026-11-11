@@ -8,6 +8,7 @@ describe('routes', () => {
     { name: 'checkout', day: '2026-10-11' },
     { name: 'checkout', day: '2026-10-11', from: 'rituals' },
     { name: 'active' },
+    { name: 'execute' },
     { name: 'rituals' },
     { name: 'rituals', assistant: 'pendingDays' },
     { name: 'rituals', assistant: 'whiteboards' },
