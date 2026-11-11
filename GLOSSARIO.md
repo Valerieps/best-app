@@ -24,6 +24,8 @@ Os termos marcados com ⚠ ainda têm mais de um sentido nos documentos.
 - **Tarefa esquecida:** tarefa aberta sem data de intenção criada há 15 dias ou mais (configurável), em risco de abandono. Quem cuida dela é o assistente "Tarefas esquecidas". (`spec/assistentes.md`)
 - **Tarefa travada:** tarefa de projeto adiada 3 vezes ou mais, ou com a data de intenção vencida. ⚠ Não confundir com o assistente "Prioridades travadas". (`spec/projetos.md`)
 - **Pessoa:** alguém que eu cito com `@Nome`, de uma palavra só. Tem uma página com o que eu devo a ela e o que ela me deve. (`spec/pessoas.md`)
+- **Tag de projeto:** `#Projeto` numa linha, que liga só aquela linha a um projeto, vencendo o vínculo da seção. (`spec/nota-do-dia.md`)
+- **Ideia:** algo que eu ainda nem sei se quero fazer, capturado com `[?] `. Não é tarefa. (`spec/ideias.md`)
 - **Menção:** `@Nome` numa linha, que liga a linha à pessoa. Numa tarefa, quer dizer que eu devo aquilo à pessoa. (`spec/pessoas.md`)
 - **Aguardando:** uma tarefa que alguém me deve, criada com `[a] ` no começo da linha. Fica fora da lista de tarefas. (`spec/pessoas.md`)
 - **Data para cobrar:** a data de intenção de uma tarefa aguardando: o dia em que ela aparece na nota do dia para eu cobrar. Mudá-la não conta como adiamento. (`spec/pessoas.md`)
@@ -49,6 +51,8 @@ Os termos marcados com ⚠ ainda têm mais de um sentido nos documentos.
 ## Prioridades
 
 - **Prioridades do dia:** até 3 tarefas em destaque dentro das tarefas do dia. (`spec/prioridades.md`)
+- **Próximo passo:** uma tarefa de projeto marcada como uma das até 3 próximas coisas a fazer nele. Não é data. (`spec/prioridades.md`)
+- **Executar:** a tela de quando eu paro para fazer as coisas: prioridades do dia, tarefas de hoje e próximos passos dos projetos. (`spec/prioridades.md`)
 - **Projetos em foco:** até 3 projetos, que eu coloco, troco e tiro a qualquer momento; valem até eu mudá-los. Antes se chamavam "projetos prioritários da semana". (`spec/prioridades.md`)
 
 ## Projetos e objetivos

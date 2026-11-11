@@ -1,9 +1,15 @@
 # Prioridades
 
-- **Entra aqui:** as prioridades do dia e os projetos em foco.
+- **Entra aqui:** as prioridades do dia, os projetos em foco, os próximos passos dos projetos e a tela "Executar".
 - **Não entra aqui:** as funcionalidades dos projetos (`projetos.md`).
 
-Eu escolho os projetos em foco quando quiser, e o fechamento do dia escolhe tarefas. Não há prioridades de tarefas fora do dia.
+## Em aberto
+
+- [ ] Onde a tela "Executar" fica na barra lateral, e se ela substitui "Próximos dias" (`tarefas.md`), que mostra parte do mesmo conteúdo.
+- [ ] A tela "Executar" mostra também as tarefas com prazo máximo nos próximos dias, ou só as que o prazo já tornou prioridade?
+- [ ] A tarefa sem data e sem projeto só volta por "Tarefas esquecidas" (`assistentes.md`). O planejamento do "Fechar o dia" deveria sugerir 2 ou 3 delas por dia, em rodízio pelas que estão há mais tempo sem aparecer?
+
+Eu escolho os projetos em foco quando quiser, e o fechamento do dia escolhe tarefas. Fora do dia, a única prioridade de tarefa é o próximo passo de um projeto *(7)*.
 
 ## Prioridades do dia *(1b)*
 
@@ -24,3 +30,20 @@ Eu escolho os projetos em foco quando quiser, e o fechamento do dia escolhe tare
 - "Tirar do foco", no "⋯" de um projeto em foco, tira o projeto da lista e libera a vaga.
 - Finalizar um projeto em foco tira o projeto da lista e libera a vaga. Reabrir o projeto não o devolve à lista; se eu quiser, adiciono de novo.
 - No planejamento do dia seguinte, o fechamento mostra as tarefas dos projetos em foco primeiro, para eu escolher entre elas as tarefas do dia seguinte (`checkout.md`, "Quadros do fechamento e fim do dia").
+
+## Próximos passos *(7)*
+
+Por quê: na hora de executar, eu não sabia no que focar, e a única forma de priorizar era dar a data de hoje, entrando em cada projeto.
+
+- Um próximo passo é uma tarefa de projeto marcada como uma das próximas coisas a fazer nele. Cada projeto tem até 3. Uma tarefa sem projeto não pode ser próximo passo: para ela, a data de intenção faz esse papel.
+- Eu marco e desmarco "Próximo" no hover da tarefa, tanto na página do projeto quanto na lista de tarefas (`tarefas.md`). Marcar um quarto não é bloqueado: o novo ocupa o lugar do terceiro, como nas prioridades do dia.
+- Próximo passo não é data: a tarefa continua com a data que tinha, ou sem data. Finalizar ou abandonar a tarefa a tira dos próximos passos, e o app não me pede outra.
+- Na página do projeto, os próximos passos ficam num grupo "Próximos passos", logo depois das travadas (`projetos.md`, "Página do projeto"). Uma tarefa travada que também é próximo passo fica só nas travadas, com a marca de próximo.
+- Na lista de tarefas, a tarefa marcada mostra a marca de próximo, e um seletor "Só próximos passos" deixa só elas na lista, combinando com agrupar, ordenar e "Só projetos em foco".
+
+## Tela "Executar" *(7)*
+
+- É a tela de quando eu paro para fazer as coisas: mostra numa visão só o que pede atenção agora, sem eu entrar em cada projeto.
+- Mostra, nesta ordem: as prioridades do dia; as outras tarefas com data de hoje ou atrasadas; e os próximos passos dos projetos, agrupados por projeto.
+- Um filtro escolhe se os próximos passos vêm de todos os projetos ativos ou só dos projetos em foco. Eu escolho na hora, e a escolha fica guardada neste navegador.
+- Nas tarefas, eu tenho as mesmas ações da nota do dia: finalizar pelo checkbox e, no hover, mudar a data de intenção e o prazo, promover a prioridade do dia e marcar ou desmarcar "Próximo".
