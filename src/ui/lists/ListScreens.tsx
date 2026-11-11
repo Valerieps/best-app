@@ -28,7 +28,7 @@ function ListPage({ title, className = '', children }: { title: string; classNam
   );
 }
 
-function TaskRow({
+export function TaskRow({
   item,
   today,
   isNext = false,
@@ -249,7 +249,20 @@ function BatchBar({ selected, today, onDone }: { selected: Set<string>; today: D
 }
 
 /** On hover: change the two dates, or abandon the task, with a second click to confirm. */
-function ActiveTaskActions({ item, today, projects, isNext }: { item: TaskListItem; today: DayKey; projects: Project[]; isNext: boolean }) {
+export function ActiveTaskActions({
+  item,
+  today,
+  projects,
+  isNext,
+  onIntendedDate,
+}: {
+  item: TaskListItem;
+  today: DayKey;
+  projects: Project[];
+  isNext: boolean;
+  /** Replaces the plain date change, as for a priority of the day, which leaves the priorities. */
+  onIntendedDate?(date: DayKey | null): void;
+}) {
   const { task } = item;
   return (
     <span className="active-tasks__actions">
@@ -285,7 +298,7 @@ function ActiveTaskActions({ item, today, projects, isNext }: { item: TaskListIt
         className="line__action"
         value={task.intendedDate}
         min={today}
-        onChange={(date) => void setIntendedDate(appContext, task.id, date)}
+        onChange={(date) => (onIntendedDate ? onIntendedDate(date) : void setIntendedDate(appContext, task.id, date))}
         clearLabel={task.intendedDate ? 'Tirar a data de intenção' : undefined}
       >
         Data

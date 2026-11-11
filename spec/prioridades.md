@@ -5,8 +5,6 @@
 
 ## Em aberto
 
-- [ ] Onde a tela "Executar" fica na barra lateral, e se ela substitui "Próximos dias" (`tarefas.md`), que mostra parte do mesmo conteúdo.
-- [ ] A tela "Executar" mostra também as tarefas com prazo máximo nos próximos dias, ou só as que o prazo já tornou prioridade?
 - [ ] A tarefa sem data e sem projeto só volta por "Tarefas esquecidas" (`assistentes.md`). O planejamento do "Fechar o dia" deveria sugerir 2 ou 3 delas por dia, em rodízio pelas que estão há mais tempo sem aparecer?
 
 Eu escolho os projetos em foco quando quiser, e o fechamento do dia escolhe tarefas. Fora do dia, a única prioridade de tarefa é o próximo passo de um projeto *(7)*.
@@ -46,6 +44,11 @@ Por quê: na hora de executar, eu não sabia no que focar, e a única forma de p
 ## Tela "Executar" *(7)*
 
 - É a tela de quando eu paro para fazer as coisas: mostra numa visão só o que pede atenção agora, sem eu entrar em cada projeto.
-- Mostra, nesta ordem: as prioridades do dia; as outras tarefas com data de hoje ou atrasadas; e os próximos passos dos projetos, agrupados por projeto.
-- Um filtro escolhe se os próximos passos vêm de todos os projetos ativos ou só dos projetos em foco. Eu escolho na hora, e a escolha fica guardada neste navegador.
-- Nas tarefas, eu tenho as mesmas ações da nota do dia: finalizar pelo checkbox e, no hover, mudar a data de intenção e o prazo, promover a prioridade do dia e marcar ou desmarcar "Próximo".
+- A tela abre pela barra lateral, no grupo Hoje, logo abaixo de "Hoje". Ela não substitui "Próximos dias" (`tarefas.md`).
+- Mostra, nesta ordem: as prioridades do dia; as outras tarefas com data de hoje ou atrasadas; os prazos chegando; e os próximos passos dos projetos, agrupados por projeto.
+- Uma tarefa cujo prazo máximo já passou entra com as atrasadas, mesmo com a data de intenção no futuro ou sem data.
+- "Prazos chegando" são as tarefas com prazo máximo nos próximos dias. Um seletor escolhe quantos dias: nenhum, 3, 7 ou 14; começa em 7. A tarefa com prazo hoje já é prioridade do dia.
+- Os próximos passos vêm em grupos por projeto: primeiro os projetos em foco, na ordem do foco, e depois os outros, por nome. Dentro do grupo, na ordem em que eu os marquei.
+- Uma tarefa aparece uma vez só na tela, no primeiro lugar em que entra; um próximo passo que já aparece mais acima mostra a marca de próximo ali.
+- Um filtro escolhe se os próximos passos vêm de todos os projetos ativos ou só dos projetos em foco. Eu escolho na hora, e a escolha fica guardada neste navegador, junto com a de "Prazos chegando".
+- Nas tarefas, eu tenho as mesmas ações da nota do dia: finalizar pelo checkbox e, no hover, mudar a data de intenção e o prazo, promover a prioridade do dia e marcar ou desmarcar "Próximo". Mudar a data de intenção de uma prioridade aqui é imediato, sem a contagem do bloco da nota do dia: a tarefa vai para a data nova e sai das prioridades de hoje, a não ser que o prazo seja hoje.

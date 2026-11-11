@@ -3,6 +3,7 @@ import type { Route } from './hooks';
 /** The places of the sidebar. */
 export type SidebarPlace =
   | 'day'
+  | 'execute'
   | 'rituals'
   | 'projects'
   | 'objectives'

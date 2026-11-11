@@ -38,4 +38,4 @@
 - Uma tela mostra as tarefas agendadas para hoje e para os 2 próximos dias ativos, uma lista por dia, na ordem dos dias. Entram as tarefas abertas cuja data de intenção é um desses dias.
 - Os dias inativos das configurações são pulados na contagem, como no "dia seguinte" do fechamento: numa sexta, a tela mostra sexta, segunda e terça. Uma tarefa agendada para um dia inativo dentro desse intervalo aparece mesmo assim, no dia dela.
 - Nas tarefas, eu tenho as mesmas ações da nota do dia: finalizar pelo checkbox e, no hover, mudar a data de intenção e o prazo e promover a prioridade do dia. Uma tarefa cuja data muda vai para o dia novo, ou sai da tela se o dia novo ficar fora dela.
-- A tela abre pela barra lateral, no grupo Hoje, logo abaixo de "Hoje", que abre a nota do dia (`navegacao.md`, "Navegação").
+- A tela abre pela barra lateral, no grupo Hoje, logo abaixo de "Executar" (`prioridades.md`, "Tela "Executar""; `navegacao.md`, "Navegação").

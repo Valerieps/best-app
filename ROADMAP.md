@@ -21,7 +21,7 @@ As fases seguem as seções do `SPEC.md`.
 | 4. Objetivos | Feita em parte | Nome do campo "motivação"; assistente "Objetivos soltos" |
 | 5. Tipos de bloco | Bloqueada | Tudo: compromissos e detecção de tipo |
 | 6. Hábitos | Feita em parte | "Agendar lembrete"; assistente "Hábitos sumidos" |
-| 7. Coletar, executar, incubar | Em andamento | Os próximos passos já estão feitos. Faltam os passos 2 a 6 de "Fase 7: ordem de implementação" |
+| 7. Coletar, executar, incubar | Em andamento | Os próximos passos e a tela "Executar" já estão feitos. Faltam os passos 4 a 6 de "Fase 7: ordem de implementação" |
 
 ## Esperando resposta a uma pergunta em aberto
 
@@ -32,7 +32,6 @@ As fases seguem as seções do `SPEC.md`.
 | Seção 5 inteira | `spec/compromissos.md`: formatos de cada tipo e como corrigir um tipo errado |
 | "Agendar lembrete" nos hábitos | `spec/habitos.md` |
 | Assistente "Hábitos sumidos" | `spec/assistentes.md`: os prazos de "parado" e "antigo" |
-| Tela "Executar" | `spec/prioridades.md`: o lugar na barra lateral e se substitui "Próximos dias"; os prazos chegando |
 | Lista e página das ideias | `spec/ideias.md`: onde fica a lista e onde eu escrevo o que penso |
 | Revisão das ideias | `spec/ideias.md`: assistente de triagem ou ritual "Revisar ideias" |
 | Notas do projeto na hora | `spec/projetos.md`: aparecer antes do fechamento do dia |
@@ -44,7 +43,6 @@ Decidida em 10/11/2026. Cada passo é um PR próprio, com testes; os que faltam 
 
 | # | Passo | O que entra | Depende de |
 | --- | --- | --- | --- |
-| 3 | Tela "Executar" | Prioridades do dia, tarefas de hoje e atrasadas, próximos passos por projeto, filtro "todos os ativos" ou "só em foco" guardado no navegador (`spec/prioridades.md`, "Tela "Executar"") | A pergunta do lugar na barra lateral (o passo 1, os próximos passos, já está feito) |
 | 4 | Ideias: captura e destinos | `[?] ` vira ideia; vínculo com o projeto pela seção ou pela tag; grupo "Ideias" na página do projeto; virar tarefa, virar projeto (já ativo, levando as notas), largar, ainda não com contagem (`spec/ideias.md`) | As perguntas da lista e da página das ideias. A tag já existe (ADR-066): a ideia entra em `projectAfterText` como a nota |
 | 5 | Revisão das ideias | Triagem ou ritual, com o aviso no "Iniciar Dia"; sugerir largar depois de 3 "ainda não" sem nota nova | Passo 4 e a pergunta da revisão |
 | 6 | Notas do projeto na hora | Notas vinculadas ou com tag na aba "Notas" antes do fechamento | A pergunta em `spec/projetos.md` |

@@ -356,6 +356,19 @@ export async function loadTaskListContext(reader: Reader): Promise<TaskListConte
   };
 }
 
+/** What the "Executar" screen needs (spec/prioridades.md, "Tela \"Executar\""). */
+export interface ExecuteData extends TaskListContext {
+  priorities: DayPriority[];
+  /** My open tasks, by intended date then creation. */
+  items: TaskListItem[];
+}
+
+export async function loadExecute(reader: Reader, today: DayKey): Promise<ExecuteData> {
+  const priorities = await loadDayPriorities(reader, today);
+  const items = await loadActiveTasks(reader);
+  return { ...(await loadTaskListContext(reader)), priorities, items };
+}
+
 /** The valid next steps of every project, given the open tasks. */
 async function loadAllNextStepIds(reader: Reader, tasks: Block[]): Promise<string[]> {
   const lists = await reader.priorityListsBetween(nextStepsListId(''), `${nextStepsListId('')}￿`);
