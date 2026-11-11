@@ -94,6 +94,8 @@ Os tipos estão em `src/domain/entities.ts`. Todo registro tem `id` (UUID), `cre
 | --- | --- |
 | 3 | Tabela `muralPhrases`: texto e frequência; as frases do dia ficam em `days`. Espera a pergunta em aberto do mural |
 | 5 | `blocks.kind = 'appointment'`, com `appointmentAt` e `migratedAt` |
+| 7 | Próximos passos: uma lista por projeto em `priorities` (id `next:<projectId>`), como os projetos em foco, com um evento por mudança. A ADR do passo 1 confirma |
+| 7 | `blocks.kind = 'idea'`, com a contagem de "ainda não" e o destino; a tag de projeto dá ao bloco um `projectId` diferente do da seção (ADR a escrever no passo 2) |
 
 ## 5. Histórico de eventos
 

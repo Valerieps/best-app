@@ -1,7 +1,11 @@
 # Projetos
 
 - **Entra aqui:** o que é um projeto, a lista de projetos, a página do projeto, a atividade, o projeto parado e a tarefa travada.
-- **Não entra aqui:** os projetos em foco (`prioridades.md`), o vínculo de projeto no fechamento do dia (`checkout.md`) e os objetivos (`objetivos.md`).
+- **Não entra aqui:** os projetos em foco e os próximos passos (`prioridades.md`), o vínculo de projeto no fechamento do dia (`checkout.md`), a tag de projeto na linha (`nota-do-dia.md`), as ideias (`ideias.md`) e os objetivos (`objetivos.md`).
+
+## Em aberto
+
+- [ ] As notas de uma seção vinculada, ou com a tag do projeto, só aparecem na aba "Notas" depois que o dia é fechado. Elas deveriam aparecer na hora, para o projeto estar em dia quando eu vou executar? *(7)*
 
 ## Projetos *(2)*
 
@@ -24,10 +28,11 @@
 ## Página do projeto *(2)*
 
 - Uma tarefa de projeto está travada quando foi adiada 3 vezes ou mais, ou quando a data de intenção já passou e ela continua ativa.
-- Na página do projeto, as tarefas aparecem em cinco grupos, do mais para o menos destacado: travadas, com o motivo e a ação de dar uma nova data à vista; próximos dias; sem data, mais discretas e num grupo que eu posso recolher; aguardando, num grupo que eu posso recolher; e feitas, recolhidas.
+- Na página do projeto, as tarefas aparecem em seis grupos, do mais para o menos destacado: travadas, com o motivo e a ação de dar uma nova data à vista; próximos passos *(7)* (`prioridades.md`, "Próximos passos"); próximos dias; sem data, mais discretas e num grupo que eu posso recolher; aguardando, num grupo que eu posso recolher; e feitas, recolhidas.
 - "Próximos dias" é um pequeno calendário com três colunas, uma para cada um dos próximos 3 dias ativos (a configuração de dias ativos), começando hoje quando hoje é um dia ativo. Cada coluna mostra o dia da semana e a data, e as tarefas com a data de intenção daquele dia; uma coluna sem tarefas diz "Nada marcado". Tarefas com data depois desses 3 dias não aparecem na página até chegarem perto.
 - Toda tarefa aguardando do projeto fica só no grupo "Aguardando", com data ou sem, e nunca entre as travadas.
 - As linhas das tarefas na página do projeto usam uma fonte maior que a do resto da página, do mesmo tamanho em todos os grupos.
+- As ideias ligadas ao projeto ficam num grupo "Ideias" da página do projeto, que eu posso recolher (`ideias.md`). *(7)*
 - O campo "Nova tarefa" fica na aba "Tarefas", logo abaixo de "Próximos dias" e antes de "Sem data".
 - A aba "Notas" da página do projeto mostra as notas das seções vinculadas a ele, da seção mais recente para a mais antiga, depois que o dia é fechado, com o Markdown formatado como na nota do dia. Ali eu posso apagar uma nota, com um segundo clique para confirmar. O histórico de eventos guarda a nota apagada.
 - No topo da timeline da aba "Notas", um ícone de + abre o campo "Nova nota". Enter salva, Shift + Enter quebra a linha e Esc desiste; cada linha vira uma nota. A nota criada aqui vive só no projeto: aparece na timeline na hora, como "Nota do projeto", e não entra em nenhuma nota do dia nem no fechamento do dia.

@@ -14,7 +14,8 @@ A spec é a fonte da verdade do produto. Este arquivo é o índice: as regras fi
 | [`spec/navegacao.md`](spec/navegacao.md) | Barra lateral, "Rituais", cabeçalho das telas, ações no hover e fila de avisos |
 | [`spec/nota-do-dia.md`](spec/nota-do-dia.md) | Nota do dia, seções, blocos, editor, paginação entre dias e onde as notas ficam depois do dia |
 | [`spec/tarefas.md`](spec/tarefas.md) | Tarefas ativas, data de intenção, adiamento, prazo máximo e "Próximos dias" |
-| [`spec/prioridades.md`](spec/prioridades.md) | Prioridades do dia e projetos em foco |
+| [`spec/prioridades.md`](spec/prioridades.md) | Prioridades do dia, projetos em foco, próximos passos e a tela "Executar" |
+| [`spec/ideias.md`](spec/ideias.md) | Ideias: captura, ciclo de vida e destinos |
 | [`spec/checkout.md`](spec/checkout.md) | "Fechar o dia", destinos de cada item, planejamento do dia seguinte, auto-triagem e "Fechar dias pendentes" |
 | [`spec/projetos.md`](spec/projetos.md) | Projetos, lista de projetos, página do projeto, atividade, projeto parado e tarefa travada |
 | [`spec/pessoas.md`](spec/pessoas.md) | Pessoas, menção com `@`, tarefa aguardando e data para cobrar, tela "Pessoas" e página da pessoa |
@@ -46,3 +47,4 @@ A spec é construída em fases, e cada uma acrescenta um ritual ou conceito. O e
 | 4. Objetivos | Os objetivos, com meta, motivação e recursos. A Revisão de Rumo e o raio-x da desconexão faziam parte desta fase e saíram do app |
 | 5. Mais tipos de bloco | O compromisso como tipo de bloco e a detecção automática do tipo pelo formato do texto |
 | 6. Hábitos | Hábitos ficam para a última fase e se encaixam nos flows que já existem |
+| 7. Coletar, executar, incubar | Decidida em 10/11/2026, depois de semanas de uso: o app passa a apoiar três fluxos distintos. Coletar ganha a tag de projeto na linha; executar ganha os próximos passos e a tela "Executar"; incubar ganha as ideias |
