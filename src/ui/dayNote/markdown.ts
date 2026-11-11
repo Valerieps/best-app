@@ -7,6 +7,7 @@
  */
 
 import { mentionStartingAt } from '../../domain/people';
+import { tagStartingAt } from '../../domain/projectTags';
 
 export type HeadingLevel = 1 | 2 | 3 | 4;
 export type ListKind = 'bullet' | 'numbered';
@@ -90,7 +91,9 @@ export type InlineNode =
   | { type: 'code'; text: string }
   | { type: 'link'; href: string; children: InlineNode[] }
   /** `@Nome`, a person cited in the line (spec/pessoas.md). */
-  | { type: 'mention'; name: string };
+  | { type: 'mention'; name: string }
+  /** `#Projeto` or `#[Nome do projeto]`, the project tag (ADR-066); `raw` is the text as typed. */
+  | { type: 'tag'; name: string; raw: string };
 
 /** Only web and mail links open; anything else (javascript:, data:...) stays plain text. */
 const SAFE_HREF = /^(https?:\/\/|mailto:)\S+$/i;
@@ -102,11 +105,11 @@ export function safeHref(href: string): string | null {
 }
 
 /** Characters a backslash can escape, to write them literally. */
-const ESCAPABLE = '\\*_[]()`~@';
+const ESCAPABLE = '\\*_[]()`~@#';
 
 /**
  * Bold (`**x**`), italic (`_x_` or `*x*`), strikethrough (`~~x~~`), code (`` `x` ``), links
- * (`[x](url)`), bare web addresses and mentions. A backslash before a marker writes it literally.
+ * (`[x](url)`), bare web addresses, mentions and project tags. A backslash before a marker writes it literally.
  */
 export function parseInline(text: string): InlineNode[] {
   const nodes: InlineNode[] = [];
@@ -128,6 +131,13 @@ export function parseInline(text: string): InlineNode[] {
       pushText();
       nodes.push({ type: 'mention', name: mention.name });
       i += mention.length;
+      continue;
+    }
+    const tag = tagStartingAt(text, i, plain ? plain[plain.length - 1] : i > 0 ? text[i - 1] : '');
+    if (tag) {
+      pushText();
+      nodes.push({ type: 'tag', name: tag.name, raw: text.slice(i, i + tag.length) });
+      i += tag.length;
       continue;
     }
     const match = matchAt(text, i);
@@ -199,7 +209,7 @@ function findClose(text: string, from: number, marker: string): number {
 export function hasMarkdown(text: string): boolean {
   const line = parseLine(text);
   if (line.heading || line.quote || line.list) return true;
-  if (/\\[\\*_[\]()`~@]/.test(text)) return true;
+  if (/\\[\\*_[\]()`~@#]/.test(text)) return true;
   return parseInline(text).some((node) => node.type !== 'text');
 }
 

@@ -67,6 +67,8 @@ export class MemoryStore implements Store, Reader {
       allPeople: () => this.people(),
       blocksWithMentions: () => this.blocksWithMentions(),
       sectionsWithMentions: () => this.sectionsWithMentions(),
+      allProjects: () => this.projects(),
+      blocksWithTags: async () => structuredClone(this.blocks().filter((block) => block.text.includes('#'))),
       blocksInSection: async (sectionId) => this.blocks().filter((block) => block.sectionId === sectionId),
       blocksOfProject: async (projectId) => this.blocks().filter((block) => block.projectId === projectId),
       sectionsOfProject: async (projectId) => this.sections().filter((section) => section.projectId === projectId),

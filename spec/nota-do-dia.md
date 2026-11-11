@@ -23,6 +23,10 @@ Por quê: numa reunião eu falo de vários projetos, e o vínculo da seção lig
 - `#` seguido de espaço no começo da linha continua sendo cabeçalho ("Formatação"). Uma barra invertida antes do `#` escreve o caractere como ele é, e dentro do código a tag não vale.
 - A tag vence o vínculo da seção para aquela linha: numa seção vinculada ao projeto Y, a linha com `#X` vai para X, e as outras linhas continuam em Y.
 - A nota com tag aparece na aba "Notas" do projeto, como as notas de uma seção vinculada; a tarefa com tag é uma tarefa do projeto, na página dele e no agrupamento por projeto da lista de tarefas.
+- Tirar a tag devolve a linha ao projeto da seção, ou ao quadro branco. Vincular a seção a outro projeto, ou voltar a seção a quadro branco, não mexe nas linhas com tag. Uma tarefa com tag escrita na página de outro projeto também vai para o projeto da tag.
+- Renomear um projeto reescreve as tags dele em todas as linhas, e juntar projetos troca as tags do projeto que sai pelas do que fica, como acontece com a menção.
+- Por baixo dos panos, o nome com espaços fica guardado entre colchetes, `#[Data Studios]`, e um nome de uma palavra só fica como `#App`. A sugestão escreve a forma certa; fora da nota do dia, onde o Markdown aparece cru, eu vejo os colchetes. *(decidido pelo agente; veja a issue #164)*
+- O `#` só começa uma tag no começo da linha ou depois de um espaço ou de um sinal de abertura, como `(`: `C#`, um endereço com `#` e `#164` não são tags. Maiúsculas e acentos não contam para achar o projeto. Se a linha tem mais de uma tag, vale a primeira. Uma tag de um projeto finalizado continua valendo, mas só os ativos são sugeridos; uma tag que não é de nenhum projeto fica como texto. Se no fechamento eu escolhi um projeto para uma tarefa sem tag, editar o texto não desfaz a escolha; só pôr ou tirar uma tag muda o projeto. *(decidido pelo agente; veja a issue #164)*
 
 ## Execução *(1a)*
 

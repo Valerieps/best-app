@@ -63,6 +63,8 @@ export class DexieStore implements Store {
           allPeople: () => (trans.table('people') as Table<Person, string>).toArray(),
           blocksWithMentions: () => blocks.filter((block) => block.text.includes('@')).toArray(),
           sectionsWithMentions: () => sections.filter((section) => section.title?.includes('@') ?? false).toArray(),
+          allProjects: () => (trans.table('projects') as Table<Project, string>).toArray(),
+          blocksWithTags: () => blocks.filter((block) => block.text.includes('#')).toArray(),
           blocksInSection: (sectionId) => blocks.where('sectionId').equals(sectionId).toArray(),
           blocksOfProject: (projectId) => blocks.where('projectId').equals(projectId).toArray(),
           sectionsOfProject: (projectId) => sections.where('projectId').equals(projectId).toArray(),

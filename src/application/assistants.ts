@@ -9,6 +9,7 @@ import { moveIntendedDate } from './intendedDate';
 import { finishTaskIn, linkSection } from './notebook';
 import type { AppContext } from './ports';
 import { addProject, addProjectNoteSection } from './projects';
+import { rewriteTags } from './projectTags';
 
 /** Use cases of the cleanup assistants (spec/assistentes.md). Nothing here deletes data. */
 
@@ -45,11 +46,14 @@ export async function mergeProjects(ctx: AppContext, keepId: string, mergeIds: r
   await ctx.store.transaction(async (tx) => {
     const day = today(ctx);
     const at = ctx.clock.now().toISOString();
-    if (!(await tx.projects.get(keepId))) throw new Error('Project to keep not found');
+    const keep = await tx.projects.get(keepId);
+    if (!keep) throw new Error('Project to keep not found');
     for (const id of mergeIds) {
       if (id === keepId) continue;
       const project = await tx.projects.get(id);
       if (!project || project.status === 'merged') continue;
+      // The lines tagged with the merged project now carry the kept one's tag (ADR-066).
+      await rewriteTags(ctx, tx, id, keep.name, await tx.allProjects());
       for (const section of await tx.sectionsOfProject(id)) {
         await tx.sections.put({ ...section, projectId: keepId, updatedAt: at });
         await record(ctx, tx, 'section.linkedToProject', 'section', section.id, day, { projectId: keepId, mergedFrom: id });
