@@ -198,6 +198,16 @@ export async function loadSectionNotes(reader: Reader): Promise<SectionNotes[]> 
     .filter((entry) => entry.notes.length > 0);
 }
 
+/**
+ * The notes of a project: a note follows its section's project, unless its tag gave it another
+ * one (ADR-065), so a tagged note shows in the tagged project and leaves the section's.
+ */
+export function notesOfProject(kept: readonly SectionNotes[], projectId: string): SectionNotes[] {
+  return kept
+    .map((entry) => ({ ...entry, notes: entry.notes.filter((note) => (note.projectId ?? entry.section.projectId) === projectId) }))
+    .filter((entry) => entry.notes.length > 0);
+}
+
 export interface PlanningView {
   target: DayKey;
   /** The board's columns (`planningColumns`), each with its tasks. */
@@ -483,7 +493,7 @@ export async function loadProject(reader: Reader, projectId: string): Promise<Pr
     project,
     activeTasks: await withOrigins(reader, tasks.filter((task) => task.status === 'active').sort(byIntendedDateThenCreation)),
     doneTasks: await withOrigins(reader, done),
-    notes: kept.filter((entry) => entry.section.projectId === projectId),
+    notes: notesOfProject(kept, projectId),
     sections: sections.length,
     ...projectActions(project, priorityIds, projects),
   };

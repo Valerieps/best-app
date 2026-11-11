@@ -752,6 +752,20 @@ a.mention:hover {
   background: none;
 }
 
+/* The project tag in a line (ADR-065), in the project's colors. */
+.project-tag {
+  color: var(--color-project-text);
+  background: var(--color-project-bg);
+  border-radius: var(--radius-sm);
+  padding: 0 2px;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.project-tag:hover {
+  text-decoration: underline;
+}
+
 .chip--waiting {
   background: var(--color-warning-bg);
   color: var(--color-warning-text);

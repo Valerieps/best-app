@@ -1,35 +1,42 @@
 import type { ReactNode } from 'react';
-import type { Person } from '../../domain/entities';
+import type { Person, Project } from '../../domain/entities';
 import { findPerson } from '../../domain/people';
+import { findTaggedProject } from '../../domain/projectTags';
 import { routeHash } from '../hooks';
 import { usePeople } from '../people/PeopleContext';
+import { useProjects } from '../projects/ProjectsContext';
 import { parseInline, parseLine, type InlineNode, type ListItem } from './markdown';
 
 /** Bullets change with the depth, as in a text editor. */
 const BULLETS = ['•', '◦', '▪'];
 
-function renderNodes(nodes: InlineNode[], people: readonly Person[]): ReactNode[] {
+interface Known {
+  people: readonly Person[];
+  projects: readonly Project[];
+}
+
+function renderNodes(nodes: InlineNode[], known: Known): ReactNode[] {
   return nodes.map((node, index) => {
     switch (node.type) {
       case 'text':
         return node.text;
       case 'bold':
-        return <strong key={index}>{renderNodes(node.children, people)}</strong>;
+        return <strong key={index}>{renderNodes(node.children, known)}</strong>;
       case 'italic':
-        return <em key={index}>{renderNodes(node.children, people)}</em>;
+        return <em key={index}>{renderNodes(node.children, known)}</em>;
       case 'strike':
-        return <del key={index}>{renderNodes(node.children, people)}</del>;
+        return <del key={index}>{renderNodes(node.children, known)}</del>;
       case 'code':
         return <code key={index}>{node.text}</code>;
       case 'link':
         return (
           <a key={index} href={node.href} target="_blank" rel="noopener noreferrer" title={node.href}>
-            {renderNodes(node.children, people)}
+            {renderNodes(node.children, known)}
           </a>
         );
       case 'mention': {
         // A known person opens their page, inside the app; a name nobody has yet is only marked.
-        const person = findPerson(node.name, people);
+        const person = findPerson(node.name, known.people);
         return person ? (
           <a key={index} className="mention" href={routeHash({ name: 'person', id: person.id })} title={`Abrir a página de ${person.name}`}>
             @{node.name}
@@ -38,6 +45,17 @@ function renderNodes(nodes: InlineNode[], people: readonly Person[]): ReactNode[
           <span key={index} className="mention mention--unknown">
             @{node.name}
           </span>
+        );
+      }
+      case 'tag': {
+        // A tag of a project opens it, with the project's whole name; one of no project is plain text.
+        const project = findTaggedProject(node.name, known.projects);
+        return project ? (
+          <a key={index} className="project-tag" href={routeHash({ name: 'project', id: project.id })} title={`Abrir o projeto ${project.name}`}>
+            #{project.name}
+          </a>
+        ) : (
+          node.raw
         );
       }
     }
@@ -59,11 +77,12 @@ export function ListMarker({ list }: { list: ListItem }) {
  */
 export function MarkdownText({ text }: { text: string }) {
   const people = usePeople();
+  const projects = useProjects();
   const line = parseLine(text);
   return (
     <>
       {line.list && <ListMarker list={line.list} />}
-      <span className="md-content">{renderNodes(parseInline(line.content), people)}</span>
+      <span className="md-content">{renderNodes(parseInline(line.content), { people, projects })}</span>
     </>
   );
 }

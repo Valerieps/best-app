@@ -62,7 +62,7 @@ Os tipos estão em `src/domain/entities.ts`. Todo registro tem `id` (UUID), `cre
 | --- | --- |
 | `kind` | `task` ou `note`; `appointment` entra na seção 5 |
 | `sectionId` | Seção onde o bloco foi escrito |
-| `projectId` | Projeto vinculado, herdado da seção ou escolhido no fechamento |
+| `projectId` | Projeto vinculado: herdado da seção, escolhido no fechamento ou dado pela tag `#projeto` no texto, que vence a seção. Numa nota, só a tag o preenche; sem ela, a nota segue a seção (ADR-065) |
 | `status` | Só tarefas: `active`, `done`, `abandoned` ou `converted` (virou hábito) |
 | `intendedDate` | Dia em que a tarefa aparece na nota do dia; numa tarefa `waiting`, a data para cobrar (ADR-052) |
 | `firstIntendedDate` | Primeira data de intenção, para medir a distância até a ação final |
@@ -75,6 +75,8 @@ Os tipos estão em `src/domain/entities.ts`. Todo registro tem `id` (UUID), `cre
 **`projects`**: `name`, `status` (`active`, `finished` ou `merged`), `mergedInto`, `keepSeparateFrom`, `objectiveId`, `icon`.
 
 **`people`**: `name` (uma palavra), `status` (`active`, `archived` ou `merged`), `mergedInto`. A menção não é gravada à parte: fica no texto do bloco; renomear e juntar reescrevem o texto (ADR-052).
+
+**Tag de projeto:** também fica só no texto, pelo nome (`#App` ou `#[Data Studios]`). O `projectId` do bloco muda só quando a tag muda, em toda gravação de texto (`followTag`); renomear e juntar projetos reescrevem as tags (ADR-065).
 
 **`days`**: `lastCheckoutAt`, `startedAt`, `warmup`, `executionStartedAt` e `sectionOrder`.
 
@@ -95,7 +97,7 @@ Os tipos estão em `src/domain/entities.ts`. Todo registro tem `id` (UUID), `cre
 | 3 | Tabela `muralPhrases`: texto e frequência; as frases do dia ficam em `days`. Espera a pergunta em aberto do mural |
 | 5 | `blocks.kind = 'appointment'`, com `appointmentAt` e `migratedAt` |
 | 7 | Próximos passos: uma lista por projeto em `priorities` (id `next:<projectId>`), como os projetos em foco, com um evento por mudança. A ADR do passo 1 confirma |
-| 7 | `blocks.kind = 'idea'`, com a contagem de "ainda não" e o destino; a tag de projeto dá ao bloco um `projectId` diferente do da seção (ADR a escrever no passo 2) |
+| 7 | `blocks.kind = 'idea'`, com a contagem de "ainda não" e o destino |
 
 ## 5. Histórico de eventos
 

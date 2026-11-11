@@ -40,14 +40,13 @@ As fases seguem as seções do `SPEC.md`.
 
 ## Fase 7: ordem de implementação
 
-Decidida em 10/11/2026. Cada passo é um PR próprio, com testes; os passos 1 e 2 já podem ser construídos, os outros esperam as perguntas da tabela acima.
+Decidida em 10/11/2026. Cada passo é um PR próprio, com testes; o passo 1 já pode ser construído, os outros esperam as perguntas da tabela acima.
 
 | # | Passo | O que entra | Depende de |
 | --- | --- | --- | --- |
 | 1 | Próximos passos | Até 3 por projeto, marcados no hover da página do projeto e da lista de tarefas; o novo ocupa o lugar do terceiro; sair ao finalizar ou abandonar; grupo "Próximos passos" na página do projeto; marca e seletor "Só próximos passos" na lista de tarefas (`spec/prioridades.md`, "Próximos passos") | Nada. É o maior ganho para executar e o menor passo |
-| 2 | Tag `#projeto` na linha | Autocomplete dos projetos ativos ao digitar `#`; a tag vence o vínculo da seção; escape com `\#`; `# ` no começo continua cabeçalho; a tarefa e a nota vão para o projeto (`spec/nota-do-dia.md`, "Tag de projeto na linha"). Precisa de uma ADR para gravar a tag no texto com nomes que têm espaço, e para renomear e juntar projetos reescreverem o texto, como a menção (ADR-052) | Nada |
 | 3 | Tela "Executar" | Prioridades do dia, tarefas de hoje e atrasadas, próximos passos por projeto, filtro "todos os ativos" ou "só em foco" guardado no navegador (`spec/prioridades.md`, "Tela "Executar"") | Passo 1 e a pergunta do lugar na barra lateral |
-| 4 | Ideias: captura e destinos | `[?] ` vira ideia; vínculo com o projeto pela seção ou pela tag; grupo "Ideias" na página do projeto; virar tarefa, virar projeto (já ativo, levando as notas), largar, ainda não com contagem (`spec/ideias.md`) | Passo 2, para a tag valer na ideia; as perguntas da lista e da página das ideias |
+| 4 | Ideias: captura e destinos | `[?] ` vira ideia; vínculo com o projeto pela seção ou pela tag; grupo "Ideias" na página do projeto; virar tarefa, virar projeto (já ativo, levando as notas), largar, ainda não com contagem (`spec/ideias.md`) | As perguntas da lista e da página das ideias. A tag já existe (ADR-065): a ideia entra em `projectAfterText` como a nota |
 | 5 | Revisão das ideias | Triagem ou ritual, com o aviso no "Iniciar Dia"; sugerir largar depois de 3 "ainda não" sem nota nova | Passo 4 e a pergunta da revisão |
 | 6 | Notas do projeto na hora | Notas vinculadas ou com tag na aba "Notas" antes do fechamento | A pergunta em `spec/projetos.md` |
 

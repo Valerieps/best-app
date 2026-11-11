@@ -42,8 +42,11 @@ export interface EventData {
   'block.deleted': { kind: BlockKind; text: string } | { kind: BlockKind; mergedInto: string };
   /** `sectionId` when the new note moved to a note on its project's page ("Tarefas esquecidas"). */
   'block.kindChanged': { from: BlockKind; to: BlockKind; sectionId?: string };
-  /** `projectId` null when a triage unlinks the task; `mergedFrom` when projects were merged. */
-  'block.linkedToProject': { projectId: string | null; mergedFrom?: string };
+  /**
+   * `projectId` null when a triage unlinks the task; `mergedFrom` when projects were merged;
+   * `byTag` when a project tag in the text moved the block (ADR-065).
+   */
+  'block.linkedToProject': { projectId: string | null; mergedFrom?: string; byTag?: true };
   'task.intendedDateChanged': { from: DayKey | null; to: DayKey | null; reason: DateChangeReason };
   'task.deadlineChanged': { from: DayKey | null; to: DayKey | null };
   'task.postponed': { from: DayKey | null; to: DayKey | null; reason: DateChangeReason };

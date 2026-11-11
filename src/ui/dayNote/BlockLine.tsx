@@ -1,11 +1,13 @@
 import { useCallback, useContext, useEffect, useLayoutEffect, useRef, useState, type ClipboardEvent, type KeyboardEvent, type MouseEvent, type PointerEvent, type ReactNode } from 'react';
 import { detectKind } from '../../domain/blockKind';
 import type { DayKey } from '../../domain/day';
-import type { Block } from '../../domain/entities';
+import type { Block, Project } from '../../domain/entities';
 import { completeMention, mentionAt, personOptions, unknownNames, type PersonOption } from '../../domain/people';
+import { completeTag, formatTag, tagAt, tagOptions } from '../../domain/projectTags';
 import { AbandonAction } from '../components/AbandonAction';
 import { relativeDay } from '../format';
 import { usePeople } from '../people/PeopleContext';
+import { useProjects } from '../projects/ProjectsContext';
 import { useSaveOnPageLeave } from '../pageLeave';
 import { rememberUnsavedLine } from '../unsavedLines';
 import { pendingFocusId, useFocusTarget } from './focus';
@@ -28,6 +30,9 @@ import {
 import { ListMarker, MarkdownText } from './MarkdownText';
 import { emptyHistory, recordEdit, redo, undo, type History } from './lineHistory';
 import { applyPaste, linkOverSelection, pastedLines, splits } from './paste';
+
+/** What a line suggests while I type: people after `@`, projects after `#` (ADR-065). */
+type LineOption = PersonOption | { type: 'project'; project: Project };
 
 /** Wait after the last keystroke before saving the text. */
 const SAVE_DELAY_MS = 400;
@@ -172,8 +177,9 @@ export function BlockLine({ block, free, day, today, isPriority, allowNewLines, 
   const history = useRef<History>(emptyHistory());
   const lastSelection = useRef<[number, number]>([0, 0]);
   const pasting = useRef(false);
-  // The `@` suggestions follow the caret; Escape closes them for the mention being typed.
+  // The `@` and `#` suggestions follow the caret; Escape closes them for the one being typed.
   const people = usePeople();
+  const projects = useProjects();
   const [caret, setCaret] = useState<number | null>(null);
   const [highlight, setHighlight] = useState(0);
   const [dismissedAt, setDismissedAt] = useState<number | null>(null);
@@ -292,10 +298,24 @@ export function BlockLine({ block, free, day, today, isPriority, allowNewLines, 
   }, []);
 
   const mention = editing && caret !== null ? mentionAt(text, caret) : null;
-  const options: PersonOption[] = mention && mention.start !== dismissedAt ? personOptions(mention.query, people) : [];
+  const tag = editing && caret !== null && !mention ? tagAt(text, caret) : null;
+  const options: LineOption[] =
+    mention && mention.start !== dismissedAt
+      ? personOptions(mention.query, people)
+      : tag && tag.start !== dismissedAt
+        ? tagOptions(tag.query, projects).map((project): LineOption => ({ type: 'project', project }))
+        : [];
   const active = Math.min(highlight, Math.max(options.length - 1, 0));
 
-  function chooseOption(option: PersonOption) {
+  function chooseOption(option: LineOption) {
+    if (option.type === 'project') {
+      if (!tag) return;
+      const next = completeTag(text, tag, option.project.name);
+      remember('step');
+      putEdit({ text: next.text, start: next.caret, end: next.caret });
+      setCaret(next.caret);
+      return;
+    }
     if (!mention) return;
     const name = option.type === 'person' ? option.person.name : option.name;
     const next = completeMention(text, mention, name);
@@ -406,7 +426,7 @@ export function BlockLine({ block, free, day, today, isPriority, allowNewLines, 
       }
       if (event.key === 'Escape') {
         event.preventDefault();
-        setDismissedAt(mention?.start ?? null);
+        setDismissedAt(mention?.start ?? tag?.start ?? null);
         return;
       }
     }
@@ -602,10 +622,10 @@ export function BlockLine({ block, free, day, today, isPriority, allowNewLines, 
         />
       </div>
       {options.length > 0 && (
-        <ul className="suggestions line__suggestions" role="listbox" aria-label="Pessoas">
+        <ul className="suggestions line__suggestions" role="listbox" aria-label={tag && !mention ? 'Projetos' : 'Pessoas'}>
           {options.map((option, index) => (
             <li
-              key={option.type === 'person' ? option.person.id : 'create'}
+              key={option.type === 'person' ? option.person.id : option.type === 'project' ? option.project.id : 'create'}
               role="option"
               aria-selected={index === active}
               className={`suggestions__item ${index === active ? 'suggestions__item--active' : ''}`}
@@ -615,7 +635,14 @@ export function BlockLine({ block, free, day, today, isPriority, allowNewLines, 
                 chooseOption(option);
               }}
             >
-              {option.type === 'person' ? `@${option.person.name}` : <>Criar a pessoa “{option.name}”</>}
+              {option.type === 'person' ? (
+                `@${option.person.name}`
+              ) : option.type === 'project' ? (
+                // The tag shows the whole name, even with spaces; the brackets stay in the text only.
+                <span title={formatTag(option.project.name)}>#{option.project.name}</span>
+              ) : (
+                <>Criar a pessoa “{option.name}”</>
+              )}
             </li>
           ))}
         </ul>

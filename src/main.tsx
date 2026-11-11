@@ -5,6 +5,7 @@ import { App } from './ui/App';
 import { ErrorBoundary } from './ui/components/ErrorBoundary';
 import { AppError } from './ui/components/ErrorScreens';
 import { PeopleProvider } from './ui/people/PeopleContext';
+import { ProjectsProvider } from './ui/projects/ProjectsContext';
 import { DATABASE_VERSION } from './infrastructure/db';
 import { DatabaseVersionGate } from './ui/components/DatabaseVersionScreen';
 import { watchDatabaseVersion } from './ui/databaseVersion';
@@ -31,7 +32,9 @@ createRoot(document.getElementById('root')!).render(
     <ErrorBoundary fallback={(error) => <AppError error={error} />}>
       <DatabaseVersionGate>
         <PeopleProvider>
-          <App />
+          <ProjectsProvider>
+            <App />
+          </ProjectsProvider>
         </PeopleProvider>
       </DatabaseVersionGate>
     </ErrorBoundary>

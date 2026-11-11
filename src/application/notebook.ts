@@ -7,6 +7,8 @@ import { canEditFreely, lastTriagedDayAfterReopen } from '../domain/tasks';
 import { record } from './events';
 import type { AppContext, StoreTransaction } from './ports';
 import { addProject, renameProjectIn } from './projects';
+import { followTag } from './projectTags';
+import { tagProject } from '../domain/projectTags';
 
 /** Use cases of the day note: sections, blocks and checking tasks off. */
 
@@ -97,8 +99,10 @@ export async function linkSection(
   const linked: Section = { ...section, projectId, updatedAt: at };
   await tx.sections.put(linked);
   await record(ctx, tx, 'section.linkedToProject', 'section', section.id, day, { projectId });
+  const projects = await tx.allProjects();
   for (const block of await tx.blocksInSection(section.id)) {
-    if (block.kind !== 'task' || block.projectId === projectId) continue;
+    // A tagged task stays in its tag's project (ADR-065).
+    if (block.kind !== 'task' || block.projectId === projectId || tagProject(block.text, projects)) continue;
     await tx.blocks.put({ ...block, projectId, updatedAt: at });
     await record(ctx, tx, 'block.linkedToProject', 'block', block.id, day, { projectId });
   }
@@ -186,8 +190,9 @@ export async function unlinkSection(ctx: AppContext, sectionId: string, title: s
     }
     await tx.sections.put({ ...section, title: next, projectId: null, updatedAt: at });
     await record(ctx, tx, 'section.unlinkedFromProject', 'section', section.id, day, { projectId });
+    const projects = await tx.allProjects();
     for (const block of await tx.blocksInSection(section.id)) {
-      if (block.kind !== 'task' || block.projectId !== projectId) continue;
+      if (block.kind !== 'task' || block.projectId !== projectId || tagProject(block.text, projects)) continue;
       await tx.blocks.put({ ...block, projectId: null, updatedAt: at });
       await record(ctx, tx, 'block.linkedToProject', 'block', block.id, day, { projectId: null });
     }
@@ -247,7 +252,7 @@ async function addBlock(
   await tx.blocks.put(block);
   await record(ctx, tx, 'block.created', 'block', block.id, today(ctx), { kind, sectionId: section.id });
   if (kind === 'note') await reopenNotesIfTriaged(ctx, tx, section);
-  return block;
+  return followTag(ctx, tx, block, null);
 }
 
 export interface NewBlockTarget {
@@ -282,12 +287,19 @@ export async function createBlock(ctx: AppContext, target: NewBlockTarget, typed
   });
 }
 
+/** Saves a block's new text, and the project its tag says (ADR-065). */
+async function putText(ctx: AppContext, tx: StoreTransaction, block: Block, text: string): Promise<Block> {
+  const saved: Block = { ...block, text, updatedAt: nowIso(ctx) };
+  await tx.blocks.put(saved);
+  return followTag(ctx, tx, saved, block.text);
+}
+
 /** Saves typed text. Plain text edits do not go into the event history (ADR-004). */
 export async function updateBlockText(ctx: AppContext, blockId: string, text: string): Promise<void> {
   await ctx.store.transaction(async (tx) => {
     const block = await tx.blocks.get(blockId);
     if (!block || block.text === text) return;
-    await tx.blocks.put({ ...block, text, updatedAt: nowIso(ctx) });
+    await putText(ctx, tx, block, text);
   });
 }
 
@@ -300,7 +312,7 @@ export async function restoreUnsavedText(ctx: AppContext, blockId: string, text:
   return ctx.store.transaction(async (tx) => {
     const block = await tx.blocks.get(blockId);
     if (!block || block.updatedAt !== base || block.text === text) return false;
-    await tx.blocks.put({ ...block, text, updatedAt: nowIso(ctx) });
+    await putText(ctx, tx, block, text);
     return true;
   });
 }
@@ -323,7 +335,7 @@ export async function splitBlock(
     const block = await getOrThrow(tx.blocks.get(blockId), 'Block');
     const before = fullText.slice(0, caret);
     const after = fullText.slice(caret);
-    if (block.text !== before) await tx.blocks.put({ ...block, text: before, updatedAt: nowIso(ctx) });
+    if (block.text !== before) await putText(ctx, tx, block, before);
 
     const section = await targetSection(ctx, tx, target);
     const kind = splitKind(block.kind, after);
@@ -362,7 +374,7 @@ async function changeKindIn(
   waiting: boolean,
 ): Promise<void> {
   if (block.kind === kind) {
-    if (block.text !== text) await tx.blocks.put({ ...block, text, updatedAt: nowIso(ctx) });
+    if (block.text !== text) await putText(ctx, tx, block, text);
     return;
   }
   const { waiting: _wasWaiting, ...rest } = block;
@@ -379,6 +391,8 @@ async function changeKindIn(
   await record(ctx, tx, 'block.kindChanged', 'block', block.id, today(ctx), { from: block.kind, to: kind });
   if (kind === 'task' && waiting) await record(ctx, tx, 'task.waitingChanged', 'block', block.id, today(ctx), { waiting: true });
   if (kind === 'note') await reopenNotesIfTriaged(ctx, tx, section);
+  // The new kind starts from the section's project; a tag still wins (ADR-065).
+  await followTag(ctx, tx, changed, null);
 }
 
 export interface PasteOptions {
@@ -403,7 +417,7 @@ export async function pasteLines(ctx: AppContext, blockId: string, lines: string
       const { block: free, section } = await requireFreeBlock(ctx, tx, blockId);
       await changeKindIn(ctx, tx, free, section, 'task', first.text, first.waiting === true);
     } else if (block.text !== lines[0]) {
-      await tx.blocks.put({ ...block, text: lines[0], updatedAt: nowIso(ctx) });
+      await putText(ctx, tx, block, lines[0]);
     }
     for (let i = 1; i < lines.length; i += 1) {
       const target = targets[i - 1];
@@ -413,6 +427,7 @@ export async function pasteLines(ctx: AppContext, blockId: string, lines: string
         const note = newBlock(ctx, section, 'note', lines[i], target.position, target.blockId);
         await tx.blocks.put(note);
         await record(ctx, tx, 'block.created', 'block', note.id, today(ctx), { kind: 'note', sectionId: section.id });
+        await followTag(ctx, tx, note, null);
       } else {
         await addBlock(ctx, tx, section, detected.kind, detected.text, target.position, target.blockId, detected.waiting);
       }
@@ -469,11 +484,11 @@ export async function splitKeptNote(
     const block = await tx.blocks.get(blockId);
     if (!block || block.kind !== 'note') return null;
     const section = await getOrThrow(tx.sections.get(block.sectionId), 'Section');
-    await tx.blocks.put({ ...block, text: fullText.slice(0, caret), updatedAt: nowIso(ctx) });
+    await putText(ctx, tx, block, fullText.slice(0, caret));
     const note = newBlock(ctx, section, 'note', fullText.slice(caret), position, newId);
     await tx.blocks.put(note);
     await record(ctx, tx, 'block.created', 'block', note.id, today(ctx), { kind: 'note', sectionId: section.id });
-    return note;
+    return followTag(ctx, tx, note, null);
   });
 }
 
@@ -483,7 +498,7 @@ export async function mergeKeptNote(ctx: AppContext, blockId: string, fullText: 
     const block = await tx.blocks.get(blockId);
     const previous = await tx.blocks.get(previousId);
     if (!block || !previous || block.kind !== 'note' || previous.kind !== 'note') return;
-    await tx.blocks.put({ ...previous, text: previous.text + fullText, updatedAt: nowIso(ctx) });
+    await putText(ctx, tx, previous, previous.text + fullText);
     await tx.blocks.delete(block.id);
     await record(ctx, tx, 'block.deleted', 'block', block.id, today(ctx), { kind: block.kind, mergedInto: previousId });
   });
@@ -494,7 +509,7 @@ export async function mergeIntoPrevious(ctx: AppContext, blockId: string, fullTe
   await ctx.store.transaction(async (tx) => {
     const { block } = await requireFreeBlock(ctx, tx, blockId);
     const previous = await getOrThrow(tx.blocks.get(previousId), 'Block');
-    await tx.blocks.put({ ...previous, text: previous.text + fullText, updatedAt: nowIso(ctx) });
+    await putText(ctx, tx, previous, previous.text + fullText);
     await tx.blocks.delete(block.id);
     await record(ctx, tx, 'block.deleted', 'block', block.id, today(ctx), { kind: block.kind, mergedInto: previousId });
   });

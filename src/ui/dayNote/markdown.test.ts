@@ -79,6 +79,23 @@ describe('parseInline', () => {
     expect(hasMarkdown('com a @Ana')).toBe(true);
   });
 
+  it('reads the project tag, but not a heading, an escape or code (ADR-065)', () => {
+    expect(parseInline('ver #App e #[Data Studios]')).toEqual([
+      { type: 'text', text: 'ver ' },
+      { type: 'tag', name: 'App', raw: '#App' },
+      { type: 'text', text: ' e ' },
+      { type: 'tag', name: 'Data Studios', raw: '#[Data Studios]' },
+    ]);
+    const heading = parseLine('# #App em título');
+    expect(heading.heading).toBe(1);
+    expect(parseInline(heading.content)[0]).toEqual({ type: 'tag', name: 'App', raw: '#App' });
+    expect(parseLine('#App no começo').heading).toBeNull();
+    expect(parseInline('\\#App')).toEqual([{ type: 'text', text: '#App' }]);
+    expect(parseInline('`#App`')).toEqual([{ type: 'code', text: '#App' }]);
+    expect(parseInline('C# e https://x.com/#App').some((node) => node.type === 'tag')).toBe(false);
+    expect(hasMarkdown('\\#App')).toBe(true);
+  });
+
   it('never turns an unsafe address into a link', () => {
     expect(parseInline('[x](javascript:alert(1))').every((node) => node.type === 'text')).toBe(true);
     expect(parseInline('[x](data:text/html,hi)').every((node) => node.type === 'text')).toBe(true);
