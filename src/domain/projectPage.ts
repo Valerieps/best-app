@@ -34,10 +34,10 @@ export function projectInitial(name: string): string {
 
 /**
  * Sections that belong to a day note. The section that holds a project page's tasks does not,
- * nor do the notes written on a project page.
+ * nor do the notes written on a project page, nor the page of an idea (ADR-067).
  */
 export function isDaySection(section: Section): boolean {
-  return section.projectPage !== true && section.projectNote !== true;
+  return section.projectPage !== true && section.projectNote !== true && section.ideaId === undefined;
 }
 
 /**

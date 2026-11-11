@@ -5,6 +5,7 @@ import type { Block, Project } from '../../domain/entities';
 import { completeMention, mentionAt, personOptions, unknownNames, type PersonOption } from '../../domain/people';
 import { completeTag, formatTag, tagAt, tagOptions } from '../../domain/projectTags';
 import { AbandonAction } from '../components/AbandonAction';
+import { Icon } from '../components/Icon';
 import { relativeDay } from '../format';
 import { usePeople } from '../people/PeopleContext';
 import { useProjects } from '../projects/ProjectsContext';
@@ -42,8 +43,13 @@ export interface LineHandlers {
   /** Splits the line at `caret`; the new line takes the focus at `newCaret` (0 by default). */
   onEnter(block: Block, text: string, caret: number, newCaret?: number): void;
   onBackspaceAtStart(block: Block, text: string): void;
-  /** `waiting` when the line started with "[a] ": something a person owes me (spec/pessoas.md). */
-  onMakeTask(block: Block, text: string, waiting?: boolean): void;
+  /**
+   * `waiting` when the line started with "[a] ": something a person owes me (spec/pessoas.md).
+   * `kind` is `idea` when it started with "[?] " (spec/ideias.md); a task otherwise.
+   */
+  onMakeTask(block: Block, text: string, waiting?: boolean, kind?: 'task' | 'idea'): void;
+  /** Opens an idea's page (spec/ideias.md). Absent: the idea's marker is not a button. */
+  onOpenIdea?(block: Block): void;
   /** Marks a task as something a person owes me, or back as mine. Absent hides the action. */
   onSetWaiting?(block: Block, waiting: boolean): void;
   /** Creates the people the line cites who do not exist yet (spec/pessoas.md). */
@@ -346,11 +352,11 @@ export function BlockLine({ block, free, day, today, isPriority, isNext = false,
     }
     if (block.kind === 'note' && free && !notesOnly) {
       const detected = detectKind(value);
-      if (detected.kind === 'task') {
+      if (detected.kind !== 'note') {
         history.current = emptyHistory();
         setText(detected.text);
         if (saveTimer.current) clearTimeout(saveTimer.current);
-        handlers.onMakeTask(block, detected.text, detected.waiting);
+        handlers.onMakeTask(block, detected.text, detected.waiting, detected.kind);
         return;
       }
     }
@@ -503,6 +509,8 @@ export function BlockLine({ block, free, day, today, isPriority, isNext = false,
   }
 
   const isTask = block.kind === 'task';
+  const isIdea = block.kind === 'idea';
+  const ideaOutcome = isIdea && block.ideaStatus === 'becameProject' ? 'virou projeto' : isIdea && block.ideaStatus === 'dropped' ? 'largada' : null;
   const done = isTask && block.status === 'done';
   const open = isTask && block.status === 'active';
   // Something a person owes me: its date is the day to follow up (spec/pessoas.md).
@@ -588,6 +596,22 @@ export function BlockLine({ block, free, day, today, isPriority, isNext = false,
           aria-label={done ? 'Reabrir tarefa' : 'Finalizar tarefa'}
         />
       )}
+      {isIdea &&
+        (handlers.onOpenIdea ? (
+          <button
+            type="button"
+            className="line__idea"
+            onClick={() => handlers.onOpenIdea?.(block)}
+            title="Abrir a ideia"
+            aria-label="Abrir a ideia"
+          >
+            <Icon name="bulb" size="sm" />
+          </button>
+        ) : (
+          <span className="line__idea" aria-hidden="true">
+            <Icon name="bulb" size="sm" />
+          </span>
+        ))}
       {/* Always wrapped, so the field is never rebuilt (and never loses the focus) when the line becomes a list item. */}
       <div className="line__field">
         {structure.list && !preview && <ListMarker list={structure.list} />}
@@ -620,7 +644,7 @@ export function BlockLine({ block, free, day, today, isPriority, isNext = false,
             createTypedPeople();
           }}
           placeholder={block.kind === 'note' && free && !notesOnly && allowNewLines && !structure.list ? NOTE_HINT : undefined}
-          aria-label={isTask ? 'Tarefa' : 'Nota'}
+          aria-label={isTask ? 'Tarefa' : isIdea ? 'Ideia' : 'Nota'}
           aria-expanded={options.length > 0}
           aria-autocomplete="list"
         />
@@ -660,6 +684,7 @@ export function BlockLine({ block, free, day, today, isPriority, isNext = false,
       <span className="line__meta">
         {extraMeta}
         {waiting && <span className="chip chip--waiting">aguardando</span>}
+        {ideaOutcome && <span className="chip chip--muted">{ideaOutcome}</span>}
         {isNext && open && <span className="chip chip--next" title="Um dos próximos passos do projeto">próximo</span>}
         {showDate &&
           (open

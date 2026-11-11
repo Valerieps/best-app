@@ -122,6 +122,41 @@ describe('database version 10', () => {
   });
 });
 
+describe('database version 11', () => {
+  it('turns the notes a version 10 database wrote with "[?] " into ideas, searchable by kind', async () => {
+    const name = 'best-app-upgrade-test-11';
+    const old = new Dexie(name);
+    old.version(10).stores({
+      blocks: 'id, sectionId, status, intendedDate, projectId, deadline',
+      sections: 'id, day, projectId',
+      snapshots: 'id, createdAt',
+    });
+    await old.open();
+    await old.table('sections').bulkPut([
+      { id: 's1', day: '2026-11-01', projectId: 'p1', notesDestination: 'wiki' },
+      { id: 's2', day: '2026-11-02', projectId: null, notesDestination: 'pending' },
+    ]);
+    await old.table('blocks').bulkPut([
+      { id: 'b1', kind: 'note', text: '[?] App de receitas', sectionId: 's1', projectId: null },
+      { id: 'b2', kind: 'note', text: '[?] Horta', sectionId: 's2', projectId: null },
+      { id: 'b3', kind: 'note', text: 'Só uma nota', sectionId: 's2', projectId: null },
+    ]);
+    old.close();
+
+    const db = new AppDatabase(name);
+    const idea = { ideaStatus: 'open', notYetCount: 0, lastNotYetAt: null, ideaSectionId: null };
+    expect(await db.blocks.get('b1')).toEqual({ id: 'b1', kind: 'idea', text: 'App de receitas', sectionId: 's1', projectId: 'p1', ...idea });
+    expect(await db.blocks.get('b2')).toEqual({ id: 'b2', kind: 'idea', text: 'Horta', sectionId: 's2', projectId: null, ...idea });
+    expect(await db.blocks.get('b3')).toEqual({ id: 'b3', kind: 'note', text: 'Só uma nota', sectionId: 's2', projectId: null });
+    expect((await db.blocks.where('kind').equals('idea').primaryKeys()).sort()).toEqual(['b1', 'b2']);
+    // The data as version 10 left it is kept, as for every upgrade (ADR-059).
+    const snapshot = await db.snapshots.get(UPGRADE_SNAPSHOT_ID);
+    expect((snapshot?.tables.blocks as unknown as { kind: string }[]).map((row) => row.kind)).toEqual(['note', 'note', 'note']);
+    db.close();
+    await Dexie.delete(name);
+  });
+});
+
 describe('database version constant', () => {
   it('matches the last version declared', async () => {
     const name = 'best-app-version-constant';

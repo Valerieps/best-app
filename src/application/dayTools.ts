@@ -66,6 +66,9 @@ export async function setDayPriority(ctx: AppContext, taskId: string, on: boolea
     const list = (await tx.priorities.get(id)) ?? { id, scope: 'day' as const, period: day, itemIds: [], updatedAt: '' };
     let itemIds: string[];
     if (on) {
+      // Only tasks are priorities: a note or an idea never is (spec/ideias.md).
+      const block = await tx.blocks.get(taskId);
+      if (block && block.kind !== 'task') return;
       const statuses = new Map<string, string | null>();
       for (const itemId of list.itemIds) statuses.set(itemId, (await tx.blocks.get(itemId))?.status ?? null);
       itemIds = promote(list.itemIds, taskId, (itemId) => statuses.get(itemId) === 'active');

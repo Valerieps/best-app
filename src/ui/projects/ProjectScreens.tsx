@@ -10,6 +10,7 @@ import { type DayKey } from '../../domain/day';
 import type { Block } from '../../domain/entities';
 import { agendaColumns, groupProjectTasks, stuckReason } from '../../domain/projectPage';
 import { BlockLine, DatePicker, type LineHandlers } from '../dayNote/BlockLine';
+import { MarkdownText } from '../dayNote/MarkdownText';
 import { requestFocus } from '../dayNote/focus';
 import { Icon } from '../components/Icon';
 import { BackButton, ScreenHeader } from '../components/ScreenHeader';
@@ -296,6 +297,18 @@ export function ProjectScreen({ id, tab, today }: { id: string; tab: 'tasks' | '
 
               <FoldedGroup label="Aguardando" count={groups.waiting.length} initiallyOpen className="task-group--waiting">
                 {groups.waiting.map((task) => line(task))}
+              </FoldedGroup>
+
+              {/* The project's ideas (spec/ideias.md): not tasks, so out of the groups above. */}
+              <FoldedGroup label="Ideias" count={view.ideas.length} initiallyOpen className="task-group--ideas">
+                {view.ideas.map((idea) => (
+                  <button type="button" key={idea.id} className="project-ideas__item" onClick={() => navigate({ name: 'idea', id: idea.id })}>
+                    <span className="line__idea" aria-hidden="true">
+                      <Icon name="bulb" size="sm" />
+                    </span>
+                    <MarkdownText text={idea.text || '(ideia sem texto)'} />
+                  </button>
+                ))}
               </FoldedGroup>
 
               <FoldedGroup label="Feitas" count={done.length} initiallyOpen={false} className="task-group--done">

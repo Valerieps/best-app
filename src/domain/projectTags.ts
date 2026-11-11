@@ -132,7 +132,7 @@ export function tagProject(text: string, projects: readonly Project[]): Project 
 /**
  * The block's `projectId` after its text changed from `previousText` (null for a new block) to
  * `block.text` (ADR-066). Only a change of tag moves it: a new tag gives the tagged project, a
- * tag taken off gives back the section's project (a task) or none (a note). With the same tag,
+ * tag taken off gives back the section's project (a task or an idea) or none (a note). With the same tag,
  * the current `projectId` stays, so a project chosen at the closing is not undone by an edit.
  */
 export function projectAfterText(
@@ -145,7 +145,12 @@ export function projectAfterText(
   const before = previousText === null ? null : (tagProject(previousText, projects)?.id ?? null);
   if (now === before) return block.projectId;
   if (now !== null) return now;
-  return block.kind === 'task' ? sectionProjectId : null;
+  return followsSection(block.kind) ? sectionProjectId : null;
+}
+
+/** Tasks and ideas take the project of the section they are written in; notes do not. */
+export function followsSection(kind: Block['kind']): boolean {
+  return kind === 'task' || kind === 'idea';
 }
 
 /** Rewrites the tags that point to `projectId` as tags of `name`. */

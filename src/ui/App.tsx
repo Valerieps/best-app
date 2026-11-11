@@ -22,6 +22,7 @@ import { useDueReminders, useReminderSignals } from './opening/Reminders';
 import { ProjectsScreen } from './projects/ProjectListScreen';
 import { ProjectScreen } from './projects/ProjectScreens';
 import { PeopleScreen, PersonScreen } from './people/PeopleScreens';
+import { IdeaScreen, IdeasScreen } from './ideas/IdeaScreens';
 import { backupNoticeLevel, needsBackupSetup, pickTopNotice, useSnoozedNotices } from './notices';
 import { autoBackup, db, reader } from './services';
 import { SettingsScreen } from './settings/SettingsScreen';
@@ -158,6 +159,8 @@ export function App() {
           {route.name === 'settings' && <SettingsScreen />}
           {route.name === 'people' && <PeopleScreen today={today} />}
           {route.name === 'person' && <PersonScreen key={route.id} id={route.id} tab={route.tab ?? 'tasks'} today={today} />}
+          {route.name === 'ideas' && <IdeasScreen />}
+          {route.name === 'idea' && <IdeaScreen key={route.id} id={route.id} today={today} />}
           {route.name === 'objectives' && <ObjectivesScreen />}
           {route.name === 'objective' && <ObjectiveScreen id={route.id} />}
           {route.name === 'habits' && <HabitsScreen today={today} />}

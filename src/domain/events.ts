@@ -72,9 +72,9 @@ export interface EventData {
   'task.waitingChanged': { waiting: boolean };
   /**
    * `projectPage` and `projectId` when the section is a project's page; `projectNote` and
-   * `projectId` when it is a note written on a project's page.
+   * `projectId` when it is a note written on a project's page; `ideaId` when it is an idea's page.
    */
-  'section.created': { kind: SectionKind; projectPage?: true; projectNote?: true; projectId?: string };
+  'section.created': { kind: SectionKind; projectPage?: true; projectNote?: true; projectId?: string; ideaId?: string };
   'section.titleChanged': { from: string | null; to: string | null };
   'section.linkedToProject': { projectId: string; mergedFrom?: string };
   /** The section went back to being a whiteboard; `projectId` is the project it left. */
@@ -88,7 +88,8 @@ export interface EventData {
   /** `weeklyReflection` is a destination from before ADR-060. */
   'section.notesReopened': { from: NotesDestination | 'weeklyReflection' };
   'section.detailsChanged': { participants: string | null; docLink: string | null };
-  'project.created': { name: string };
+  /** `fromIdeaId` and `fromProjectId` when the project grew from an idea (spec/ideias.md). */
+  'project.created': { name: string; fromIdeaId?: string; fromProjectId?: string };
   'project.renamed': { from: string; to: string };
   'project.finished': NoData;
   'project.reopened': NoData;
@@ -116,6 +117,13 @@ export interface EventData {
    * were removed (ADR-060); the closed ones stay in the history and in the backup.
    */
   'reflection.closed': { kind: 'focus' | 'direction'; since: string | null; metrics: Record<string, unknown> };
+  /** The idea's destinations (spec/ideias.md, "Destinos"), on the idea's block. */
+  'idea.becameTask': { projectId: string | null };
+  /** `projectId` is the new project; `fromProjectId` the idea's project then, if any. */
+  'idea.becameProject': { projectId: string; fromProjectId: string | null };
+  'idea.dropped': NoData;
+  /** "Ainda não": `count` is how many times so far, this one included. */
+  'idea.notYet': { count: number };
   'settings.changed': Partial<Omit<Settings, 'id' | 'updatedAt'>>;
   'day.started': NoData;
   'day.executionStarted': NoData;
