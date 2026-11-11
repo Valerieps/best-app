@@ -897,3 +897,9 @@ button:not(.link, .day-part__handle):active:not(:disabled) {
   border-radius: var(--radius-sm, 4px);
   padding: 0 0.3em;
 }
+
+/* Mark of a task chosen as one of its project's next steps. */
+.chip--next {
+  background: var(--color-accent);
+  color: var(--color-accent-text);
+}

@@ -48,6 +48,8 @@ export interface LineHandlers {
   onSetDate(block: Block, date: DayKey | null): void;
   onSetDeadline(block: Block, date: DayKey | null): void;
   onTogglePriority(block: Block, on: boolean): void;
+  /** Marks or unmarks "Próximo", a next step of the task's project. Absent hides the action. */
+  onToggleNext?(block: Block, on: boolean): void;
   /** Takes an active task out of circulation (trash icon, confirmed with a second click). Absent hides the action. */
   onAbandon?(block: Block): void;
   /** Alt + ↑/↓: moves the line inside its group (request 2). Absent where lines keep their order. */
@@ -83,6 +85,8 @@ interface Props {
   day: DayKey | null;
   today: DayKey;
   isPriority: boolean;
+  /** Marked "Próximo" in its project (spec/prioridades.md, "Próximos passos"). */
+  isNext?: boolean;
   /** False when looking at a past day: Enter does not create lines there. */
   allowNewLines: boolean;
   handlers: LineHandlers;
@@ -155,7 +159,7 @@ export function DatePicker({
   );
 }
 
-export function BlockLine({ block, free, day, today, isPriority, allowNewLines, handlers, extraMeta, hideDate = false, drag, selected = false, notesOnly = false }: Props) {
+export function BlockLine({ block, free, day, today, isPriority, isNext = false, allowNewLines, handlers, extraMeta, hideDate = false, drag, selected = false, notesOnly = false }: Props) {
   const ref = useRef<HTMLTextAreaElement>(null);
   const [text, setText] = useState(block.text);
   const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -629,6 +633,7 @@ export function BlockLine({ block, free, day, today, isPriority, allowNewLines, 
       <span className="line__meta">
         {extraMeta}
         {waiting && <span className="chip chip--waiting">aguardando</span>}
+        {isNext && open && <span className="chip chip--next" title="Um dos próximos passos do projeto">próximo</span>}
         {showDate &&
           (open
             ? waiting
@@ -646,6 +651,17 @@ export function BlockLine({ block, free, day, today, isPriority, allowNewLines, 
         <span className="line__tail">
           <span className="line__actions">
             {open && !waiting && !isPriority && starButton()}
+            {open && !waiting && block.projectId !== null && handlers.onToggleNext && (
+              <button
+                type="button"
+                className="line__action"
+                title={isNext ? 'Tirar dos próximos passos do projeto' : 'Marcar como um dos próximos passos do projeto'}
+                aria-pressed={isNext}
+                onClick={() => handlers.onToggleNext?.(block, !isNext)}
+              >
+                {isNext ? 'Não é próximo' : 'Próximo'}
+              </button>
+            )}
             {open && !showDate && (waiting
               ? pickDate('Data para cobrar', 'line__action', 'Cobrar')
               : pickDate(hideDate ? 'Mudar a data de intenção' : 'Data de intenção', 'line__action', 'Data'))}

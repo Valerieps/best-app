@@ -825,3 +825,8 @@ button.project-actions {
   padding: var(--space-1);
   color: var(--color-text-muted);
 }
+
+/* "Próximos passos": right after the stuck tasks, before "Próximos dias". */
+.next-steps {
+  margin-top: var(--space-4);
+}

@@ -96,11 +96,17 @@ export interface EventData {
    * A change of a priority list, carrying the whole list after it. Day priorities (entity
    * `day:<day>`) name the task; the list in focus names the project, and a removal says why:
    * `removed` by hand, `finished` with the project, `review` in the Revisão de Foco (history
-   * only, ADR-060). An addition that took another project's place names it in `replaced`.
+   * only, ADR-060). An addition that took another project's place names it in `replaced`. A
+   * project's next steps (entity `next:<projectId>`, ADR-065) name the task and the project, and a
+   * removal says why: `removed` by hand, `finished`, `abandoned`, or `moved` out of the project.
    */
-  'priority.added': { taskId: string; itemIds: string[] } | { projectId: string; itemIds: string[]; replaced?: string };
+  'priority.added':
+    | { taskId: string; itemIds: string[] }
+    | { projectId: string; itemIds: string[]; replaced?: string }
+    | { taskId: string; projectId: string; itemIds: string[]; replaced?: string };
   'priority.removed':
     | { taskId: string; itemIds: string[] }
+    | { taskId: string; projectId: string; reason: 'removed' | 'finished' | 'abandoned' | 'moved'; itemIds: string[] }
     | { projectId: string; reason: 'removed' | 'finished' | 'review'; itemIds: string[] };
   /**
    * History only: a review was closed, with a snapshot of the metrics it showed. The reviews

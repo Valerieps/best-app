@@ -1,5 +1,6 @@
 import { useEffect, useState, type KeyboardEvent, type ReactNode } from 'react';
 import { setDayPriority, setDeadline, setIntendedDate } from '../../application/dayTools';
+import { setNextStep } from '../../application/nextSteps';
 import { abandonTask, setTaskDone, setTaskWaiting, updateBlockText } from '../../application/notebook';
 import { ensurePeople } from '../../application/people';
 import { createProjectTask, renameProject, setProjectIcon } from '../../application/projects';
@@ -146,11 +147,12 @@ export function ProjectScreen({ id, tab, today }: { id: string; tab: 'tasks' | '
   const { project } = view;
   const active = view.activeTasks.map((item) => item.task);
   const done = view.doneTasks.map((item) => item.task);
-  const groups = groupProjectTasks(active, today);
+  const groups = groupProjectTasks(active, today, view.nextStepIds);
+  const nextIds = new Set(view.nextStepIds);
   const agenda = agendaColumns(groups.upcoming, today, settings?.activeDays);
   const priorityIds = new Set(dayPriorities.map((priority) => priority.task.id));
   // Arrow keys move through the lines in the order they show.
-  const shownLines = [...groups.stuck, ...agenda.flatMap((entry) => entry.tasks), ...groups.undated, ...groups.waiting, ...done];
+  const shownLines = [...groups.stuck, ...groups.next, ...agenda.flatMap((entry) => entry.tasks), ...groups.undated, ...groups.waiting, ...done];
 
   const handlers: LineHandlers = {
     onSaveText: (block, text) => write(() => updateBlockText(appContext, block.id, text)),
@@ -167,6 +169,7 @@ export function ProjectScreen({ id, tab, today }: { id: string; tab: 'tasks' | '
     onSetDate: (block, date) => write(() => setIntendedDate(appContext, block.id, date)),
     onSetDeadline: (block, date) => write(() => setDeadline(appContext, block.id, date)),
     onTogglePriority: (block, on) => write(() => setDayPriority(appContext, block.id, on)),
+    onToggleNext: (block, on) => write(() => setNextStep(appContext, block.id, on)),
     onSetWaiting: (block, waiting) => write(() => setTaskWaiting(appContext, block.id, waiting)),
     onAbandon: (block) => write(() => abandonTask(appContext, block.id)),
     onEnsurePeople: (names) => write(() => ensurePeople(appContext, names)),
@@ -180,6 +183,7 @@ export function ProjectScreen({ id, tab, today }: { id: string; tab: 'tasks' | '
       day={null}
       today={today}
       isPriority={priorityIds.has(task.id)}
+      isNext={nextIds.has(task.id)}
       allowNewLines={false}
       handlers={handlers}
       hideDate={hideDate}
@@ -254,6 +258,15 @@ export function ProjectScreen({ id, tab, today }: { id: string; tab: 'tasks' | '
                       </div>
                     );
                   })}
+                </section>
+              )}
+
+              {groups.next.length > 0 && (
+                <section className="next-steps" aria-label="Próximos passos">
+                  <h3 className="task-group__title">
+                    Próximos passos <span className="task-group__count">{groups.next.length}</span>
+                  </h3>
+                  {groups.next.map((task) => line(task))}
                 </section>
               )}
 
