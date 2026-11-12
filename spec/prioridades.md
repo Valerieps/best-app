@@ -53,4 +53,5 @@ Por quê: a tela "Executar" mostrava tudo o que pedia atenção, em quatro lista
 - Finalizar ou abandonar a tarefa, em qualquer lugar, a tira da fila. Reabrir a tarefa não a devolve. Uma tarefa que passa a ser aguardando some da fila.
 - A fila vale até eu mudá-la: passar o dia ou fechar o dia não a esvazia. Não há limite de tarefas.
 - Na fila, cada tarefa mostra embaixo, pequeno e discreto, o nome do projeto, quando tem; clicar abre a página do projeto.
+- A linha da tarefa na fila não mostra data de intenção, prazo nem adiamentos: só o texto e o nome do projeto. Eles continuam nas outras telas.
 - Nas tarefas da fila, eu tenho as mesmas ações das listas: finalizar pelo checkbox e, no hover, mudar a data de intenção e o prazo, marcar ou desmarcar "Próximo", vincular a um projeto e abandonar. Mudar a data não tira a tarefa da fila.

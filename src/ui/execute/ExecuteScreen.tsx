@@ -60,6 +60,7 @@ function QueueContent({ data, today, inPanel }: { data: ExecutionQueueData; toda
         today={today}
         isNext={nextSet.has(task.id)}
         quietProject
+        hideMeta
         drag={
           items.length < 2
             ? undefined
