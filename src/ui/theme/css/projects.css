@@ -559,14 +559,6 @@ button.resource-card__toggle {
   margin-bottom: var(--space-6);
 }
 
-.projects__group-head {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: var(--space-3);
-  margin-bottom: var(--space-3);
-}
-
 .section-title,
 .projects__group-title {
   margin: 0;
@@ -617,111 +609,30 @@ button.projects__toggle {
   outline: none;
 }
 
-/* The week's priority projects: up to 3 cards side by side */
-.priority-cards {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: var(--space-3);
-}
-
-.priority-card {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-3);
-  min-width: 0;
-  padding: var(--space-4);
-  background: var(--color-surface);
-  border: var(--border-width) solid var(--color-border);
-  border-radius: var(--radius-lg);
-}
-
-.priority-card__head {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: var(--space-2);
-}
-
-.priority-card__name {
-  min-width: 0;
-  color: var(--color-text);
-  font-weight: 600;
-  text-decoration: none;
-}
-
-.priority-card__name:hover .priority-card__label {
-  text-decoration: underline;
-}
-
-.priority-card__label,
 .project-row__label {
   overflow: hidden;
   white-space: nowrap;
   text-overflow: ellipsis;
 }
 
-.priority-card__stats {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-  font-size: var(--font-size-sm);
-  color: var(--color-text-muted);
-}
-
-.priority-card__stats p {
-  margin: 0;
-}
-
-.priority-card__number {
-  font-size: var(--font-size-md);
-  font-weight: 600;
-  font-variant-numeric: tabular-nums;
-  color: var(--color-text);
-}
-
-.priority-card__stat--warning,
-.priority-card__stat--warning .priority-card__number {
-  color: var(--color-warning-text);
-}
-.priority-card__objective,
-.priority-card__last {
-  margin: 0;
-  font-size: var(--font-size-sm);
-  overflow: hidden;
-  white-space: nowrap;
-  text-overflow: ellipsis;
-}
-
-.priority-card__last {
-  margin-top: auto;
-  color: var(--color-text-muted);
-}
-
-.priority-card__last--warning {
-  color: var(--color-warning-text);
-}
-
-/* A free slot: dashed, "Definir prioridade" */
+/* "Colocar em foco", under the focus rows while there is a free slot */
 .priority-slot {
   display: flex;
-  min-height: 180px;
+  margin-top: var(--space-2);
 }
 
 .priority-slot > .dropdown__trigger {
-  flex: 1;
-  display: flex;
+  display: inline-flex;
   align-items: center;
-  justify-content: center;
   gap: var(--space-2);
-  border: 2px dashed var(--color-border-strong);
-  border-radius: var(--radius-lg);
+  border: none;
   background: transparent;
+  padding: var(--space-1) 0;
   color: var(--color-text-muted);
 }
 
 .priority-slot > .dropdown__trigger:hover,
 .priority-slot > .dropdown__trigger[aria-expanded='true'] {
-  border-color: var(--color-text-muted);
   color: var(--color-text);
 }
 

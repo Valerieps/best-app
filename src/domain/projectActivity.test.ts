@@ -3,8 +3,6 @@ import type { DayKey } from './day';
 import type { DomainEvent, EventType } from './events';
 import {
   activityByDay,
-  activityGrid,
-  activityLevel,
   lastActivityDay,
   recentlyFinished,
   stalledDays,
@@ -117,35 +115,5 @@ describe('stalledDays: "Parado há N dias"', () => {
     const result = activity([created('t1', '2026-08-20'), finished('t1', '2026-10-10'), reopened('t1', '2026-10-11')]);
     expect(lastActivityDay(result, TODAY)).toBe('2026-08-20');
     expect(stalledDays(ACTIVE, result, TODAY)).toBe(53);
-  });
-});
-
-describe('activityLevel', () => {
-  it('has four steps of intensity plus empty', () => {
-    expect([0, 1, 2, 3, 4, 5, 6, 20].map(activityLevel)).toEqual([0, 1, 2, 2, 3, 3, 4, 4]);
-  });
-});
-
-describe('activityGrid: one column per week, one row per day', () => {
-  it('ends with the current week and starts on Mondays', () => {
-    const grid = activityGrid(new Map(), TODAY, 16);
-    expect(grid).toHaveLength(16);
-    expect(grid.every((column) => column.length === 7)).toBe(true);
-    expect(grid[15][0].day).toBe(TODAY);
-    expect(grid[0][0].day).toBe('2026-06-29');
-    expect(grid[0][6].day).toBe('2026-07-05');
-  });
-
-  it('marks the days after today as future, without level', () => {
-    const grid = activityGrid(new Map([['2026-10-13', { tasksCreated: 9, tasksFinished: 0, notes: 0, sections: 0 }]]), TODAY, 8);
-    const current = grid[7];
-    expect(current[0]).toMatchObject({ day: TODAY, future: false, level: 0 });
-    expect(current[1]).toMatchObject({ day: '2026-10-13', future: true, level: 0 });
-  });
-
-  it('gives each day its activity and level', () => {
-    const result = activity([created('n1', '2026-10-07'), finished('t1', '2026-10-07'), finished('t2', '2026-10-07')]);
-    const cell = activityGrid(result, TODAY, 8)[6][2];
-    expect(cell).toMatchObject({ day: '2026-10-07', level: 2, activity: { notes: 1, tasksFinished: 2 } });
   });
 });

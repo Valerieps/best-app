@@ -38,6 +38,7 @@ export function TaskRow({
   selection,
   drag,
   quietProject = false,
+  hideMeta = false,
 }: {
   item: TaskListItem;
   today: DayKey;
@@ -50,12 +51,14 @@ export function TaskRow({
   drag?: LineDragProps;
   /** The project as small muted text under the task, instead of the chip at the end. */
   quietProject?: boolean;
+  /** No date, deadline or postponement text on the row, as in the "Fila de execução". */
+  hideMeta?: boolean;
 }) {
   const { task, project } = item;
   const when = task.intendedDate ? relativeDay(task.intendedDate, today) : 'sem data';
   const active = task.status === 'active';
   const deadline = active && task.deadline ? `prazo ${relativeDay(task.deadline, today)}` : null;
-  const meta = [active ? when : null, deadline, postponedLabel(task.postponeCount)].filter(Boolean).join(' · ');
+  const meta = hideMeta ? '' : [active ? when : null, deadline, postponedLabel(task.postponeCount)].filter(Boolean).join(' · ');
   return (
     <li
       className={`card-list__item card-list__item--stacked ${task.status === 'done' ? 'active-tasks__row--done' : ''} ${selection ? 'active-tasks__row--select' : ''} ${selection?.on ? 'active-tasks__row--on' : ''} ${drag?.dragging ? 'task-row--dragging' : ''} ${drag?.mark ? `task-row--drop-${drag.mark}` : ''}`}

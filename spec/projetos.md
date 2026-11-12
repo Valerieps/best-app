@@ -18,11 +18,10 @@
 ## Lista de projetos *(2)*
 
 - A lista de projetos é onde eu acompanho os projetos; a página do projeto é onde eu executo. Métricas e visualizações de acompanhamento ficam na lista, e a página do projeto fica focada nas tarefas.
-- A lista de projetos mostra os projetos em foco em cards, lado a lado, e os outros projetos ativos numa lista com contador, que eu posso recolher. Os projetos finalizados ficam num grupo recolhido. O app lembra se deixei cada grupo aberto ou fechado.
-- Cada projeto ativo mostra na lista um mapa de atividade por dia, no estilo do GitHub: 16 semanas nos cards dos projetos em foco. As linhas dos outros projetos ativos não mostram o mapa. A intensidade da cor indica quanto aconteceu no dia. Não há contagem de dias seguidos.
+- A lista de projetos mostra os projetos em foco numa lista, no alto, e os outros projetos ativos em outra lista com contador, que eu posso recolher. As duas listas têm as mesmas linhas. Enquanto há vaga em foco, um "Colocar em foco" abaixo da lista deixa eu escolher um projeto ativo. Os projetos finalizados ficam num grupo recolhido. O app lembra se deixei cada grupo aberto ou fechado.
+- Cada linha mostra o nome e quantas tarefas estão ativas, ou "Parado há N dias". Não há mapa de atividade nem contagem de dias seguidos.
 - Atividade num projeto é qualquer uma destas coisas: tarefa criada, tarefa finalizada, nota escrita ou seção aberta vinculada a ele, também as notas escritas direto na página do projeto.
-- Junto do mapa, a lista mostra quantas tarefas estão ativas e travadas, quantas eu finalizei nas últimas 2 semanas, o objetivo e quando foi a última atividade.
-- A lista não mostra progresso em fração do total ("4 de 10"), porque eu nem sempre sei todas as tarefas que vão compor o projeto. O mapa de atividade mostra o ritmo no lugar.
+- A lista não mostra progresso em fração do total ("4 de 10"), porque eu nem sempre sei todas as tarefas que vão compor o projeto.
 - Um projeto ativo está parado quando passa 14 dias sem nenhuma atividade. A lista mostra "Parado há N dias", e o grupo dos outros ativos mostra quantos estão parados mesmo quando está recolhido.
 
 ## Página do projeto *(2)*
