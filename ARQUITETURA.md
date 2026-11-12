@@ -81,7 +81,7 @@ Os tipos estão em `src/domain/entities.ts`. Todo registro tem `id` (UUID), `cre
 
 **`days`**: `lastCheckoutAt`, `startedAt`, `warmup`, `executionStartedAt` e `sectionOrder`.
 
-**`priorities`**: listas com id `escopo:período`. `day:AAAA-MM-DD` guarda as tarefas escolhidas à mão; as com prazo no dia entram na leitura (ADR-017). `focusProjects` é a lista única de até 3 projetos em foco, e cada mudança grava um evento com a lista inteira (ADR-038). `next:<projectId>` é a lista dos até 3 próximos passos de um projeto, com o mesmo desenho (ADR-065): quem lê só mostra as tarefas ainda abertas e ainda no projeto, e finalizar, abandonar ou trocar de projeto tiram a tarefa da lista.
+**`priorities`**: listas com id `escopo:período`. `day:AAAA-MM-DD` guarda as tarefas escolhidas à mão; as com prazo no dia entram na leitura (ADR-017). `focusProjects` é a lista única de até 3 projetos em foco, e cada mudança grava um evento com a lista inteira (ADR-038). `next:<projectId>` é a lista dos até 3 próximos passos de um projeto, com o mesmo desenho (ADR-065): quem lê só mostra as tarefas ainda abertas e ainda no projeto, e finalizar, abandonar ou trocar de projeto tiram a tarefa da lista. `queue` é a fila de execução, sem limite, com o mesmo desenho (ADR-069): adicionar e remover gravam um evento com a lista inteira, reordenar não grava evento (ADR-040), finalizar ou abandonar tiram a tarefa, e quem lê só mostra tarefas abertas e não aguardando.
 
 **`settings`**: um registro só, id `main`, que entra no backup.
 

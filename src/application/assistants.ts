@@ -4,6 +4,7 @@ import type { Block } from '../domain/entities';
 import type { TaskDecision } from '../domain/triage';
 import type { PlanningChange } from './checkout';
 import { record } from './events';
+import { releaseFromQueue } from './executionQueue';
 import { releaseNextStep } from './nextSteps';
 import { moveIntendedDate } from './intendedDate';
 import { finishTaskIn, linkSection } from './notebook';
@@ -88,6 +89,7 @@ export async function resolveForgottenTasks(ctx: AppContext, actions: ReadonlyMa
       if (action === 'abandon') {
         await tx.blocks.put({ ...task, status: 'abandoned', closedAt: at, updatedAt: at });
         await releaseNextStep(ctx, tx, task, 'abandoned', day);
+        await releaseFromQueue(ctx, tx, task, 'abandoned', day);
         await record(ctx, tx, 'task.abandoned', 'block', task.id, day);
         continue;
       }
@@ -136,6 +138,7 @@ export async function planForgottenTasks(
       if (decision.kind === 'abandon') {
         await tx.blocks.put({ ...task, status: 'abandoned', closedAt: at, updatedAt: at });
         await releaseNextStep(ctx, tx, task, 'abandoned', day);
+        await releaseFromQueue(ctx, tx, task, 'abandoned', day);
         await record(ctx, tx, 'task.abandoned', 'block', task.id, day);
       }
     }

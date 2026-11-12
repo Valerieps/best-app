@@ -172,14 +172,14 @@ export type WarmupResult = 'done' | 'skipped' | 'later';
 
 /**
  * Ordered priorities. Ids look like `day:2026-10-11` (the day's tasks) or `focusProjects` (section
- * 2, the single list of projects in focus) or `next:<projectId>` (a project's next steps, ADR-065). `weekProjects:2026-W42` lists are the week's priority
+ * 2, the single list of projects in focus) or `next:<projectId>` (a project's next steps, ADR-065) or `queue` (the "Fila de execução", ADR-069). `weekProjects:2026-W42` lists are the week's priority
  * projects from before the single list (ADR-035), kept as history; before version 6
  * they were per month, with ids `month:AAAA-MM`.
  */
 export interface PriorityList {
   id: string;
-  /** `focusProjects` and `weekProjects` list projects; `day` and `nextSteps` list tasks. */
-  scope: 'day' | 'focusProjects' | 'weekProjects' | 'nextSteps';
+  /** `focusProjects` and `weekProjects` list projects; `day`, `nextSteps` and `queue` list tasks. */
+  scope: 'day' | 'focusProjects' | 'weekProjects' | 'nextSteps' | 'queue';
   /** A day (AAAA-MM-DD), an ISO week (AAAA-Www) for the old week lists, or empty. */
   period: string;
   itemIds: string[];

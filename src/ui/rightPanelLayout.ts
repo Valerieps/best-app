@@ -24,7 +24,7 @@ export interface RightPanelMenuEntry {
 
 /** The menus of the strip, top to bottom. The first one opens with the toggle and the shortcut. */
 export const RIGHT_PANEL_MENUS: readonly RightPanelMenuEntry[] = [
-  { menu: 'execute', label: 'Executar', icon: 'bolt', screen: 'execute' },
+  { menu: 'execute', label: 'Fila de execução', icon: 'bolt', screen: 'execute' },
 ];
 
 export function rightPanelEntry(menu: RightPanelMenu): RightPanelMenuEntry | undefined {

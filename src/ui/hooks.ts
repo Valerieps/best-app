@@ -25,7 +25,7 @@ export type Route =
   /** `from` is where the closing goes back to when it ends: the day note, or "Rituais". */
   | { name: 'checkout'; day: DayKey; from?: 'rituals' }
   | { name: 'active' }
-  /** "Executar": what asks for attention now (spec/prioridades.md). */
+  /** "Fila de execução": the tasks I chose to do next (spec/prioridades.md). */
   | { name: 'execute' }
   /** `assistant` opens one assistant's details; omitted shows the dashboard. */
   /** The "Rituais" screen, or one of its assistants when `assistant` is set. */

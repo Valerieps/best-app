@@ -1,10 +1,11 @@
 import { useEffect, useState, type KeyboardEvent, type ReactNode } from 'react';
 import { setDayPriority, setDeadline, setIntendedDate } from '../../application/dayTools';
+import { addToQueue } from '../../application/executionQueue';
 import { setNextStep } from '../../application/nextSteps';
 import { abandonTask, setTaskDone, setTaskWaiting, updateBlockText } from '../../application/notebook';
 import { ensurePeople } from '../../application/people';
 import { createProjectTask, renameProject, setProjectIcon } from '../../application/projects';
-import { loadDayPriorities, loadProject, loadProjectResources } from '../../application/queries';
+import { loadDayPriorities, loadProject, loadProjectResources, loadQueueIds } from '../../application/queries';
 import { setProjectPanelPinned } from '../../application/settings';
 import { type DayKey } from '../../domain/day';
 import type { Block } from '../../domain/entities';
@@ -100,6 +101,7 @@ export function ProjectScreen({ id, tab, today }: { id: string; tab: 'tasks' | '
   const objectives = useLiveQuery(() => reader.objectives()) ?? [];
   const resources = useLiveQuery(() => loadProjectResources(reader, id), [id]) ?? [];
   const dayPriorities = useLiveQuery(() => loadDayPriorities(reader, today), [today]) ?? [];
+  const queued = useLiveQuery(() => loadQueueIds(reader)) ?? [];
   const settings = useLiveQuery(() => reader.settings());
   const pinned = settings?.projectPanelPinned ?? false;
   const narrow = useNarrow();
@@ -150,6 +152,7 @@ export function ProjectScreen({ id, tab, today }: { id: string; tab: 'tasks' | '
   const done = view.doneTasks.map((item) => item.task);
   const groups = groupProjectTasks(active, today, view.nextStepIds);
   const nextIds = new Set(view.nextStepIds);
+  const queueIds = new Set(queued);
   const priorityIds = new Set(dayPriorities.map((priority) => priority.task.id));
   // Arrow keys move through the lines in the order they show.
   const shownLines = [...groups.stuck, ...groups.next,...groups.undated, ...groups.waiting, ...done];
@@ -170,6 +173,7 @@ export function ProjectScreen({ id, tab, today }: { id: string; tab: 'tasks' | '
     onSetDeadline: (block, date) => write(() => setDeadline(appContext, block.id, date)),
     onTogglePriority: (block, on) => write(() => setDayPriority(appContext, block.id, on)),
     onToggleNext: (block, on) => write(() => setNextStep(appContext, block.id, on)),
+    onAddToQueue: (block) => write(() => addToQueue(appContext, block.id)),
     onSetWaiting: (block, waiting) => write(() => setTaskWaiting(appContext, block.id, waiting)),
     onAbandon: (block) => write(() => abandonTask(appContext, block.id)),
     onEnsurePeople: (names) => write(() => ensurePeople(appContext, names)),
@@ -184,6 +188,7 @@ export function ProjectScreen({ id, tab, today }: { id: string; tab: 'tasks' | '
       today={today}
       isPriority={priorityIds.has(task.id)}
       isNext={nextIds.has(task.id)}
+      isQueued={queueIds.has(task.id)}
       allowNewLines={false}
       handlers={handlers}
       hideDate={hideDate}

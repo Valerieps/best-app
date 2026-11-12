@@ -21,7 +21,7 @@ As fases seguem as seções do `SPEC.md`.
 | 4. Objetivos | Feita em parte | Nome do campo "motivação"; assistente "Objetivos soltos" |
 | 5. Tipos de bloco | Bloqueada | Tudo: compromissos e detecção de tipo |
 | 6. Hábitos | Feita em parte | "Agendar lembrete"; assistente "Hábitos sumidos" |
-| 7. Coletar, executar, incubar | Em andamento | Os próximos passos, a tela "Executar" e as ideias já estão feitos. Faltam os passos 5 e 6 de "Fase 7: ordem de implementação" |
+| 7. Coletar, executar, incubar | Em andamento | Os próximos passos, a fila de execução e as ideias já estão feitos. Faltam os passos 5 e 6 de "Fase 7: ordem de implementação" |
 
 ## Esperando resposta a uma pergunta em aberto
 
