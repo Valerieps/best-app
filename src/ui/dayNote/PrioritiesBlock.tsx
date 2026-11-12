@@ -43,6 +43,8 @@ interface Props {
   /** Moves the task to another intended date, out of today's priorities; called after the countdown. */
   onMoveDate(taskId: string, date: DayKey | null): void;
   onSetDeadline(taskId: string, date: DayKey | null): void;
+  /** Ids in the "Fila de execução", and "Adicionar à fila"; absent hides the action. */
+  queue?: { ids: ReadonlySet<string>; onAdd(taskId: string): void };
   /** Shown at the right of the header, like the focus mode button. */
   trailing?: ReactNode;
 }
@@ -56,7 +58,7 @@ function destination(date: DayKey | null, today: DayKey): string {
  * "Prioridades do dia": up to 3 tasks, highlighted. Their dates change here too: a new intended
  * date waits a short countdown, which I can cancel, before the task goes to that day.
  */
-export function PrioritiesBlock({ priorities, today, pinned, onTogglePin, onToggleDone, onDemote, onMoveDate, onSetDeadline, trailing }: Props) {
+export function PrioritiesBlock({ priorities, today, pinned, onTogglePin, onToggleDone, onDemote, onMoveDate, onSetDeadline, queue, trailing }: Props) {
   const [waiting, setWaiting] = useState<PendingMove[]>([]);
   const commit = useRef(onMoveDate);
   commit.current = onMoveDate;
@@ -157,6 +159,17 @@ export function PrioritiesBlock({ priorities, today, pinned, onTogglePin, onTogg
                   <span className="line__actions">
                     {!showDate && datePicker('Mudar a data de intenção', 'line__action', 'Data')}
                     {!deadline && deadlinePicker('Prazo máximo', 'line__action', 'Prazo')}
+                    {queue && !task.waiting && (
+                      <button
+                        type="button"
+                        className="line__action"
+                        disabled={queue.ids.has(task.id)}
+                        title={queue.ids.has(task.id) ? 'Já está na fila de execução' : 'Adicionar ao fim da fila de execução'}
+                        onClick={() => queue.onAdd(task.id)}
+                      >
+                        {queue.ids.has(task.id) ? 'Na fila' : 'Adicionar à fila'}
+                      </button>
+                    )}
                   </span>
                   {!automatic && (
                     <button

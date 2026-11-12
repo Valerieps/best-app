@@ -32,6 +32,7 @@ import { comparePositions } from '../domain/position';
 import { buildDayPriorities, dayPriorityListId, type DayPriority } from '../domain/priorities';
 import { FOCUS_LIST_ID, focusProjectIds, hasFreeSlot } from '../domain/focusProjects';
 import { nextStepIds, nextStepsListId } from '../domain/nextSteps';
+import { QUEUE_LIST_ID, queueIds } from '../domain/executionQueue';
 import { activityByDay, lastActivityDay, recentlyFinished, stalledDays, type ActivityByDay } from '../domain/projectActivity';
 import { isDaySection, isStuckTask } from '../domain/projectPage';
 import { buildPeopleOverview, buildPersonPage, meetingPeople, type PeopleOverview, type PersonPage } from '../domain/people';
@@ -348,6 +349,8 @@ export interface TaskListContext {
   focusIds: string[];
   /** Ids of the tasks marked "Próximo", across projects (spec/prioridades.md, "Próximos passos"). */
   nextStepIds: string[];
+  /** Ids of the tasks in the "Fila de execução" (spec/prioridades.md). */
+  queueIds: string[];
 }
 
 export async function loadTaskListContext(reader: Reader): Promise<TaskListContext> {
@@ -358,20 +361,26 @@ export async function loadTaskListContext(reader: Reader): Promise<TaskListConte
       .sort((a, b) => a.name.localeCompare(b.name, 'pt-BR', { sensitivity: 'base' })),
     focusIds: await loadFocusProjectIds(reader, projects),
     nextStepIds: await loadAllNextStepIds(reader, await myActiveTasks(reader)),
+    queueIds: await loadQueueIds(reader),
   };
 }
 
-/** What the "Executar" screen needs (spec/prioridades.md, "Tela \"Executar\""). */
-export interface ExecuteData extends TaskListContext {
-  priorities: DayPriority[];
-  /** My open tasks, by intended date then creation. */
+/** What the "Fila de execução" needs (spec/prioridades.md, "Fila de execução"). */
+export interface ExecutionQueueData extends TaskListContext {
+  /** The tasks in the queue, in its order. */
   items: TaskListItem[];
 }
 
-export async function loadExecute(reader: Reader, today: DayKey): Promise<ExecuteData> {
-  const priorities = await loadDayPriorities(reader, today);
-  const items = await loadActiveTasks(reader);
-  return { ...(await loadTaskListContext(reader)), priorities, items };
+export async function loadExecutionQueue(reader: Reader): Promise<ExecutionQueueData> {
+  const tasks = await myActiveTasks(reader);
+  const byId = new Map(tasks.map((task) => [task.id, task]));
+  const ids = queueIds(await reader.priorityList(QUEUE_LIST_ID), tasks);
+  return { ...(await loadTaskListContext(reader)), items: await withOrigins(reader, ids.map((id) => byId.get(id)!)) };
+}
+
+/** Ids of the tasks in the "Fila de execução", for the "Adicionar à fila" action elsewhere. */
+export async function loadQueueIds(reader: Reader): Promise<string[]> {
+  return queueIds(await reader.priorityList(QUEUE_LIST_ID), await myActiveTasks(reader));
 }
 
 /** The valid next steps of every project, given the open tasks. */

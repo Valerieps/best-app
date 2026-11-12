@@ -8,7 +8,7 @@ describe('sidebar places', () => {
   it('lists the places in groups and in order, with the footer last', () => {
     const groups = sidebarGroups({ counts, dueCount: 0, features: hidden });
     expect(groups.map((group) => [group.key, group.entries.map((entry) => entry.label)])).toEqual([
-      ['start', ['Hoje', 'Executar', 'Rituais']],
+      ['start', ['Hoje', 'Fila de execução', 'Rituais']],
       ['planning', ['Projetos']],
       ['lists', ['Tarefas', 'Pessoas', 'Ideias']],
       ['footer', ['Dados e backup', 'Configurações']],
