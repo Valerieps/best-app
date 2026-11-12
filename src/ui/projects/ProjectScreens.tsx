@@ -8,14 +8,14 @@ import { loadDayPriorities, loadProject, loadProjectResources } from '../../appl
 import { setProjectPanelPinned } from '../../application/settings';
 import { type DayKey } from '../../domain/day';
 import type { Block } from '../../domain/entities';
-import { agendaColumns, groupProjectTasks, stuckReason } from '../../domain/projectPage';
+import { groupProjectTasks, stuckReason } from '../../domain/projectPage';
 import { BlockLine, DatePicker, type LineHandlers } from '../dayNote/BlockLine';
 import { MarkdownText } from '../dayNote/MarkdownText';
 import { requestFocus } from '../dayNote/focus';
 import { Icon } from '../components/Icon';
 import { BackButton, ScreenHeader } from '../components/ScreenHeader';
 import { LoadingPage } from '../components/Skeleton';
-import { formatLongDate, formatShortDate, stuckReasonLabel, weekdayName } from '../format';
+import { stuckReasonLabel } from '../format';
 import { navigate } from '../hooks';
 import { appContext, reader } from '../services';
 import { useLiveQuery } from '../useLiveQuery';
@@ -150,10 +150,9 @@ export function ProjectScreen({ id, tab, today }: { id: string; tab: 'tasks' | '
   const done = view.doneTasks.map((item) => item.task);
   const groups = groupProjectTasks(active, today, view.nextStepIds);
   const nextIds = new Set(view.nextStepIds);
-  const agenda = agendaColumns(groups.upcoming, today, settings?.activeDays);
   const priorityIds = new Set(dayPriorities.map((priority) => priority.task.id));
   // Arrow keys move through the lines in the order they show.
-  const shownLines = [...groups.stuck, ...groups.next, ...agenda.flatMap((entry) => entry.tasks), ...groups.undated, ...groups.waiting, ...done];
+  const shownLines = [...groups.stuck, ...groups.next,...groups.undated, ...groups.waiting, ...done];
 
   const handlers: LineHandlers = {
     onSaveText: (block, text) => write(() => updateBlockText(appContext, block.id, text)),
@@ -270,24 +269,6 @@ export function ProjectScreen({ id, tab, today }: { id: string; tab: 'tasks' | '
                   {groups.next.map((task) => line(task))}
                 </section>
               )}
-
-              {/* "Próximos dias" as a calendar of the next 3 active days; later tasks do not show. */}
-              <section className="agenda" aria-label="Próximos dias">
-                <h3 className="task-group__title">Próximos dias</h3>
-                <div className="agenda__columns">
-                  {agenda.map(({ day, tasks }) => (
-                    <div className={`agenda__day ${day === today ? 'agenda__day--today' : ''}`} key={day} aria-label={formatLongDate(day)}>
-                      <p className="agenda__date">
-                        <span className="agenda__weekday">{weekdayName(day)}</span>
-                        <span className="agenda__number">{day === today ? `hoje · ${formatShortDate(day)}` : formatShortDate(day)}</span>
-                      </p>
-                      <div className="agenda__tasks">
-                        {tasks.length > 0 ? tasks.map((task) => line(task, true)) : <p className="muted agenda__empty">Nada marcado</p>}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </section>
 
               <NewTaskField projectId={project.id} />
 
