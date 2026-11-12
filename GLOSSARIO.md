@@ -19,7 +19,7 @@ Os termos marcados com ⚠ ainda têm mais de um sentido nos documentos.
 
 - **Data de intenção (de execução):** o dia em que a tarefa aparecia na nota do dia. Saiu em 12/11/2026: o que eu quero fazer vai para a fila de execução. As datas antigas ficam guardadas. (`spec/tarefas.md`)
 - **Prazo máximo:** a segunda data, opcional. No dia do prazo, a tarefa vira prioridade do dia. (`spec/tarefas.md`)
-- **Adiamento:** era mudar a data de intenção para depois, ou tirá-la. Hoje só conta a tarefa que o "Fechar dias pendentes" devolve para a lista; os adiamentos de antes ficam guardados. (`spec/tarefas.md`)
+- **Adiamento:** era mudar a data de intenção para depois, ou tirá-la. Saiu: o app não conta mais, e o que foi contado fica guardado sem aparecer. (`spec/tarefas.md`)
 - **Tarefas:** a lista das tarefas abertas, ou seja, nem finalizadas nem abandonadas, que também mostra as finalizadas quando eu peço. Antes se chamava "tarefas ativas". (`spec/tarefas.md`)
 - **Pessoa:** alguém que eu cito com `@Nome`, de uma palavra só. Tem uma página com o que eu devo a ela e o que ela me deve. (`spec/pessoas.md`)
 - **Tag de projeto:** `#Projeto` numa linha, que liga só aquela linha a um projeto, vencendo o vínculo da seção. (`spec/nota-do-dia.md`)
@@ -57,6 +57,7 @@ Os termos marcados com ⚠ ainda têm mais de um sentido nos documentos.
 - **Projeto:** uma coleção de tarefas que fazem sentido juntas. Pode ter no máximo um objetivo. (`spec/projetos.md`)
 - **Atividade (de um projeto):** tarefa criada, tarefa finalizada, nota escrita ou seção aberta vinculada a ele. (`spec/projetos.md`)
 - **Projeto parado:** projeto ativo sem atividade há 14 dias ou mais. (`spec/projetos.md`)
+- **Backlog (de projetos):** os projetos que eu guardo para depois: não são ativos nem finalizados, e nunca contam como parados. Não confundir com as tarefas de um projeto. (`spec/projetos.md`)
 - **Objetivo:** meta, motivação, projetos e recursos. (`spec/objetivos.md`)
 - **Meta:** a frase que digo se atingi ou não. (`spec/objetivos.md`)
 - **Motivação:** o que me faz querer engajar com o objetivo. Nome provisório. (`spec/objetivos.md`)
@@ -65,18 +66,13 @@ Os termos marcados com ⚠ ainda têm mais de um sentido nos documentos.
 
 ## Rituais e abertura do dia
 
-- **Ritual:** warm up e "Fechar o dia" (`spec/abertura-do-dia.md`, "Rituais pulados"). A tela "Rituais" mostra o calendário dos dias a fechar e os "Assistentes" (`spec/assistentes.md`). A Revisão de Foco e a Revisão de Rumo, que substituíram as reflexões semanal e mensal, saíram do app em 17/10/2026; as revisões fechadas ficam guardadas no histórico e no backup, sem tela.
+- **Ritual:** warm up e "Fechar o dia" (`spec/abertura-do-dia.md`, "Rituais pulados"). A Revisão de Foco e a Revisão de Rumo, que substituíram as reflexões semanal e mensal, saíram do app em 17/10/2026; as revisões fechadas ficam guardadas no histórico e no backup, sem tela.
 - **Iniciar Dia:** a tela branca que abre o dia e começa o warm up. (`spec/abertura-do-dia.md`)
 - **Warm up:** o checklist que eu defino para começar o dia. (`spec/abertura-do-dia.md`)
-- **Dashboard:** a tela de boas-vindas depois do warm up, com os projetos em foco, mural e "Iniciar o Flow de Execução". ⚠ A `ARQUITETURA.md` e o código também chamam os "Assistentes" de dashboard.
+- **Dashboard:** a tela de boas-vindas depois do warm up, com os projetos em foco, mural e "Iniciar o Flow de Execução".
 - **Flow de Execução:** o trabalho na nota do dia, que começa pelo botão "Iniciar o Flow de Execução" do dashboard. (`spec/abertura-do-dia.md`)
 - **Mural:** as frases de mim para mim mesma que o dashboard mostra em rodízio. ⚠ O `spec/abertura-do-dia.md` também as chama de "lembretes".
 - **Lembrete:** um item que volta dentro do app depois de um horário, como no "perguntar de novo às XXh" do warm up. Nunca é uma notificação. ⚠ Veja "Mural". (`spec/abertura-do-dia.md`)
-
-## Limpeza
-
-- **Assistentes:** a grade sem data da tela "Rituais" que lista os assistentes que têm algo a limpar, com uma cor que diz há quanto tempo o item mais antigo espera. Recebe tudo o que não perece de um dia para o outro. Não confundir com "Fechar o dia". Antes se chamava "Colocar ordem na casa". (`spec/assistentes.md`)
-- **Assistente (de limpeza):** encontra o que está fora do lugar e sugere uma ação, que aceito em lote. Os nomes de cada um estão na tabela do `spec/assistentes.md`.
 
 ## Backup e avisos
 

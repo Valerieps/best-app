@@ -2,7 +2,7 @@
 
 Oct 4, 2026 · @Valerie
 
-Este é um app pessoal para eu capturar tudo ao longo do dia sem decidir onde guardar, e decidir o destino de cada coisa só no fim do dia, no "Fechar o dia". Os rituais, como o "Fechar o dia" e os "Assistentes" da tela "Rituais", entram aos poucos e ligam o dia a dia a projetos e objetivos. As revisões sem data marcada (a de Foco e a de Rumo) saíram do app em 17/10/2026.
+Este é um app pessoal para eu capturar tudo ao longo do dia sem decidir onde guardar, e decidir o destino de cada coisa só no fim do dia, no "Fechar o dia". Os rituais, como o "Fechar o dia", entram aos poucos e ligam o dia a dia a projetos e objetivos. As revisões sem data marcada (a de Foco e a de Rumo) saíram do app em 17/10/2026.
 
 A spec é a fonte da verdade do produto. Este arquivo é o índice: as regras ficam na pasta `spec/`, um arquivo por funcionalidade. Leia só o arquivo da funcionalidade em que vai mexer.
 
@@ -11,7 +11,7 @@ A spec é a fonte da verdade do produto. Este arquivo é o índice: as regras fi
 | Arquivo | O que tem |
 | --- | --- |
 | [`spec/principios.md`](spec/principios.md) | Princípios, primeiro uso, plataforma, dados e backup |
-| [`spec/navegacao.md`](spec/navegacao.md) | Barra lateral, "Rituais", cabeçalho das telas, ações no hover e fila de avisos |
+| [`spec/navegacao.md`](spec/navegacao.md) | Barra lateral, cabeçalho das telas, ações no hover e fila de avisos |
 | [`spec/nota-do-dia.md`](spec/nota-do-dia.md) | Nota do dia, seções, blocos, editor, paginação entre dias e onde as notas ficam depois do dia |
 | [`spec/tarefas.md`](spec/tarefas.md) | Tarefas ativas, tabela de tarefas, fim da data de intenção, adiamento e prazo máximo |
 | [`spec/prioridades.md`](spec/prioridades.md) | Prioridades do dia, projetos em foco e a fila de execução |
@@ -23,7 +23,6 @@ A spec é a fonte da verdade do produto. Este arquivo é o índice: as regras fi
 | [`spec/objetivos.md`](spec/objetivos.md) | Objetivos, meta, motivação e recursos |
 | [`spec/compromissos.md`](spec/compromissos.md) | Compromissos e detecção automática do tipo de bloco |
 | [`spec/habitos.md`](spec/habitos.md) | Hábitos e onde eles entram nos flows |
-| [`spec/assistentes.md`](spec/assistentes.md) | A tela "Rituais": calendário dos dias sem fechamento e os "Assistentes" de limpeza |
 
 Os termos estão definidos em `GLOSSARIO.md`.
 

@@ -1,11 +1,4 @@
-import {
-  findDuplicateProjects,
-  findWhiteboardGroups,
-  type DuplicateGroup,
-  type WhiteboardGroup,
-} from '../domain/assistants';
-import { assistantCards, oldestDay, type AssistantCard } from '../domain/cleanupStatus';
-import { addDays, fromDayKey, toDayKey, type DayKey } from '../domain/day';
+import { addDays, fromDayKey, type DayKey } from '../domain/day';
 import { buildDayNote, type DayNoteSection } from '../domain/dayNote';
 import type {
   Block,
@@ -22,7 +15,7 @@ import type {
 } from '../domain/entities';
 import { habitStats, isExpectedOn, type HabitStats } from '../domain/habits';
 import { isOpenIdea, sortIdeas } from '../domain/ideas';
-import { daysBetween as daysInRange, monthKey, monthRange, type MonthKey } from '../domain/month';
+import { monthKey, monthRange } from '../domain/month';
 import { dayStage, dueReminders, type DayStage } from '../domain/dayFlow';
 import { weekOf } from '../domain/week';
 import { comparePositions } from '../domain/position';
@@ -53,19 +46,6 @@ export interface DayNoteView {
 /** Sections of a day's note: the section behind a project page belongs to no day. */
 async function daySections(reader: Reader, day: DayKey): Promise<Section[]> {
   return (await reader.sectionsOfDay(day)).filter(isDaySection);
-}
-
-/** Days of the month with at least one line written, for the "Rituais" calendar. */
-export async function loadDaysWithNotes(reader: Reader, month: MonthKey): Promise<DayKey[]> {
-  const { start, end } = monthRange(month);
-  const days: DayKey[] = [];
-  for (const day of daysInRange(start, end)) {
-    const sections = await daySections(reader, day);
-    if (sections.length > 0 && (await reader.blocksInSections(sections.map((section) => section.id))).length > 0) {
-      days.push(day);
-    }
-  }
-  return days;
 }
 
 /** `today` makes a closed today start over (`isShownAfterClosing`); past days keep everything. */
@@ -216,50 +196,6 @@ export async function loadDayPriorities(reader: Reader, day: DayKey): Promise<Da
   return buildDayPriorities(list?.itemIds ?? [], chosen, deadline.sort((a, b) => (a.createdAt < b.createdAt ? -1 : 1)));
 }
 
-export interface CleanupView {
-  whiteboards: WhiteboardGroup[];
-  duplicates: DuplicateGroup[];
-}
-
-/** What the cleanup assistants of 1b have to show ("Assistentes"). */
-export async function loadCleanup(reader: Reader): Promise<CleanupView> {
-  const sections = await reader.sectionsWithStatus('leftUnlinked');
-  const projects = await reader.projects();
-  const blocks = await reader.blocksInSections(sections.map((section) => section.id));
-  const texts = new Map<string, string>();
-  for (const block of blocks) texts.set(block.sectionId, [texts.get(block.sectionId) ?? '', block.text].join('\n'));
-  return {
-    whiteboards: findWhiteboardGroups(sections, projects, texts),
-    duplicates: findDuplicateProjects(projects),
-  };
-}
-
-export interface CleanupDashboard extends CleanupView {
-  pendingDays: DayKey[];
-  /** One card per assistant, most urgent first. */
-  cards: AssistantCard[];
-}
-
-/** The "Assistentes" grid of the "Rituais" screen: each assistant's findings and color. */
-export async function loadCleanupDashboard(reader: Reader, today: DayKey): Promise<CleanupDashboard> {
-  const cleanup = await loadCleanup(reader);
-  const pendingDays = await loadPendingDays(reader, today);
-  const settings = await reader.settings();
-  const findings = {
-    pendingDays: { count: pendingDays.length, oldest: oldestDay(pendingDays) },
-    whiteboards: {
-      count: cleanup.whiteboards.length,
-      oldest: oldestDay(cleanup.whiteboards.flatMap((group) => group.sections.map((section) => section.day))),
-    },
-    // A repeat starts waiting when the second project of the group was created.
-    duplicates: {
-      count: cleanup.duplicates.length,
-      oldest: oldestDay(cleanup.duplicates.map((group) => group.projects[1] && toDayKey(new Date(group.projects[1].createdAt)))),
-    },
-  };
-  return { ...cleanup, pendingDays, cards: assistantCards(findings, today, settings?.cleanupAgeLimits) };
-}
-
 export interface MenuCounts {
   projects: number;
   active: number;
@@ -369,6 +305,8 @@ export interface ProjectListView {
   priority: ProjectListItem[];
   /** Other active projects, most recent activity first. */
   others: ProjectListItem[];
+  /** Projects kept for later, by name. */
+  backlog: ProjectListItem[];
   finished: ProjectListItem[];
   /** "4 ativos · 1 parado · 3 travadas" */
   summary: { active: number; stalled: number };
@@ -378,7 +316,7 @@ export interface ProjectListView {
 }
 
 /** Defaults of the collapsible groups of the project list. */
-export const PROJECT_LIST_GROUPS_OPEN: Record<ProjectListGroup, boolean> = { others: true, finished: false };
+export const PROJECT_LIST_GROUPS_OPEN: Record<ProjectListGroup, boolean> = { others: true, backlog: false, finished: false };
 
 /** Activity of each project, from the events of its tasks, notes and day sections (ADR-034). */
 export async function loadActivities(reader: Reader, projects: readonly Project[], today: DayKey) {
@@ -436,6 +374,7 @@ export async function loadProjectList(reader: Reader, today: DayKey): Promise<Pr
         const dayB = b.lastActivityDay ?? '';
         return dayA !== dayB ? (dayA < dayB ? 1 : -1) : byName(a, b);
       }),
+    backlog: items.filter((item) => item.project.status === 'backlog').sort(byName),
     finished: finished.sort((a, b) => ((a.project.finishedAt ?? '') < (b.project.finishedAt ?? '') ? 1 : -1)),
     summary: {
       active: active.length,

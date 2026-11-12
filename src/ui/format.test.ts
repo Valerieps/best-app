@@ -6,7 +6,6 @@ import {
   listDays,
   monthName,
   pendingDaysSentence,
-  postponedLabel,
   relativeDay,
   boardDayLabel,
 } from './format';
@@ -44,12 +43,6 @@ describe('format', () => {
     expect(linkDomain(' http://intranet/wiki ')).toBe('intranet');
     expect(linkDomain('go/plano')).toBe('go/plano');
     expect(monthName('2026-10-11')).toBe('outubro');
-  });
-
-  it('labels postponements', () => {
-    expect(postponedLabel(0)).toBeNull();
-    expect(postponedLabel(1)).toBe('adiada 1 vez');
-    expect(postponedLabel(4)).toBe('adiada 4 vezes');
   });
 
   it('writes the date block of the agenda', () => {

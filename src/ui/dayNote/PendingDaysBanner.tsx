@@ -7,7 +7,7 @@ import { ClosePendingDaysDialog } from './ClosePendingDaysDialog';
 interface Props {
   days: DayKey[];
   today: DayKey;
-  /** "Lembrar depois": hides the band until tomorrow; "Rituais" keeps counting the days. */
+  /** "Lembrar depois": hides the band until tomorrow. */
   onSnooze(): void;
 }
 

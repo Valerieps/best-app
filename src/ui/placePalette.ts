@@ -14,7 +14,6 @@ export function palettePlaces(features: { objectives: boolean; habits: boolean }
   return [
     { key: 'day', label: 'Hoje', icon: 'sun', route: { name: 'day' } },
     { key: 'execute', label: 'Fila de execução', icon: 'bolt', route: { name: 'execute' } },
-    { key: 'rituals', label: 'Rituais', icon: 'repeat', route: { name: 'rituals' } },
     { key: 'projects', label: 'Projetos', icon: 'folder', route: { name: 'projects' } },
     ...(features.objectives
       ? [{ key: 'objectives', label: 'Objetivos', icon: 'target' as const, route: { name: 'objectives' as const } }]

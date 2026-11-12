@@ -42,11 +42,12 @@ As telas chamam as funções de `application/queries.ts` dentro de `useLiveQuery
 ## 3. Invariantes
 
 - **Um registro por entidade.** Um bloco existe uma vez só; a nota do dia, os projetos e os recursos apontam para ele, sem cópias (ADR-002). A seção "De outros dias" só existe na tela: as tarefas com a data do dia aparecem ali sem sair da seção onde foram escritas.
-- **O que dá para calcular não é guardado.** Se um dia está pendente, a etapa do dia (ADR-023), a nota do dia, as listas de tarefas, a página do projeto, a cor dos assistentes (ADR-045) e o estado parado dos projetos (ADR-034) são calculados das tabelas e dos eventos. `days` guarda só o que não dá para calcular.
+- **O que dá para calcular não é guardado.** Se um dia está pendente, a etapa do dia (ADR-023), a nota do dia, as listas de tarefas, a página do projeto e o estado parado dos projetos (ADR-034) são calculados das tabelas e dos eventos. `days` guarda só o que não dá para calcular.
 - **Atalhos recalculáveis.** `postponeCount` e as listas de prioridades podem ser refeitos a partir do histórico.
 - **Datas** de calendário são `AAAA-MM-DD` no fuso local, e o dia vira à meia-noite (ADR-005). Semanas são ISO, como `2026-W42` (ADR-020).
 - **Ordem sem reescrever vizinhos.** `position` é um índice fracionário; a ordem das partes do dia fica em `days.sectionOrder` (ADR-040).
 - **O editor tem um campo de texto por bloco** (`ui/dayNote/BlockLine.tsx`), não um editor de documento único como ProseMirror, para manter um registro por bloco. Seleção de várias linhas e listas são feitas por cima disso (ADR-051).
+- **Uma tarefa se comporta igual em todas as telas.** Quais ações ela oferece em cada tela está numa tabela só (`ui/tasks/taskSurface.ts`); o checkbox, as datas e as ações do hover são os mesmos componentes (`ui/tasks/TaskControls.tsx`), e o que cada ação grava passa por `ui/tasks/taskCommands.ts`. Nenhuma tela decide sozinha o que a tarefa mostra; só a Fila de execução tem uma ação própria (ADR-073).
 - **O texto do bloco guarda o Markdown cru**, sem campo novo; a formatação é só na tela (ADR-048).
 - **Texto do usuário nunca vira HTML**, e links abrem só `http`, `https` e `mailto`, com `rel="noopener noreferrer"` (`SEGURANCA.md`).
 - **Abandonar esconde, não apaga**, para o histórico continuar íntegro.
@@ -105,7 +106,7 @@ Os tipos estão em `src/domain/entities.ts`. Todo registro tem `id` (UUID), `cre
 - **Editar o texto de um bloco não gera evento** (ADR-004); criar, apagar e mudar o tipo geram.
 - **Exclusões deixam rastro:** um bloco apagado ou um recurso removido sai da tabela, mas deixa `block.deleted` ou `resource.removed`. É assim que o backup automático distingue um registro apagado de um perdido (seção 7).
 - **Formato dos detalhes:** cada tipo tem o seu `data` em `EventData`, e `record` só aceita esse formato. Um formato já gravado nunca muda: os antigos ficam em `LegacyEventData`, e uma mudança incompatível sobe a versão do evento (`v`, ausente = 1). Quem lê confere o valor, porque um backup importado pode trazer qualquer coisa (ADR-043).
-- **Adiamento:** gera `task.postponed` e soma 1 em `postponeCount` quando a data de intenção muda para depois, ou quando "Fechar dias pendentes" devolve a tarefa sem data. A tarefa deixada sem mexer no "Fechar o dia", ou posta na fila por ele, fica sem data e sem contar adiamento (ADR-072).
+- **Adiamento:** não é mais contado (ADR-074). `postponeCount` e o evento `task.postponed` continuam no modelo e nos backups só para os dados antigos: nada novo os grava e nenhuma tela os lê.
 - **Ideias:** cada destino grava o seu evento no bloco da ideia: `idea.becameTask`, `idea.becameProject`, `idea.dropped` e `idea.notYet`, com a contagem (ADR-067).
 - **Métricas** são funções puras do domínio sobre os eventos de um período; uma métrica nova não exige migração.
 

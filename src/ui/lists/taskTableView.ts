@@ -11,14 +11,13 @@ import {
 /** The columns of the tasks table that can be shown or hidden. "Tarefa" is always shown. */
 export type TaskColumn = Exclude<TaskSortKey, 'text'>;
 
-export const TASK_COLUMNS: readonly TaskColumn[] = ['deadline', 'project', 'createdDate', 'postponeCount'];
+export const TASK_COLUMNS: readonly TaskColumn[] = ['deadline', 'project', 'createdDate'];
 
 export const COLUMN_LABELS: Record<TaskSortKey, string> = {
   text: 'Tarefa',
   deadline: 'Prazo',
   project: 'Projeto',
   createdDate: 'Criada em',
-  postponeCount: 'Adiamentos',
 };
 
 /** Which tasks the list shows. Not remembered: the screen always opens on the open tasks. */

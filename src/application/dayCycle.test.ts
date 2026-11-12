@@ -112,13 +112,14 @@ describe('day cycle', () => {
     expect(later.entries.flatMap((entry) => entry.blocks.map((block) => block.text))).toEqual(['Fica hoje', 'Algum dia', 'Uma nota']);
   });
 
-  it('counts "sem data" chosen in the triage as a postponement of a dated task', async () => {
+  it('does not count "sem data" chosen in the triage as a postponement', async () => {
     const { ctx, reader, db } = createTestContext();
     const task = await createBlock(ctx, { sectionId: null, position: nextPosition() }, '[] Pagar a conta');
     await applyTriage(ctx, SUNDAY, { ...noDecisions(), tasks: new Map([[task.id, { kind: 'schedule', date: SUNDAY } as const]]) });
     expect((await loadDayTriage(reader, SUNDAY, SUNDAY)).rows).toEqual([]);
     await applyTriage(ctx, MONDAY, { ...noDecisions(), tasks: new Map([[task.id, { kind: 'undate' } as const]]) });
-    expect(await db.blocks.get(task.id)).toMatchObject({ intendedDate: null, postponeCount: 1 });
+    expect(await db.blocks.get(task.id)).toMatchObject({ intendedDate: null, postponeCount: 0 });
+    expect(await db.events.where('type').equals('task.postponed').count()).toBe(0);
   });
 
   it('finishing a task during the day takes it out of the triage', async () => {
@@ -196,7 +197,7 @@ describe('day cycle', () => {
     ]);
   });
 
-  it('planning: adding sets the date, removing leaves the task without date and counts as postponed', async () => {
+  it('planning: adding sets the date, removing leaves the task without date', async () => {
     const { ctx, db } = createTestContext();
     const a = await createBlock(ctx, { sectionId: null, position: nextPosition() }, '[] A');
     const b = await createBlock(ctx, { sectionId: a.sectionId, position: nextPosition() }, '[] B');
@@ -210,7 +211,7 @@ describe('day cycle', () => {
       { taskId: b.id, date: MONDAY },
     ]);
 
-    expect(await db.blocks.get(a.id)).toMatchObject({ intendedDate: null, postponeCount: 1 });
+    expect(await db.blocks.get(a.id)).toMatchObject({ intendedDate: null, postponeCount: 0 });
     expect(await db.blocks.get(b.id)).toMatchObject({ intendedDate: MONDAY, postponeCount: 0 });
   });
 
@@ -271,7 +272,7 @@ describe('day cycle', () => {
     expect(await db.events.where('type').equals('task.postponed').count()).toBe(0);
   });
 
-  it('closes pending days: tasks lose their date and count as postponed, notes are kept', async () => {
+  it('closes pending days: tasks lose their date without counting, notes are kept', async () => {
     const { ctx, reader, clock, db } = createTestContext(undefined, `${SATURDAY}T10:00:00`);
     const task = await createBlock(ctx, { sectionId: null, position: nextPosition() }, '[] Trocar o filtro');
     await createBlock(ctx, { sectionId: task.sectionId, position: nextPosition() }, 'Nota de sábado');
@@ -282,7 +283,8 @@ describe('day cycle', () => {
     await closePendingDays(ctx, await loadPendingTriages(reader, MONDAY));
 
     expect(await loadPendingDays(reader, MONDAY)).toEqual([]);
-    expect(await db.blocks.get(task.id)).toMatchObject({ status: 'active', intendedDate: null, postponeCount: 1 });
+    expect(await db.blocks.get(task.id)).toMatchObject({ status: 'active', intendedDate: null, postponeCount: 0 });
+    expect(await db.events.where('type').equals('task.postponed').count()).toBe(0);
     expect((await loadSectionNotes(reader)).map((entry) => entry.notes[0].text)).toEqual(['Nota de sábado']);
     expect((await db.sections.get(task.sectionId))?.whiteboardDecision).toBe('leftUnlinked');
     expect(await db.days.get(SATURDAY)).toMatchObject({ day: SATURDAY });

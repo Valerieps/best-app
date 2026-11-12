@@ -1,5 +1,4 @@
 import { useEffect, useState, useSyncExternalStore } from 'react';
-import { ASSISTANT_IDS, type AssistantId } from '../domain/cleanupStatus';
 import { isDayKey, toDayKey, type DayKey } from '../domain/day';
 
 /** Today's day key, updated at midnight and when the tab becomes visible again. */
@@ -22,14 +21,10 @@ export function useToday(): DayKey {
 export type Route =
   /** The day note; `day` is set when paging to a past day with pending items (1b). */
   | { name: 'day'; day?: DayKey }
-  /** `from` is where the closing goes back to when it ends: the day note, or "Rituais". */
-  | { name: 'checkout'; day: DayKey; from?: 'rituals' }
+  | { name: 'checkout'; day: DayKey }
   | { name: 'active' }
   /** "Fila de execução": the tasks I chose to do next (spec/prioridades.md). */
   | { name: 'execute' }
-  /** `assistant` opens one assistant's details; omitted shows the dashboard. */
-  /** The "Rituais" screen, or one of its assistants when `assistant` is set. */
-  | { name: 'rituals'; assistant?: AssistantId }
   | { name: 'data' }
   | { name: 'projects' }
   /** `tab` opens the notes tab; omitted shows the tasks. */
@@ -47,13 +42,6 @@ export type Route =
   | { name: 'objective'; id: string }
   | { name: 'habits' };
 
-/** Portuguese paths for the cleanup assistants, as the user reads them in the address bar. */
-const ASSISTANT_SLUGS: Record<AssistantId, string> = {
-  pendingDays: 'dias-em-aberto',
-  whiteboards: 'secoes-soltas',
-  duplicates: 'projetos-repetidos',
-};
-
 export function parseRoute(hash: string): Route {
   const parts = hash.replace(/^#\/?/, '').split('/');
   switch (parts[0]) {
@@ -61,7 +49,7 @@ export function parseRoute(hash: string): Route {
       return isDayKey(parts[1]) ? { name: 'day', day: parts[1] } : { name: 'day' };
     case 'checkout':
       if (!isDayKey(parts[1])) return { name: 'day' };
-      return parts[2] === 'rituais' ? { name: 'checkout', day: parts[1], from: 'rituals' } : { name: 'checkout', day: parts[1] };
+      return { name: 'checkout', day: parts[1] };
     case 'tarefas':
       return { name: 'active' };
     case 'executar':
@@ -69,19 +57,8 @@ export function parseRoute(hash: string): Route {
     // The archived tasks list is gone (ADR-049); its old address opens the task list.
     case 'arquivadas':
       return { name: 'active' };
-    case 'rituais':
-    case 'ordem': { // "Colocar ordem na casa", before the "Rituais" screen
-      const assistant = ASSISTANT_IDS.find((id) => ASSISTANT_SLUGS[id] === parts[1]);
-      return assistant ? { name: 'rituals', assistant } : { name: 'rituals' };
-    }
     case 'dados':
       return { name: 'data' };
-    // The reviews and the reflections before them are gone; their old addresses open "Rituais".
-    case 'foco':
-    case 'reflexao':
-    case 'rumo':
-    case 'mes':
-      return { name: 'rituals' };
     case 'projetos':
       return { name: 'projects' };
     case 'projeto':
@@ -118,13 +95,11 @@ export function routeHash(route: Route): string {
     case 'day':
       return route.day ? `#/dia/${route.day}` : '#/';
     case 'checkout':
-      return `#/checkout/${route.day}${route.from === 'rituals' ? '/rituais' : ''}`;
+      return `#/checkout/${route.day}`;
     case 'active':
       return '#/tarefas';
     case 'execute':
       return '#/executar';
-    case 'rituals':
-      return route.assistant ? `#/rituais/${ASSISTANT_SLUGS[route.assistant]}` : '#/rituais';
     case 'data':
       return '#/dados';
     case 'projects':

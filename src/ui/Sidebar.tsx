@@ -1,7 +1,6 @@
 import { useState, type CSSProperties, type KeyboardEvent, type PointerEvent } from 'react';
 import { loadMenuCounts } from '../application/queries';
 import { setSidebarCollapsed, setSidebarWidth } from '../application/settings';
-import type { DayKey } from '../domain/day';
 import type { AutoBackupState } from '../infrastructure/autoBackup';
 import { BackupStatus } from './backup/BackupStatus';
 import { Icon } from './components/Icon';
@@ -16,19 +15,14 @@ import { enqueue } from './writeQueue';
 
 interface Props {
   route: Route;
-  pendingDays: DayKey[];
   backupState: AutoBackupState;
-}
-
-function Badge({ count }: { count: number }) {
-  return count > 0 ? <span className="badge">{count}</span> : null;
 }
 
 /**
  * Level 1 of the navigation (spec/navegacao.md, "Navegação"): the only global bar, fixed on the
  * left of every screen but "Iniciar Dia". Only places, in groups; it can be collapsed to a strip.
  */
-export function Sidebar({ route, pendingDays, backupState }: Props) {
+export function Sidebar({ route, backupState }: Props) {
   const current = sidebarPlace(route);
   const storedCollapsed = useLiveQueryState(async () => (await reader.settings())?.sidebarCollapsed ?? false).value;
   // The toggle shows at once; the settings write follows (as in ADR-036).
@@ -41,7 +35,6 @@ export function Sidebar({ route, pendingDays, backupState }: Props) {
 
   // Counts are extras: a failed query is logged and the sidebar goes on without them.
   const counts = useLiveQueryState(() => loadMenuCounts(reader)).value;
-  const dueCount = pendingDays.length;
 
   const toggle = () => {
     const next = !collapsed;
@@ -95,7 +88,7 @@ export function Sidebar({ route, pendingDays, backupState }: Props) {
     }
   };
 
-  const groups = sidebarGroups({ counts, dueCount, features: FEATURES });
+  const groups = sidebarGroups({ counts, features: FEATURES });
   const footer = groups.find((group) => group.key === 'footer')?.entries ?? [];
   const body = groups.filter((group) => group.key !== 'footer');
   const isCurrent = (entry: SidebarEntry) => entry.place === current;
@@ -113,7 +106,6 @@ export function Sidebar({ route, pendingDays, backupState }: Props) {
       >
         <Icon name={PLACE_ICONS[entry.place]} />
         <span className="visually-hidden">{entry.label}</span>
-        {entry.due !== undefined && <Badge count={entry.due} />}
         {entry.place === 'data' && <BackupStatus state={backupState} />}
       </button>
     );
@@ -150,7 +142,6 @@ export function Sidebar({ route, pendingDays, backupState }: Props) {
     >
       <Icon name={PLACE_ICONS[entry.place]} />
       <span className="sidebar__label">{entry.label}</span>
-      {entry.due !== undefined && <Badge count={entry.due} />}
       {entry.count !== undefined && <span className="muted">{entry.count}</span>}
       {entry.place === 'data' && <BackupStatus state={backupState} />}
     </button>
