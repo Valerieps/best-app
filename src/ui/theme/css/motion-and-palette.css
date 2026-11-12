@@ -142,10 +142,10 @@
   font-size: var(--font-size-sm);
 }
 
-/* "Fechar o dia", boards: the drop zones above the board, and the card with its box. */
+/* "Fechar o dia", board: the drop zone above the board, and the card with its box. */
 .plan-drops {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-columns: minmax(0, 1fr);
   gap: var(--space-3);
   margin-top: var(--space-3);
 }

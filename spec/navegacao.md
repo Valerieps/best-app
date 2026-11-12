@@ -1,17 +1,17 @@
 # Navegação
 
-- **Entra aqui:** onde cada opção mora (barra lateral, cabeçalho da tela, ações do item), o menu "Rituais" e a fila de avisos.
+- **Entra aqui:** onde cada opção mora (barra lateral, painel da direita, cabeçalho da tela, ações do item), o menu "Rituais" e a fila de avisos.
 - **Não entra aqui:** o comportamento de cada tela (fica no arquivo da funcionalidade).
 
 Toda opção do app mora num de três níveis, e cada nível tem um lugar fixo, para eu saber onde procurar.
 
 ## 1. Global: a barra lateral, igual em toda tela
 
-- Tudo o que é global fica numa única barra lateral fixa, à esquerda. Não há barra de cima nem gaveta: o centro fica limpo para eu focar no trabalho. A área central é toda branca em toda tela, como no Obsidian, para dar a sensação de que tudo é área de trabalho *(1b)*. O rascunho é o `rascunhos/rascunho-barra-lateral_1.png`, mas dele vale só a barra lateral, e os itens são os desta lista.
+- Tudo o que é global fica numa única barra lateral fixa, à esquerda; à direita fica só o painel da direita, com alguns menus que eu quero ver ao lado da tela ("Painel da direita", abaixo). Não há barra de cima nem gaveta: o centro fica limpo para eu focar no trabalho. A área central é toda branca em toda tela, como no Obsidian, para dar a sensação de que tudo é área de trabalho *(1b)*. O rascunho é o `rascunhos/rascunho-barra-lateral_1.png`, mas dele vale só a barra lateral, e os itens são os desta lista.
 - O app ainda não tem versão para celular: a barra lateral é pensada para a tela do computador.
 - Eu posso recolher a barra lateral num botão no topo dela. Recolhida, ela vira uma faixa estreita com o botão de abrir e o ícone de cada lugar, que leva a ele; o nome aparece como dica no hover, e o contador de "Rituais" fica junto do ícone dele. Recolher e abrir é uma transição suave, e a área central acompanha *(1b)*. O app lembra se deixei a barra aberta ou recolhida. Aberta, eu posso arrastar a borda direita dela com o mouse para deixá-la mais larga ou mais estreita, e a área central encolhe ou cresce junto *(1b)*. A largura vai de 200 a 480 pixels, começa em 260, e um clique duplo na borda volta para ela. O app lembra a largura que escolhi.
 - No topo da barra fica o nome do app, "Vesper Tasks", que também é o título da aba do navegador. Clicar nele abre a nota do dia.
-- A barra lateral tem só lugares, em grupos, nesta ordem: Hoje (Hoje, Executar, próximos dias e Rituais); projetos, objetivos, hábitos; tarefas, Pessoas (`pessoas.md`) e Ideias (`ideias.md`); e, no rodapé, Dados e backup e Configurações. Os grupos não têm título: os títulos "Planejamento" e "Listas" saíram em 15/10/2026, e um espaço separa um grupo do outro. Cada lugar tem um ícone antes do nome, para eu achá-lo de relance.
+- A barra lateral tem só lugares, em grupos, nesta ordem: Hoje (Hoje, Fila de execução e Rituais); projetos, objetivos, hábitos; tarefas, Pessoas (`pessoas.md`) e Ideias (`ideias.md`); e, no rodapé, Dados e backup e Configurações. Os grupos não têm título: os títulos "Planejamento" e "Listas" saíram em 15/10/2026, e um espaço separa um grupo do outro. Cada lugar tem um ícone antes do nome, para eu achá-lo de relance.
 - "Hoje" volta para a nota do dia de qualquer tela.
 - Eu aperto Ctrl + K (⌘ + K no Mac) para ir a outro lugar sem o mouse *(1b)*. Abre uma caixinha no centro da tela com um campo; eu digito parte do nome e a lista mostra só os lugares da barra lateral que batem, sem ligar para maiúsculas nem acentos ("configuracoes" acha "Configurações"); os que começam com o que digitei vêm primeiro. As setas ↑/↓ mudam o lugar escolhido, Enter vai até ele, e Esc, um clique fora ou Ctrl + K de novo fecham a caixinha e me devolvem para onde eu estava. Ela só navega: não busca tarefas nem notas. O atalho vale em toda tela que tem a barra lateral, também no modo foco e no "Fechar o dia", e não em "Iniciar Dia". Com o cursor numa linha da nota do dia, Ctrl + K continua sendo o atalho de link da formatação (`nota-do-dia.md`, "Formatação"); fora dela, abre a caixinha.
 - "Rituais" é um lugar, como "Projetos": abre a tela "Rituais", com o calendário dos dias sem fechamento e os "Assistentes" (`assistentes.md`, "A tela Rituais"). A barra não abre mais uma lista de rituais. Um contador mostra os dias pendentes. Os endereços antigos das revisões e das reflexões, que saíram do app, abrem a tela "Rituais".
@@ -19,6 +19,16 @@ Toda opção do app mora num de três níveis, e cada nível tem um lugar fixo, 
 - Só um aviso aparece por vez no topo da tela, nesta ordem: backup bloqueado, com erro ou parado há mais de 24 horas, fechamento pendente, backup ainda não ativado. Quando um some, o próximo aparece. Os lembretes que voltaram ficam fora dessa fila e aparecem sempre, porque são o único sinal deles.
 - O aviso de fechamento pendente e o de backup não ativado têm "Lembrar depois", que os esconde até o dia seguinte. O contador de "Rituais" continua mostrando os dias pendentes. O aviso de backup bloqueado, com erro ou parado há mais de 24 horas não pode ser adiado.
 - Quando uma mudança não é salva, a tela volta ao que está salvo e um aviso curto aparece no rodapé, fora da fila do topo: "Uma mudança não foi salva. A tela mostra o que está salvo; tente de novo." Ele some sozinho depois de 8 segundos, ou antes, se eu fechar; com o mouse em cima, ou com o foco do teclado dentro dele, ele espera, e os 8 segundos recomeçam inteiros quando o mouse ou o foco saem. Se outra mudança falhar enquanto ele está na tela, ele conta as mudanças e os 8 segundos recomeçam.
+
+### Painel da direita *(1b)*
+
+- Na direita de toda tela que tem a barra lateral há uma faixa estreita com um ícone por menu, como a faixa da direita do Obsidian. Clicar num ícone abre aquele menu num painel ao lado da tela, e a área central encolhe junto; clicar de novo no mesmo ícone recolhe o painel. No topo da faixa, um botão abre e recolhe o painel, e Ctrl + Alt + B (⌘ + Option + B no Mac) faz o mesmo de qualquer tela; Ctrl + B continua sendo negrito na nota do dia.
+- Por enquanto o único menu é a "Fila de execução", inteira, como na tela (`prioridades.md`, "Fila de execução"). Ela continua também na barra lateral, para quando eu quero a tela cheia.
+- O painel começa recolhido, e o app lembra se deixei aberto e qual menu.
+- Aberto, eu posso arrastar a borda esquerda dele para deixá-lo mais largo ou mais estreito. A largura tem só um mínimo, de 280 pixels, e não tem máximo; começa em 360, e um clique duplo na borda volta para ela. O app lembra a largura que escolhi.
+- Na área central há um botão (ícone de coluna à esquerda) que a recolhe numa faixa estreita à esquerda; o painel da direita, se aberto, ocupa todo o espaço que sobrou. Se o painel também estiver recolhido, ficam só as duas faixas. Clicar de novo no botão da faixa reabre o centro, e o app lembra se deixei o centro recolhido.
+- O painel aparece em toda tela com a barra lateral, também no "Fechar o dia" e no modo foco. Quando o centro já mostra a mesma tela do menu, como a "Fila de execução", o painel fica recolhido e o ícone dela fica apagado, para a mesma tela não aparecer duas vezes.
+- Um link dentro do painel, como o nome de um projeto, abre no centro, e o painel continua aberto.
 
 ## 2. Da tela: um cabeçalho no topo do centro
 
@@ -34,5 +44,6 @@ Toda opção do app mora num de três níveis, e cada nível tem um lugar fixo, 
 ## 3. Do item: ações no hover
 
 - Ações de uma linha ou de um item aparecem quando passo o mouse por cima ou quando o cursor está na linha, como data, prazo e prioridade numa tarefa.
-- O que já está definido fica visível na própria linha, sem hover: a data de intenção e o prazo viram etiquetas, e clicar numa delas muda a data. A estrela é uma só: cheia, ela marca a prioridade do dia e fica sempre visível; vazia, aparece no hover e promove a tarefa. Finalizar é pelo checkbox, sem botão repetido.
+- O que já está definido fica visível na própria linha, sem hover: o prazo e, numa tarefa aguardando, a data para cobrar viram etiquetas, e clicar numa delas muda a data. A estrela é uma só: cheia, ela marca a prioridade do dia e fica sempre visível; vazia, aparece no hover e promove a tarefa. Finalizar é pelo checkbox, sem botão repetido.
+- Em qualquer tela, clicar no texto de uma tarefa (ou em "Detalhes" no hover, na nota do dia) abre uma janela por cima do app com todos os detalhes dela, e todos os campos são editáveis: texto, projeto, prazo máximo, data para cobrar (numa tarefa aguardando), aguardando, fila de execução e conclusão. Esc ou clicar fora fecha e salva o texto.
 - Uma linha vazia mostra uma dica de como criar tarefa enquanto eu escrevo nela.

@@ -1,92 +1,3 @@
-/* Activity map, GitHub style: one column per week, one row per day */
-.activity-map {
-  display: flex;
-  gap: var(--activity-gap);
-}
-
-.activity-map__week {
-  display: grid;
-  grid-template-rows: repeat(7, var(--activity-cell));
-  gap: var(--activity-gap);
-}
-
-.activity-map__day {
-  position: relative;
-  display: inline-block;
-  width: var(--activity-cell);
-  height: var(--activity-cell);
-  border-radius: 2px;
-}
-
-.activity-map__day--0 { background: var(--color-activity-0); }
-.activity-map__day--1 { background: var(--color-activity-1); }
-.activity-map__day--2 { background: var(--color-activity-2); }
-.activity-map__day--3 { background: var(--color-activity-3); }
-.activity-map__day--4 { background: var(--color-activity-4); }
-
-.activity-map__day--future {
-  background: transparent;
-}
-
-/* Hover detail: "07/10 · 1 nota, 2 tarefas finalizadas" */
-.activity-map__day[data-tip]:hover {
-  outline: 1px solid var(--color-text);
-}
-
-.activity-map__day[data-tip]:hover::after {
-  content: attr(data-tip);
-  position: absolute;
-  bottom: calc(100% + 6px);
-  left: 50%;
-  transform: translateX(-50%);
-  z-index: 10;
-  padding: 2px var(--space-2);
-  border-radius: var(--radius-sm);
-  background: var(--color-accent);
-  color: var(--color-accent-text);
-  font-size: var(--font-size-xs);
-  white-space: nowrap;
-  pointer-events: none;
-}
-
-.activity-map__week--end .activity-map__day[data-tip]:hover::after {
-  left: auto;
-  right: 0;
-  transform: none;
-}
-
-.activity-map__week:first-child .activity-map__day[data-tip]:hover::after,
-.activity-map__week:nth-child(2) .activity-map__day[data-tip]:hover::after {
-  left: 0;
-  transform: none;
-}
-
-.activity-legend {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--activity-gap);
-  font-size: var(--font-size-xs);
-  color: var(--color-text-muted);
-}
-
-.activity-legend .activity-map__day:first-of-type {
-  margin-left: var(--space-1);
-}
-
-.activity-legend .activity-map__day:last-of-type {
-  margin-right: var(--space-1);
-}
-
-@media (max-width: 900px) {
-  .priority-cards {
-    grid-template-columns: minmax(0, 1fr);
-  }
-
-  .priority-slot {
-    min-height: 64px;
-  }
-}
-
 @media (max-width: 640px) {
   .project-row {
     grid-template-columns: minmax(0, 1fr) auto;
@@ -659,6 +570,219 @@ select.line__action.active-tasks__project {
   display: flex;
 }
 
+/* The tasks table: a card with the count and the menus on top, headers that sort */
+.task-table__panel {
+  background: var(--color-surface);
+  border: var(--border-width) solid var(--color-border);
+  border-radius: var(--radius-lg);
+  padding: var(--space-4) var(--space-5);
+}
+
+.task-table__panel .active-tasks__controls {
+  align-items: center;
+}
+
+.task-table__count {
+  color: var(--color-text-muted);
+}
+
+.task-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.task-table__th {
+  text-align: left;
+  font-weight: 600;
+  white-space: nowrap;
+  padding: var(--space-2) var(--space-3);
+  border-bottom: var(--border-width) solid var(--color-border);
+}
+
+.task-table__th--check,
+.task-table__td--check {
+  width: 1%;
+  padding-right: 0;
+}
+
+.task-table__sort {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  border: none;
+  background: none;
+  padding: 0;
+  font: inherit;
+  font-weight: 600;
+  color: var(--color-text);
+  cursor: pointer;
+}
+
+.task-table__sort:hover {
+  color: var(--color-accent);
+}
+
+.task-table__td {
+  padding: var(--space-2) var(--space-3);
+  border-bottom: var(--border-width) solid var(--color-border);
+  vertical-align: middle;
+  color: var(--color-text-muted);
+  white-space: nowrap;
+}
+
+.task-table__td--text {
+  width: 100%;
+  white-space: normal;
+  color: var(--color-text);
+}
+
+.task-table__td--postponeCount {
+  text-align: right;
+}
+
+.task-table__row:hover {
+  background: var(--color-surface-soft);
+}
+
+.task-table__row:hover .active-tasks__actions,
+.task-table__row:focus-within .active-tasks__actions {
+  display: flex;
+}
+
+/* In a table row the highlight bar is drawn on the first cell. */
+.task-table__row.active-tasks__row--select {
+  border-left: none;
+}
+
+.task-table__row.active-tasks__row--on {
+  background: var(--color-select-bg);
+}
+
+.task-table__row.active-tasks__row--on > td:first-child {
+  box-shadow: inset var(--section-bar-width) 0 0 var(--color-accent);
+}
+
+.task-table__group-row > td {
+  padding: var(--space-3) 0 var(--space-1);
+  border-bottom: var(--border-width) solid var(--color-border);
+}
+
+.task-table__group-row .active-tasks__group-head {
+  margin-bottom: 0;
+}
+
+.task-table__empty {
+  margin: var(--space-3) var(--space-3) 0;
+}
+
+/* "Filtros" and "Colunas" */
+.table-menu__trigger {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+}
+
+.table-menu__trigger--on {
+  border-color: var(--color-accent);
+}
+
+.table-menu .dropdown__list {
+  padding: 0;
+  overflow: hidden;
+}
+
+.table-menu__panes {
+  display: flex;
+  min-width: 460px;
+  max-height: 420px;
+}
+
+.table-menu__categories {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: var(--space-2);
+  background: var(--color-hover);
+  min-width: 180px;
+}
+
+.table-menu__category {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border: none;
+  background: none;
+  border-radius: var(--radius-sm);
+  padding: var(--space-2) var(--space-3);
+  text-align: left;
+  color: var(--color-text);
+}
+
+.table-menu__category:hover,
+.table-menu__category--on {
+  background: var(--color-surface);
+}
+
+.table-menu__category--on {
+  font-weight: 600;
+}
+
+.table-menu__clear {
+  margin-top: auto;
+  padding: var(--space-2) var(--space-3);
+  text-align: left;
+  font-size: var(--font-size-sm);
+}
+
+.table-menu__options {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  padding: var(--space-2);
+  overflow-y: auto;
+}
+
+.table-menu__heading {
+  margin: var(--space-1) var(--space-3) var(--space-2);
+  font-size: var(--font-size-xs);
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--color-text-muted);
+}
+
+.table-menu__option {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin: 0;
+  border: none;
+  background: none;
+  border-radius: var(--radius-sm);
+  padding: var(--space-2) var(--space-3);
+  text-align: left;
+  color: var(--color-text);
+}
+
+button.table-menu__option:hover {
+  background: var(--color-surface-soft);
+}
+
+.table-menu__option[aria-checked='true'] {
+  font-weight: 600;
+}
+
+.table-menu__option--locked {
+  color: var(--color-text-muted);
+  cursor: default;
+}
+
+.table-menu__mark {
+  display: inline-flex;
+  width: 16px;
+  color: var(--color-accent);
+}
+
 .line__action.active-tasks__abandon--confirm,
 .active-tasks__batch .active-tasks__abandon--confirm {
   color: var(--color-warning-text);
@@ -912,49 +1036,63 @@ button:not(.link, .day-part__handle):active:not(:disabled) {
   padding: 0 0.3em;
 }
 
-/* Mark of a task chosen as one of its project's next steps. */
-.chip--next {
-  background: var(--color-accent);
-  color: var(--color-accent-text);
-}
-
-/* "Executar": the day's priorities, what is due, the deadlines coming and the next steps */
-.execute__group + .execute__group {
-  margin-top: var(--space-5);
-}
-
-.execute__title {
-  display: flex;
-  align-items: center;
-  gap: var(--space-2);
-  font-size: var(--font-size-md);
-  font-weight: 600;
-  margin: 0 0 var(--space-2);
-}
-
-.execute__controls {
-  display: flex;
-  align-items: center;
-  gap: var(--space-2);
-  margin-bottom: var(--space-2);
-}
-
-.execute__project + .execute__project {
-  margin-top: var(--space-3);
-}
-
-.execute__project-name {
+/* "Fila de execução": a handle to reorder, and the project quiet under the task */
+.task-row__handle {
+  color: var(--color-text-muted);
   font-size: var(--font-size-sm);
-  font-weight: 600;
-  margin: 0 0 var(--space-1);
+  cursor: grab;
+  touch-action: none;
+  user-select: none;
+  visibility: hidden;
 }
 
-.execute__project-name a {
-  color: var(--color-text);
+.card-list__item:hover .task-row__handle,
+.task-row--dragging .task-row__handle {
+  visibility: visible;
 }
 
-.execute__due-today {
-  display: inline-flex;
-  align-items: center;
-  color: var(--color-danger);
+.task-row--dragging {
+  opacity: 0.5;
+}
+
+.task-row--dragging .task-row__handle {
+  cursor: grabbing;
+}
+
+.task-row--drop-before,
+.task-row--drop-after {
+  position: relative;
+}
+
+.task-row--drop-before::before,
+.task-row--drop-after::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 2px;
+  border-radius: var(--radius-pill);
+  background: var(--color-focus);
+  pointer-events: none;
+}
+
+.task-row--drop-before::before {
+  top: -1px;
+}
+
+.task-row--drop-after::after {
+  bottom: -1px;
+}
+
+.task-row__project {
+  display: block;
+  margin-top: 2px;
+  padding-left: calc(var(--space-4) + var(--space-3) * 2);
+  font-size: var(--font-size-xs);
+  color: var(--color-text-muted);
+  text-decoration: none;
+}
+
+.task-row__project:hover {
+  text-decoration: underline;
 }

@@ -1,3 +1,4 @@
+import { openTaskDetails } from '../taskDetails/taskDetailsStore';
 import { useCallback, useContext, useEffect, useLayoutEffect, useRef, useState, type ClipboardEvent, type KeyboardEvent, type MouseEvent, type PointerEvent, type ReactNode } from 'react';
 import { detectKind } from '../../domain/blockKind';
 import type { DayKey } from '../../domain/day';
@@ -59,8 +60,8 @@ export interface LineHandlers {
   onSetDate(block: Block, date: DayKey | null): void;
   onSetDeadline(block: Block, date: DayKey | null): void;
   onTogglePriority(block: Block, on: boolean): void;
-  /** Marks or unmarks "Próximo", a next step of the task's project. Absent hides the action. */
-  onToggleNext?(block: Block, on: boolean): void;
+  /** "Adicionar à fila" (spec/prioridades.md, "Fila de execução"). Absent hides the action. */
+  onAddToQueue?(block: Block): void;
   /** Takes an active task out of circulation (trash icon, confirmed with a second click). Absent hides the action. */
   onAbandon?(block: Block): void;
   /** Alt + ↑/↓: moves the line inside its group (request 2). Absent where lines keep their order. */
@@ -96,15 +97,13 @@ interface Props {
   day: DayKey | null;
   today: DayKey;
   isPriority: boolean;
-  /** Marked "Próximo" in its project (spec/prioridades.md, "Próximos passos"). */
-  isNext?: boolean;
+  /** In the "Fila de execução": the action shows "Na fila", disabled. */
+  isQueued?: boolean;
   /** False when looking at a past day: Enter does not create lines there. */
   allowNewLines: boolean;
   handlers: LineHandlers;
   /** More metadata before the dates, like "adiada 3×" on the project page. */
   extraMeta?: ReactNode;
-  /** The intended date is shown elsewhere, like the project agenda's date block: no chip, only the hover shortcut. */
-  hideDate?: boolean;
   drag?: LineDragProps;
   /** Part of the lines selected together (spec/nota-do-dia.md, "Selecionar várias linhas"). */
   selected?: boolean;
@@ -170,7 +169,7 @@ export function DatePicker({
   );
 }
 
-export function BlockLine({ block, free, day, today, isPriority, isNext = false, allowNewLines, handlers, extraMeta, hideDate = false, drag, selected = false, notesOnly = false }: Props) {
+export function BlockLine({ block, free, day, today, isPriority, isQueued = false, allowNewLines, handlers, extraMeta, drag, selected = false, notesOnly = false }: Props) {
   const ref = useRef<HTMLTextAreaElement>(null);
   const [text, setText] = useState(block.text);
   const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -513,11 +512,12 @@ export function BlockLine({ block, free, day, today, isPriority, isNext = false,
   const ideaOutcome = isIdea && block.ideaStatus === 'becameProject' ? 'virou projeto' : isIdea && block.ideaStatus === 'dropped' ? 'largada' : null;
   const done = isTask && block.status === 'done';
   const open = isTask && block.status === 'active';
-  // Something a person owes me: its date is the day to follow up (spec/pessoas.md).
+  // Something a person owes me: its date is the day to follow up (spec/pessoas.md). A task of
+  // mine has no intended date any more, only the deadline (ADR-072).
   const waiting = isTask && block.waiting === true;
   const deadline = block.deadline ?? null;
-  const showDate = isTask && !hideDate && block.intendedDate !== null && block.intendedDate !== day;
-  const dateLabel = showDate ? `${waiting ? 'cobrar ' : ''}${relativeDay(block.intendedDate!, today)}` : '';
+  const showDate = waiting && block.intendedDate !== null && block.intendedDate !== day;
+  const dateLabel = showDate ? `cobrar ${relativeDay(block.intendedDate!, today)}` : '';
   const deadlineLabel = deadline ? `prazo ${relativeDay(deadline, today)}` : '';
   const pickDate = (label: string, className: string, children: string, clearLabel?: string) => (
     <DatePicker
@@ -550,7 +550,7 @@ export function BlockLine({ block, free, day, today, isPriority, isNext = false,
     </button>
   );
   const convertible = block.kind === 'note' && free && !notesOnly;
-  const hasActions = open || convertible;
+  const hasActions = isTask || convertible;
 
   const structure = parseLine(text);
   const prefixLength = structure.list ? structure.prefixLength : 0;
@@ -685,13 +685,8 @@ export function BlockLine({ block, free, day, today, isPriority, isNext = false,
         {extraMeta}
         {waiting && <span className="chip chip--waiting">aguardando</span>}
         {ideaOutcome && <span className="chip chip--muted">{ideaOutcome}</span>}
-        {isNext && open && <span className="chip chip--next" title="Um dos próximos passos do projeto">próximo</span>}
         {showDate &&
-          (open
-            ? waiting
-              ? pickDate('Mudar a data para cobrar', 'line__chip', dateLabel, 'Tirar a data para cobrar')
-              : pickDate('Mudar a data de intenção', 'line__chip', dateLabel, 'Tirar a data de intenção')
-            : <span className="muted">{dateLabel}</span>)}
+          (open ? pickDate('Mudar a data para cobrar', 'line__chip', dateLabel, 'Tirar a data para cobrar') : <span className="muted">{dateLabel}</span>)}
         {deadline &&
           (open ? pickDeadline('Mudar o prazo máximo', 'line__chip', deadlineLabel, 'Tirar o prazo máximo') : <span className="chip chip--muted">{deadlineLabel}</span>)}
       </span>
@@ -702,21 +697,24 @@ export function BlockLine({ block, free, day, today, isPriority, isNext = false,
       {hasActions && (
         <span className="line__tail">
           <span className="line__actions">
+            {isTask && (
+              <button type="button" className="line__action" title="Ver e editar todos os detalhes da tarefa" onClick={() => openTaskDetails(block.id)}>
+                Detalhes
+              </button>
+            )}
             {open && !waiting && !isPriority && starButton()}
-            {open && !waiting && block.projectId !== null && handlers.onToggleNext && (
+            {open && isTask && !waiting && handlers.onAddToQueue && (
               <button
                 type="button"
                 className="line__action"
-                title={isNext ? 'Tirar dos próximos passos do projeto' : 'Marcar como um dos próximos passos do projeto'}
-                aria-pressed={isNext}
-                onClick={() => handlers.onToggleNext?.(block, !isNext)}
+                disabled={isQueued}
+                title={isQueued ? 'Já está na fila de execução' : 'Adicionar ao fim da fila de execução'}
+                onClick={() => handlers.onAddToQueue?.(block)}
               >
-                {isNext ? 'Não é próximo' : 'Próximo'}
+                {isQueued ? 'Na fila' : 'Adicionar à fila'}
               </button>
             )}
-            {open && !showDate && (waiting
-              ? pickDate('Data para cobrar', 'line__action', 'Cobrar')
-              : pickDate(hideDate ? 'Mudar a data de intenção' : 'Data de intenção', 'line__action', 'Data'))}
+            {open && waiting && !showDate && pickDate('Data para cobrar', 'line__action', 'Cobrar')}
             {open && !waiting && !deadline && pickDeadline('Prazo máximo', 'line__action', 'Prazo')}
             {open && handlers.onSetWaiting && (
               <button

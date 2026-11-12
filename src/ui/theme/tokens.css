@@ -94,14 +94,6 @@
   --color-status3-border: var(--color-danger-border);
   --color-status3-strong: var(--color-danger);
 
-  /* Activity map of the projects: empty, then four tints of the project lilac */
-  --color-activity-0: #ebe8e1;
-  --color-activity-1: #d9d3f7;
-  --color-activity-2: #b0a5ec;
-  --color-activity-3: #7f71dc;
-  --color-activity-4: #4b3fb3;
-  --activity-cell: 10px;
-  --activity-gap: 2px;
 
   /* Fireworks */
   --color-firework-1: #e8a33d;
@@ -144,6 +136,7 @@
   --topbar-height: 56px;
   --sidebar-width: 260px;
   --sidebar-collapsed-width: 48px;
+  --right-panel-width: 360px;
   --project-panel-width: 260px;
 
   /* Motion: short transitions where the screen changes state (issue #120), off with reduced motion */
@@ -224,12 +217,6 @@
     --color-status2-border: #64401f;
     --color-status2-strong: #f09a55;
 
-    /* Activity map: from the empty cell up to the lightest lilac, so more activity stands out more */
-    --color-activity-0: #2a2830;
-    --color-activity-1: #3b3566;
-    --color-activity-2: #5a4fa3;
-    --color-activity-3: #8478d9;
-    --color-activity-4: #b3a8f7;
   }
 }
 
@@ -300,10 +287,4 @@
   --color-status2-border: #64401f;
   --color-status2-strong: #f09a55;
 
-  /* Activity map: from the empty cell up to the lightest lilac, so more activity stands out more */
-  --color-activity-0: #2a2830;
-  --color-activity-1: #3b3566;
-  --color-activity-2: #5a4fa3;
-  --color-activity-3: #8478d9;
-  --color-activity-4: #b3a8f7;
 }

@@ -1,13 +1,10 @@
 import {
   findDuplicateProjects,
-  findForgottenTasks,
   findWhiteboardGroups,
-  normalizeForgottenTaskDays,
   type DuplicateGroup,
   type WhiteboardGroup,
 } from '../domain/assistants';
 import { assistantCards, oldestDay, type AssistantCard } from '../domain/cleanupStatus';
-import { planningColumnOf, planningColumns, type PlanningColumn } from '../domain/checkoutSteps';
 import { addDays, fromDayKey, toDayKey, type DayKey } from '../domain/day';
 import { buildDayNote, type DayNoteSection } from '../domain/dayNote';
 import type {
@@ -31,9 +28,9 @@ import { weekOf } from '../domain/week';
 import { comparePositions } from '../domain/position';
 import { buildDayPriorities, dayPriorityListId, type DayPriority } from '../domain/priorities';
 import { FOCUS_LIST_ID, focusProjectIds, hasFreeSlot } from '../domain/focusProjects';
-import { nextStepIds, nextStepsListId } from '../domain/nextSteps';
+import { QUEUE_LIST_ID, queueIds } from '../domain/executionQueue';
 import { activityByDay, lastActivityDay, recentlyFinished, stalledDays, type ActivityByDay } from '../domain/projectActivity';
-import { isDaySection, isStuckTask } from '../domain/projectPage';
+import { isDaySection } from '../domain/projectPage';
 import { buildPeopleOverview, buildPersonPage, meetingPeople, type PeopleOverview, type PersonPage } from '../domain/people';
 import { buildDayTriage, findPendingDays, isTriagePending, type DayTriage } from '../domain/triage';
 import type { Reader } from './ports';
@@ -211,49 +208,6 @@ export function notesOfProject(kept: readonly SectionNotes[], projectId: string)
     .filter((entry) => entry.notes.length > 0);
 }
 
-export interface PlanningView {
-  target: DayKey;
-  /** The board's columns (`planningColumns`), each with its tasks. */
-  columns: { column: PlanningColumn; items: TaskListItem[] }[];
-}
-
-/**
- * The planning step of the checkout, as a board: the late tasks, today when it has tasks, and the
- * target day with the days after it. Tasks without a date, or dated after the last column, stay
- * out. The late ones go from the oldest date, and the tasks of the projects in focus come first
- * in each column, in the order of the projects (spec/prioridades.md, "Projetos em foco").
- * `exclude` leaves out tasks shown elsewhere (the triage of the day), and `late: false` leaves
- * out the late tasks and their column. `columns` is how many columns of days, three by default.
- */
-export async function loadPlanning(
-  reader: Reader,
-  target: DayKey,
-  today: DayKey,
-  options: { exclude?: ReadonlySet<string>; late?: boolean; columns?: number } = {},
-): Promise<PlanningView> {
-  const { exclude, late = true, columns: count } = options;
-  const items = (await loadActiveTasks(reader)).filter(
-    (item) => !exclude?.has(item.task.id) && (late || item.task.intendedDate === null || item.task.intendedDate >= today),
-  );
-  const focusIds = await loadFocusProjectIds(reader, await reader.projects());
-  const rank = (item: TaskListItem) => {
-    const index = item.task.projectId ? focusIds.indexOf(item.task.projectId) : -1;
-    return index === -1 ? focusIds.length : index;
-  };
-  // A stable sort keeps the usual order inside each project.
-  const focusFirst = (list: TaskListItem[]) => list.map((item, index) => ({ item, index })).sort((a, b) => rank(a.item) - rank(b.item) || a.index - b.index).map(({ item }) => item);
-  const activeDays = (await reader.settings())?.activeDays;
-  const columns = planningColumns(items.map((item) => item.task.intendedDate), today, target, count, activeDays);
-  const byDate = (a: TaskListItem, b: TaskListItem) => ((a.task.intendedDate ?? '') < (b.task.intendedDate ?? '') ? -1 : a.task.intendedDate === b.task.intendedDate ? 0 : 1);
-  return {
-    target,
-    columns: columns.map((column, index) => {
-      const list = focusFirst(items.filter((item) => planningColumnOf(item.task.intendedDate, columns, today) === index));
-      return { column, items: column.kind === 'late' ? [...list].sort(byDate) : list };
-    }),
-  };
-}
-
 /** The day's priorities: chosen by hand plus tasks whose deadline is the day (1b). */
 export async function loadDayPriorities(reader: Reader, day: DayKey): Promise<DayPriority[]> {
   const list = await reader.priorityList(dayPriorityListId(day));
@@ -282,8 +236,6 @@ export async function loadCleanup(reader: Reader): Promise<CleanupView> {
 
 export interface CleanupDashboard extends CleanupView {
   pendingDays: DayKey[];
-  /** "Tarefas esquecidas", the oldest first, with where each one came from. */
-  forgottenTasks: TaskListItem[];
   /** One card per assistant, most urgent first. */
   cards: AssistantCard[];
 }
@@ -293,12 +245,6 @@ export async function loadCleanupDashboard(reader: Reader, today: DayKey): Promi
   const cleanup = await loadCleanup(reader);
   const pendingDays = await loadPendingDays(reader, today);
   const settings = await reader.settings();
-  const forgotten = findForgottenTasks(
-    await reader.tasksWithStatus('active'),
-    today,
-    normalizeForgottenTaskDays(settings?.forgottenTaskDays),
-  );
-  const forgottenTasks = await withOrigins(reader, forgotten);
   const findings = {
     pendingDays: { count: pendingDays.length, oldest: oldestDay(pendingDays) },
     whiteboards: {
@@ -310,13 +256,8 @@ export async function loadCleanupDashboard(reader: Reader, today: DayKey): Promi
       count: cleanup.duplicates.length,
       oldest: oldestDay(cleanup.duplicates.map((group) => group.projects[1] && toDayKey(new Date(group.projects[1].createdAt)))),
     },
-    // Colored by how many there are (COUNTED_ASSISTANTS); the age still shows on the card.
-    forgottenTasks: {
-      count: forgotten.length,
-      oldest: forgotten[0] ? toDayKey(new Date(forgotten[0].createdAt)) : null,
-    },
   };
-  return { ...cleanup, pendingDays, forgottenTasks, cards: assistantCards(findings, today, settings?.cleanupAgeLimits) };
+  return { ...cleanup, pendingDays, cards: assistantCards(findings, today, settings?.cleanupAgeLimits) };
 }
 
 export interface MenuCounts {
@@ -346,8 +287,8 @@ export async function loadFocusProjectIds(reader: Reader, projects: readonly Pro
 export interface TaskListContext {
   activeProjects: Project[];
   focusIds: string[];
-  /** Ids of the tasks marked "Próximo", across projects (spec/prioridades.md, "Próximos passos"). */
-  nextStepIds: string[];
+  /** Ids of the tasks in the "Fila de execução" (spec/prioridades.md). */
+  queueIds: string[];
 }
 
 export async function loadTaskListContext(reader: Reader): Promise<TaskListContext> {
@@ -357,27 +298,38 @@ export async function loadTaskListContext(reader: Reader): Promise<TaskListConte
       .filter((project) => project.status === 'active')
       .sort((a, b) => a.name.localeCompare(b.name, 'pt-BR', { sensitivity: 'base' })),
     focusIds: await loadFocusProjectIds(reader, projects),
-    nextStepIds: await loadAllNextStepIds(reader, await myActiveTasks(reader)),
+    queueIds: await loadQueueIds(reader),
   };
 }
 
-/** What the "Executar" screen needs (spec/prioridades.md, "Tela \"Executar\""). */
-export interface ExecuteData extends TaskListContext {
-  priorities: DayPriority[];
-  /** My open tasks, by intended date then creation. */
+/** Everything the task details window shows for one task; null when the task no longer exists. */
+export interface TaskDetails extends TaskListContext {
+  item: TaskListItem;
+}
+
+export async function loadTaskDetails(reader: Reader, taskId: string): Promise<TaskDetails | null> {
+  const [task] = await reader.blocksByIds([taskId]);
+  if (!task || task.kind !== 'task') return null;
+  const [item] = await withOrigins(reader, [task]);
+  return { ...(await loadTaskListContext(reader)), item };
+}
+
+/** What the "Fila de execução" needs (spec/prioridades.md, "Fila de execução"). */
+export interface ExecutionQueueData extends TaskListContext {
+  /** The tasks in the queue, in its order. */
   items: TaskListItem[];
 }
 
-export async function loadExecute(reader: Reader, today: DayKey): Promise<ExecuteData> {
-  const priorities = await loadDayPriorities(reader, today);
-  const items = await loadActiveTasks(reader);
-  return { ...(await loadTaskListContext(reader)), priorities, items };
+export async function loadExecutionQueue(reader: Reader): Promise<ExecutionQueueData> {
+  const tasks = await myActiveTasks(reader);
+  const byId = new Map(tasks.map((task) => [task.id, task]));
+  const ids = queueIds(await reader.priorityList(QUEUE_LIST_ID), tasks);
+  return { ...(await loadTaskListContext(reader)), items: await withOrigins(reader, ids.map((id) => byId.get(id)!)) };
 }
 
-/** The valid next steps of every project, given the open tasks. */
-async function loadAllNextStepIds(reader: Reader, tasks: Block[]): Promise<string[]> {
-  const lists = await reader.priorityListsBetween(nextStepsListId(''), `${nextStepsListId('')}￿`);
-  return lists.flatMap((list) => nextStepIds(list, tasks, list.id.slice(nextStepsListId('').length)));
+/** Ids of the tasks in the "Fila de execução", for the "Adicionar à fila" action elsewhere. */
+export async function loadQueueIds(reader: Reader): Promise<string[]> {
+  return queueIds(await reader.priorityList(QUEUE_LIST_ID), await myActiveTasks(reader));
 }
 
 /** What the "⋯" of a project offers about the focus, in the list and on its page. */
@@ -405,7 +357,6 @@ export interface ProjectListItem extends ProjectActions {
   project: Project;
   objective: Objective | null;
   activeTasks: number;
-  stuckTasks: number;
   finishedLastTwoWeeks: number;
   lastActivityDay: DayKey | null;
   /** Days without activity when the project is stalled; null otherwise. */
@@ -420,7 +371,7 @@ export interface ProjectListView {
   others: ProjectListItem[];
   finished: ProjectListItem[];
   /** "4 ativos · 1 parado · 3 travadas" */
-  summary: { active: number; stalled: number; stuck: number };
+  summary: { active: number; stalled: number };
   /** Whether "Outros ativos" and "Finalizados" are open, from the settings. */
   open: Record<ProjectListGroup, boolean>;
   objectives: Objective[];
@@ -454,7 +405,7 @@ export async function loadActivities(reader: Reader, projects: readonly Project[
   });
 }
 
-/** The project list (section 2): where projects are followed, with their activity maps. */
+/** The project list (section 2): where projects are followed. */
 export async function loadProjectList(reader: Reader, today: DayKey): Promise<ProjectListView> {
   const projects = (await reader.projects()).filter((project) => project.status !== 'merged');
   const objectives = await reader.objectives();
@@ -466,7 +417,6 @@ export async function loadProjectList(reader: Reader, today: DayKey): Promise<Pr
       project,
       objective: objectives.find((objective) => objective.id === project.objectiveId) ?? null,
       activeTasks: active.length,
-      stuckTasks: active.filter((task) => isStuckTask(task, today)).length,
       finishedLastTwoWeeks: recentlyFinished(activity, today),
       lastActivityDay: lastActivityDay(activity, today),
       stalledDays,
@@ -490,7 +440,6 @@ export async function loadProjectList(reader: Reader, today: DayKey): Promise<Pr
     summary: {
       active: active.length,
       stalled: active.filter((item) => item.stalledDays !== null).length,
-      stuck: active.reduce((sum, item) => sum + item.stuckTasks, 0),
     },
     open: { ...PROJECT_LIST_GROUPS_OPEN, ...settings?.projectListGroups },
     objectives,
@@ -506,8 +455,6 @@ export interface ProjectView extends ProjectActions {
   notes: SectionNotes[];
   /** Day-note sections linked to the project. */
   sections: number;
-  /** The tasks marked "Próximo" (up to 3, in the order marked), still open and in the project. */
-  nextStepIds: string[];
   /** The project's ideas without a destination, oldest first (spec/ideias.md). */
   ideas: Block[];
 }
@@ -528,7 +475,6 @@ export async function loadProject(reader: Reader, projectId: string): Promise<Pr
     doneTasks: await withOrigins(reader, done),
     notes: notesOfProject(kept, projectId),
     sections: sections.length,
-    nextStepIds: nextStepIds(await reader.priorityList(nextStepsListId(projectId)), tasks, projectId),
     ideas: sortIdeas(blocks.filter(isOpenIdea)),
     ...projectActions(project, priorityIds, projects),
   };

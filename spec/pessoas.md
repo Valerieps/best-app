@@ -1,7 +1,7 @@
 # Pessoas
 
 - **Entra aqui:** a pessoa, a menção com `@`, a tarefa aguardando e a data para cobrar, a tela "Pessoas" e a página da pessoa. Vale a partir da fase 2.
-- **Não entra aqui:** onde "Pessoas" fica na barra lateral (`navegacao.md`), a tarefa em si e a data de intenção (`tarefas.md`), e o que o "Fechar o dia" faz com uma tarefa aguardando (`checkout.md`, "Destinos").
+- **Não entra aqui:** onde "Pessoas" fica na barra lateral (`navegacao.md`), a tarefa em si e o fim da data de intenção (`tarefas.md`), e o que o "Fechar o dia" faz com uma tarefa aguardando (`checkout.md`, "Destinos").
 
 ## Pessoa e menção
 
@@ -20,10 +20,10 @@
 ## Aguardando
 
 - Uma tarefa aguardando é algo que a pessoa me deve. Eu crio uma começando a linha com `[a]` e espaço (a de aguardando), como o `[]` da tarefa comum, ou marco uma tarefa já escrita com "Aguardando", no hover.
-- Ela tem uma data para cobrar, que é a data de intenção dela. Na data para cobrar, ela aparece na nota do dia.
+- Ela tem uma data para cobrar. Na data para cobrar, ela aparece na nota do dia. A data para cobrar continuou quando a data de intenção das minhas tarefas saiu (`tarefas.md`), e é a única data que a página da pessoa mostra. *(decidido pelo agente; veja a issue #164)*
 - Sem data para cobrar, ela passa pelo "Fechar o dia" (`checkout.md`). No dia da data para cobrar, se ainda não chegou, ela também passa.
-- Mudar a data para cobrar não conta como adiamento, e ela não entra nas métricas da precisão da data de intenção nem na tarefa travada.
-- Ela não entra na lista de tarefas, no planejamento do dia seguinte nem nas prioridades do dia: aparece na página da pessoa, na tela "Pessoas" e na nota do dia da data para cobrar.
+- Mudar a data para cobrar não conta como adiamento, e ela não entra nas métricas da precisão da data de intenção.
+- Ela não entra na lista de tarefas, na fila de execução nem nas prioridades do dia: aparece na página da pessoa, na tela "Pessoas" e na nota do dia da data para cobrar.
 - Quando a pessoa entrega, eu concluo pelo checkbox, e acontece o mesmo que com uma tarefa concluída.
 
 ## Tela "Pessoas"

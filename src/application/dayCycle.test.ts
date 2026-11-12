@@ -16,8 +16,11 @@ import {
   linkSectionToProject,
   setSectionTitle,
   setTaskDone,
+  setTaskWaiting,
   splitBlock,
 } from './notebook';
+import { setIntendedDate } from './dayTools';
+import { addToQueue } from './executionQueue';
 import { createProject } from './projects';
 import {
   loadActiveTasks,
@@ -25,6 +28,7 @@ import {
   loadDayTriage,
   loadPendingDays,
   loadPendingTriages,
+  loadQueueIds,
   loadSectionNotes,
 } from './queries';
 
@@ -239,6 +243,32 @@ describe('day cycle', () => {
     expect((await loadActiveTasks(reader)).map((item) => [item.task.id, item.task.intendedDate])).toEqual([[a.id, null]]);
     expect((await db.blocks.get(b.id))?.status).toBe('abandoned');
     expect((await loadDayNote(reader, SUNDAY)).entries[0].blocks.map((block) => block.id)).toEqual([a.id]);
+  });
+
+  it('"colocar na fila" puts the task at the end of the queue and clears its date, without postponing', async () => {
+    const { ctx, reader, db } = createTestContext();
+    const first = await createBlock(ctx, { sectionId: null, position: nextPosition() }, '[] Já na fila');
+    const dated = await createBlock(ctx, { sectionId: first.sectionId, position: nextPosition() }, '[] Para a fila');
+    const left = await createBlock(ctx, { sectionId: first.sectionId, position: nextPosition() }, '[] Fica no projeto');
+    const waiting = await createBlock(ctx, { sectionId: first.sectionId, position: nextPosition() }, '[] Resposta da Ana');
+    await addToQueue(ctx, first.id);
+    await setIntendedDate(ctx, dated.id, SUNDAY);
+    await setTaskWaiting(ctx, waiting.id, true);
+
+    await applyTriage(ctx, SUNDAY, {
+      ...noDecisions(),
+      tasks: new Map<string, TaskDecision>([
+        [dated.id, { kind: 'queue' }],
+        [left.id, { kind: 'undate', untouched: true }],
+        // A waiting task is not mine to do: it never goes into the queue.
+        [waiting.id, { kind: 'queue' }],
+      ]),
+    });
+
+    expect(await loadQueueIds(reader)).toEqual([first.id, dated.id]);
+    expect(await db.blocks.get(dated.id)).toMatchObject({ status: 'active', intendedDate: null, postponeCount: 0, lastTriagedDay: SUNDAY });
+    expect(await db.blocks.get(left.id)).toMatchObject({ status: 'active', intendedDate: null, lastTriagedDay: SUNDAY });
+    expect(await db.events.where('type').equals('task.postponed').count()).toBe(0);
   });
 
   it('closes pending days: tasks lose their date and count as postponed, notes are kept', async () => {

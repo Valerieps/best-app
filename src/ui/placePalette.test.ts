@@ -6,10 +6,10 @@ const labels = (query: string, features = off) => filterPlaces(palettePlaces(fea
 
 describe('place palette', () => {
   it('lists the sidebar places in order, with objectives and habits only when on', () => {
-    expect(labels('')).toEqual(['Hoje', 'Executar', 'Rituais', 'Projetos', 'Tarefas', 'Pessoas', 'Ideias', 'Dados e backup', 'Configurações']);
+    expect(labels('')).toEqual(['Hoje', 'Fila de execução', 'Rituais', 'Projetos', 'Tarefas', 'Pessoas', 'Ideias', 'Dados e backup', 'Configurações']);
     expect(labels('', { objectives: true, habits: true })).toEqual([
       'Hoje',
-      'Executar',
+      'Fila de execução',
       'Rituais',
       'Projetos',
       'Objetivos',
@@ -30,7 +30,8 @@ describe('place palette', () => {
 
   it('finds a part of the name, names starting with it first', () => {
     expect(labels('backup')).toEqual(['Dados e backup']);
-    expect(labels('ta')).toEqual(['Tarefas', 'Executar']);
+    expect(labels('ta')).toEqual(['Tarefas']);
+    expect(labels('fila')).toEqual(['Fila de execução']);
     expect(labels('p')).toEqual(['Projetos', 'Pessoas', 'Dados e backup']);
     expect(labels('xyz')).toEqual([]);
   });

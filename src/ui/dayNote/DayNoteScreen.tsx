@@ -25,11 +25,12 @@ import {
   pasteLines,
 } from '../../application/notebook';
 import { chainedPositions } from './paste';
-import { moveDayPriority, setDayPriority, setDeadline, setIntendedDate } from '../../application/dayTools';
+import { setDayPriority, setDeadline, setIntendedDate } from '../../application/dayTools';
 import { ensurePeople } from '../../application/people';
 import { usePeople } from '../people/PeopleContext';
 import { setDayNoteFocus } from '../../application/settings';
-import { loadDayNote, loadDayPriorities } from '../../application/queries';
+import { loadDayNote, loadDayPriorities, loadQueueIds } from '../../application/queries';
+import { addToQueue } from '../../application/executionQueue';
 import { detectKind } from '../../domain/blockKind';
 import type { DayKey } from '../../domain/day';
 import type { DayNoteSection } from '../../domain/dayNote';
@@ -177,6 +178,7 @@ export function DayNoteScreen({
   const view = useLiveQuery(() => loadDayNote(reader, day, today), [day, today]);
   const prioritiesDay = focus ? focus.day : today;
   const priorities = useLiveQuery(() => loadDayPriorities(reader, prioritiesDay), [prioritiesDay]) ?? [];
+  const queueIds = new Set(useLiveQuery(() => loadQueueIds(reader)) ?? []);
   const [pinned, setPinned] = usePinnedPriorities();
   const [collapsedParts, toggleCollapsedPart] = useCollapsedParts();
   // The arrows page only through days that still have pending items (1b).
@@ -536,6 +538,7 @@ export function DayNoteScreen({
     onSetDate: (block, date) => write(() => setIntendedDate(ctx, block.id, date)),
     onSetDeadline: (block, date) => write(() => setDeadline(ctx, block.id, date)),
     onTogglePriority: (block, on) => write(() => setDayPriority(ctx, block.id, on)),
+    onAddToQueue: (block) => write(() => addToQueue(ctx, block.id)),
     onMove: (block, direction) => {
       const slot = slotOf(block);
       if (slot) reorder(slot, moveByOne(groupOf(slot).ids, block.id, direction));
@@ -674,8 +677,8 @@ export function DayNoteScreen({
       onTogglePin={isToday && !focus ? () => setPinned(!pinned) : undefined}
       onToggleDone={(taskId, done) => write(() => setTaskDone(ctx, taskId, done))}
       onDemote={(taskId) => write(() => setDayPriority(ctx, taskId, false))}
-      onMoveDate={(taskId, date) => write(() => moveDayPriority(ctx, taskId, date))}
       onSetDeadline={(taskId, date) => write(() => setDeadline(ctx, taskId, date))}
+      queue={{ ids: queueIds, onAdd: (taskId) => write(() => addToQueue(ctx, taskId)) }}
       trailing={focusButton(PRIORITIES_PART, 'nas prioridades do dia')}
     />
   );
@@ -711,6 +714,7 @@ export function DayNoteScreen({
               block={block}
               free={false}
               isPriority={priorityIds.has(block.id)}
+              isQueued={queueIds.has(block.id)}
               drag={dragProps(entry, true, block, index)}
               selected={selectedIds.has(block.id)}
               {...lineProps}
@@ -752,6 +756,7 @@ export function DayNoteScreen({
             block={block}
             free={isFree(block)}
             isPriority={priorityIds.has(block.id)}
+            isQueued={queueIds.has(block.id)}
             drag={dragProps(entry, false, block, index)}
             selected={selectedIds.has(block.id)}
             {...lineProps}

@@ -13,7 +13,7 @@ export interface PalettePlace {
 export function palettePlaces(features: { objectives: boolean; habits: boolean }): PalettePlace[] {
   return [
     { key: 'day', label: 'Hoje', icon: 'sun', route: { name: 'day' } },
-    { key: 'execute', label: 'Executar', icon: 'bolt', route: { name: 'execute' } },
+    { key: 'execute', label: 'Fila de execução', icon: 'bolt', route: { name: 'execute' } },
     { key: 'rituals', label: 'Rituais', icon: 'repeat', route: { name: 'rituals' } },
     { key: 'projects', label: 'Projetos', icon: 'folder', route: { name: 'projects' } },
     ...(features.objectives

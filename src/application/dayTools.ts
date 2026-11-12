@@ -2,7 +2,6 @@ import { toDayKey, type DayKey } from '../domain/day';
 import { dayPriorityListId, demote, promote } from '../domain/priorities';
 import { record } from './events';
 import { moveIntendedDate } from './intendedDate';
-import { releaseNextStep } from './nextSteps';
 import type { AppContext } from './ports';
 
 /** 1b shortcuts of the day note: dates, deadlines, priorities and meeting details. */
@@ -52,7 +51,6 @@ export async function setTaskProject(ctx: AppContext, taskId: string, projectId:
     const task = await tx.blocks.get(taskId);
     if (!task || task.kind !== 'task' || task.status !== 'active' || task.projectId === projectId) return;
     if (projectId !== null && (await tx.projects.get(projectId))?.status !== 'active') return;
-    await releaseNextStep(ctx, tx, task, 'moved');
     await tx.blocks.put({ ...task, projectId, updatedAt: ctx.clock.now().toISOString() });
     await record(ctx, tx, 'block.linkedToProject', 'block', task.id, today(ctx), { projectId });
   });
@@ -78,27 +76,6 @@ export async function setDayPriority(ctx: AppContext, taskId: string, on: boolea
     if (itemIds.join() === list.itemIds.join()) return;
     await tx.priorities.put({ ...list, itemIds, updatedAt: ctx.clock.now().toISOString() });
     await record(ctx, tx, on ? 'priority.added' : 'priority.removed', 'priorities', id, day, { taskId, itemIds });
-  });
-}
-
-/**
- * Moves a priority of today to another intended date, from the priorities block, once its
- * countdown ends: the task gets the new date and leaves today's chosen priorities. A task that
- * is due today stays an automatic priority (spec/prioridades.md, "Prioridades do dia").
- */
-export async function moveDayPriority(ctx: AppContext, taskId: string, date: DayKey | null): Promise<void> {
-  await ctx.store.transaction(async (tx) => {
-    const task = await tx.blocks.get(taskId);
-    if (!task || task.kind !== 'task' || task.status !== 'active') return;
-    const day = today(ctx);
-    await tx.blocks.put(await moveIntendedDate(ctx, tx, task, date, day, 'dayNote'));
-    if (date === day) return;
-    const id = dayPriorityListId(day);
-    const list = await tx.priorities.get(id);
-    if (!list?.itemIds.includes(taskId)) return;
-    const itemIds = demote(list.itemIds, taskId);
-    await tx.priorities.put({ ...list, itemIds, updatedAt: ctx.clock.now().toISOString() });
-    await record(ctx, tx, 'priority.removed', 'priorities', id, day, { taskId, itemIds });
   });
 }
 

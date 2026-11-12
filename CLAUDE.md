@@ -63,6 +63,10 @@ New docs start with what goes in them and what does not ("Entra aqui" / "Não en
 Portuguese; ADRs, code and this file in English.
 
 ## Working with the owner
+- Ship with `npm run ship -- "<commit message>"`: it commits, opens the PR, turns on auto-merge and
+  waits until GitHub merges it. Do not run the `gh pr` steps by hand or poll with `sleep`.
+- Asked whether everything is merged or the session can be archived: run `npm run branches` and
+  report its answer.
 - The owner (Valeria) answers questions as a numbered list in the chat, or as nested items under
   each "Em aberto" question. Fold each answer into the text of its section and remove the
   answered question.
@@ -115,13 +119,15 @@ Each step rereads the whole conversation, so long sessions and back-and-forth co
 - `npm run build` - typecheck, unit tests, and production build into `dist/` (CSP injected); a failing test stops the deploy
 - `npm run preview` - serve the production build locally
 - `npm run docs:check` - broken links between docs, and ADRs without a `**Status:**` line
+- `npm run ship -- "<message>"` - commit, push, open the PR, auto-merge and wait for the merge; `--no-wait` stops after auto-merge is on
+- `npm run branches` - what is not merged yet, per branch and worktree; `-- --clean` deletes merged local branches
 
 ## Deployment
 Cloudflare Pages, from the public GitHub repository. Build command `npm run build`, output directory `dist`.
 GitHub Actions (`.github/workflows/ci.yml`) runs the same build and `npm run docs:check` on every pull request. Branch
 protection on `main` requires its `build` check and a branch up to date with `main` before merging
-(ADR-058): wait with `gh pr checks <n> --watch`, and if the merge is refused because the branch is
-behind, bring it up to date and wait again. No direct pushes to `main`. No `dev` branch: each
+(ADR-058): `npm run ship` waits for that check and brings a branch that fell behind up to date by
+itself. No direct pushes to `main`. No `dev` branch: each
 branch's Cloudflare preview is the staging.
 
 ## Code Conventions

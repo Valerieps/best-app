@@ -172,14 +172,15 @@ export type WarmupResult = 'done' | 'skipped' | 'later';
 
 /**
  * Ordered priorities. Ids look like `day:2026-10-11` (the day's tasks) or `focusProjects` (section
- * 2, the single list of projects in focus) or `next:<projectId>` (a project's next steps, ADR-065). `weekProjects:2026-W42` lists are the week's priority
- * projects from before the single list (ADR-035), kept as history; before version 6
+ * 2, the single list of projects in focus) or `queue` (the "Fila de execução", ADR-069). `weekProjects:2026-W42` lists are the week's priority
+ * projects from before the single list (ADR-035), kept as history, and so are the `next:<projectId>`
+ * lists of the project next steps, removed in favor of the queue (ADR-070); before version 6
  * they were per month, with ids `month:AAAA-MM`.
  */
 export interface PriorityList {
   id: string;
-  /** `focusProjects` and `weekProjects` list projects; `day` and `nextSteps` list tasks. */
-  scope: 'day' | 'focusProjects' | 'weekProjects' | 'nextSteps';
+  /** `focusProjects` and `weekProjects` list projects; `day`, `queue` and the old `nextSteps` list tasks. */
+  scope: 'day' | 'focusProjects' | 'weekProjects' | 'nextSteps' | 'queue';
   /** A day (AAAA-MM-DD), an ISO week (AAAA-Www) for the old week lists, or empty. */
   period: string;
   itemIds: string[];
@@ -250,6 +251,15 @@ export interface Settings {
   /** Width of the open sidebar, in pixels, dragged by the user. Absent means the default width. */
   sidebarWidth?: number;
   /**
+   * The menu open in the right panel (spec/navegacao.md, "Painel da direita"). Absent or null
+   * means the panel is collapsed to its strip of icons, the default.
+   */
+  rightPanelMenu?: RightPanelMenu | null;
+  /** Width of the open right panel, in pixels, dragged by the user. Absent means the default width. */
+  rightPanelWidth?: number;
+  /** Whether the center area is collapsed to a narrow strip on the left. Absent means open. */
+  centerCollapsed?: boolean;
+  /**
    * The part of the day note shown alone, in focus mode (spec/nota-do-dia.md, "Modo foco").
    * Absent or null shows the whole note. Only the user leaves it.
    */
@@ -269,6 +279,9 @@ export type AutoBackupInterval = 'afterChange' | 'quarterHour' | 'hour';
 
 /** Collapsible groups of the project list: "Outros ativos" (open by default) and "Finalizados" (closed). */
 export type ProjectListGroup = 'others' | 'finished';
+
+/** Menus of the right panel (spec/navegacao.md, "Painel da direita"). */
+export type RightPanelMenu = 'execute';
 
 export interface WarmupItem {
   id: string;

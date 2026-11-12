@@ -2,10 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { createTestContext } from '../test/fixtures';
 import { addFocusProject, removeFocusProject, swapFocusProject } from './focusProjects';
 import { createProject, setProjectFinished } from './projects';
-import { createBlock, linkSectionToProject } from './notebook';
-import { setIntendedDates } from './dayTools';
-import { loadDayOpening, loadPlanning, loadProject, loadProjectList } from './queries';
-import { positionBetween } from '../domain/position';
+import { loadDayOpening, loadProject, loadProjectList } from './queries';
 
 // The test clock starts on Sunday 2026-10-11.
 const SUNDAY = '2026-10-11';
@@ -112,43 +109,6 @@ describe('projects in focus', () => {
 });
 
 describe('projects in focus in the day to day', () => {
-  it('puts their tasks first in the planning of the next day', async () => {
-    const { ctx, reader, projects } = await setup(['Fora', 'Foco']);
-    const loose = await createBlock(ctx, { sectionId: null, position: positionBetween(null, null) }, '[] Solta');
-    const outside = await createBlock(ctx, { sectionId: null, position: positionBetween(null, null) }, '[] Do outro projeto');
-    await linkSectionToProject(ctx, outside.sectionId, projects[0].id);
-    const inFocus = await createBlock(ctx, { sectionId: null, position: positionBetween(null, null) }, '[] Do projeto em foco');
-    await linkSectionToProject(ctx, inFocus.sectionId, projects[1].id);
-    await addFocusProject(ctx, projects[1].id);
-    await setIntendedDates(ctx, [loose.id, outside.id, inFocus.id], '2026-10-12');
-    const undated = await createBlock(ctx, { sectionId: null, position: positionBetween(null, null) }, '[] Algum dia');
-
-    const view = await loadPlanning(reader, '2026-10-12', SUNDAY);
-    const planned = view.columns.find(({ column }) => column.kind === 'day' && column.day === '2026-10-12')!.items;
-    expect(planned.map((item) => item.task.text)[0]).toBe('Do projeto em foco');
-    expect(planned.map((item) => item.task.id)).toEqual(expect.arrayContaining([loose.id, outside.id]));
-    // Tasks without a date are the "algum dia": they stay out of the planning.
-    expect(view.columns.flatMap(({ items }) => items).map((item) => item.task.id)).not.toContain(undated.id);
-  });
-
-  it('leaves out the excluded tasks and, when asked, the late ones', async () => {
-    const { ctx, reader } = await setup([]);
-    const late = await createBlock(ctx, { sectionId: null, position: positionBetween(null, null) }, '[] Atrasada');
-    const planned = await createBlock(ctx, { sectionId: null, position: positionBetween(null, null) }, '[] Planejada');
-    const triaged = await createBlock(ctx, { sectionId: null, position: positionBetween(null, null) }, '[] Na triagem');
-    await setIntendedDates(ctx, [late.id], '2026-10-01');
-    await setIntendedDates(ctx, [planned.id, triaged.id], '2026-10-12');
-
-    const ids = (view: Awaited<ReturnType<typeof loadPlanning>>) => view.columns.flatMap(({ items }) => items).map((item) => item.task.id);
-    const all = await loadPlanning(reader, '2026-10-12', SUNDAY, { exclude: new Set([triaged.id]) });
-    expect(all.columns[0].column.kind).toBe('late');
-    expect(ids(all)).toEqual(expect.arrayContaining([late.id, planned.id]));
-    expect(ids(all)).not.toContain(triaged.id);
-    const days = await loadPlanning(reader, '2026-10-12', SUNDAY, { late: false });
-    expect(days.columns.every(({ column }) => column.kind === 'day')).toBe(true);
-    expect(ids(days)).not.toContain(late.id);
-  });
-
   it('lists them for the dashboard, but without a warm up the day still opens on the day note', async () => {
     const { ctx, reader, projects } = await setup(['Foco']);
     await addFocusProject(ctx, projects[0].id);

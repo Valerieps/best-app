@@ -13,8 +13,7 @@ import { listDays, plural } from '../format';
 import { navigate } from '../hooks';
 import { appContext, reader } from '../services';
 import { useLiveQuery } from '../useLiveQuery';
-import { ageLabel, ASSISTANT_INFO, cardStateLabel, shortAgeLabel, AssistantIcon, STATUS_LABELS } from './assistantInfo';
-import { ForgottenTasksAssistant } from './ForgottenTasksAssistant';
+import { ageLabel, ASSISTANT_INFO, shortAgeLabel, AssistantIcon, STATUS_LABELS } from './assistantInfo';
 import { RitualsCalendar } from './RitualsCalendar';
 
 interface Props {
@@ -27,7 +26,7 @@ interface Props {
 /**
  * The "Rituais" screen (spec/assistentes.md, "A tela Rituais"): a small calendar of the days
  * without a closing, then the "Assistentes" grid, with one card per assistant colored by how long
- * its oldest item has been waiting (or, for "Tarefas esquecidas", by how many there are). The
+ * its oldest item has been waiting. The
  * details and actions of an assistant only show after opening its card.
  */
 export function RitualsScreen({ today, assistant, pendingDays }: Props) {
@@ -68,9 +67,9 @@ function Rituals({ dashboard, today, pendingDays }: { dashboard: CleanupDashboar
           {/* The calendar above does the job of "Dias em aberto". */}
           {dashboard.cards
             .filter(({ id }) => id !== 'pendingDays')
-            .map(({ id, status, count, ageInDays }) => {
+            .map(({ id, status, ageInDays }) => {
               const { name, description } = ASSISTANT_INFO[id];
-              const age = cardStateLabel(id, count, ageInDays);
+              const age = ageLabel(ageInDays);
               const state = [STATUS_LABELS[status], age].filter(Boolean).join(', ');
               return (
                 <li key={id}>
@@ -113,8 +112,7 @@ function AssistantScreen({
   const age = card.count > 0 ? ageLabel(card.ageInDays) : null;
 
   return (
-    // "Tarefas esquecidas" ends on the board of "Fechar o dia", which needs the width.
-    <main className={id === 'forgottenTasks' ? 'page page--wide' : 'page'}>
+    <main className="page">
       <ScreenHeader
         back={{ label: 'Rituais', onSelect: backToDashboard }}
         title={
@@ -145,9 +143,6 @@ function AssistantScreen({
             <WhiteboardsAssistant groups={dashboard.whiteboards} projects={projects} onDone={backToDashboard} />
           )}
           {id === 'duplicates' && <DuplicatesAssistant groups={dashboard.duplicates} onDone={backToDashboard} />}
-          {id === 'forgottenTasks' && (
-            <ForgottenTasksAssistant items={dashboard.forgottenTasks} today={today} onDone={backToDashboard} />
-          )}
         </>
       )}
     </main>

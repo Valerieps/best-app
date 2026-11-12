@@ -1,6 +1,4 @@
 import { addDays, fromDayKey, type DayKey } from '../domain/day';
-import type { DayActivity } from '../domain/projectActivity';
-import type { StuckReason } from '../domain/projectPage';
 
 /** Date and time labels in Brazilian Portuguese. */
 
@@ -97,28 +95,6 @@ export function linkDomain(url: string): string {
 /** "outubro" */
 export function monthName(day: DayKey): string {
   return fromDayKey(day).toLocaleDateString('pt-BR', { month: 'long' });
-}
-
-/** Hover of a day on the activity map: "07/10 · 1 nota, 2 tarefas finalizadas", or "07/10 · nada". */
-export function activityDetail(day: DayKey, activity: DayActivity): string {
-  const parts = [
-    activity.notes > 0 ? plural(activity.notes, 'nota', 'notas') : null,
-    activity.sections > 0 ? plural(activity.sections, 'seção aberta', 'seções abertas') : null,
-    activity.tasksCreated > 0 ? plural(activity.tasksCreated, 'tarefa criada', 'tarefas criadas') : null,
-    activity.tasksFinished > 0 ? plural(activity.tasksFinished, 'tarefa finalizada', 'tarefas finalizadas') : null,
-  ].filter(Boolean);
-  return `${formatShortDate(day)} · ${parts.length > 0 ? parts.join(', ') : 'nada'}`;
-}
-
-/** Why a task is stuck: "adiada 3 vezes · desde 18/09", "venceu em 09/10", or both. */
-export function stuckReasonLabel(reason: StuckReason): string {
-  return [
-    reason.overdueOn ? `venceu em ${formatShortDate(reason.overdueOn)}` : null,
-    reason.postponed !== null ? postponedLabel(reason.postponed) : null,
-    reason.since ? `desde ${formatShortDate(reason.since)}` : null,
-  ]
-    .filter(Boolean)
-    .join(' · ');
 }
 
 /** Date block of the project agenda: "amanhã" over "13", a weekday within the week, else the month. */

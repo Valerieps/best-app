@@ -201,121 +201,6 @@ button.task-group__toggle {
   color: var(--color-text-muted);
 }
 
-/* Level 1, "Travadas": a warning container, one card per task, larger text */
-.stuck {
-  margin-top: var(--space-4);
-  padding: var(--space-3);
-  background: var(--color-warning-bg);
-  border: var(--border-width) solid var(--color-warning-border);
-  border-radius: var(--radius-lg);
-}
-
-.stuck__title {
-  display: flex;
-  align-items: baseline;
-  gap: var(--space-2);
-  margin: 0 var(--space-1) var(--space-2);
-  font-size: var(--font-size-sm);
-  font-weight: 600;
-  color: var(--color-warning-text);
-}
-
-.stuck__card {
-  padding: var(--space-2) var(--space-3);
-  background: var(--color-surface);
-  border-radius: var(--radius-md);
-}
-
-.stuck__card + .stuck__card {
-  margin-top: var(--space-2);
-}
-
-.project-tasks .stuck__card .line {
-  padding: 0;
-  font-size: var(--font-size-lg);
-}
-
-.project-tasks .stuck__card .line:hover,
-.project-tasks .stuck__card .line:focus-within {
-  background: none;
-}
-
-.stuck__card .line__check {
-  margin-top: 7px;
-}
-
-.stuck__foot {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: var(--space-3);
-  margin: var(--space-1) 0 0 calc(13px + var(--space-3));
-}
-
-.stuck__reason {
-  font-size: var(--font-size-sm);
-  color: var(--color-warning-text);
-}
-
-button.stuck__date {
-  flex-shrink: 0;
-}
-
-/* Level 2, "Próximos dias": a calendar of the next 3 active days, one column each */
-.agenda__columns {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: var(--space-3);
-}
-
-.agenda__day {
-  min-width: 0;
-  padding: var(--space-2);
-  background: var(--color-surface);
-  border: var(--border-width) solid var(--color-border);
-  border-radius: var(--radius-md);
-}
-
-.agenda__day--today {
-  border-color: var(--color-check);
-}
-
-.agenda__date {
-  display: flex;
-  align-items: baseline;
-  justify-content: space-between;
-  gap: var(--space-2);
-  margin: 0 var(--space-2) var(--space-2);
-  line-height: 1.2;
-}
-
-.agenda__weekday {
-  font-weight: 600;
-  text-transform: capitalize;
-}
-
-.agenda__number {
-  font-size: var(--font-size-sm);
-  color: var(--color-text-muted);
-  font-variant-numeric: tabular-nums;
-}
-
-.agenda__empty {
-  margin: 0 var(--space-2);
-  font-size: var(--font-size-sm);
-}
-
-/* Level 3, "Sem data": quieter lines */
-.task-group--undated .line {
-  color: var(--color-text-muted);
-}
-
-.task-group--undated .line__check {
-  width: 11px;
-  height: 11px;
-  margin-top: 4px;
-}
-
 .chip--warning {
   background: var(--color-warning-bg);
   color: var(--color-warning-text);
@@ -603,14 +488,6 @@ button.resource-card__toggle {
   margin-bottom: var(--space-6);
 }
 
-.projects__group-head {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: var(--space-3);
-  margin-bottom: var(--space-3);
-}
-
 .section-title,
 .projects__group-title {
   margin: 0;
@@ -661,111 +538,30 @@ button.projects__toggle {
   outline: none;
 }
 
-/* The week's priority projects: up to 3 cards side by side */
-.priority-cards {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: var(--space-3);
-}
-
-.priority-card {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-3);
-  min-width: 0;
-  padding: var(--space-4);
-  background: var(--color-surface);
-  border: var(--border-width) solid var(--color-border);
-  border-radius: var(--radius-lg);
-}
-
-.priority-card__head {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: var(--space-2);
-}
-
-.priority-card__name {
-  min-width: 0;
-  color: var(--color-text);
-  font-weight: 600;
-  text-decoration: none;
-}
-
-.priority-card__name:hover .priority-card__label {
-  text-decoration: underline;
-}
-
-.priority-card__label,
 .project-row__label {
   overflow: hidden;
   white-space: nowrap;
   text-overflow: ellipsis;
 }
 
-.priority-card__stats {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-  font-size: var(--font-size-sm);
-  color: var(--color-text-muted);
-}
-
-.priority-card__stats p {
-  margin: 0;
-}
-
-.priority-card__number {
-  font-size: var(--font-size-md);
-  font-weight: 600;
-  font-variant-numeric: tabular-nums;
-  color: var(--color-text);
-}
-
-.priority-card__stat--warning,
-.priority-card__stat--warning .priority-card__number {
-  color: var(--color-warning-text);
-}
-.priority-card__objective,
-.priority-card__last {
-  margin: 0;
-  font-size: var(--font-size-sm);
-  overflow: hidden;
-  white-space: nowrap;
-  text-overflow: ellipsis;
-}
-
-.priority-card__last {
-  margin-top: auto;
-  color: var(--color-text-muted);
-}
-
-.priority-card__last--warning {
-  color: var(--color-warning-text);
-}
-
-/* A free slot: dashed, "Definir prioridade" */
+/* "Colocar em foco", under the focus rows while there is a free slot */
 .priority-slot {
   display: flex;
-  min-height: 180px;
+  margin-top: var(--space-2);
 }
 
 .priority-slot > .dropdown__trigger {
-  flex: 1;
-  display: flex;
+  display: inline-flex;
   align-items: center;
-  justify-content: center;
   gap: var(--space-2);
-  border: 2px dashed var(--color-border-strong);
-  border-radius: var(--radius-lg);
+  border: none;
   background: transparent;
+  padding: var(--space-1) 0;
   color: var(--color-text-muted);
 }
 
 .priority-slot > .dropdown__trigger:hover,
 .priority-slot > .dropdown__trigger[aria-expanded='true'] {
-  border-color: var(--color-text-muted);
   color: var(--color-text);
 }
 
@@ -826,7 +622,7 @@ button.project-actions {
   color: var(--color-text-muted);
 }
 
-/* "Próximos passos": right after the stuck tasks, before "Próximos dias". */
-.next-steps {
+/* "Na fila": the project's tasks in the execution queue, first on the page. */
+.project-queue {
   margin-top: var(--space-4);
 }
