@@ -1,6 +1,4 @@
 import { useState, type FormEvent, type ReactNode } from 'react';
-import { setIntendedDate } from '../../application/dayTools';
-import { setTaskDone } from '../../application/notebook';
 import { deletePerson, mergePeople, renamePerson, setPersonArchived } from '../../application/people';
 import { loadPeopleView, loadPersonView, type PersonView } from '../../application/queries';
 import type { DayKey } from '../../domain/day';
@@ -9,21 +7,17 @@ import type { PersonItem, PersonSummary } from '../../domain/people';
 import { Icon } from '../components/Icon';
 import { LoadingPage } from '../components/Skeleton';
 import { ScreenHeader } from '../components/ScreenHeader';
-import { DatePicker } from '../dayNote/BlockLine';
+import { shownChips, TaskActionButtons, TaskCheckbox, TaskDateChips } from '../tasks/TaskControls';
+import { taskActions, taskText } from '../tasks/taskSurface';
 import { MarkdownText } from '../dayNote/MarkdownText';
-import { formatShortDate, formatTime, openForLabel, relativeDay } from '../format';
+import { formatShortDate, formatTime, openForLabel } from '../format';
 import { navigate, routeHash } from '../hooks';
 import { appContext, reader } from '../services';
 import { useLiveQuery } from '../useLiveQuery';
-import { enqueue } from '../writeQueue';
+import { enqueue, write } from '../writeQueue';
 
 /** The "Pessoas" screen and the page of each person (spec/pessoas.md). */
 
-function write(work: () => Promise<unknown>) {
-  enqueue(work).catch(() => {
-    // Logged by the queue; the screen shows the saved state again on its own.
-  });
-}
 
 function sectionLabel(section: Section | null): string {
   if (!section) return 'Origem desconhecida';
@@ -34,37 +28,21 @@ function sectionLabel(section: Section | null): string {
 /** One open task between me and someone: done by the checkbox, with its age and, when waiting, the day to follow up. */
 function ItemRow({ item, today, person, section }: { item: PersonItem; today: DayKey; person?: Person | null; section: Section | null }) {
   const { task } = item;
-  const waiting = task.waiting === true;
   const finished = task.status === 'done';
-  // Only a waiting task keeps a date, the day to follow up; mine have none (ADR-072).
-  const dateLabel = waiting && task.intendedDate ? `cobrar ${relativeDay(task.intendedDate, today)}` : null;
+  const chips = shownChips(task);
   return (
     <li className="card-list__item people__item">
-      <input
-        type="checkbox"
-        className="line__check"
-        checked={finished}
-        onChange={() => write(() => setTaskDone(appContext, task.id, !finished))}
-        aria-label={finished ? 'Reabrir tarefa' : waiting ? 'Concluir: chegou' : 'Finalizar tarefa'}
-      />
+      <TaskCheckbox task={task} className="line__check" />
       <span className="people__item-text">
-        <MarkdownText text={task.text || '(tarefa sem texto)'} />
+        <MarkdownText text={taskText(task)} />
         <span className="muted people__item-from">{sectionLabel(section)}</span>
       </span>
       <span className="list-meta">
         {/* The person is already in the text, as a mention: only a task citing nobody says so. */}
         {person === null && <span className="chip chip--muted">sem pessoa</span>}
         {!finished && <span className="muted">{openForLabel(item.openDays)}</span>}
-        {!finished && waiting && <DatePicker
-          label="Data para cobrar"
-          className={dateLabel ? 'line__chip' : 'line__action'}
-          value={task.intendedDate}
-          min={today}
-          onChange={(date) => write(() => setIntendedDate(appContext, task.id, date))}
-          clearLabel="Tirar a data para cobrar"
-        >
-          {dateLabel ?? 'Cobrar'}
-        </DatePicker>}
+        {!finished && <TaskDateChips task={task} today={today} chips={{ date: chips.date, deadline: false }} />}
+        <TaskActionButtons task={task} today={today} actions={taskActions(task, 'person')} chips={chips} />
       </span>
     </li>
   );

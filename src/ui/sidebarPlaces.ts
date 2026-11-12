@@ -8,8 +8,6 @@ export interface SidebarEntry {
   route: Route;
   label: string;
   count?: number;
-  /** The "Rituais" counter: the pending days. */
-  due?: number;
 }
 
 export interface SidebarGroup {
@@ -21,7 +19,6 @@ export interface SidebarGroup {
 export const PLACE_ICONS: Record<SidebarPlace, IconName> = {
   day: 'sun',
   execute: 'bolt',
-  rituals: 'repeat',
   projects: 'folder',
   objectives: 'target',
   habits: 'leaf',
@@ -34,7 +31,6 @@ export const PLACE_ICONS: Record<SidebarPlace, IconName> = {
 
 interface Input {
   counts: MenuCounts | undefined;
-  dueCount: number;
   features: { objectives: boolean; habits: boolean };
 }
 
@@ -43,14 +39,13 @@ interface Input {
  * strip (spec/navegacao.md, "Global"). The groups have no titles since 15/10/2026: a space sets
  * them apart. The footer holds "Dados e backup" and "Configurações".
  */
-export function sidebarGroups({ counts, dueCount, features }: Input): SidebarGroup[] {
+export function sidebarGroups({ counts, features }: Input): SidebarGroup[] {
   return [
     {
       key: 'start',
       entries: [
         { place: 'day', route: { name: 'day' }, label: 'Hoje' },
         { place: 'execute', route: { name: 'execute' }, label: 'Fila de execução' },
-        { place: 'rituals', route: { name: 'rituals' }, label: 'Rituais', due: dueCount },
       ],
     },
     {

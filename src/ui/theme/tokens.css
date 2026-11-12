@@ -70,7 +70,7 @@
 
   /* Small marks: the meeting icon and the linked-project icon, in the brown of the "Sem backup" dot */
   --color-mark: var(--color-dot-attention);
-  /* The "Rituais" counter and the pending days of its calendar, in the brand color, so an
+  /* The count badges, in the brand color, so an
      invitation does not look like the backup's warning */
   --color-mark-bg: var(--color-brand-soft);
   --color-mark-text: var(--color-brand-strong);

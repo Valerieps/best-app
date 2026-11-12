@@ -1,13 +1,13 @@
 import { useEffect, useRef, useState } from 'react';
-import { setDeadline, setIntendedDate, setTaskProject } from '../../application/dayTools';
-import { addToQueue, removeFromQueue } from '../../application/executionQueue';
-import { abandonTask, setTaskDone, setTaskWaiting, updateBlockText } from '../../application/notebook';
+import { updateBlockText } from '../../application/notebook';
 import { loadTaskDetails, type TaskDetails } from '../../application/queries';
 import type { DayKey } from '../../domain/day';
 import { AbandonAction } from '../components/AbandonAction';
 import { relativeDay } from '../format';
 import { appContext, reader } from '../services';
+import { taskCommands } from '../tasks/taskCommands';
 import { useLiveQuery } from '../useLiveQuery';
+import { write } from '../writeQueue';
 import { closeTaskDetails, useOpenTaskId } from './taskDetailsStore';
 
 /**
@@ -65,7 +65,7 @@ function TaskDetailsDialog({ details, today }: { details: TaskDetails; today: Da
   function saveText() {
     if (text === savedText.current) return;
     savedText.current = text;
-    void updateBlockText(appContext, task.id, text);
+    write(() => updateBlockText(appContext, task.id, text));
   }
 
   function close() {
@@ -109,7 +109,7 @@ function TaskDetailsDialog({ details, today }: { details: TaskDetails; today: Da
           type="checkbox"
           checked={task.status === 'done'}
           disabled={task.status !== 'active' && task.status !== 'done'}
-          onChange={(event) => void setTaskDone(appContext, task.id, event.target.checked)}
+          onChange={(event) => taskCommands.setDone(task.id, event.target.checked)}
         />
         <span>Concluída</span>
       </label>
@@ -120,7 +120,7 @@ function TaskDetailsDialog({ details, today }: { details: TaskDetails; today: Da
           className="text-input"
           value={task.projectId ?? ''}
           disabled={!active}
-          onChange={(event) => void setTaskProject(appContext, task.id, event.target.value || null)}
+          onChange={(event) => taskCommands.linkProject(task.id, event.target.value || null)}
         >
           <option value="">Sem projeto</option>
           {projectOptions.map((option) => (
@@ -141,7 +141,7 @@ function TaskDetailsDialog({ details, today }: { details: TaskDetails; today: Da
               className="date-input"
               disabled={!active}
               value={task.intendedDate ?? ''}
-              onChange={(event) => void setIntendedDate(appContext, task.id, event.target.value || null)}
+              onChange={(event) => taskCommands.setDate(task.id, event.target.value || null)}
             />
           </label>
         )}
@@ -152,7 +152,7 @@ function TaskDetailsDialog({ details, today }: { details: TaskDetails; today: Da
             className="date-input"
             disabled={!active}
             value={task.deadline ?? ''}
-            onChange={(event) => void setDeadline(appContext, task.id, event.target.value || null)}
+            onChange={(event) => taskCommands.setDeadline(task.id, event.target.value || null)}
           />
         </label>
       </div>
@@ -160,14 +160,14 @@ function TaskDetailsDialog({ details, today }: { details: TaskDetails; today: Da
       {active && (
         <div className="task-details__row">
           <label className="task-details__field task-details__field--inline">
-            <input type="checkbox" checked={Boolean(task.waiting)} onChange={(event) => void setTaskWaiting(appContext, task.id, event.target.checked)} />
+            <input type="checkbox" checked={Boolean(task.waiting)} onChange={(event) => taskCommands.setWaiting(task.id, event.target.checked)} />
             <span>Aguardando (alguém me deve)</span>
           </label>
           {!task.waiting && (
             <button
               type="button"
               className="small"
-              onClick={() => void (inQueue ? removeFromQueue(appContext, task.id) : addToQueue(appContext, task.id))}
+              onClick={() => inQueue ? taskCommands.removeFromQueue(task.id) : taskCommands.addToQueue(task.id)}
             >
               {inQueue ? 'Tirar da fila de execução' : 'Adicionar à fila de execução'}
             </button>
@@ -189,8 +189,6 @@ function TaskDetailsDialog({ details, today }: { details: TaskDetails; today: Da
             </dd>
           </>
         )}
-        <dt>Adiamentos</dt>
-        <dd>{task.postponeCount}</dd>
         {task.closedAt && (
           <>
             <dt>{task.status === 'done' ? 'Concluída em' : 'Encerrada em'}</dt>
@@ -203,7 +201,7 @@ function TaskDetailsDialog({ details, today }: { details: TaskDetails; today: Da
         {active && (
           <AbandonAction
             onAbandon={() => {
-              void abandonTask(appContext, task.id);
+              taskCommands.abandon(task.id);
               closeTaskDetails();
             }}
           />

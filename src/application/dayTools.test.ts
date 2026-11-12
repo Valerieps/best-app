@@ -61,7 +61,7 @@ describe('1b day tools', () => {
     expect((await db.events.toArray()).filter((event) => event.type === 'task.abandoned')).toHaveLength(1);
   });
 
-  it('a date set during the day takes the task out of the triage, and moving it later counts', async () => {
+  it('a date set during the day takes the task out of the triage, and moving it later is not counted', async () => {
     const { ctx, reader, db } = createTestContext();
     const task = await newTask(ctx, 'Comprar presente');
 
@@ -71,7 +71,8 @@ describe('1b day tools', () => {
     expect(triage.rows.filter((row) => row.type === 'task')).toEqual([]);
 
     await setIntendedDate(ctx, task.id, '2026-10-16');
-    expect((await db.blocks.get(task.id))?.postponeCount).toBe(1);
+    expect((await db.blocks.get(task.id))?.postponeCount).toBe(0);
+    expect(await db.events.where('type').equals('task.postponed').count()).toBe(0);
   });
 
   it('deadline day makes the task a priority automatically', async () => {

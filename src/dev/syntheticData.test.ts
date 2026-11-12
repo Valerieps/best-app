@@ -2,7 +2,6 @@ import { beforeAll, describe, expect, it } from 'vitest';
 import { parseBackup, type BackupFile } from '../application/backup';
 import {
   loadActiveTasks,
-  loadCleanup,
   loadDayPriorities,
   loadPendingDays,
   loadPendingTriages,
@@ -28,12 +27,6 @@ describe('synthetic data', () => {
     await importBackup(db, backup, NOW);
   });
 
-  const taskNamed = (text: string) => {
-    const task = backup.tables.blocks.find((block) => block.kind === 'task' && block.text === text);
-    if (!task) throw new Error(`No task "${text}"`);
-    return task;
-  };
-
   it('is a valid backup', () => {
     expect(parseBackup(JSON.parse(JSON.stringify(backup))).ok).toBe(true);
   });
@@ -56,9 +49,8 @@ describe('synthetic data', () => {
     const [threeDaysAgo, twoDaysAgo, yesterday] = await loadPendingTriages(reader, TODAY);
 
     const apiDocs = threeDaysAgo.rows.find((row): row is TaskRow => row.type === 'task' && row.task.text === 'Atualizar a documentação da API');
-    expect(apiDocs?.task.postponeCount).toBe(3);
-    expect(apiDocs).toMatchObject({ attention: true, suggestion: { kind: 'undate', untouched: true } });
-    // Whiteboards no longer pass through the closing: the "Seções soltas" assistant takes them.
+    expect(apiDocs).toMatchObject({ attention: false, suggestion: { kind: 'undate', untouched: true } });
+    // Whiteboards no longer pass through the closing: they stay unlinked.
     expect(threeDaysAgo.automatic.some((item) => item.type === 'whiteboardUnlinked')).toBe(true);
     expect(threeDaysAgo.automatic.some((item) => item.type === 'finishedDuringDay')).toBe(true);
 
@@ -71,25 +63,6 @@ describe('synthetic data', () => {
     );
     expect(yesterday.open).toHaveLength(2);
     expect(yesterday.rows).toHaveLength(2);
-  });
-
-  it('gives the whiteboards assistant groups to link, convert and keep', async () => {
-    const { whiteboards } = await loadCleanup(reader);
-    expect(whiteboards.map((group) => [group.title, group.sections.length, group.suggestion.kind])).toEqual([
-      ['Daily do App de agendamento', 3, 'link'],
-      ['Ideias de decoração', 2, 'convert'],
-      ['Orçamentos Marcenaria', 2, 'convert'],
-      ['Leituras sobre acessibilidade', 1, 'keep'],
-    ]);
-  });
-
-  it('gives the duplicates assistant real duplicates and a false positive', async () => {
-    const { duplicates } = await loadCleanup(reader);
-    expect(duplicates.map((group) => group.projects.map((project) => project.name))).toEqual([
-      ['Festa de fim de ano', 'Festa de fim-de-ano'],
-      ['Reforma da cozinha', 'Reforma da cosinha'],
-      ['Sprint 41', 'Sprint 42'],
-    ]);
   });
 
   it('keeps active tasks without a date for weeks', async () => {
@@ -107,7 +80,6 @@ describe('synthetic data', () => {
         'Pedir orçamento de bancada de granito',
       ]),
     );
-    expect(taskNamed('Alugar uma caixa de som').postponeCount).toBe(1);
   });
 
   it("shows today's priorities, including the deadline of today", async () => {

@@ -5,7 +5,7 @@
 
 ## Em aberto
 
-- [ ] A tarefa sem projeto e fora da fila só volta pela lista de tarefas, já que "Tarefas esquecidas" saiu (`assistentes.md`). O quadro do "Fechar o dia" deveria sugerir 2 ou 3 delas por dia, em rodízio pelas que estão há mais tempo sem aparecer?
+- [ ] A tarefa sem projeto e fora da fila só volta pela lista de tarefas, já que "Tarefas esquecidas" saiu. O quadro do "Fechar o dia" deveria sugerir 2 ou 3 delas por dia, em rodízio pelas que estão há mais tempo sem aparecer?
 
 Eu escolho os projetos em foco quando quiser. O que fazer, eu escolho pondo tarefas na fila de execução, no fechamento do dia ou a qualquer momento *(7)*.
 
@@ -41,5 +41,5 @@ Por quê: a tela "Executar" mostrava tudo o que pedia atenção, em quatro lista
 - Na página do projeto, as tarefas do projeto que estão na fila ficam num grupo "Na fila", na ordem da fila, antes de todas as outras (`projetos.md`, "Página do projeto"). Uma tarefa na fila sai de "A fazer": a tarefa nunca aparece duas vezes na página.
 - A fila vale até eu mudá-la: passar o dia ou fechar o dia não a esvazia. Não há limite de tarefas.
 - Na fila, cada tarefa mostra embaixo, pequeno e discreto, o nome do projeto, quando tem; clicar abre a página do projeto.
-- A linha da tarefa na fila não mostra prazo nem adiamentos: só o texto e o nome do projeto. Eles continuam nas outras telas.
+- A linha da tarefa na fila não mostra o prazo: só o texto e o nome do projeto. Eles continuam nas outras telas.
 - Nas tarefas da fila, eu tenho as mesmas ações das listas: finalizar pelo checkbox e, no hover, mudar o prazo, vincular a um projeto e abandonar. Mudar o prazo não tira a tarefa da fila.

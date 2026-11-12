@@ -6,13 +6,8 @@ describe('routes', () => {
     { name: 'day' },
     { name: 'day', day: '2026-10-09' },
     { name: 'checkout', day: '2026-10-11' },
-    { name: 'checkout', day: '2026-10-11', from: 'rituals' },
     { name: 'active' },
     { name: 'execute' },
-    { name: 'rituals' },
-    { name: 'rituals', assistant: 'pendingDays' },
-    { name: 'rituals', assistant: 'whiteboards' },
-    { name: 'rituals', assistant: 'duplicates' },
     { name: 'data' },
     { name: 'projects' },
     { name: 'project', id: 'p-1' },
@@ -31,15 +26,11 @@ describe('routes', () => {
     expect(parseRoute('')).toEqual({ name: 'day' });
     expect(parseRoute('#/nada')).toEqual({ name: 'day' });
     expect(parseRoute('#/checkout/ontem')).toEqual({ name: 'day' });
-    expect(parseRoute('#/rituais/nada')).toEqual({ name: 'rituals' });
   });
 
-  it('takes the old "Colocar ordem na casa" links to the "Rituais" screen', () => {
-    expect(parseRoute('#/ordem')).toEqual({ name: 'rituals' });
-    expect(parseRoute('#/ordem/secoes-soltas')).toEqual({ name: 'rituals', assistant: 'whiteboards' });
-  });
-
-  it('takes the old review and reflection links to the "Rituais" screen', () => {
-    for (const hash of ['#/foco', '#/rumo', '#/reflexao/2026-W41', '#/mes/2026-09']) expect(parseRoute(hash)).toEqual({ name: 'rituals' });
+  it('opens the day note for the addresses of the removed "Rituais" screen', () => {
+    for (const hash of ['#/rituais', '#/rituais/secoes-soltas', '#/ordem', '#/foco', '#/reflexao/2026-W41', '#/mes/2026-09']) {
+      expect(parseRoute(hash)).toEqual({ name: 'day' });
+    }
   });
 });

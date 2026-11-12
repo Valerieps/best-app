@@ -1,6 +1,5 @@
 import { useEffect, useState } from 'react';
-import { abandonTask, deleteKeptNote, mergeKeptNote, pasteLines, setTaskDone, updateBlockText } from '../../application/notebook';
-import { setDeadline, setIntendedDate } from '../../application/dayTools';
+import { deleteKeptNote, mergeKeptNote, pasteLines, updateBlockText } from '../../application/notebook';
 import { addIdeaLine, changeIdeaLineKind, dropIdea, ideaToProject, ideaToTask, notYetIdea, splitIdeaLine } from '../../application/ideas';
 import { loadIdea, loadIdeas, type IdeaView } from '../../application/queries';
 import type { DayKey } from '../../domain/day';
@@ -20,15 +19,10 @@ import { formatShortDate } from '../format';
 import { navigate, routeHash } from '../hooks';
 import { appContext, reader } from '../services';
 import { useLiveQuery } from '../useLiveQuery';
-import { enqueue } from '../writeQueue';
+import { enqueue, write } from '../writeQueue';
 
 /** "Ideias" and the page of each idea (spec/ideias.md). */
 
-function write(work: () => Promise<unknown>) {
-  enqueue(work).catch(() => {
-    // Logged by the queue; the screen shows the saved state again on its own.
-  });
-}
 
 const backToIdeas = { label: 'Ideias', onSelect: () => navigate({ name: 'ideas' }) };
 
@@ -206,16 +200,10 @@ function IdeaLines({ idea, lines, today, editable }: { idea: Block; lines: Block
     },
     onMakeTask: (block, text, _waiting, kind = 'task') => write(() => changeIdeaLineKind(appContext, block.id, kind, text)),
     onOpenIdea: (block) => navigate({ name: 'idea', id: block.id }),
-    onToggleDone: (block, done) => write(() => setTaskDone(appContext, block.id, done)),
     onArrow: (block, direction) => {
       const target = lines[indexOf(block) + (direction === 'up' ? -1 : 1)];
       if (target) requestFocus(target.id, direction === 'up' ? 'end' : 0);
     },
-    onSetDate: (block, date) => write(() => setIntendedDate(appContext, block.id, date)),
-    onSetDeadline: (block, date) => write(() => setDeadline(appContext, block.id, date)),
-    // The day's priorities are chosen in the day note.
-    onTogglePriority: () => {},
-    onAbandon: (block) => write(() => abandonTask(appContext, block.id)),
   };
 
   return (
@@ -230,6 +218,7 @@ function IdeaLines({ idea, lines, today, editable }: { idea: Block; lines: Block
           isPriority={false}
           allowNewLines
           handlers={handlers}
+          surface="idea"
         />
       ))}
       {lines.length === 0 && (

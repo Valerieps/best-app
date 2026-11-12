@@ -18,8 +18,6 @@ import { ReminderStep } from './ReminderStep';
 interface Props {
   day: DayKey;
   today: DayKey;
-  /** Where the closing started, and goes back to: the day note, or "Rituais". */
-  from?: 'rituals';
 }
 
 const STEP_LABELS: Record<CheckoutStep, string> = { triage: 'Tarefas', reminders: 'Lembretes' };
@@ -29,7 +27,7 @@ const STEP_LABELS: Record<CheckoutStep, string> = { triage: 'Tarefas', reminders
  * step, skipping the steps with nothing to decide. Each step is saved when moving on, so leaving
  * halfway keeps what was decided, and coming back starts at the first step still pending.
  */
-export function CheckoutScreen({ day, today, from }: Props) {
+export function CheckoutScreen({ day, today }: Props) {
   const [triage, setTriage] = useState<DayTriage | null>(null);
   const [celebrating, setCelebrating] = useState(false);
   const [projects, setProjects] = useState<Project[]>([]);
@@ -40,7 +38,7 @@ export function CheckoutScreen({ day, today, from }: Props) {
   const [busy, setBusy] = useState(false);
   const [loadError, setLoadError] = useState<unknown>(undefined);
   // The day note opens on today, which starts over if it was the day closed.
-  const origin: Route = from === 'rituals' ? { name: 'rituals' } : { name: 'day' };
+  const origin: Route = { name: 'day' };
 
   useEffect(
     () =>
@@ -107,7 +105,7 @@ export function CheckoutScreen({ day, today, from }: Props) {
       <div className="card card--plain">
         <header className="card__header">
           <BackButton
-            action={{ label: from === 'rituals' ? 'Rituais' : 'a nota do dia', onSelect: () => navigate(origin) }}
+            action={{ label: 'a nota do dia', onSelect: () => navigate(origin) }}
           />
           <h1 className="card__title">Fechar o dia · {formatLongDate(day)}</h1>
           <span />

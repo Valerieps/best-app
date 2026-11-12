@@ -4,7 +4,6 @@ import type { Route } from './hooks';
 export type SidebarPlace =
   | 'day'
   | 'execute'
-  | 'rituals'
   | 'projects'
   | 'objectives'
   | 'habits'
@@ -15,8 +14,8 @@ export type SidebarPlace =
   | 'settings';
 
 /**
- * Which place of the sidebar is marked as current. A project page belongs to "Projetos", and the
- * rituals opened from the "Rituais" screen (a closing, an assistant) belong to it.
+ * Which place of the sidebar is marked as current. A project page belongs to "Projetos", and a
+ * closing belongs to "Hoje".
  */
 export function sidebarPlace(route: Route): SidebarPlace {
   switch (route.name) {
@@ -29,7 +28,7 @@ export function sidebarPlace(route: Route): SidebarPlace {
     case 'idea':
       return 'ideas';
     case 'checkout':
-      return 'rituals';
+      return 'day';
     default:
       return route.name;
   }

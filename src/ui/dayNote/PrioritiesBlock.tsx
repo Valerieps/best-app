@@ -3,8 +3,9 @@ import type { DayKey } from '../../domain/day';
 import type { DayPriority } from '../../domain/priorities';
 import { Icon } from '../components/Icon';
 import { TaskText } from '../taskDetails/TaskText';
-import { relativeDay } from '../format';
-import { DatePicker } from './BlockLine';
+import { taskCommands } from '../tasks/taskCommands';
+import { PriorityStar, shownChips, TaskActionButtons, TaskCheckbox, TaskDateChips } from '../tasks/TaskControls';
+import { taskActions } from '../tasks/taskSurface';
 
 const PIN_KEY = 'best-app:pinPriorities';
 
@@ -37,11 +38,8 @@ interface Props {
   pinned: boolean;
   /** Pins or unpins the block; absent where pinning means nothing (another day, focus mode). */
   onTogglePin?(): void;
-  onToggleDone(taskId: string, done: boolean): void;
-  onDemote(taskId: string): void;
-  onSetDeadline(taskId: string, date: DayKey | null): void;
-  /** Ids in the "Fila de execução", and "Adicionar à fila"; absent hides the action. */
-  queue?: { ids: ReadonlySet<string>; onAdd(taskId: string): void };
+  /** Ids in the "Fila de execução": their "Adicionar à fila" shows "Na fila". */
+  queueIds: ReadonlySet<string>;
   /** Shown at the right of the header, like the focus mode button. */
   trailing?: ReactNode;
 }
@@ -50,7 +48,7 @@ interface Props {
  * "Prioridades do dia": up to 3 tasks, highlighted. The deadline changes here too; a task of mine
  * has no intended date any more (ADR-072).
  */
-export function PrioritiesBlock({ priorities, today, pinned, onTogglePin, onToggleDone, onDemote, onSetDeadline, queue, trailing }: Props) {
+export function PrioritiesBlock({ priorities, today, pinned, onTogglePin, queueIds, trailing }: Props) {
   return (
     <section className={`priorities ${pinned ? 'priorities--pinned' : ''}`} aria-label="Prioridades do dia">
       <div className="priorities__header">
@@ -75,59 +73,28 @@ export function PrioritiesBlock({ priorities, today, pinned, onTogglePin, onTogg
         <ol className="priorities__list">
           {priorities.map(({ task, automatic }) => {
             const deadline = task.deadline ?? null;
-            const deadlinePicker = (label: string, className: string, children: string, clearLabel?: string) => (
-              <DatePicker label={label} className={className} value={deadline} onChange={(date) => onSetDeadline(task.id, date)} clearLabel={clearLabel}>
-                {children}
-              </DatePicker>
-            );
+            // A deadline of today that made the task a priority shows as the icon instead of a chip.
+            const dueToday = automatic && deadline === today;
+            const chips = shownChips(task, today);
             return (
             <li key={task.id} className="priorities__item">
-              {automatic && deadline === today && (
+              {dueToday && (
                 // Outside the block, at the left of the task, so it is seen before the text.
                 <span className="priorities__due-today" role="img" title="Prazo máximo hoje" aria-label="Prazo máximo hoje">
                   <Icon name="alertCircle" size="sm" />
                 </span>
               )}
-              <input
-                type="checkbox"
-                checked={task.status === 'done'}
-                onChange={(event) => onToggleDone(task.id, event.target.checked)}
-                aria-label={`Finalizar "${task.text}"`}
-              />
+              <TaskCheckbox task={task} />
               <span className="priorities__text">
                 <TaskText taskId={task.id} text={task.text} />
               </span>
               <span className="line__meta">
-                {!(automatic && deadline === today) &&
-                  deadline &&
-                  deadlinePicker('Mudar o prazo máximo', 'line__chip', `prazo ${relativeDay(deadline, today)}`, 'Tirar o prazo máximo')}
+                <TaskDateChips task={task} today={today} chips={chips} hideDeadline={dueToday} />
               </span>
               <span className="line__actions">
-                {!deadline && deadlinePicker('Prazo máximo', 'line__action', 'Prazo')}
-                {queue && !task.waiting && (
-                  <button
-                    type="button"
-                    className="line__action"
-                    disabled={queue.ids.has(task.id)}
-                    title={queue.ids.has(task.id) ? 'Já está na fila de execução' : 'Adicionar ao fim da fila de execução'}
-                    onClick={() => queue.onAdd(task.id)}
-                  >
-                    {queue.ids.has(task.id) ? 'Na fila' : 'Adicionar à fila'}
-                  </button>
-                )}
+                <TaskActionButtons task={task} today={today} actions={taskActions(task, 'priorities')} isQueued={queueIds.has(task.id)} chips={chips} />
               </span>
-              {!automatic && (
-                <button
-                  type="button"
-                  className="line__star line__star--on"
-                  onClick={() => onDemote(task.id)}
-                  title="Tirar das prioridades"
-                  aria-label="Tirar das prioridades"
-                  aria-pressed={true}
-                >
-                  ★
-                </button>
-              )}
+              {!automatic && <PriorityStar on label="Tirar das prioridades" onToggle={() => taskCommands.setPriority(task.id, false)} />}
             </li>
             );
           })}

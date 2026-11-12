@@ -1,5 +1,6 @@
 import { Linkified } from '../components/Linkified';
 import { openTaskDetails } from './taskDetailsStore';
+import { taskText } from '../tasks/taskSurface';
 
 /** The text of a task; a click on it (not on a link inside it) opens the task details window. */
 export function TaskText({ taskId, text }: { taskId: string; text: string }) {
@@ -19,7 +20,7 @@ export function TaskText({ taskId, text }: { taskId: string; text: string }) {
         openTaskDetails(taskId);
       }}
     >
-      <Linkified text={text || '(tarefa sem texto)'} />
+      <Linkified text={taskText({ text })} />
     </span>
   );
 }
