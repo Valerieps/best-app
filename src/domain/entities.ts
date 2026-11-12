@@ -1,4 +1,3 @@
-import type { AssistantId, StatusLimits } from './cleanupStatus';
 import type { DayKey } from './day';
 
 /**
@@ -78,7 +77,7 @@ export type NotesDestination = 'pending' | 'wiki' | 'discarded';
 
 /**
  * Checkout decision for a section still on whiteboard (no project). `keptUnlinked` means the
- * whiteboards assistant was told to leave it as it is, so it stops suggesting it.
+ * the (removed) whiteboards assistant was told to leave it as it is.
  */
 export type WhiteboardDecision = 'pending' | 'leftUnlinked' | 'keptUnlinked';
 
@@ -115,7 +114,7 @@ export interface Section {
   ideaId?: string;
 }
 
-/** `merged` projects were joined into another one (`mergedInto`) by the duplicates assistant. */
+/** `merged` projects were joined into another one (`mergedInto`) by the (removed) duplicates assistant. */
 export type ProjectStatus = 'active' | 'finished' | 'merged';
 
 export interface Project {
@@ -126,7 +125,7 @@ export interface Project {
   updatedAt: string;
   finishedAt: string | null;
   mergedInto?: string | null;
-  /** Projects the duplicates assistant was told are not the same as this one. */
+  /** Projects the (removed) duplicates assistant was told are not the same as this one. */
   keepSeparateFrom?: string[];
   /** Section 4: at most one objective. */
   objectiveId?: string | null;
@@ -228,20 +227,10 @@ export interface Settings {
   /** Section 3: the warm-up checklist, in order. Empty or absent means no warm up. */
   warmupItems?: WarmupItem[];
   /**
-   * Limits, in days of waiting, for the colors of the cleanup dashboard; absent assistants use
-   * the defaults (ADR-045).
-   */
-  cleanupAgeLimits?: Partial<Record<AssistantId, StatusLimits>>;
-  /**
    * Days without a date, counted from creation, after which a task shows up in "Tarefas
    * esquecidas". Absent means the default (`DEFAULT_FORGOTTEN_TASK_DAYS`).
    */
   forgottenTaskDays?: number;
-  /**
-   * Limits by number of items, from before the colors measured age. Nothing reads them anymore:
-   * a count would make no sense as days.
-   */
-  cleanupLimits?: Partial<Record<AssistantId, StatusLimits>>;
   /** Whether the side column of the project page stays docked, for every project. */
   projectPanelPinned?: boolean;
   /** Which groups of the project list are open; absent groups use their default. */

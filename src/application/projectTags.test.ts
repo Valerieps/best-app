@@ -1,7 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { positionBetween } from '../domain/position';
 import { createTestContext } from '../test/fixtures';
-import { mergeProjects } from './assistants';
 import { closePendingDays } from './checkout';
 import { changeBlockKind, createBlock, linkSectionToProject, unlinkSection, updateBlockText } from './notebook';
 import { createProject, createProjectTask, renameProject } from './projects';
@@ -86,16 +85,5 @@ describe('project tag on a line (ADR-066)', () => {
     const saved = await db.blocks.get(line.id);
     expect(saved?.text).toBe('Subir o #[Best App] e o `#App`');
     expect(saved?.projectId).toBe(app.id);
-  });
-
-  it('rewrites the tags of merged projects as the kept one', async () => {
-    const { ctx, db } = createTestContext();
-    const keep = await createProject(ctx, 'Data Studios');
-    const dup = await createProject(ctx, 'DS');
-    const line = await createBlock(ctx, { sectionId: null, position: at() }, '[] Revisar #DS');
-    await mergeProjects(ctx, keep.id, [dup.id]);
-    const saved = await db.blocks.get(line.id);
-    expect(saved?.text).toBe('Revisar #[Data Studios]');
-    expect(saved?.projectId).toBe(keep.id);
   });
 });

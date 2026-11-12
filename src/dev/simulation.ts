@@ -1,4 +1,3 @@
-import { resolveWhiteboardGroup } from '../application/assistants';
 import {
   applyPlanning,
   applyTriage,
@@ -170,12 +169,6 @@ export class Simulation {
   async priority(task: Block): Promise<void> {
     this.step();
     await setDayPriority(this.ctx, task.id, true);
-  }
-
-  /** "Deixar como está" in the whiteboards assistant. */
-  async keepWhiteboard(section: Section): Promise<void> {
-    this.step();
-    await resolveWhiteboardGroup(this.ctx, [section.id], { kind: 'keep' });
   }
 
   async closePendingDays(): Promise<void> {

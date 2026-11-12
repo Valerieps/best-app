@@ -1,7 +1,7 @@
 # Fechar o dia e auto-triagem
 
 - **Entra aqui:** o "Fechar o dia", o ritual diário que antes se chamava checkout; os destinos de cada tipo de item; o quadro em que eu ponho tarefas na fila de execução; a auto-triagem; e o "Fechar dias pendentes". Antes, a auto-triagem tinha um arquivo próprio (`AUTO-TRIAGEM.md`).
-- **Não entra aqui:** o que acontece com o item depois do destino, como um hábito criado a partir de uma tarefa (`habitos.md`); e o que não perece de um dia para o outro, como seções sem projeto, que fica nos "Assistentes" da tela "Rituais" (`assistentes.md`).
+- **Não entra aqui:** o que acontece com o item depois do destino, como um hábito criado a partir de uma tarefa (`habitos.md`); e o que não perece de um dia para o outro, como seções sem projeto, que não tem tela própria.
 
 ## Em aberto
 
@@ -9,13 +9,13 @@
 
 ## Fechar o dia *(1a)*
 
-O "Fechar o dia" é curto, de cerca de um minuto: ele cuida só do que perece de um dia para o outro, enquanto eu ainda lembro do contexto. Todo o resto o app resolve sozinho ou deixa para os "Assistentes", que eu faço quando quiser e sem data (`assistentes.md`).
+O "Fechar o dia" é curto, de cerca de um minuto: ele cuida só do que perece de um dia para o outro, enquanto eu ainda lembro do contexto. Todo o resto o app resolve sozinho ou fica onde está.
 
 - O dia só vira depois da meia-noite.
 - O fechamento pode ser feito antes de o dia terminar e mais de uma vez por dia. Ao fim dele, eu posso continuar o mesmo dia normalmente. Se eu adicionar itens depois do fechamento, ele volta a ficar pendente.
 - Posso fechar o dia na manhã seguinte, descansada e com o contexto ainda fresco, sem que isso conte como atraso.
 - As notas não passam pelo fechamento: as de todas as seções, gerais ou de reunião, com projeto ou em quadro branco, ficam onde foram escritas, e as de seções vinculadas também aparecem na página do projeto (veja "Regras da auto-triagem" e `nota-do-dia.md`, "Notas depois do dia").
-- As seções em quadro branco também não passam pelo fechamento. Se o dia termina com uma seção em quadro branco, o conteúdo dela fica sem vínculo com projeto, e o assistente "Seções soltas" oferece converter em projeto ou vincular depois (`assistentes.md`).
+- As seções em quadro branco também não passam pelo fechamento. Se o dia termina com uma seção em quadro branco, o conteúdo dela fica sem vínculo com projeto, e eu vinculo a um projeto depois, pela própria seção.
 - O fechamento não leva nenhuma tarefa sozinho para lugar nenhum. Passam por ele as tarefas abertas do dia: as escritas nele e as que ainda têm uma data antiga para aquele dia (`tarefas.md`), além das tarefas aguardando (`pessoas.md`). Uma tarefa com data futura antiga, de antes do fim da data de intenção, fica de fora até o dia dela.
 - As tarefas são triadas num quadro (veja "Quadro do fechamento e fim do dia"). Numa seção vinculada a um projeto, elas continuam vinculadas a ele.
 - Um fechamento é considerado finalizado quando o dia termina sem nenhum item pendente para triagem.
@@ -72,7 +72,7 @@ Mostrar tudo numa tela só pesava, porque misturava tipos de decisão diferentes
 
 ### Depois do fechamento
 
-- Quando eu finalizo o dia, volto para onde comecei o fechamento: para a tela "Rituais", se eu o abri pelo calendário de "Fechar o dia" (`assistentes.md`), ou para a nota do dia de hoje, sem ir para o dia seguinte.
+- Quando eu finalizo o dia, volto para a nota do dia de hoje, sem ir para o dia seguinte.
 - Se eu fecho o dia antes de ele terminar, é porque quero recomeçar do zero: a nota de hoje fica limpa, como se eu tivesse acabado de começar o dia. Somem dela as notas (as de seção vinculada continuam na página do projeto, e as de seção sem vínculo no assistente "Seções soltas"), as tarefas finalizadas e as tarefas triadas, que continuam na lista de tarefas, na fila e na página do projeto. O que eu escrevo depois do fechamento aparece normalmente.
 - A nota de um dia que já passou continua mostrando tudo o que foi escrito nele, porque é pela paginação entre dias que eu encontro as notas (`nota-do-dia.md`, "Notas depois do dia").
 

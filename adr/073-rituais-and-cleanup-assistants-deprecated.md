@@ -1,0 +1,7 @@
+# ADR-073: The "Rituais" menu and the cleanup assistants are deprecated
+
+**Status:** Accepted
+**Date:** 2026-11-12
+**Decision:** The "Rituais" sidebar place and its screen leave the app, and with them the whole cleanup-assistant system: "Seções soltas", "Projetos repetidos", the calendar of days without a closing, the colored grid, and the age limits in the settings. Removed: `ui/cleanup/*`, `domain/assistants.ts`, `domain/cleanupStatus.ts`, `domain/ritualsCalendar.ts`, `application/assistants.ts` (including `mergeProjects` and `keepProjectsSeparate`), `loadCleanup*` and `loadDaysWithNotes`, `setCleanupLimits`, the `rituals` route (and `from: 'rituals'` on the checkout), the sidebar counter, and `spec/assistentes.md`. Old addresses (`#/rituais...`, `#/ordem...`, `#/foco`, `#/rumo`, ...) open the day note. Pending days are still closed from the day note's banner and its arrows (`spec/navegacao.md`).
+**Kept on purpose:** the stored fields `Section.whiteboardDecision`, `Project.keepSeparateFrom`, the `merged` project status and `mergedInto`, and any saved `cleanupAgeLimits`/`cleanupLimits` in old settings (the type no longer declares the last two). No migration and no new database version; old events such as `project.merged` and `section.keptUnlinked` stay in the history.
+**Why:** The owner decided that the screen and the two assistants were not worth their weight. The other planned assistants lived on the same screen and are dropped from the roadmap; a future one needs a new home first.

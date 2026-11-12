@@ -9,7 +9,6 @@ import { BackupSetupScreen } from './backup/BackupSetupScreen';
 import { ImportDialog } from './backup/ImportDialog';
 import { useAutoBackupState, useBackup } from './backup/useBackup';
 import { CheckoutScreen } from './checkout/CheckoutScreen';
-import { RitualsScreen } from './cleanup/RitualsScreen';
 import { ScreenHeader } from './components/ScreenHeader';
 import { DayNoteScreen } from './dayNote/DayNoteScreen';
 import { HabitsScreen } from './habits/HabitsScreen';
@@ -127,7 +126,7 @@ export function App() {
 
   return (
     <div className="shell">
-      <Sidebar route={route} pendingDays={pendingDays} backupState={backupState} />
+      <Sidebar route={route} backupState={backupState} />
       <PlacePalette />
       <div className={`shell__main ${centerCollapsed ? 'shell__main--collapsed' : ''}`}>
         <button
@@ -175,12 +174,9 @@ export function App() {
               focus={focus}
             />
           )}
-          {route.name === 'checkout' && <CheckoutScreen key={route.day} day={route.day} today={today} from={route.from} />}
+          {route.name === 'checkout' && <CheckoutScreen key={route.day} day={route.day} today={today} />}
           {route.name === 'active' && <ActiveTasksScreen today={today} />}
           {route.name === 'execute' && <ExecuteScreen today={today} />}
-          {route.name === 'rituals' && (
-            <RitualsScreen today={today} assistant={route.assistant} pendingDays={pendingDays} />
-          )}
           {route.name === 'projects' && <ProjectsScreen today={today} />}
           {route.name === 'project' && <ProjectScreen key={route.id} id={route.id} tab={route.tab ?? 'tasks'} today={today} />}
           {route.name === 'settings' && <SettingsScreen />}

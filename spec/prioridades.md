@@ -5,7 +5,7 @@
 
 ## Em aberto
 
-- [ ] A tarefa sem projeto e fora da fila só volta pela lista de tarefas, já que "Tarefas esquecidas" saiu (`assistentes.md`). O quadro do "Fechar o dia" deveria sugerir 2 ou 3 delas por dia, em rodízio pelas que estão há mais tempo sem aparecer?
+- [ ] A tarefa sem projeto e fora da fila só volta pela lista de tarefas, já que "Tarefas esquecidas" saiu. O quadro do "Fechar o dia" deveria sugerir 2 ou 3 delas por dia, em rodízio pelas que estão há mais tempo sem aparecer?
 
 Eu escolho os projetos em foco quando quiser. O que fazer, eu escolho pondo tarefas na fila de execução, no fechamento do dia ou a qualquer momento *(7)*.
 

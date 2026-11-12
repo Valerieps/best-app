@@ -1,4 +1,3 @@
-import { normalizeLimits, type AssistantId } from '../domain/cleanupStatus';
 import { toDayKey } from '../domain/day';
 import type { Appearance, AutoBackupInterval, DayNoteFocus, ProjectListGroup, RightPanelMenu, Settings, WarmupItem } from '../domain/entities';
 import { record } from './events';
@@ -26,17 +25,6 @@ export async function updateSettings(
 /** Section 3: the weekdays the user works. "Dia seguinte" skips the others. */
 export function setActiveDays(ctx: AppContext, activeDays: number[]): Promise<void> {
   return updateSettings(ctx, { activeDays: [...new Set(activeDays)].sort() });
-}
-
-/**
- * Limits, in days, for the color of one cleanup assistant on the dashboard; null brings back
- * the defaults. Limits are normalized, so orange never starts before yellow.
- */
-export function setCleanupLimits(ctx: AppContext, id: AssistantId, limits: readonly number[] | null): Promise<void> {
-  return updateSettings(ctx, (current) => {
-    const { [id]: _previous, ...others } = current.cleanupAgeLimits ?? {};
-    return { cleanupAgeLimits: limits ? { ...others, [id]: normalizeLimits(limits) } : others };
-  });
 }
 
 /** Whether the project page's side column stays docked. One choice for every project. */
