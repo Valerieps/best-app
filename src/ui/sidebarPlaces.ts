@@ -49,7 +49,7 @@ export function sidebarGroups({ counts, dueCount, features }: Input): SidebarGro
       key: 'start',
       entries: [
         { place: 'day', route: { name: 'day' }, label: 'Hoje' },
-        { place: 'execute', route: { name: 'execute' }, label: 'Executar' },
+        { place: 'execute', route: { name: 'execute' }, label: 'Fila de execução' },
         { place: 'rituals', route: { name: 'rituals' }, label: 'Rituais', due: dueCount },
       ],
     },

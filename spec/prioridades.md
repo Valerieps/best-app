@@ -1,6 +1,6 @@
 # Prioridades
 
-- **Entra aqui:** as prioridades do dia, os projetos em foco, os próximos passos dos projetos e a tela "Executar".
+- **Entra aqui:** as prioridades do dia, os projetos em foco, os próximos passos dos projetos e a fila de execução.
 - **Não entra aqui:** as funcionalidades dos projetos (`projetos.md`).
 
 ## Em aberto
@@ -41,14 +41,16 @@ Por quê: na hora de executar, eu não sabia no que focar, e a única forma de p
 - Uma tarefa aguardando (`pessoas.md`) não é minha para fazer e não ganha "Próximo". Se a tarefa muda de projeto ou perde o projeto, ela sai dos próximos passos do projeto antigo e não entra nos do novo; juntar projetos faz o mesmo com as tarefas que mudam. Reabrir uma tarefa finalizada não a devolve aos próximos passos.
 - Um próximo passo que não está travado sai de "Próximos dias" e de "Sem data" na página do projeto e aparece só em "Próximos passos", com a data na linha: a tarefa nunca aparece duas vezes na página.
 
-## Tela "Executar" *(7)*
+## Fila de execução *(7)*
 
-- É a tela de quando eu paro para fazer as coisas: mostra numa visão só o que pede atenção agora, sem eu entrar em cada projeto.
-- A tela abre pela barra lateral, no grupo Hoje, logo abaixo de "Hoje". Ela não substitui "Próximos dias" (`tarefas.md`). Ela também abre inteira no painel da direita, ao lado de qualquer tela (`navegacao.md`, "Painel da direita").
-- Mostra, nesta ordem: as prioridades do dia; as outras tarefas com data de hoje ou atrasadas; os prazos chegando; e os próximos passos dos projetos, agrupados por projeto.
-- Uma tarefa cujo prazo máximo já passou entra com as atrasadas, mesmo com a data de intenção no futuro ou sem data.
-- "Prazos chegando" são as tarefas com prazo máximo nos próximos dias. Um seletor escolhe quantos dias: nenhum, 3, 7 ou 14; começa em 7. A tarefa com prazo hoje já é prioridade do dia.
-- Os próximos passos vêm em grupos por projeto: primeiro os projetos em foco, na ordem do foco, e depois os outros, por nome. Dentro do grupo, na ordem em que eu os marquei.
-- Uma tarefa aparece uma vez só na tela, no primeiro lugar em que entra; um próximo passo que já aparece mais acima mostra a marca de próximo ali.
-- Um filtro escolhe se os próximos passos vêm de todos os projetos ativos ou só dos projetos em foco. Eu escolho na hora, e a escolha fica guardada neste navegador, junto com a de "Prazos chegando".
-- Nas tarefas, eu tenho as mesmas ações da nota do dia: finalizar pelo checkbox e, no hover, mudar a data de intenção e o prazo, promover a prioridade do dia e marcar ou desmarcar "Próximo". Mudar a data de intenção de uma prioridade aqui é imediato, sem a contagem do bloco da nota do dia: a tarefa vai para a data nova e sai das prioridades de hoje, a não ser que o prazo seja hoje.
+Por quê: a tela "Executar" mostrava tudo o que pedia atenção, em quatro listas, e eu ainda tinha que escolher ali o que fazer. Na fila, eu escolho antes e só executo, na ordem que eu quiser. Decidido em 12/11/2026; a fila substituiu a tela "Executar".
+
+- É a tela de quando eu paro para fazer as coisas: mostra só as tarefas que eu pus na fila. Prioridades do dia, tarefas atrasadas, prazos chegando e próximos passos continuam nos lugares deles (a nota do dia, a lista de tarefas, a página do projeto) e não aparecem aqui.
+- A tela abre pela barra lateral, no grupo Hoje, logo abaixo de "Hoje", com o nome "Fila de execução". Ela não substitui "Próximos dias" (`tarefas.md`). Ela também abre inteira no painel da direita, ao lado de qualquer tela (`navegacao.md`, "Painel da direita").
+- Toda tarefa aberta minha ganha, no hover, "Adicionar à fila": na nota do dia, no bloco de prioridades, na lista de tarefas e na página do projeto. Uma tarefa que já está na fila mostra "Na fila", sem efeito, e não ganha outra marca na linha. Uma tarefa aguardando (`pessoas.md`) não é minha para fazer e não ganha a ação.
+- A tarefa entra no fim da fila: a fila fica na ordem em que eu adicionei. Uma alça à esquerda de cada tarefa deixa eu arrastar para mudar a ordem.
+- Dentro da fila, cada tarefa tem "Remover da fila", que a tira da fila sem mudar mais nada nela.
+- Finalizar ou abandonar a tarefa, em qualquer lugar, a tira da fila. Reabrir a tarefa não a devolve. Uma tarefa que passa a ser aguardando some da fila.
+- A fila vale até eu mudá-la: passar o dia ou fechar o dia não a esvazia. Não há limite de tarefas.
+- Na fila, cada tarefa mostra embaixo, pequeno e discreto, o nome do projeto, quando tem; clicar abre a página do projeto.
+- Nas tarefas da fila, eu tenho as mesmas ações das listas: finalizar pelo checkbox e, no hover, mudar a data de intenção e o prazo, marcar ou desmarcar "Próximo", vincular a um projeto e abandonar. Mudar a data não tira a tarefa da fila.

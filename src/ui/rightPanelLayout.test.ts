@@ -26,8 +26,8 @@ describe('right panel width', () => {
 });
 
 describe('the menu shown in the right panel', () => {
-  it('has "Executar" as its first menu', () => {
-    expect(RIGHT_PANEL_MENUS[0]).toMatchObject({ menu: 'execute', label: 'Executar' });
+  it('has "Fila de execução" as its first menu', () => {
+    expect(RIGHT_PANEL_MENUS[0]).toMatchObject({ menu: 'execute', label: 'Fila de execução' });
   });
 
   it('shows the menu left open', () => {

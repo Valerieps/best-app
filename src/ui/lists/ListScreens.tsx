@@ -1,5 +1,6 @@
 import { useEffect, useState, type MouseEvent } from 'react';
 import { setDeadline, setDeadlines, setIntendedDate, setIntendedDates, setTaskProject } from '../../application/dayTools';
+import { addToQueue } from '../../application/executionQueue';
 import { setNextStep } from '../../application/nextSteps';
 import { abandonTask, abandonTasks, setTaskDone } from '../../application/notebook';
 import { loadActiveTasks, loadFinishedTasks, loadTaskListContext, type TaskListItem } from '../../application/queries';
@@ -10,7 +11,7 @@ import { TASK_LIST_KEYS, groupTasks, inFocusProjects, onlyNextSteps, type TaskGr
 import { AbandonAction } from '../components/AbandonAction';
 import { ProjectChip } from '../components/Chips';
 import { Icon } from '../components/Icon';
-import { DatePicker } from '../dayNote/BlockLine';
+import { DatePicker, type LineDragProps } from '../dayNote/BlockLine';
 import { Linkified } from '../components/Linkified';
 import { ScreenHeader } from '../components/ScreenHeader';
 import { LoadingPage } from '../components/Skeleton';
@@ -35,6 +36,8 @@ export function TaskRow({
   action,
   extra,
   selection,
+  drag,
+  quietProject = false,
 }: {
   item: TaskListItem;
   today: DayKey;
@@ -45,6 +48,10 @@ export function TaskRow({
   extra?: React.ReactNode;
   /** In a batch selection, a click anywhere on the row picks it, highlighted, as in the planning. */
   selection?: { on: boolean; onPick(event: MouseEvent): void };
+  /** Reordering by dragging the handle, as in the "Fila de execução". */
+  drag?: LineDragProps;
+  /** The project as small muted text under the task, instead of the chip at the end. */
+  quietProject?: boolean;
 }) {
   const { task, project } = item;
   const when = task.intendedDate ? relativeDay(task.intendedDate, today) : 'sem data';
@@ -53,10 +60,17 @@ export function TaskRow({
   const meta = [active ? when : null, deadline, postponedLabel(task.postponeCount)].filter(Boolean).join(' · ');
   return (
     <li
-      className={`card-list__item card-list__item--stacked ${task.status === 'done' ? 'active-tasks__row--done' : ''} ${selection ? 'active-tasks__row--select' : ''} ${selection?.on ? 'active-tasks__row--on' : ''}`}
+      className={`card-list__item card-list__item--stacked ${task.status === 'done' ? 'active-tasks__row--done' : ''} ${selection ? 'active-tasks__row--select' : ''} ${selection?.on ? 'active-tasks__row--on' : ''} ${drag?.dragging ? 'task-row--dragging' : ''} ${drag?.mark ? `task-row--drop-${drag.mark}` : ''}`}
       onClick={selection?.onPick}
+      data-drag-group={drag?.group}
+      data-drag-id={drag ? task.id : undefined}
     >
       <div className="task-row">
+        {drag && (
+          <span className="task-row__handle" title="Arraste para mudar a ordem" aria-hidden="true" onPointerDown={drag.onStart}>
+            ⠿
+          </span>
+        )}
         {action}
         {selection ? (
           <button type="button" className="task-row__text" aria-pressed={selection.on}>
@@ -75,8 +89,13 @@ export function TaskRow({
         )}
         {extra}
         {/* Always the last item of the row, after the hover actions. */}
-        {project && <ProjectChip name={project.name} href={selection ? undefined : routeHash({ name: 'project', id: project.id })} />}
+        {project && !quietProject && <ProjectChip name={project.name} href={selection ? undefined : routeHash({ name: 'project', id: project.id })} />}
       </div>
+      {project && quietProject && (
+        <a className="task-row__project" href={routeHash({ name: 'project', id: project.id })} title="Abrir a página do projeto">
+          {project.name}
+        </a>
+      )}
     </li>
   );
 }
@@ -254,18 +273,32 @@ export function ActiveTaskActions({
   today,
   projects,
   isNext,
+  inQueue,
   onIntendedDate,
 }: {
   item: TaskListItem;
   today: DayKey;
   projects: Project[];
   isNext: boolean;
+  /** Whether the task is in the "Fila de execução"; absent hides the queue action. */
+  inQueue?: boolean;
   /** Replaces the plain date change, as for a priority of the day, which leaves the priorities. */
   onIntendedDate?(date: DayKey | null): void;
 }) {
   const { task } = item;
   return (
     <span className="active-tasks__actions">
+      {inQueue !== undefined && !task.waiting && (
+        <button
+          type="button"
+          className="line__action"
+          disabled={inQueue}
+          title={inQueue ? 'Já está na fila de execução' : 'Adicionar ao fim da fila de execução'}
+          onClick={() => void addToQueue(appContext, task.id)}
+        >
+          {inQueue ? 'Na fila' : 'Adicionar à fila'}
+        </button>
+      )}
       {item.project && !task.waiting && (
         <button
           type="button"
@@ -430,6 +463,7 @@ export function ActiveTasksScreen({ today }: { today: DayKey }) {
   const groups = groupTasks(items, groupBy, sortBy);
   const groupId = (key: string | null) => `${groupBy}:${key ?? ''}`;
   const nextSet = new Set(context.nextStepIds);
+  const queueSet = new Set(context.queueIds);
   const isOpen = (item: TaskListItem) => item.task.status === 'active';
   // Only open tasks can be selected: the batch actions are for them.
   const shownIds = groups.flatMap((group) => group.items.filter(isOpen).map((item) => item.task.id));
@@ -504,7 +538,7 @@ export function ActiveTasksScreen({ today }: { today: DayKey }) {
               )
             }
             selection={selecting && open ? { on: selected.has(id), onPick: (event) => pick(id, event) } : undefined}
-            extra={selecting || !open ? undefined : <ActiveTaskActions item={item} today={today} projects={context.activeProjects} isNext={nextSet.has(id)} />}
+            extra={selecting || !open ? undefined : <ActiveTaskActions item={item} today={today} projects={context.activeProjects} isNext={nextSet.has(id)} inQueue={queueSet.has(id)} />}
           />
         );
       })}

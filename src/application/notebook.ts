@@ -5,6 +5,7 @@ import { isPeopleTitle } from '../domain/people';
 import { adoptFirstPart, carriedPosition, placeInOrder, type Ordered } from '../domain/order';
 import { canEditFreely, lastTriagedDayAfterReopen } from '../domain/tasks';
 import { record } from './events';
+import { releaseFromQueue } from './executionQueue';
 import { releaseNextStep } from './nextSteps';
 import type { AppContext, StoreTransaction } from './ports';
 import { addProject, renameProjectIn } from './projects';
@@ -526,6 +527,7 @@ export async function finishTaskIn(ctx: AppContext, tx: StoreTransaction, task: 
   const finished: Block = { ...task, status: 'done', closedAt: nowIso(ctx), updatedAt: nowIso(ctx) };
   await tx.blocks.put(finished);
   await releaseNextStep(ctx, tx, task, 'finished', day);
+  await releaseFromQueue(ctx, tx, task, 'finished', day);
   await record(ctx, tx, 'task.finished', 'block', task.id, day, {
     intendedDate: task.intendedDate,
     firstIntendedDate: task.firstIntendedDate,
@@ -585,6 +587,7 @@ export async function abandonTasks(ctx: AppContext, taskIds: readonly string[]):
       if (!task || task.kind !== 'task' || task.status !== 'active') continue;
       await tx.blocks.put({ ...task, status: 'abandoned', closedAt: nowIso(ctx), updatedAt: nowIso(ctx) });
       await releaseNextStep(ctx, tx, task, 'abandoned');
+      await releaseFromQueue(ctx, tx, task, 'abandoned');
       await record(ctx, tx, 'task.abandoned', 'block', task.id, today(ctx));
     }
   });

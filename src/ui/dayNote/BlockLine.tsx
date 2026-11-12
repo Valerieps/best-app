@@ -61,6 +61,8 @@ export interface LineHandlers {
   onTogglePriority(block: Block, on: boolean): void;
   /** Marks or unmarks "Próximo", a next step of the task's project. Absent hides the action. */
   onToggleNext?(block: Block, on: boolean): void;
+  /** "Adicionar à fila" (spec/prioridades.md, "Fila de execução"). Absent hides the action. */
+  onAddToQueue?(block: Block): void;
   /** Takes an active task out of circulation (trash icon, confirmed with a second click). Absent hides the action. */
   onAbandon?(block: Block): void;
   /** Alt + ↑/↓: moves the line inside its group (request 2). Absent where lines keep their order. */
@@ -98,6 +100,8 @@ interface Props {
   isPriority: boolean;
   /** Marked "Próximo" in its project (spec/prioridades.md, "Próximos passos"). */
   isNext?: boolean;
+  /** In the "Fila de execução": the action shows "Na fila", disabled. */
+  isQueued?: boolean;
   /** False when looking at a past day: Enter does not create lines there. */
   allowNewLines: boolean;
   handlers: LineHandlers;
@@ -170,7 +174,7 @@ export function DatePicker({
   );
 }
 
-export function BlockLine({ block, free, day, today, isPriority, isNext = false, allowNewLines, handlers, extraMeta, hideDate = false, drag, selected = false, notesOnly = false }: Props) {
+export function BlockLine({ block, free, day, today, isPriority, isNext = false, isQueued = false, allowNewLines, handlers, extraMeta, hideDate = false, drag, selected = false, notesOnly = false }: Props) {
   const ref = useRef<HTMLTextAreaElement>(null);
   const [text, setText] = useState(block.text);
   const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -703,6 +707,17 @@ export function BlockLine({ block, free, day, today, isPriority, isNext = false,
         <span className="line__tail">
           <span className="line__actions">
             {open && !waiting && !isPriority && starButton()}
+            {open && isTask && !waiting && handlers.onAddToQueue && (
+              <button
+                type="button"
+                className="line__action"
+                disabled={isQueued}
+                title={isQueued ? 'Já está na fila de execução' : 'Adicionar ao fim da fila de execução'}
+                onClick={() => handlers.onAddToQueue?.(block)}
+              >
+                {isQueued ? 'Na fila' : 'Adicionar à fila'}
+              </button>
+            )}
             {open && !waiting && block.projectId !== null && handlers.onToggleNext && (
               <button
                 type="button"
