@@ -3,17 +3,15 @@ import type { PriorityList, Project } from './entities';
 import { weekKey, type WeekKey } from './week';
 
 /**
- * Section 2: "Projetos em foco" (spec/prioridades.md). Up to 3 projects, which I add, swap and
+ * Section 2: "Projetos em foco" (spec/prioridades.md). Any number of projects, which I add and
  * remove at any time. There is a single list, stored with id `focusProjects`.
  */
 
-export const FOCUS_PROJECT_LIMIT = 3;
-
 export const FOCUS_LIST_ID = 'focusProjects';
 
-/** Ids in a list as recorded, without repeats and at most 3: what was chosen, whatever happened later. */
+/** Ids in a list as recorded, without repeats: what was chosen, whatever happened later. */
 export function recordedFocusProjects(list: Pick<PriorityList, 'itemIds'> | undefined): string[] {
-  return [...new Set(list?.itemIds ?? [])].slice(0, FOCUS_PROJECT_LIMIT);
+  return [...new Set(list?.itemIds ?? [])];
 }
 
 /** The projects in focus as shown: only active ones, in the order chosen. */
@@ -22,32 +20,15 @@ export function focusProjectIds(list: Pick<PriorityList, 'itemIds'> | undefined,
   return recordedFocusProjects(list).filter((id) => active.has(id));
 }
 
-export function hasFreeSlot(ids: readonly string[]): boolean {
-  return ids.length < FOCUS_PROJECT_LIMIT;
-}
-
-/**
- * Adding takes a free slot, at the end. Returns the new list, or null when nothing changes (the
- * list is full or already has the project).
- */
+/** Adding puts the project at the end. Returns the new list, or null when it already has the project. */
 export function withAddedProject(ids: readonly string[], projectId: string): string[] | null {
-  if (ids.includes(projectId) || !hasFreeSlot(ids)) return null;
+  if (ids.includes(projectId)) return null;
   return [...ids, projectId];
 }
 
-/** Removing frees a slot. Returns the new list, or null when the project is not in it. */
+/** Returns the new list, or null when the project is not in it. */
 export function withRemovedProject(ids: readonly string[], projectId: string): string[] | null {
   return ids.includes(projectId) ? ids.filter((id) => id !== projectId) : null;
-}
-
-/**
- * Swapping puts a project in the place of one in the list, keeping its position, so a full list
- * can change in one step. Returns the new list, or null when nothing changes (the project to
- * take out is not in the list, or the one to put in already is).
- */
-export function withSwappedProject(ids: readonly string[], outId: string, inId: string): string[] | null {
-  if (!ids.includes(outId) || ids.includes(inId)) return null;
-  return ids.map((id) => (id === outId ? inId : id));
 }
 
 // Before the single list (versions 6 and earlier), the priority projects belonged to a week.
@@ -85,8 +66,7 @@ function stringIds(value: unknown): string[] {
 
 /**
  * Version 6 (ADR-035): month lists of projects (`month:AAAA-MM`) become week lists. A month's
- * list becomes the list of the week of the month's first day. Only the first 3 projects of a
- * month are kept. Other rows pass through untouched; anything malformed is left for the backup
+ * list becomes the list of the week of the month's first day. The first 3 projects of a month are kept (the limit of the time). Other rows pass through untouched; anything malformed is left for the backup
  * validation to reject.
  */
 export function migrateMonthPriorityLists<T>(rows: readonly T[]): T[] {
@@ -104,7 +84,7 @@ export function migrateMonthPriorityLists<T>(rows: readonly T[]): T[] {
       id,
       scope: 'weekProjects',
       period: week,
-      itemIds: [...new Set(stringIds(row.itemIds))].slice(0, FOCUS_PROJECT_LIMIT),
+      itemIds: [...new Set(stringIds(row.itemIds))].slice(0, 3),
       updatedAt: typeof row.updatedAt === 'string' ? row.updatedAt : '',
     });
   }

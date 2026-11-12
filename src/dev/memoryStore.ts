@@ -73,6 +73,19 @@ export class MemoryStore implements Store, Reader {
       blocksOfProject: async (projectId) => this.blocks().filter((block) => block.projectId === projectId),
       sectionsOfProject: async (projectId) => this.sections().filter((section) => section.projectId === projectId),
       priorityListsBetween: (fromId, toId) => this.priorityListsBetween(fromId, toId),
+      resourcesOf: (ownerId) => this.resourcesOf(ownerId),
+      deleteEventsOfEntities: async (entityIds) => {
+        const events = this.tables.get('events')!;
+        const wanted = new Set(entityIds);
+        let removed = 0;
+        for (const [id, event] of [...events]) {
+          if (wanted.has((event as DomainEvent).entityId)) {
+            events.delete(id);
+            removed += 1;
+          }
+        }
+        return removed;
+      },
       appendEvent: async (event) => {
         const events = this.tables.get('events')!;
         if (events.has(event.id)) throw new Error(`Event ${event.id} already exists`);

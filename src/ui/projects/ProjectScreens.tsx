@@ -215,7 +215,7 @@ export function ProjectScreen({ id, tab, today }: { id: string; tab: 'tasks' | '
                 <Icon name="star" size="sm" filled />
               </span>
             )}
-            <ProjectActionsMenu project={project} objectives={objectives} focus={view} />
+            <ProjectActionsMenu project={project} objectives={objectives} focus={view} onDeleted={() => navigate({ name: 'projects' })} />
           </header>
 
 
