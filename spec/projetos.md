@@ -12,13 +12,16 @@
 - Um projeto é uma coleção de tarefas que fazem sentido juntas. Os projetos já existem por baixo dos panos desde o 1a, criados a partir de seções em quadro branco convertidas; esta parte dá a eles funcionalidades próprias.
 - Uma tarefa pode existir sem projeto e se vincula a no máximo um projeto.
 - Projetos só são finalizados manualmente: eu abro o projeto e finalizo.
-- Posso criar uma tarefa direto na página do projeto; ela já nasce vinculada a ele. Ela nasce ativa e fica só no projeto: não entra na nota do dia de hoje nem no fechamento do dia. Quando eu quiser fazê-la, ponho na fila de execução. Assim eu monto o backlog do projeto sem precisar triar cada item no fim do dia.
+- Posso criar uma tarefa direto na página do projeto; ela já nasce vinculada a ele. Ela nasce ativa e fica só no projeto: não entra na nota do dia de hoje nem no fechamento do dia. Quando eu quiser fazê-la, ponho na fila de execução. Assim eu monto a lista de tarefas do projeto sem precisar triar cada item no fim do dia.
 - Cada projeto tem um ícone, que eu escolho numa coleção de ícones estilizados do app. Enquanto eu não escolho, o projeto mostra a inicial do nome.
 
 ## Lista de projetos *(2)*
 
 - A lista de projetos é onde eu acompanho os projetos; a página do projeto é onde eu executo. Métricas e visualizações de acompanhamento ficam na lista, e a página do projeto fica focada nas tarefas.
-- A lista de projetos mostra os projetos em foco numa lista, no alto, e os outros projetos ativos em outra lista com contador, que eu posso recolher. As duas listas têm as mesmas linhas. Um "Colocar em foco" abaixo da lista deixa eu escolher um projeto ativo. Os projetos finalizados ficam num grupo recolhido. O app lembra se deixei cada grupo aberto ou fechado.
+- A lista de projetos mostra os projetos em foco numa lista, no alto, e os outros projetos ativos em outra lista com contador, que eu posso recolher. As duas listas têm as mesmas linhas. Um "Colocar em foco" abaixo da lista deixa eu escolher um projeto ativo. Os projetos em backlog ficam num grupo "Backlog", recolhido, e os finalizados em outro grupo recolhido. O app lembra se deixei cada grupo aberto ou fechado.
+- Um projeto tem um destes status: em foco, ativo, backlog ou finalizado. Backlog é onde eu guardo os projetos que não vou tocar agora, sem finalizá-los. Um projeto em backlog nunca conta como parado e não aparece onde eu escolho projetos ativos (vincular seção, autocompletar tag, mover tarefa); uma `#tag` com o nome dele ainda acha o projeto. *(2)*
+  - Por quê: separar o que está parado de propósito do que está parado por esquecimento, sem ter de finalizar.
+- Quando eu passo o mouse numa linha da lista, aparecem os botões "Em foco", "Ativo" e "Backlog", com o status atual marcado. Um projeto vai de qualquer status para qualquer outro, inclusive um finalizado, que é reaberto. *(2)*
 - Cada linha mostra o nome e quantas tarefas estão ativas, ou "Parado há N dias". Não há mapa de atividade nem contagem de dias seguidos.
 - Atividade num projeto é qualquer uma destas coisas: tarefa criada, tarefa finalizada, nota escrita ou seção aberta vinculada a ele, também as notas escritas direto na página do projeto.
 - A lista não mostra progresso em fração do total ("4 de 10"), porque eu nem sempre sei todas as tarefas que vão compor o projeto.

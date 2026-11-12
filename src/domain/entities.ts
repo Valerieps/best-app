@@ -115,7 +115,8 @@ export interface Section {
 }
 
 /** `merged` projects were joined into another one (`mergedInto`) by the (removed) duplicates assistant. */
-export type ProjectStatus = 'active' | 'finished' | 'merged';
+/** `backlog`: kept for later, out of the active list (spec/projetos.md, "Backlog"). */
+export type ProjectStatus = 'active' | 'backlog' | 'finished' | 'merged';
 
 export interface Project {
   id: string;
@@ -267,7 +268,7 @@ export type Appearance = 'light' | 'dark' | 'system';
 export type AutoBackupInterval = 'afterChange' | 'quarterHour' | 'hour';
 
 /** Collapsible groups of the project list: "Outros ativos" (open by default) and "Finalizados" (closed). */
-export type ProjectListGroup = 'others' | 'finished';
+export type ProjectListGroup = 'others' | 'backlog' | 'finished';
 
 /** Menus of the right panel (spec/navegacao.md, "Painel da direita"). */
 export type RightPanelMenu = 'execute';

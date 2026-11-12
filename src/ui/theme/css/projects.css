@@ -583,7 +583,7 @@ button.projects__toggle {
 
 .project-row {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 9rem auto;
+  grid-template-columns: minmax(0, 1fr) 9rem auto auto;
   align-items: center;
   gap: var(--space-3);
   padding: var(--space-2) var(--space-3) var(--space-2) var(--space-4);
@@ -594,7 +594,24 @@ button.projects__toggle {
 }
 
 .project-row--finished {
-  grid-template-columns: minmax(0, 1fr) auto auto;
+  grid-template-columns: minmax(0, 1fr) auto auto auto;
+}
+
+/* "Em foco · Ativo · Backlog": only while the mouse is over the row, or a button has the focus. */
+.project-row__places {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.project-row:hover .project-row__places,
+.project-row__places:focus-within {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.project-row__places .segmented__option:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
 }
 
 .project-row__name {
