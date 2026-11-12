@@ -1,4 +1,4 @@
-# ADR-074: "Apagar projeto" erases the project and its history
+# ADR-075: "Apagar projeto" erases the project and its history
 
 **Status:** Accepted
 **Date:** 2026-11-12

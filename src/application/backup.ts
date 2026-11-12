@@ -313,7 +313,7 @@ export function computeImportLoss(current: BackupTables, incoming: BackupTables)
     sections: tableLoss('sections', current.sections, incoming.sections, deleted),
     projects: tableLoss('projects', current.projects, incoming.projects, deleted),
     days: tableLoss('days', current.days, incoming.days, deleted),
-    // The history of a project deleted on purpose is gone on purpose (ADR-074).
+    // The history of a project deleted on purpose is gone on purpose (ADR-075).
     missingEvents: current.events.filter((event) => !incomingEvents.has(event.id) && !deleted.has(deletionKey(event.entityType, event.entityId))).length,
   };
   const hasLoss =
