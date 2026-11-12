@@ -189,8 +189,6 @@ function TaskDetailsDialog({ details, today }: { details: TaskDetails; today: Da
             </dd>
           </>
         )}
-        <dt>Adiamentos</dt>
-        <dd>{task.postponeCount}</dd>
         {task.closedAt && (
           <>
             <dt>{task.status === 'done' ? 'Concluída em' : 'Encerrada em'}</dt>

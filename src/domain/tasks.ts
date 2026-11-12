@@ -2,18 +2,6 @@ import { addDays, laterDay, type DayKey } from './day';
 import { nextActiveDay } from './dayFlow';
 import type { Block, Section } from './entities';
 
-/** Tasks postponed this many times get highlighted at checkout. */
-export const POSTPONE_ATTENTION_THRESHOLD = 3;
-
-/**
- * A postponement is any move of the intended date to later, including removing it.
- * Setting the first intended date (from null) is not a postponement.
- */
-export function isPostponement(from: DayKey | null, to: DayKey | null): boolean {
-  if (from === null) return false;
-  return to === null || to > from;
-}
-
 /**
  * "Dia seguinte" when checking out `day`: the next active day after it (section 3), but never
  * before today.

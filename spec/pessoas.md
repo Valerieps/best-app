@@ -22,7 +22,7 @@
 - Uma tarefa aguardando é algo que a pessoa me deve. Eu crio uma começando a linha com `[a]` e espaço (a de aguardando), como o `[]` da tarefa comum, ou marco uma tarefa já escrita com "Aguardando", no hover.
 - Ela tem uma data para cobrar. Na data para cobrar, ela aparece na nota do dia. A data para cobrar continuou quando a data de intenção das minhas tarefas saiu (`tarefas.md`), e é a única data que a página da pessoa mostra. *(decidido pelo agente; veja a issue #164)*
 - Sem data para cobrar, ela passa pelo "Fechar o dia" (`checkout.md`). No dia da data para cobrar, se ainda não chegou, ela também passa.
-- Mudar a data para cobrar não conta como adiamento, e ela não entra nas métricas da precisão da data de intenção.
+- A data para cobrar não entra nas métricas da precisão da data de intenção.
 - Ela não entra na lista de tarefas, na fila de execução nem nas prioridades do dia: aparece na página da pessoa, na tela "Pessoas" e na nota do dia da data para cobrar.
 - Quando a pessoa entrega, eu concluo pelo checkbox, e acontece o mesmo que com uma tarefa concluída.
 

@@ -2,25 +2,11 @@ import { describe, expect, it } from 'vitest';
 import { section, task, note } from '../test/builders';
 import {
   canEditFreely,
-  isPostponement,
   isTaskPendingOn,
   lastTriagedDayAfterReopen,
   nextPlanningDay,
   undateArchivedTask,
 } from './tasks';
-
-describe('isPostponement', () => {
-  it('counts moving the date later and removing it', () => {
-    expect(isPostponement('2026-10-11', '2026-10-12')).toBe(true);
-    expect(isPostponement('2026-10-11', null)).toBe(true);
-  });
-
-  it('does not count the first intended date or moving earlier', () => {
-    expect(isPostponement(null, '2026-10-12')).toBe(false);
-    expect(isPostponement('2026-10-14', '2026-10-12')).toBe(false);
-    expect(isPostponement('2026-10-12', '2026-10-12')).toBe(false);
-  });
-});
 
 describe('nextPlanningDay', () => {
   it('is the day after the triaged day, but never before today', () => {

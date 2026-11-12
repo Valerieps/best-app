@@ -40,5 +40,5 @@ Por quê: a tela "Executar" mostrava tudo o que pedia atenção, em quatro lista
 - Na página do projeto, as tarefas do projeto que estão na fila ficam num grupo "Na fila", na ordem da fila, antes de todas as outras (`projetos.md`, "Página do projeto"). Uma tarefa na fila sai de "A fazer": a tarefa nunca aparece duas vezes na página.
 - A fila vale até eu mudá-la: passar o dia ou fechar o dia não a esvazia. Não há limite de tarefas.
 - Na fila, cada tarefa mostra embaixo, pequeno e discreto, o nome do projeto, quando tem; clicar abre a página do projeto.
-- A linha da tarefa na fila não mostra prazo nem adiamentos: só o texto e o nome do projeto. Eles continuam nas outras telas.
+- A linha da tarefa na fila não mostra o prazo: só o texto e o nome do projeto. Eles continuam nas outras telas.
 - Nas tarefas da fila, eu tenho as mesmas ações das listas: finalizar pelo checkbox e, no hover, mudar o prazo, vincular a um projeto e abandonar. Mudar o prazo não tira a tarefa da fila.

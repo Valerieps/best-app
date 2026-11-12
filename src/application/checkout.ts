@@ -68,14 +68,12 @@ export async function applyTaskDecision(
       // Settled for the day, as it is: only `lastTriagedDay` changes, below.
     } else if (decision.kind === 'queue') {
       // Into the queue, and out of any day: a task of mine has no intended date any more (ADR-072).
-      task = await moveIntendedDate(ctx, tx, task, null, day, 'checkout', { postpone: false });
+      task = await moveIntendedDate(ctx, tx, task, null, day, 'checkout');
       await tx.blocks.put(task);
       await queueIn(ctx, tx, task.id, day);
     } else if (decision.kind === 'schedule' || decision.kind === 'undate') {
       const to = decision.kind === 'schedule' ? decision.date : null;
-      // A task left untouched in the triage goes to the task list without counting as postponed.
-      const quiet = decision.kind === 'undate' && decision.untouched === true;
-      task = await moveIntendedDate(ctx, tx, task, to, day, 'checkout', { postpone: !quiet });
+      task = await moveIntendedDate(ctx, tx, task, to, day, 'checkout');
     } else if (decision.kind === 'habit') {
       const habit = await addHabitIn(ctx, tx, { name: task.text || 'Hábito', criterion: '', weekdays: [], objectiveId: null });
       task = { ...task, status: 'converted', closedAt: nowIso(ctx), updatedAt: nowIso(ctx) };
@@ -248,7 +246,7 @@ export function summarizeClosePendingDays(triages: readonly DayTriage[]): CloseP
 
 /**
  * "Fechar dias pendentes" (spec/checkout.md): notes are kept, whiteboards stay unlinked,
- * and tasks not done go back to the active list without a date, counting as postponed.
+ * and tasks not done go back to the active list without a date.
  * Nothing is deleted or abandoned.
  */
 export async function closePendingDays(ctx: AppContext, triages: readonly DayTriage[]): Promise<void> {
@@ -271,13 +269,12 @@ export async function closePendingDays(ctx: AppContext, triages: readonly DayTri
       for (const taskId of openTasksOf(triage)) {
         const task = await tx.blocks.get(taskId);
         if (!task || task.status !== 'active' || (task.lastTriagedDay !== null && task.lastTriagedDay >= day)) continue;
-        // A waiting task is no postponement: it stays as it is, out of that day (spec/pessoas.md).
+        // A waiting task stays as it is, out of that day (spec/pessoas.md).
         if (task.waiting) {
           await tx.blocks.put({ ...task, lastTriagedDay: laterOf(task.lastTriagedDay, day), updatedAt: nowIso(ctx) });
           continue;
         }
         const from = task.intendedDate;
-        await record(ctx, tx, 'task.postponed', 'block', task.id, day, { from, to: null, reason: 'closePendingDays' });
         if (from !== null) {
           await record(ctx, tx, 'task.intendedDateChanged', 'block', task.id, day, {
             from,
@@ -288,7 +285,6 @@ export async function closePendingDays(ctx: AppContext, triages: readonly DayTri
         await tx.blocks.put({
           ...task,
           intendedDate: null,
-          postponeCount: task.postponeCount + 1,
           lastTriagedDay: laterOf(task.lastTriagedDay, day),
           updatedAt: nowIso(ctx),
         });
