@@ -125,10 +125,10 @@ describe('project list', () => {
 
   it('remembers which groups are open, in the settings', async () => {
     const { ctx, reader } = createTestContext();
-    expect((await loadProjectList(reader, TODAY)).open).toEqual({ others: true, finished: false });
+    expect((await loadProjectList(reader, TODAY)).open).toEqual({ others: true, backlog: false, finished: false });
     await setProjectListGroupOpen(ctx, 'finished', true);
     await setProjectListGroupOpen(ctx, 'others', false);
-    expect((await loadProjectList(reader, TODAY)).open).toEqual({ others: false, finished: true });
+    expect((await loadProjectList(reader, TODAY)).open).toEqual({ others: false, backlog: false, finished: true });
     expect((await reader.settings())?.projectListGroups).toEqual({ others: false, finished: true });
   });
 });

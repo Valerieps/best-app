@@ -32,16 +32,16 @@ describe('buildDayTriage', () => {
     expect(triage.automatic).toEqual([{ type: 'scheduledDuringDay', task: t, section: s }]);
   });
 
-  it('highlights a deadline before "dia seguinte" and tasks postponed 3 times or more (1b)', () => {
+  it('highlights a deadline before "dia seguinte", not the postponements (1b)', () => {
     const s = section({ day, projectId: 'p' });
     const late = task(s.id, 'x', { deadline: day });
     const fine = task(s.id, 'y', { deadline: '2026-10-20' });
-    const often = task(s.id, 'z', { postponeCount: 3 });
+    const often = task(s.id, 'z', { postponeCount: 9 });
     const triage = buildDayTriage({ ...base, sections: [s], blocks: [late, fine, often] });
     expect(triage.rows.map((row) => [row.task.text, row.attention])).toEqual([
       ['x', true],
       ['y', false],
-      ['z', true],
+      ['z', false],
     ]);
     expect(triage.rows.every((row) => row.suggestion.kind === 'undate')).toBe(true);
   });

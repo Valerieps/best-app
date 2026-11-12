@@ -14,13 +14,8 @@ import { requestFocus } from '../dayNote/focus';
 import { formatShortDate, formatTime } from '../format';
 import { appContext, reader } from '../services';
 import { useLiveQuery } from '../useLiveQuery';
-import { enqueue } from '../writeQueue';
+import { write } from '../writeQueue';
 
-function write(work: () => Promise<unknown>) {
-  enqueue(work).catch(() => {
-    // Logged by the queue; the screen shows the saved state again on its own.
-  });
-}
 
 /**
  * The "Notas" tab of a project page (spec/projetos.md, "Página do projeto"): the notes of its
@@ -153,15 +148,11 @@ function SectionEditor({ section, today }: { section: Section; today: DayKey }) 
       }
     },
     onMakeTask: () => {},
-    onToggleDone: () => {},
     onArrow: (block, direction) => {
       const index = lines.findIndex((line) => line.id === block.id);
       const target = lines[index + (direction === 'up' ? -1 : 1)];
       if (target) requestFocus(target.id, direction === 'up' ? 'end' : 0);
     },
-    onSetDate: () => {},
-    onSetDeadline: () => {},
-    onTogglePriority: () => {},
   };
 
   return (

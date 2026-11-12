@@ -13,6 +13,7 @@ import { plural } from '../format';
 import { appContext, reader } from '../services';
 import { useLiveQuery } from '../useLiveQuery';
 import { noDecisions, StepFooter, StepQuestion, useStepKeys } from './StepParts';
+import { taskText } from '../tasks/taskSurface';
 
 interface Props {
   day: DayKey;
@@ -117,7 +118,7 @@ export function BoardStep({ day, today, triage, projects, busy, onBack, onNext, 
   const body = (item: TaskListItem, done = false, mark: string | null = null) => (
     <span className="plan-card__text">
       <span className={done ? 'plan-card__done' : undefined}>
-        <Linkified text={item.task.text || '(tarefa sem texto)'} />
+        <Linkified text={taskText(item.task)} />
       </span>
       <span className="plan-card__meta">
         {item.project && <ProjectChip name={item.project.name} />}
@@ -130,7 +131,7 @@ export function BoardStep({ day, today, triage, projects, busy, onBack, onNext, 
   /** A task of the day: draggable, with the box to finish it. */
   const card = (item: TaskListItem) => {
     const id = item.task.id;
-    const text = item.task.text || '(tarefa sem texto)';
+    const text = taskText(item.task);
     const isAbandoned = abandoned.has(id);
     const isFinished = finished.has(id);
     return (

@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { createTestContext } from '../test/fixtures';
 import { addFocusProject, removeFocusProject, swapFocusProject } from './focusProjects';
-import { createProject, setProjectFinished } from './projects';
+import { createProject, setProjectFinished, setProjectPlace } from './projects';
 import { loadDayOpening, loadProject, loadProjectList } from './queries';
 
 // The test clock starts on Sunday 2026-10-11.
@@ -115,5 +115,58 @@ describe('projects in focus in the day to day', () => {
     const opening = await loadDayOpening(reader, SUNDAY);
     expect(opening.stage).toBe('execution');
     expect(opening.focusProjects.map((project) => project.name)).toEqual(['Foco']);
+  });
+});
+
+describe('project places (focus, active, backlog)', () => {
+  const groups = async (reader: ReturnType<typeof createTestContext>['reader']) => {
+    const view = await loadProjectList(reader, SUNDAY);
+    const names = (items: { project: { name: string } }[]) => items.map((item) => item.project.name);
+    return { focus: names(view.priority), others: names(view.others), backlog: names(view.backlog), finished: names(view.finished) };
+  };
+
+  it('moves a project between focus, active and backlog in any order', async () => {
+    const { ctx, reader, db, projects } = await setup(['A', 'B']);
+    expect(await setProjectPlace(ctx, projects[0].id, 'focus')).toBe(true);
+    expect(await groups(reader)).toEqual({ focus: ['A'], others: ['B'], backlog: [], finished: [] });
+
+    expect(await setProjectPlace(ctx, projects[0].id, 'backlog')).toBe(true);
+    expect(await groups(reader)).toEqual({ focus: [], others: ['B'], backlog: ['A'], finished: [] });
+    const removed = await db.events.where('type').equals('priority.removed').toArray();
+    expect(removed.map((event) => event.data)).toEqual([{ projectId: projects[0].id, reason: 'backlog', itemIds: [] }]);
+
+    expect(await setProjectPlace(ctx, projects[0].id, 'focus')).toBe(true);
+    expect(await groups(reader)).toEqual({ focus: ['A'], others: ['B'], backlog: [], finished: [] });
+
+    expect(await setProjectPlace(ctx, projects[0].id, 'active')).toBe(true);
+    expect(await groups(reader)).toEqual({ focus: [], others: ['A', 'B'], backlog: [], finished: [] });
+
+    const types = (await db.events.where('entityId').equals(projects[0].id).toArray()).map((event) => event.type);
+    expect(types).toEqual(['project.created', 'project.backlogged', 'project.reopened']);
+  });
+
+  it('reopens a finished project straight into the backlog or the focus', async () => {
+    const { ctx, reader, projects } = await setup(['A', 'B']);
+    await setProjectFinished(ctx, projects[0].id, true);
+    await setProjectFinished(ctx, projects[1].id, true);
+    await setProjectPlace(ctx, projects[0].id, 'backlog');
+    await setProjectPlace(ctx, projects[1].id, 'focus');
+    expect(await groups(reader)).toEqual({ focus: ['B'], others: [], backlog: ['A'], finished: [] });
+    expect((await loadProject(reader, projects[0].id))?.project.finishedAt).toBeNull();
+  });
+
+  it('leaves the project where it was when the focus is full', async () => {
+    const { ctx, reader, projects } = await setup(['A', 'B', 'C', 'D']);
+    for (const project of projects.slice(0, 3)) await setProjectPlace(ctx, project.id, 'focus');
+    await setProjectPlace(ctx, projects[3].id, 'backlog');
+    expect(await setProjectPlace(ctx, projects[3].id, 'focus')).toBe(false);
+    expect(await groups(reader)).toEqual({ focus: ['A', 'B', 'C'], others: [], backlog: ['D'], finished: [] });
+  });
+
+  it('never counts a project in the backlog as stalled', async () => {
+    const { ctx, reader, projects } = await setup(['A']);
+    await setProjectPlace(ctx, projects[0].id, 'backlog');
+    const view = await loadProjectList(reader, '2026-12-31');
+    expect(view.backlog[0].stalledDays).toBeNull();
   });
 });

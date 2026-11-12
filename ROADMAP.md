@@ -16,11 +16,11 @@ As fases seguem as seções do `SPEC.md`.
 | 0. Fundação | Feita | — |
 | 1a. Núcleo | Feita | — |
 | 1b. Acabamento | Feita | — ("Próximos dias" saiu com a data de intenção em 12/11/2026) |
-| 2. Projetos | Feita em parte | Sugestão de agregar tarefas em projetos; assistente "Projetos parados" |
-| 3. Abertura do dia | Feita em parte | Mural; assistente "Warm up"; um ajuste do `SPEC.md` (veja "O SPEC mudou e o código ainda não") |
-| 4. Objetivos | Feita em parte | Nome do campo "motivação"; assistente "Objetivos soltos" |
+| 2. Projetos | Feita em parte | Sugestão de agregar tarefas em projetos |
+| 3. Abertura do dia | Feita em parte | Mural; um ajuste do `SPEC.md` (veja "O SPEC mudou e o código ainda não") |
+| 4. Objetivos | Feita em parte | Nome do campo "motivação" |
 | 5. Tipos de bloco | Bloqueada | Tudo: compromissos e detecção de tipo |
-| 6. Hábitos | Feita em parte | "Agendar lembrete"; assistente "Hábitos sumidos" |
+| 6. Hábitos | Feita em parte | "Agendar lembrete" |
 | 7. Coletar, executar, incubar | Em andamento | A fila de execução e as ideias já estão feitas. Faltam os passos 5 e 6 de "Fase 7: ordem de implementação" |
 
 ## Esperando resposta a uma pergunta em aberto
@@ -31,8 +31,7 @@ As fases seguem as seções do `SPEC.md`.
 | Nome definitivo do campo "motivação" | `spec/objetivos.md` |
 | Seção 5 inteira | `spec/compromissos.md`: formatos de cada tipo e como corrigir um tipo errado |
 | "Agendar lembrete" nos hábitos | `spec/habitos.md` |
-| Assistente "Hábitos sumidos" | `spec/assistentes.md`: os prazos de "parado" e "antigo" |
-| Revisão das ideias | `spec/ideias.md`: assistente de triagem ou ritual "Revisar ideias" |
+| Revisão das ideias | `spec/ideias.md`: triagem ou ritual "Revisar ideias" |
 | Notas do projeto na hora | `spec/projetos.md`: aparecer antes do fechamento do dia |
 | Redescobrir tarefas fora da fila | `spec/prioridades.md`: sugestões em rodízio no quadro do "Fechar o dia" |
 
@@ -44,18 +43,6 @@ Decidida em 10/11/2026. Cada passo é um PR próprio, com testes; os que faltam 
 | --- | --- | --- | --- |
 | 5 | Revisão das ideias | Triagem ou ritual, com o aviso no "Iniciar Dia"; sugerir largar depois de 3 "ainda não" sem nota nova | A pergunta da revisão. A contagem e a data do último "ainda não" já ficam na ideia (ADR-067) |
 | 6 | Notas do projeto na hora | Notas vinculadas ou com tag na aba "Notas" antes do fechamento | A pergunta em `spec/projetos.md` |
-
-## Assistentes
-
-Os que faltam, pela tabela do `spec/assistentes.md`:
-
-| Assistente | Estado |
-| --- | --- |
-| Hábitos sumidos | Espera os prazos de "parado" e "antigo" |
-| Projetos parados | Pode ser construído: os 14 dias já estão definidos no `spec/projetos.md` ("Projetos") |
-| Warm up | Pode ser construído, mas "itens que eu quase sempre pulo" não tem um número definido |
-| Objetivos soltos | Pode ser construído, mas "meta talvez atingida" não tem critério definido |
-| Compromissos passados | Espera a seção 5 |
 
 ## O SPEC mudou e o código ainda não
 
