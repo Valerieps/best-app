@@ -2,7 +2,7 @@ import { toDayKey, type DayKey } from './day';
 import type { Block, Project, Section } from './entities';
 import { CARRIED_PART, orderDayParts, sortCarried } from './order';
 import { comparePositions } from './position';
-import { isTaskPendingOn, isTaskShownOn, nextPlanningDay, POSTPONE_ATTENTION_THRESHOLD } from './tasks';
+import { isTaskPendingOn, isTaskShownOn, nextPlanningDay } from './tasks';
 
 /**
  * "Fechar o dia" (spec/checkout.md). For one day, decides what is automatic and what needs a
@@ -115,14 +115,13 @@ export function buildDayTriage(input: DayTriageInput): DayTriage {
   const open: OpenTask[] = [];
   const addPending = (task: Block, section: Section | null) => {
     open.push({ task, section });
-    const postponedOften = task.postponeCount >= POSTPONE_ATTENTION_THRESHOLD;
     const pastDeadline = task.deadline != null && task.deadline < nextDay;
     rows.push({
       type: 'task',
       task,
       section,
       suggestion: task.waiting ? { kind: 'keep' } : { kind: 'undate', untouched: true },
-      attention: !task.waiting && (postponedOften || pastDeadline),
+      attention: !task.waiting && pastDeadline,
     });
   };
 
