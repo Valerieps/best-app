@@ -449,6 +449,19 @@ button.sidebar__footer-item {
   border-left: var(--border-width) solid var(--color-border);
 }
 
+.right-panel {
+  margin-left: auto;
+}
+
+.right-panel--fill {
+  flex: 1;
+}
+
+.right-panel--fill .right-panel__body {
+  flex: 1;
+  width: auto;
+}
+
 .right-panel__body {
   position: relative;
   width: var(--right-panel-width);

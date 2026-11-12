@@ -1,4 +1,5 @@
-import { useEffect, useState, type KeyboardEvent, type ReactNode } from 'react';
+import { useEffect, useRef, useState, type KeyboardEvent, type ReactNode } from 'react';
+import { NEW_TASK_SHORTCUT, isNewTaskKey, isTypingTarget } from './newTaskShortcut';
 import { setDayPriority, setDeadline, setIntendedDate } from '../../application/dayTools';
 import { addToQueue } from '../../application/executionQueue';
 import { abandonTask, setTaskDone, setTaskWaiting, updateBlockText } from '../../application/notebook';
@@ -50,9 +51,19 @@ function useNarrow(): boolean {
   return narrow;
 }
 
-/** "Nova tarefa", between "Na fila" and "Sem data": Enter creates the task and keeps the field for the next one. */
+/** "Nova tarefa", above "Na fila": Enter creates the task and keeps the field for the next one; Ctrl + A focuses it. */
 function NewTaskField({ projectId }: { projectId: string }) {
   const [text, setText] = useState('');
+  const inputRef = useRef<HTMLInputElement>(null);
+  useEffect(() => {
+    const onKey = (event: globalThis.KeyboardEvent) => {
+      if (!isNewTaskKey(event) || event.isComposing || isTypingTarget(event.target)) return;
+      event.preventDefault();
+      inputRef.current?.focus();
+    };
+    document.addEventListener('keydown', onKey);
+    return () => document.removeEventListener('keydown', onKey);
+  }, []);
   const onKeyDown = (event: KeyboardEvent<HTMLInputElement>) => {
     if (event.key === 'Enter' && !event.nativeEvent.isComposing) {
       event.preventDefault();
@@ -68,9 +79,11 @@ function NewTaskField({ projectId }: { projectId: string }) {
     <label className="new-task">
       <Icon name="plus" size="sm" />
       <input
+        ref={inputRef}
         className="new-task__input"
         value={text}
         placeholder="Nova tarefa"
+        title={`Nova tarefa (${NEW_TASK_SHORTCUT})`}
         aria-label="Nova tarefa do projeto"
         onChange={(event) => setText(event.target.value)}
         onKeyDown={onKeyDown}
@@ -232,6 +245,8 @@ export function ProjectScreen({ id, tab, today }: { id: string; tab: 'tasks' | '
             <div role="tabpanel" aria-label="Tarefas" className="project-tasks">
               {active.length === 0 && <p className="muted project-tasks__empty">Nenhuma tarefa ativa.</p>}
 
+              <NewTaskField projectId={project.id} />
+
               {groups.queued.length > 0 && (
                 <section className="project-queue" aria-label="Na fila">
                   <h3 className="task-group__title">
@@ -240,8 +255,6 @@ export function ProjectScreen({ id, tab, today }: { id: string; tab: 'tasks' | '
                   {groups.queued.map((task) => line(task))}
                 </section>
               )}
-
-              <NewTaskField projectId={project.id} />
 
               <FoldedGroup label="A fazer" count={groups.open.length} initiallyOpen className="task-group--open">
                 {groups.open.map((task) => line(task))}

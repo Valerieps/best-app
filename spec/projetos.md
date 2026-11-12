@@ -31,7 +31,7 @@
 - Toda tarefa aguardando do projeto fica só no grupo "Aguardando".
 - As linhas das tarefas na página do projeto usam uma fonte maior que a do resto da página, do mesmo tamanho em todos os grupos.
 - As ideias ligadas ao projeto ficam num grupo "Ideias" da página do projeto, que eu posso recolher (`ideias.md`). *(7)*
-- O campo "Nova tarefa" fica na aba "Tarefas", logo abaixo de "Na fila" e antes de "A fazer".
+- O campo "Nova tarefa" fica na aba "Tarefas", acima de "Na fila". O atalho Ctrl + A leva o foco até ele, quando eu não estou digitando em outro campo.
 - A aba "Notas" da página do projeto mostra as notas das seções vinculadas a ele, da seção mais recente para a mais antiga, depois que o dia é fechado, com o Markdown formatado como na nota do dia. Ali eu posso apagar uma nota, com um segundo clique para confirmar. O histórico de eventos guarda a nota apagada.
 - No topo da timeline da aba "Notas", um ícone de + abre o campo "Nova nota". Enter salva, Shift + Enter quebra a linha e Esc desiste; cada linha vira uma nota. A nota criada aqui vive só no projeto: aparece na timeline na hora, como "Nota do projeto", e não entra em nenhuma nota do dia nem no fechamento do dia.
 - "Editar", no hover de uma entrada da timeline, abre a entrada inteira no mesmo editor de linhas da nota do dia: Enter quebra a nota em duas, Backspace no começo junta com a nota de cima e o Markdown aparece formatado fora da linha em que estou, com os mesmos ícones e atalhos de formatação da nota do dia. As linhas continuam notas: `[] ` não vira tarefa ali. "Concluir" fecha o editor.

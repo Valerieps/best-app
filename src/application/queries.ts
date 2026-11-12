@@ -302,6 +302,18 @@ export async function loadTaskListContext(reader: Reader): Promise<TaskListConte
   };
 }
 
+/** Everything the task details window shows for one task; null when the task no longer exists. */
+export interface TaskDetails extends TaskListContext {
+  item: TaskListItem;
+}
+
+export async function loadTaskDetails(reader: Reader, taskId: string): Promise<TaskDetails | null> {
+  const [task] = await reader.blocksByIds([taskId]);
+  if (!task || task.kind !== 'task') return null;
+  const [item] = await withOrigins(reader, [task]);
+  return { ...(await loadTaskListContext(reader)), item };
+}
+
 /** What the "Fila de execução" needs (spec/prioridades.md, "Fila de execução"). */
 export interface ExecutionQueueData extends TaskListContext {
   /** The tasks in the queue, in its order. */

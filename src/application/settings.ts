@@ -64,6 +64,11 @@ export function setRightPanelWidth(ctx: AppContext, width: number | null): Promi
   return updateSettings(ctx, { rightPanelWidth: width ?? undefined });
 }
 
+/** Whether the center area is collapsed to a strip, leaving the room to the right panel. */
+export function setCenterCollapsed(ctx: AppContext, collapsed: boolean): Promise<void> {
+  return updateSettings(ctx, { centerCollapsed: collapsed });
+}
+
 /** The app's appearance; "system" follows the system and is stored as absent, the default. */
 export function setAppearance(ctx: AppContext, appearance: Appearance): Promise<void> {
   return updateSettings(ctx, { appearance: appearance === 'system' ? undefined : appearance });

@@ -2,7 +2,7 @@ import { useState, type ReactNode } from 'react';
 import type { DayKey } from '../../domain/day';
 import type { DayPriority } from '../../domain/priorities';
 import { Icon } from '../components/Icon';
-import { Linkified } from '../components/Linkified';
+import { TaskText } from '../taskDetails/TaskText';
 import { relativeDay } from '../format';
 import { DatePicker } from './BlockLine';
 
@@ -95,7 +95,7 @@ export function PrioritiesBlock({ priorities, today, pinned, onTogglePin, onTogg
                 aria-label={`Finalizar "${task.text}"`}
               />
               <span className="priorities__text">
-                <Linkified text={task.text || '(tarefa sem texto)'} />
+                <TaskText taskId={task.id} text={task.text} />
               </span>
               <span className="line__meta">
                 {!(automatic && deadline === today) &&

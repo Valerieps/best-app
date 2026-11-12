@@ -2,16 +2,16 @@ import type { RightPanelMenu } from '../domain/entities';
 import type { IconName } from './components/Icon';
 import type { Route } from './hooks';
 
-/** Widths of the open right panel, in pixels (spec/navegacao.md, "Painel da direita"). */
-export const RIGHT_PANEL_WIDTH = { default: 360, min: 280, max: 560 } as const;
+/** Widths of the open right panel, in pixels (spec/navegacao.md, "Painel da direita"). It has no maximum. */
+export const RIGHT_PANEL_WIDTH = { default: 360, min: 280 } as const;
 
 /** Step of the arrow keys on the resize handle. */
 export const RIGHT_PANEL_WIDTH_STEP = 16;
 
-/** Keeps a width the user dragged to inside the limits, in whole pixels. */
+/** Keeps a width the user dragged to above the minimum, in whole pixels. */
 export function clampRightPanelWidth(width: number): number {
   if (!Number.isFinite(width)) return RIGHT_PANEL_WIDTH.default;
-  return Math.round(Math.min(RIGHT_PANEL_WIDTH.max, Math.max(RIGHT_PANEL_WIDTH.min, width)));
+  return Math.round(Math.max(RIGHT_PANEL_WIDTH.min, width));
 }
 
 export interface RightPanelMenuEntry {
