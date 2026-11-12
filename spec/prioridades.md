@@ -44,7 +44,7 @@ Por quê: na hora de executar, eu não sabia no que focar, e a única forma de p
 ## Tela "Executar" *(7)*
 
 - É a tela de quando eu paro para fazer as coisas: mostra numa visão só o que pede atenção agora, sem eu entrar em cada projeto.
-- A tela abre pela barra lateral, no grupo Hoje, logo abaixo de "Hoje". Ela não substitui "Próximos dias" (`tarefas.md`).
+- A tela abre pela barra lateral, no grupo Hoje, logo abaixo de "Hoje". Ela não substitui "Próximos dias" (`tarefas.md`). Ela também abre inteira no painel da direita, ao lado de qualquer tela (`navegacao.md`, "Painel da direita").
 - Mostra, nesta ordem: as prioridades do dia; as outras tarefas com data de hoje ou atrasadas; os prazos chegando; e os próximos passos dos projetos, agrupados por projeto.
 - Uma tarefa cujo prazo máximo já passou entra com as atrasadas, mesmo com a data de intenção no futuro ou sem data.
 - "Prazos chegando" são as tarefas com prazo máximo nos próximos dias. Um seletor escolhe quantos dias: nenhum, 3, 7 ou 14; começa em 7. A tarefa com prazo hoje já é prioridade do dia.

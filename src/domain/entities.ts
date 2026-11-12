@@ -250,6 +250,13 @@ export interface Settings {
   /** Width of the open sidebar, in pixels, dragged by the user. Absent means the default width. */
   sidebarWidth?: number;
   /**
+   * The menu open in the right panel (spec/navegacao.md, "Painel da direita"). Absent or null
+   * means the panel is collapsed to its strip of icons, the default.
+   */
+  rightPanelMenu?: RightPanelMenu | null;
+  /** Width of the open right panel, in pixels, dragged by the user. Absent means the default width. */
+  rightPanelWidth?: number;
+  /**
    * The part of the day note shown alone, in focus mode (spec/nota-do-dia.md, "Modo foco").
    * Absent or null shows the whole note. Only the user leaves it.
    */
@@ -269,6 +276,9 @@ export type AutoBackupInterval = 'afterChange' | 'quarterHour' | 'hour';
 
 /** Collapsible groups of the project list: "Outros ativos" (open by default) and "Finalizados" (closed). */
 export type ProjectListGroup = 'others' | 'finished';
+
+/** Menus of the right panel (spec/navegacao.md, "Painel da direita"). */
+export type RightPanelMenu = 'execute';
 
 export interface WarmupItem {
   id: string;
