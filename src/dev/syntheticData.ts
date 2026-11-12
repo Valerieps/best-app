@@ -7,7 +7,7 @@ import { Simulation } from './simulation';
  * Synthetic data for trying the app out: about five weeks of use with three projects (a
  * year-end party, a scheduling app and a kitchen remodel), written so that every checkout
  * rule and cleanup assistant has something to show, plus an English course followed for
- * about four months, so the 16-week activity maps have history. Dev only; see ADR-027.
+ * about four months. Dev only; see ADR-027.
  *
  * What it leaves behind, relative to today:
  * - Project list: the scheduling app and the remodel are the projects in focus, with one

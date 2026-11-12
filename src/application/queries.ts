@@ -453,7 +453,7 @@ export async function loadActivities(reader: Reader, projects: readonly Project[
   });
 }
 
-/** The project list (section 2): where projects are followed, with their activity maps. */
+/** The project list (section 2): where projects are followed. */
 export async function loadProjectList(reader: Reader, today: DayKey): Promise<ProjectListView> {
   const projects = (await reader.projects()).filter((project) => project.status !== 'merged');
   const objectives = await reader.objectives();

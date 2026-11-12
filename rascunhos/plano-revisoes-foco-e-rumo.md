@@ -53,7 +53,7 @@ Cada etapa é um commit (ou PR) com testes, e deixa o app funcionando.
 - `Reflection` ganha `kind: 'focus' | 'direction'` (os antigos `week` e `month` ficam como histórico e contam como a última revisão de cada tipo). Id gerado; existe no máximo uma revisão aberta por tipo, com `start` no início do período.
 - `application/reflection.ts`: `closeFocusReview` e `closeDirectionReview` (no lugar de `closeWeek` e `closeMonth`), guardando as métricas no evento `reflection.closed` com `kind`. Some `reopenWeek`.
 - `Settings`: `weeklyReflection` sai; entra `reviewCadence: { focusCheckouts: 5, directionFocusReviews: 4 }`. O campo antigo é ignorado nos registros e backups velhos.
-- Some `domain/reflectionSchedule.ts`; `domain/week.ts` fica só no que ainda usa semana (tela de hábitos, mapas de atividade).
+- Some `domain/reflectionSchedule.ts`; `domain/week.ts` fica só no que ainda usa semana (tela de hábitos).
 - ADR nova que atualiza as ADR-019 e ADR-021.
 
 ### 4. Telas das revisões e navegação

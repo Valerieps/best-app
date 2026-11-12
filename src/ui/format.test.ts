@@ -1,6 +1,5 @@
 import { describe, expect, it } from 'vitest';
 import {
-  activityDetail,
   agendaDate,
   formatLongDate,
   linkDomain,
@@ -52,12 +51,6 @@ describe('format', () => {
     expect(postponedLabel(0)).toBeNull();
     expect(postponedLabel(1)).toBe('adiada 1 vez');
     expect(postponedLabel(4)).toBe('adiada 4 vezes');
-  });
-
-  it('details a day of the activity map', () => {
-    expect(activityDetail('2026-10-07', { notes: 1, sections: 0, tasksCreated: 0, tasksFinished: 2 })).toBe('07/10 · 1 nota, 2 tarefas finalizadas');
-    expect(activityDetail('2026-10-07', { notes: 0, sections: 1, tasksCreated: 1, tasksFinished: 0 })).toBe('07/10 · 1 seção aberta, 1 tarefa criada');
-    expect(activityDetail('2026-10-07', { notes: 0, sections: 0, tasksCreated: 0, tasksFinished: 0 })).toBe('07/10 · nada');
   });
 
   it('spells out why a task is stuck', () => {
