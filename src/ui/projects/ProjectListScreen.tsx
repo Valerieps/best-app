@@ -5,7 +5,6 @@ import { loadProjectList, type ProjectListItem, type ProjectListView } from '../
 import { setProjectListGroupOpen } from '../../application/settings';
 import { toDayKey, type DayKey } from '../../domain/day';
 import type { ProjectListGroup } from '../../domain/entities';
-import { FOCUS_PROJECT_LIMIT } from '../../domain/focusProjects';
 import { Dropdown, DropdownItem } from '../components/Dropdown';
 import { Icon } from '../components/Icon';
 import { ScreenHeader } from '../components/ScreenHeader';
@@ -29,7 +28,6 @@ export function ProjectsScreen({ today }: { today: DayKey }) {
   if (!view) return <LoadingPage title="Projetos" />;
 
   const candidates = view.others.map((item) => item.project);
-  const freeSlots = FOCUS_PROJECT_LIMIT - view.priority.length;
   const hasActive = view.summary.active > 0;
 
   return (
@@ -54,7 +52,7 @@ export function ProjectsScreen({ today }: { today: DayKey }) {
               ))}
             </ul>
           )}
-          {freeSlots > 0 && <FreeSlot candidates={candidates} />}
+          {<FreeSlot candidates={candidates} />}
         </section>
       )}
 
@@ -95,7 +93,7 @@ export function ProjectsScreen({ today }: { today: DayKey }) {
                 <span className="project-row__state">
                   {item.project.finishedAt ? `Finalizado em ${formatShortDate(toDayKey(new Date(item.project.finishedAt)))}` : 'Finalizado'}
                 </span>
-                <PlaceSwitch item={item} view={view} />
+                <PlaceSwitch item={item} />
                 <ProjectActionsMenu project={item.project} objectives={view.objectives} focus={item} />
               </li>
             ))}
@@ -116,7 +114,7 @@ function ProjectRow({ item, view }: { item: ProjectListItem; view: ProjectListVi
       <span className={`project-row__state ${item.stalledDays !== null ? 'project-row__state--warning' : ''}`}>
         {item.stalledDays !== null ? `Parado há ${item.stalledDays} dias` : plural(item.activeTasks, 'ativa', 'ativas')}
       </span>
-      <PlaceSwitch item={item} view={view} />
+      <PlaceSwitch item={item} />
       <ProjectActionsMenu project={item.project} objectives={view.objectives} focus={item} />
     </li>
   );
@@ -137,23 +135,19 @@ function currentPlace(item: ProjectListItem): ProjectPlace | null {
 
 /**
  * Shown when the mouse is over the row: moves the project to the focus, the other active ones or
- * the backlog, from wherever it is. "Em foco" is off while the focus is full.
+ * the backlog, from wherever it is.
  */
-function PlaceSwitch({ item, view }: { item: ProjectListItem; view: ProjectListView }) {
+function PlaceSwitch({ item }: { item: ProjectListItem }) {
   const current = currentPlace(item);
-  const focusFull = view.priority.length >= FOCUS_PROJECT_LIMIT;
   return (
     <span className="segmented project-row__places" role="group" aria-label={`Status de ${item.project.name}`}>
       {PLACES.map(({ place, label }) => {
-        const blocked = place === 'focus' && current !== 'focus' && focusFull;
         return (
           <button
             key={place}
             type="button"
             className={`segmented__option ${current === place ? 'segmented__option--on' : ''}`}
             aria-pressed={current === place}
-            disabled={blocked}
-            title={blocked ? `Em foco está cheio (${FOCUS_PROJECT_LIMIT})` : undefined}
             onClick={() => current !== place && write(() => setProjectPlace(appContext, item.project.id, place))}
           >
             {label}
@@ -164,7 +158,7 @@ function PlaceSwitch({ item, view }: { item: ProjectListItem; view: ProjectListV
   );
 }
 
-/** "Colocar em foco": lets an active project take a free focus slot. */
+/** "Colocar em foco": lets an active project take the focus. */
 function FreeSlot({ candidates }: { candidates: ProjectListItem['project'][] }) {
   return (
     <Dropdown

@@ -1,0 +1,8 @@
+# ADR-075: "Apagar projeto" erases the project and its history
+
+**Status:** Accepted
+**Date:** 2026-11-12
+**Decision:** `deleteProject` (`application/projects.ts`) removes, in one transaction, the project, its page sections (`projectPage` and `projectNote`) with their blocks, its resources and its place in the focus list, and unlinks (without deleting) everything else that pointed at it: blocks and day-note sections stay with `projectId: null`, projects that grew from it lose `fromProjectId`. It then deletes every event of the removed rows through the new port method `deleteEventsOfEntities`, and records one `project.deleted` event whose data is only the list of erased rows (`entityType`, `entityId`), no name or text. This is the second exception to the append-only history (ADR-006 being the first).
+`project.deleted` is in `DELETION_EVENTS`, and `computeImportLoss` reads its `erased` list: rows and events of those entities do not count as lost (`deletedRows`, `missingEvents`). The `deletionGuard.test.ts` scan skips the deletes marked `// covered by project.deleted`.
+**Why:** Projects are sometimes created by mistake and the owner wants no trace. Without the tombstone, the automatic backup (ADR-008) would see the old file holding rows and events the browser lacks and pause with a false warning.
+**Consequences:** A deleted project cannot be recovered except from an older backup copy. Tasks and notes written in day notes are kept, so nothing the owner typed outside the project page is lost silently. Events elsewhere that mention the project's id (such as `block.linkedToProject` on a kept task) stay; they carry only an id.

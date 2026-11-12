@@ -69,6 +69,8 @@ export class DexieStore implements Store {
           blocksOfProject: (projectId) => blocks.where('projectId').equals(projectId).toArray(),
           sectionsOfProject: (projectId) => sections.where('projectId').equals(projectId).toArray(),
           priorityListsBetween: (fromId, toId) => priorities.where('id').between(fromId, toId, true, true).toArray(),
+          resourcesOf: (ownerId) => (trans.table('resources') as Table<Resource, string>).where('ownerId').equals(ownerId).toArray(),
+          deleteEventsOfEntities: (entityIds) => (entityIds.length === 0 ? Promise.resolve(0) : events.where('entityId').anyOf(entityIds).delete()),
           appendEvent: async (event) => {
             // `add` (not `put`) so an existing event can never be overwritten.
             await events.add(event);
