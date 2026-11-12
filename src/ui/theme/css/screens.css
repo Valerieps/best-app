@@ -987,6 +987,34 @@ button.plan-card--on:hover {
   /* The whole main area is white on every screen, so all of it feels like the place to work */
   min-height: 100vh;
   background: var(--color-surface);
+  position: relative;
+}
+
+/* The center folds into a narrow strip on the left; the right panel takes the room */
+.shell__main--collapsed {
+  flex: none;
+  width: var(--sidebar-collapsed-width);
+  overflow: hidden;
+  background: var(--color-surface-soft);
+  border-right: var(--border-width) solid var(--color-border);
+}
+
+.shell__main--collapsed > .shell__content {
+  display: none;
+}
+
+.shell__collapse {
+  position: absolute;
+  top: var(--space-2);
+  right: var(--space-2);
+  z-index: 5;
+}
+
+.shell__main--collapsed > .shell__collapse {
+  right: auto;
+  left: 50%;
+  transform: translateX(-50%);
+  top: var(--space-4);
 }
 
 .sidebar {

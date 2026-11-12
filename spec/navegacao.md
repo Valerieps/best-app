@@ -25,7 +25,8 @@ Toda opção do app mora num de três níveis, e cada nível tem um lugar fixo, 
 - Na direita de toda tela que tem a barra lateral há uma faixa estreita com um ícone por menu, como a faixa da direita do Obsidian. Clicar num ícone abre aquele menu num painel ao lado da tela, e a área central encolhe junto; clicar de novo no mesmo ícone recolhe o painel. No topo da faixa, um botão abre e recolhe o painel, e Ctrl + Alt + B (⌘ + Option + B no Mac) faz o mesmo de qualquer tela; Ctrl + B continua sendo negrito na nota do dia.
 - Por enquanto o único menu é a "Fila de execução", inteira, como na tela (`prioridades.md`, "Fila de execução"). Ela continua também na barra lateral, para quando eu quero a tela cheia.
 - O painel começa recolhido, e o app lembra se deixei aberto e qual menu.
-- Aberto, eu posso arrastar a borda esquerda dele para deixá-lo mais largo ou mais estreito. A largura vai de 280 a 560 pixels, começa em 360, e um clique duplo na borda volta para ela. O app lembra a largura que escolhi.
+- Aberto, eu posso arrastar a borda esquerda dele para deixá-lo mais largo ou mais estreito. A largura tem só um mínimo, de 280 pixels, e não tem máximo; começa em 360, e um clique duplo na borda volta para ela. O app lembra a largura que escolhi.
+- Na área central há um botão (ícone de coluna à esquerda) que a recolhe numa faixa estreita à esquerda; o painel da direita, se aberto, ocupa todo o espaço que sobrou. Se o painel também estiver recolhido, ficam só as duas faixas. Clicar de novo no botão da faixa reabre o centro, e o app lembra se deixei o centro recolhido.
 - O painel aparece em toda tela com a barra lateral, também no "Fechar o dia" e no modo foco. Quando o centro já mostra a mesma tela do menu, como a "Fila de execução", o painel fica recolhido e o ícone dela fica apagado, para a mesma tela não aparecer duas vezes.
 - Um link dentro do painel, como o nome de um projeto, abre no centro, e o painel continua aberto.
 
