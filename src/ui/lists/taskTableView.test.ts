@@ -10,9 +10,11 @@ describe('reading the saved view of the tasks table', () => {
 
   it('keeps valid values and drops invalid ones', () => {
     const view = parseView(
-      JSON.stringify({ groupBy: 'project', sortBy: 'deadline', direction: 'desc', project: 'project:p1', nextOnly: true, columns: ['project', 'bogus', 'intendedDate'] }),
+      JSON.stringify({ groupBy: 'project', sortBy: 'deadline', direction: 'desc', project: 'project:p1', nextOnly: true, columns: ['project', 'bogus', 'intendedDate', 'deadline'] }),
     );
-    expect(view).toEqual({ groupBy: 'project', sortBy: 'deadline', direction: 'desc', project: 'project:p1', columns: ['intendedDate', 'project'] });
+    // The old "Data" column is gone (ADR-072): a saved one is dropped.
+    expect(view).toEqual({ groupBy: 'project', sortBy: 'deadline', direction: 'desc', project: 'project:p1', columns: ['deadline', 'project'] });
+    expect(parseView(JSON.stringify({ sortBy: 'intendedDate', groupBy: 'intendedDate' }))).toEqual(DEFAULT_VIEW);
     expect(parseView(JSON.stringify({ sortBy: 'nope', project: 'project:', groupBy: 'text' }))).toEqual(DEFAULT_VIEW);
   });
 
@@ -27,9 +29,9 @@ describe('reading the saved view of the tasks table', () => {
 
 describe('sorting by a column header', () => {
   it('flips the direction on the same column and starts ascending on another', () => {
-    const desc = sortByColumn(DEFAULT_VIEW, 'intendedDate');
-    expect(desc).toMatchObject({ sortBy: 'intendedDate', direction: 'desc' });
-    expect(sortByColumn(desc, 'intendedDate').direction).toBe('asc');
+    const desc = sortByColumn(DEFAULT_VIEW, 'createdDate');
+    expect(desc).toMatchObject({ sortBy: 'createdDate', direction: 'desc' });
+    expect(sortByColumn(desc, 'createdDate').direction).toBe('asc');
     expect(sortByColumn(desc, 'text')).toMatchObject({ sortBy: 'text', direction: 'asc' });
   });
 });
@@ -37,8 +39,8 @@ describe('sorting by a column header', () => {
 describe('showing and hiding columns', () => {
   it('keeps the table order', () => {
     const hidden = toggleColumn(DEFAULT_VIEW, 'deadline');
-    expect(hidden.columns).toEqual(['intendedDate', 'project']);
-    expect(toggleColumn(toggleColumn(hidden, 'postponeCount'), 'deadline').columns).toEqual(['intendedDate', 'deadline', 'project', 'postponeCount']);
+    expect(hidden.columns).toEqual(['project']);
+    expect(toggleColumn(toggleColumn(hidden, 'postponeCount'), 'deadline').columns).toEqual(['deadline', 'project', 'postponeCount']);
   });
 });
 

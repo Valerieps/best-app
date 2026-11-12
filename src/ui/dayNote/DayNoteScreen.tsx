@@ -25,7 +25,7 @@ import {
   pasteLines,
 } from '../../application/notebook';
 import { chainedPositions } from './paste';
-import { moveDayPriority, setDayPriority, setDeadline, setIntendedDate } from '../../application/dayTools';
+import { setDayPriority, setDeadline, setIntendedDate } from '../../application/dayTools';
 import { ensurePeople } from '../../application/people';
 import { usePeople } from '../people/PeopleContext';
 import { setDayNoteFocus } from '../../application/settings';
@@ -677,7 +677,6 @@ export function DayNoteScreen({
       onTogglePin={isToday && !focus ? () => setPinned(!pinned) : undefined}
       onToggleDone={(taskId, done) => write(() => setTaskDone(ctx, taskId, done))}
       onDemote={(taskId) => write(() => setDayPriority(ctx, taskId, false))}
-      onMoveDate={(taskId, date) => write(() => moveDayPriority(ctx, taskId, date))}
       onSetDeadline={(taskId, date) => write(() => setDeadline(ctx, taskId, date))}
       queue={{ ids: queueIds, onAdd: (taskId) => write(() => addToQueue(ctx, taskId)) }}
       trailing={focusButton(PRIORITIES_PART, 'nas prioridades do dia')}

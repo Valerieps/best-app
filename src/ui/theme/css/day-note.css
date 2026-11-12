@@ -401,8 +401,7 @@ button.priorities__pin[aria-pressed='true'] {
   padding: 2px 0;
 }
 
-/* A priority going to another date: a short countdown, which I can cancel, before it leaves */
-.priorities__item--moving .priorities__text {
+.priorities__text {
   color: var(--color-text-muted);
 }
 

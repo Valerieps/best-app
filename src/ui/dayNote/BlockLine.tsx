@@ -104,8 +104,6 @@ interface Props {
   handlers: LineHandlers;
   /** More metadata before the dates, like "adiada 3×" on the project page. */
   extraMeta?: ReactNode;
-  /** The intended date is shown elsewhere, like the project agenda's date block: no chip, only the hover shortcut. */
-  hideDate?: boolean;
   drag?: LineDragProps;
   /** Part of the lines selected together (spec/nota-do-dia.md, "Selecionar várias linhas"). */
   selected?: boolean;
@@ -171,7 +169,7 @@ export function DatePicker({
   );
 }
 
-export function BlockLine({ block, free, day, today, isPriority, isQueued = false, allowNewLines, handlers, extraMeta, hideDate = false, drag, selected = false, notesOnly = false }: Props) {
+export function BlockLine({ block, free, day, today, isPriority, isQueued = false, allowNewLines, handlers, extraMeta, drag, selected = false, notesOnly = false }: Props) {
   const ref = useRef<HTMLTextAreaElement>(null);
   const [text, setText] = useState(block.text);
   const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -514,11 +512,12 @@ export function BlockLine({ block, free, day, today, isPriority, isQueued = fals
   const ideaOutcome = isIdea && block.ideaStatus === 'becameProject' ? 'virou projeto' : isIdea && block.ideaStatus === 'dropped' ? 'largada' : null;
   const done = isTask && block.status === 'done';
   const open = isTask && block.status === 'active';
-  // Something a person owes me: its date is the day to follow up (spec/pessoas.md).
+  // Something a person owes me: its date is the day to follow up (spec/pessoas.md). A task of
+  // mine has no intended date any more, only the deadline (ADR-072).
   const waiting = isTask && block.waiting === true;
   const deadline = block.deadline ?? null;
-  const showDate = isTask && !hideDate && block.intendedDate !== null && block.intendedDate !== day;
-  const dateLabel = showDate ? `${waiting ? 'cobrar ' : ''}${relativeDay(block.intendedDate!, today)}` : '';
+  const showDate = waiting && block.intendedDate !== null && block.intendedDate !== day;
+  const dateLabel = showDate ? `cobrar ${relativeDay(block.intendedDate!, today)}` : '';
   const deadlineLabel = deadline ? `prazo ${relativeDay(deadline, today)}` : '';
   const pickDate = (label: string, className: string, children: string, clearLabel?: string) => (
     <DatePicker
@@ -687,11 +686,7 @@ export function BlockLine({ block, free, day, today, isPriority, isQueued = fals
         {waiting && <span className="chip chip--waiting">aguardando</span>}
         {ideaOutcome && <span className="chip chip--muted">{ideaOutcome}</span>}
         {showDate &&
-          (open
-            ? waiting
-              ? pickDate('Mudar a data para cobrar', 'line__chip', dateLabel, 'Tirar a data para cobrar')
-              : pickDate('Mudar a data de intenção', 'line__chip', dateLabel, 'Tirar a data de intenção')
-            : <span className="muted">{dateLabel}</span>)}
+          (open ? pickDate('Mudar a data para cobrar', 'line__chip', dateLabel, 'Tirar a data para cobrar') : <span className="muted">{dateLabel}</span>)}
         {deadline &&
           (open ? pickDeadline('Mudar o prazo máximo', 'line__chip', deadlineLabel, 'Tirar o prazo máximo') : <span className="chip chip--muted">{deadlineLabel}</span>)}
       </span>
@@ -719,9 +714,7 @@ export function BlockLine({ block, free, day, today, isPriority, isQueued = fals
                 {isQueued ? 'Na fila' : 'Adicionar à fila'}
               </button>
             )}
-            {open && !showDate && (waiting
-              ? pickDate('Data para cobrar', 'line__action', 'Cobrar')
-              : pickDate(hideDate ? 'Mudar a data de intenção' : 'Data de intenção', 'line__action', 'Data'))}
+            {open && waiting && !showDate && pickDate('Data para cobrar', 'line__action', 'Cobrar')}
             {open && !waiting && !deadline && pickDeadline('Prazo máximo', 'line__action', 'Prazo')}
             {open && handlers.onSetWaiting && (
               <button

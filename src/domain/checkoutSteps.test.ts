@@ -1,89 +1,58 @@
 import { describe, expect, it } from 'vitest';
-import {
-  boardOutcome,
-  checkoutSteps,
-  groupByProject,
-  nextStep,
-  planningColumnOf,
-  planningColumns,
-  previousStep,
-  rangeBetween,
-  stepCounts,
-  type StepCounts,
-} from './checkoutSteps';
+import { boardOutcome, checkoutSteps, groupByProject, nextStep, previousStep, rangeBetween, stepCounts, type StepCounts } from './checkoutSteps';
 
-const NONE: StepCounts = { late: 0, reminders: 0 };
-const FULL: StepCounts = { late: 3, reminders: 1 };
+const NONE: StepCounts = { reminders: 0 };
+const FULL: StepCounts = { reminders: 1 };
 
 describe('checkout steps', () => {
   it('skips the steps with nothing to decide, but always shows the board of the day', () => {
     expect(checkoutSteps(NONE)).toEqual(['triage']);
-    expect(checkoutSteps({ ...NONE, late: 2 })).toEqual(['late', 'triage']);
-    expect(checkoutSteps(FULL)).toEqual(['late', 'triage', 'reminders']);
+    expect(checkoutSteps(FULL)).toEqual(['triage', 'reminders']);
   });
 
-  it('counts the late tasks and the reminders', () => {
-    expect(stepCounts(1, 2)).toEqual({ late: 1, reminders: 2 });
+  it('counts the reminders', () => {
+    expect(stepCounts(2)).toEqual({ reminders: 2 });
   });
 
   it('moves forward and back over the steps that still have items', () => {
     const plan = checkoutSteps(FULL);
-    expect(nextStep(plan, 'late', FULL)).toBe('triage');
     expect(nextStep(plan, 'triage', FULL)).toBe('reminders');
-    expect(nextStep(plan, 'triage', { ...FULL, reminders: 0 })).toBeNull();
-    expect(previousStep(plan, 'triage', FULL)).toBe('late');
-    expect(previousStep(plan, 'triage', { ...FULL, late: 0 })).toBeNull();
+    expect(nextStep(plan, 'triage', NONE)).toBeNull();
+    expect(previousStep(plan, 'reminders', FULL)).toBe('triage');
+    expect(previousStep(plan, 'triage', FULL)).toBeNull();
     expect(nextStep(plan, 'reminders', FULL)).toBeNull();
   });
 });
 
 describe('board outcome', () => {
-  const none = { dates: new Map<string, string | null>(), abandoned: new Set<string>(), finished: new Set<string>() };
   const undate = { kind: 'undate', untouched: true } as const;
+  const keep = { kind: 'keep' } as const;
 
-  it('gives every task of the triage a decision, its suggestion when untouched', () => {
+  it('gives every card a decision: abandon, finish, queue, or its suggestion when untouched', () => {
     const cards = [
-      { id: 'a', date: null, suggestion: undate },
-      { id: 'b', date: null, suggestion: undate },
-      { id: 'c', date: null, suggestion: undate },
-      { id: 'd', date: '2026-10-16', suggestion: undate },
-      { id: 'e', date: null, suggestion: undate },
+      { id: 'a', suggestion: undate },
+      { id: 'b', suggestion: undate },
+      { id: 'c', suggestion: undate },
+      { id: 'd', suggestion: undate },
+      { id: 'w', suggestion: keep },
     ];
-    const { decisions, changes } = boardOutcome(cards, {
-      dates: new Map([
-        ['b', '2026-10-17'],
-        ['c', null],
-      ]),
-      abandoned: new Set(['d']),
-      finished: new Set(['e']),
-    });
+    const decisions = boardOutcome(cards, { queued: new Set(['b']), abandoned: new Set(['c']), finished: new Set(['d']) });
     expect(Object.fromEntries(decisions)).toEqual({
       a: undate,
-      b: { kind: 'schedule', date: '2026-10-17' },
-      c: { kind: 'undate' },
-      d: { kind: 'abandon' },
-      e: { kind: 'finish' },
+      b: { kind: 'queue' },
+      c: { kind: 'abandon' },
+      d: { kind: 'finish' },
+      w: keep,
     });
-    expect(changes).toEqual([]);
   });
 
-  it('changes only the dates that moved for the other tasks, and abandons them', () => {
+  it('lets abandoning win over finishing, and finishing over the queue', () => {
     const cards = [
-      { id: 'late', date: '2026-10-10' },
-      { id: 'same', date: '2026-10-17' },
-      { id: 'still', date: '2026-10-18' },
-      { id: 'gone', date: '2026-10-18' },
+      { id: 'a', suggestion: undate },
+      { id: 'b', suggestion: undate },
     ];
-    const { decisions, changes } = boardOutcome(cards, {
-      ...none,
-      dates: new Map([
-        ['late', '2026-10-17'],
-        ['same', '2026-10-17'],
-      ]),
-      abandoned: new Set(['gone']),
-    });
-    expect(changes).toEqual([{ taskId: 'late', date: '2026-10-17' }]);
-    expect(Object.fromEntries(decisions)).toEqual({ gone: { kind: 'abandon' } });
+    const decisions = boardOutcome(cards, { queued: new Set(['a', 'b']), abandoned: new Set(['a']), finished: new Set(['a', 'b']) });
+    expect(Object.fromEntries(decisions)).toEqual({ a: { kind: 'abandon' }, b: { kind: 'finish' } });
   });
 });
 
@@ -100,60 +69,6 @@ describe('group by project', () => {
       ['b', [2, 4]],
       ['a', [3]],
       [null, [1]],
-    ]);
-  });
-});
-
-describe('planning columns', () => {
-  const today = '2026-10-13';
-  const target = '2026-10-14';
-
-  it('shows the target and the two days after it on a quiet day', () => {
-    expect(planningColumns([target, null], today, target)).toEqual([
-      { kind: 'day', day: '2026-10-14' },
-      { kind: 'day', day: '2026-10-15' },
-      { kind: 'day', day: '2026-10-16' },
-    ]);
-  });
-
-  it('puts the late tasks first, all together, and today when a task is dated for it', () => {
-    const columns = planningColumns(['2026-10-10', today], today, target);
-    expect(columns).toEqual([{ kind: 'late' }, { kind: 'day', day: today }, { kind: 'day', day: target }]);
-    expect(planningColumnOf('2026-10-01', columns, today)).toBe(0);
-    expect(planningColumnOf(today, columns, today)).toBe(1);
-    expect(planningColumnOf(target, columns, today)).toBe(2);
-    expect(planningColumnOf('2026-10-15', columns, today)).toBe(-1);
-    expect(planningColumnOf(null, columns, today)).toBe(-1);
-  });
-
-  it('jumps from today to the target over the days that are not active', () => {
-    expect(planningColumns([today], today, '2026-10-16')).toEqual([
-      { kind: 'day', day: today },
-      { kind: 'day', day: '2026-10-16' },
-      { kind: 'day', day: '2026-10-17' },
-    ]);
-  });
-
-  it('skips the days that are not active, unless a task is dated for one', () => {
-    const friday = '2026-10-16';
-    const weekdays = [1, 2, 3, 4, 5];
-    expect(planningColumns([], '2026-10-15', friday, 3, weekdays)).toEqual([
-      { kind: 'day', day: friday },
-      { kind: 'day', day: '2026-10-19' },
-      { kind: 'day', day: '2026-10-20' },
-    ]);
-    expect(planningColumns(['2026-10-17'], '2026-10-15', friday, 3, weekdays)).toEqual([
-      { kind: 'day', day: friday },
-      { kind: 'day', day: '2026-10-17' },
-      { kind: 'day', day: '2026-10-19' },
-    ]);
-  });
-
-  it('has no column for today when it is the target', () => {
-    expect(planningColumns([today], today, today)).toEqual([
-      { kind: 'day', day: today },
-      { kind: 'day', day: target },
-      { kind: 'day', day: '2026-10-15' },
     ]);
   });
 });

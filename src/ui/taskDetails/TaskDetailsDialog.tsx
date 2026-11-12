@@ -132,16 +132,19 @@ function TaskDetailsDialog({ details, today }: { details: TaskDetails; today: Da
       </label>
 
       <div className="task-details__row">
-        <label className="task-details__field">
-          <span className="task-details__label">{task.waiting ? 'Data para cobrar' : 'Data de intenção'}</span>
-          <input
-            type="date"
-            className="date-input"
-            disabled={!active}
-            value={task.intendedDate ?? ''}
-            onChange={(event) => void setIntendedDate(appContext, task.id, event.target.value || null)}
-          />
-        </label>
+        {/* Only a waiting task has a date besides the deadline: the day to follow up (ADR-072). */}
+        {task.waiting && (
+          <label className="task-details__field">
+            <span className="task-details__label">Data para cobrar</span>
+            <input
+              type="date"
+              className="date-input"
+              disabled={!active}
+              value={task.intendedDate ?? ''}
+              onChange={(event) => void setIntendedDate(appContext, task.id, event.target.value || null)}
+            />
+          </label>
+        )}
         <label className="task-details__field">
           <span className="task-details__label">Prazo máximo</span>
           <input
@@ -184,12 +187,6 @@ function TaskDetailsDialog({ details, today }: { details: TaskDetails; today: Da
               {origin.title ? `${origin.title}, ` : ''}
               {relativeDay(origin.day, today)}
             </dd>
-          </>
-        )}
-        {task.firstIntendedDate && task.firstIntendedDate !== task.intendedDate && (
-          <>
-            <dt>Primeira data de intenção</dt>
-            <dd>{relativeDay(task.firstIntendedDate, today)}</dd>
           </>
         )}
         <dt>Adiamentos</dt>
