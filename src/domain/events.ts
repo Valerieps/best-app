@@ -94,6 +94,12 @@ export interface EventData {
   'project.finished': NoData;
   'project.reopened': NoData;
   'project.merged': { into: string };
+  /**
+   * The project was deleted for good, with its history (ADR-074). `erased` lists the rows that went
+   * with it (the project, its page sections, their blocks and its resources), by type and id only,
+   * so the backup guard can tell a deliberate deletion from a loss. No name or text is kept.
+   */
+  'project.deleted': { erased: { entityType: EntityType; entityId: string }[] };
   'project.iconChanged': { from: string | null; to: string | null };
   'project.linkedToObjective': { objectiveId: string | null };
   /**

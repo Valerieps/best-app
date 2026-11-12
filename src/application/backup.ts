@@ -258,7 +258,7 @@ function keyOf(name: BackupTableName, row: object): string {
  * deletes a row of a protected table must record one of these, or the automatic backup pauses
  * with a false warning (`deletionGuard.test.ts` checks it).
  */
-export const DELETION_EVENTS: ReadonlySet<EventType> = new Set<EventType>(['block.deleted', 'resource.removed']);
+export const DELETION_EVENTS: ReadonlySet<EventType> = new Set<EventType>(['block.deleted', 'resource.removed', 'project.deleted']);
 
 /** Tables whose rows the automatic backup protects from disappearing (`computeImportLoss`). */
 export const ENTITY_OF: Record<'blocks' | 'sections' | 'projects' | 'days', EntityType> = {
@@ -274,9 +274,14 @@ function deletionKey(entityType: EntityType, id: string): string {
 
 /** Rows the history says were deleted on purpose, keyed by `deletionKey`. */
 function deletedRows(events: DomainEvent[]): Set<string> {
-  return new Set(
-    events.filter((event) => DELETION_EVENTS.has(event.type)).map((event) => deletionKey(event.entityType, event.entityId)),
-  );
+  const keys = new Set<string>();
+  for (const event of events) {
+    if (!DELETION_EVENTS.has(event.type)) continue;
+    keys.add(deletionKey(event.entityType, event.entityId));
+    // A deleted project took its page, its blocks and its resources with it.
+    if (event.type === 'project.deleted') for (const row of event.data.erased) keys.add(deletionKey(row.entityType, row.entityId));
+  }
+  return keys;
 }
 
 function tableLoss<T extends { updatedAt: string }>(
@@ -308,7 +313,8 @@ export function computeImportLoss(current: BackupTables, incoming: BackupTables)
     sections: tableLoss('sections', current.sections, incoming.sections, deleted),
     projects: tableLoss('projects', current.projects, incoming.projects, deleted),
     days: tableLoss('days', current.days, incoming.days, deleted),
-    missingEvents: current.events.filter((event) => !incomingEvents.has(event.id)).length,
+    // The history of a project deleted on purpose is gone on purpose (ADR-074).
+    missingEvents: current.events.filter((event) => !incomingEvents.has(event.id) && !deleted.has(deletionKey(event.entityType, event.entityId))).length,
   };
   const hasLoss =
     loss.missingEvents > 0 ||

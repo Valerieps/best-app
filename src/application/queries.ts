@@ -20,7 +20,7 @@ import { dayStage, dueReminders, type DayStage } from '../domain/dayFlow';
 import { weekOf } from '../domain/week';
 import { comparePositions } from '../domain/position';
 import { buildDayPriorities, dayPriorityListId, type DayPriority } from '../domain/priorities';
-import { FOCUS_LIST_ID, focusProjectIds, hasFreeSlot } from '../domain/focusProjects';
+import { FOCUS_LIST_ID, focusProjectIds } from '../domain/focusProjects';
 import { QUEUE_LIST_ID, queueIds } from '../domain/executionQueue';
 import { activityByDay, lastActivityDay, recentlyFinished, stalledDays, type ActivityByDay } from '../domain/projectActivity';
 import { isDaySection } from '../domain/projectPage';
@@ -272,21 +272,13 @@ export async function loadQueueIds(reader: Reader): Promise<string[]> {
 export interface ProjectActions {
   /** In focus: "Tirar do foco". */
   isPriority: boolean;
-  /** Active, not in focus yet, and the list has a free slot: "Colocar em foco". */
+  /** Active and not in focus yet: "Colocar em foco". */
   canAddToPriorities: boolean;
-  /** Active, not in focus, and the list is full: the projects in focus it can take the place of. */
-  swapTargets: { id: string; name: string }[];
 }
 
-function projectActions(project: Project, priorityIds: readonly string[], projects: readonly Project[]): ProjectActions {
+function projectActions(project: Project, priorityIds: readonly string[]): ProjectActions {
   const isPriority = priorityIds.includes(project.id);
-  const candidate = project.status === 'active' && !isPriority;
-  const free = hasFreeSlot(priorityIds);
-  const swapTargets =
-    candidate && !free
-      ? priorityIds.flatMap((id) => projects.filter((other) => other.id === id).map((other) => ({ id: other.id, name: other.name })))
-      : [];
-  return { isPriority, canAddToPriorities: candidate && free, swapTargets };
+  return { isPriority, canAddToPriorities: project.status === 'active' && !isPriority };
 }
 
 export interface ProjectListItem extends ProjectActions {
@@ -301,7 +293,7 @@ export interface ProjectListItem extends ProjectActions {
 }
 
 export interface ProjectListView {
-  /** The projects in focus, in the order chosen; at most 3. */
+  /** The projects in focus, in the order chosen. */
   priority: ProjectListItem[];
   /** Other active projects, most recent activity first. */
   others: ProjectListItem[];
@@ -357,7 +349,7 @@ export async function loadProjectList(reader: Reader, today: DayKey): Promise<Pr
       lastActivityDay: lastActivityDay(activity, today),
       stalledDays,
       activity,
-      ...projectActions(project, priorityIds, projects),
+      ...projectActions(project, priorityIds),
     };
   });
   const byName = (a: ProjectListItem, b: ProjectListItem) => a.project.name.localeCompare(b.project.name, 'pt-BR');
@@ -412,7 +404,7 @@ export async function loadProject(reader: Reader, projectId: string): Promise<Pr
     notes: notesOfProject(kept, projectId),
     sections: sections.length,
     ideas: sortIdeas(blocks.filter(isOpenIdea)),
-    ...projectActions(project, priorityIds, projects),
+    ...projectActions(project, priorityIds),
   };
 }
 

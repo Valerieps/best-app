@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { createTestContext } from '../test/fixtures';
-import { addFocusProject, removeFocusProject, swapFocusProject } from './focusProjects';
+import { addFocusProject, removeFocusProject } from './focusProjects';
 import { createProject, setProjectFinished } from './projects';
 import { loadDayOpening, loadProject, loadProjectList } from './queries';
 
@@ -18,28 +18,15 @@ const focusNames = async (reader: ReturnType<typeof createTestContext>['reader']
   (await loadProjectList(reader, today)).priority.map((item) => item.project.name);
 
 describe('projects in focus', () => {
-  it('takes a free slot, up to 3', async () => {
+  it('takes any number of projects', async () => {
     const { ctx, reader, projects } = await setup(['A', 'B', 'C', 'D']);
-    expect(await loadProject(reader, projects[3].id)).toMatchObject({ isPriority: false, canAddToPriorities: true, swapTargets: [] });
-    for (const project of projects.slice(0, 3)) expect(await addFocusProject(ctx, project.id)).toBe(true);
-    expect(await addFocusProject(ctx, projects[3].id)).toBe(false);
-    expect(await focusNames(reader)).toEqual(['A', 'B', 'C']);
-    expect(await loadProject(reader, projects[0].id)).toMatchObject({ isPriority: true, canAddToPriorities: false, swapTargets: [] });
+    for (const project of projects) expect(await addFocusProject(ctx, project.id)).toBe(true);
+    expect(await addFocusProject(ctx, projects[0].id)).toBe(false);
+    expect(await focusNames(reader)).toEqual(['A', 'B', 'C', 'D']);
+    expect(await loadProject(reader, projects[0].id)).toMatchObject({ isPriority: true, canAddToPriorities: false });
   });
 
-  it('offers a full list for a swap, in the order chosen', async () => {
-    const { ctx, reader, projects } = await setup(['A', 'B', 'C', 'D']);
-    for (const project of projects.slice(0, 3)) await addFocusProject(ctx, project.id);
-    expect(await loadProject(reader, projects[3].id)).toMatchObject({
-      isPriority: false,
-      canAddToPriorities: false,
-      swapTargets: ['A', 'B', 'C'].map((name, index) => ({ id: projects[index].id, name })),
-    });
-    await setProjectFinished(ctx, projects[3].id, true);
-    expect(await loadProject(reader, projects[3].id)).toMatchObject({ canAddToPriorities: false, swapTargets: [] });
-  });
-
-  it('removes a project at any time, freeing its slot', async () => {
+  it('removes a project at any time', async () => {
     const { ctx, reader, db, projects } = await setup(['A', 'B']);
     await addFocusProject(ctx, projects[0].id);
     await addFocusProject(ctx, projects[1].id);
@@ -48,30 +35,6 @@ describe('projects in focus', () => {
     expect(await focusNames(reader)).toEqual(['B']);
     const removed = await db.events.where('type').equals('priority.removed').toArray();
     expect(removed.map((event) => event.data)).toEqual([{ projectId: projects[0].id, reason: 'removed', itemIds: [projects[1].id] }]);
-  });
-
-  it('swaps a project in focus for another in one change, keeping its place', async () => {
-    const { ctx, reader, db, projects } = await setup(['A', 'B', 'C', 'D']);
-    for (const project of projects.slice(0, 3)) await addFocusProject(ctx, project.id);
-    expect(await swapFocusProject(ctx, projects[1].id, projects[3].id)).toBe(true);
-    expect(await focusNames(reader)).toEqual(['A', 'D', 'C']);
-    const added = await db.events.where('type').equals('priority.added').toArray();
-    expect(added.map((event) => event.data)).toContainEqual({
-      projectId: projects[3].id,
-      replaced: projects[1].id,
-      itemIds: [projects[0].id, projects[3].id, projects[2].id],
-    });
-  });
-
-  it('does not swap in a finished project, one already in focus, or for one not in focus', async () => {
-    const { ctx, reader, projects } = await setup(['A', 'B', 'C', 'D']);
-    await addFocusProject(ctx, projects[0].id);
-    await addFocusProject(ctx, projects[1].id);
-    expect(await swapFocusProject(ctx, projects[0].id, projects[1].id)).toBe(false);
-    expect(await swapFocusProject(ctx, projects[2].id, projects[3].id)).toBe(false);
-    await setProjectFinished(ctx, projects[3].id, true);
-    expect(await swapFocusProject(ctx, projects[0].id, projects[3].id)).toBe(false);
-    expect(await focusNames(reader)).toEqual(['A', 'B']);
   });
 
   it('records each change with the whole list in the event history', async () => {

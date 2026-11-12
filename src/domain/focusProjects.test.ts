@@ -9,7 +9,6 @@ import {
   recordedFocusProjects,
   withAddedProject,
   withRemovedProject,
-  withSwappedProject,
 } from './focusProjects';
 import { weekOf } from './week';
 
@@ -22,31 +21,25 @@ function project(id: string, status: Project['status'] = 'active'): Project {
 }
 
 describe('projects in focus', () => {
-  it('shows only active projects, in the order chosen, at most 3', () => {
+  it('shows only active projects, in the order chosen', () => {
     const projects = [project('a'), project('b', 'finished'), project('c'), project('d'), project('e')];
-    expect(focusProjectIds({ itemIds: ['c', 'b', 'a', 'd', 'e'] }, projects)).toEqual(['c', 'a']);
+    expect(focusProjectIds({ itemIds: ['c', 'b', 'a', 'd', 'e'] }, projects)).toEqual(['c', 'a', 'd', 'e']);
     expect(focusProjectIds(undefined, projects)).toEqual([]);
   });
 
   it('keeps what was recorded, whatever happened to the projects later', () => {
-    expect(recordedFocusProjects({ itemIds: ['a', 'a', 'b', 'c', 'd'] })).toEqual(['a', 'b', 'c']);
+    expect(recordedFocusProjects({ itemIds: ['a', 'a', 'b', 'c', 'd'] })).toEqual(['a', 'b', 'c', 'd']);
   });
 
-  it('adds a project only while there is a free slot', () => {
+  it('adds a project with no limit', () => {
     expect(withAddedProject(['a', 'b'], 'c')).toEqual(['a', 'b', 'c']);
-    expect(withAddedProject(['a', 'b', 'c'], 'd')).toBeNull();
+    expect(withAddedProject(['a', 'b', 'c'], 'd')).toEqual(['a', 'b', 'c', 'd']);
     expect(withAddedProject(['a'], 'a')).toBeNull();
   });
 
   it('removes a project in the list', () => {
     expect(withRemovedProject(['a', 'b', 'c'], 'b')).toEqual(['a', 'c']);
     expect(withRemovedProject(['a'], 'z')).toBeNull();
-  });
-
-  it('swaps a project in the list for one outside it, in the same place', () => {
-    expect(withSwappedProject(['a', 'b', 'c'], 'b', 'd')).toEqual(['a', 'd', 'c']);
-    expect(withSwappedProject(['a', 'b'], 'z', 'd')).toBeNull();
-    expect(withSwappedProject(['a', 'b'], 'a', 'b')).toBeNull();
   });
 });
 

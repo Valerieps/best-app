@@ -5,7 +5,6 @@ import { loadProjectList, type ProjectListItem, type ProjectListView } from '../
 import { setProjectListGroupOpen } from '../../application/settings';
 import { toDayKey, type DayKey } from '../../domain/day';
 import type { ProjectListGroup } from '../../domain/entities';
-import { FOCUS_PROJECT_LIMIT } from '../../domain/focusProjects';
 import { Dropdown, DropdownItem } from '../components/Dropdown';
 import { Icon } from '../components/Icon';
 import { ScreenHeader } from '../components/ScreenHeader';
@@ -29,7 +28,6 @@ export function ProjectsScreen({ today }: { today: DayKey }) {
   if (!view) return <LoadingPage title="Projetos" />;
 
   const candidates = view.others.map((item) => item.project);
-  const freeSlots = FOCUS_PROJECT_LIMIT - view.priority.length;
   const hasActive = view.summary.active > 0;
 
   return (
@@ -54,7 +52,7 @@ export function ProjectsScreen({ today }: { today: DayKey }) {
               ))}
             </ul>
           )}
-          {freeSlots > 0 && <FreeSlot candidates={candidates} />}
+          {<FreeSlot candidates={candidates} />}
         </section>
       )}
 

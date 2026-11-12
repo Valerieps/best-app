@@ -60,7 +60,13 @@ export interface StoreTransaction {
   sectionsOfProject(projectId: string): Promise<Section[]>;
   /** Priority lists whose ids are between `fromId` and `toId`, both included. */
   priorityListsBetween(fromId: string, toId: string): Promise<PriorityList[]>;
+  resourcesOf(ownerId: string): Promise<Resource[]>;
   appendEvent(event: DomainEvent): Promise<void>;
+  /**
+   * The only way an event leaves the history: "Apagar projeto" erases everything about a project
+   * that was made by mistake (ADR-072). Returns how many were removed.
+   */
+  deleteEventsOfEntities(entityIds: string[]): Promise<number>;
 }
 
 export interface Store {

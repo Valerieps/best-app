@@ -1,6 +1,6 @@
 import { toDayKey } from '../domain/day';
 import type { PriorityList } from '../domain/entities';
-import { FOCUS_LIST_ID, recordedFocusProjects, withAddedProject, withRemovedProject, withSwappedProject } from '../domain/focusProjects';
+import { FOCUS_LIST_ID, recordedFocusProjects, withAddedProject, withRemovedProject } from '../domain/focusProjects';
 import { record } from './events';
 import type { AppContext, StoreTransaction } from './ports';
 
@@ -16,7 +16,7 @@ async function idsInFocus(tx: StoreTransaction): Promise<string[]> {
 }
 
 type Change =
-  | { added: string; replaced?: string }
+  | { added: string }
   | { removed: string; reason: 'removed' | 'finished' };
 
 /** Saves the whole list. The event carries it too, which is the history of the list. */
@@ -25,14 +25,13 @@ async function save(ctx: AppContext, tx: StoreTransaction, itemIds: string[], ch
   await tx.priorities.put(list);
   const day = toDayKey(ctx.clock.now());
   if ('added' in change) {
-    const replaced = change.replaced ? { replaced: change.replaced } : {};
-    await record(ctx, tx, 'priority.added', 'priorities', FOCUS_LIST_ID, day, { projectId: change.added, itemIds, ...replaced });
+    await record(ctx, tx, 'priority.added', 'priorities', FOCUS_LIST_ID, day, { projectId: change.added, itemIds });
   } else {
     await record(ctx, tx, 'priority.removed', 'priorities', FOCUS_LIST_ID, day, { projectId: change.removed, reason: change.reason, itemIds });
   }
 }
 
-/** "Colocar em foco": an active project takes a free slot. Returns whether it was added. */
+/** "Colocar em foco": an active project joins the list. Returns whether it was added. */
 export async function addFocusProject(ctx: AppContext, projectId: string): Promise<boolean> {
   return ctx.store.transaction(async (tx) => {
     if ((await tx.projects.get(projectId))?.status !== 'active') return false;
@@ -43,7 +42,7 @@ export async function addFocusProject(ctx: AppContext, projectId: string): Promi
   });
 }
 
-/** "Tirar do foco": frees the project's slot. Returns whether it was in the list. */
+/** "Tirar do foco": takes the project out of the list. Returns whether it was in the list. */
 export async function removeFocusProject(ctx: AppContext, projectId: string): Promise<boolean> {
   return ctx.store.transaction(async (tx) => {
     const next = withRemovedProject(await idsInFocus(tx), projectId);
@@ -54,24 +53,17 @@ export async function removeFocusProject(ctx: AppContext, projectId: string): Pr
 }
 
 /**
- * "Colocar em foco no lugar de": an active project takes the place of one in focus, in a single
- * change, so a full list can be swapped. Returns whether the list changed.
- */
-export async function swapFocusProject(ctx: AppContext, outId: string, inId: string): Promise<boolean> {
-  return ctx.store.transaction(async (tx) => {
-    if ((await tx.projects.get(inId))?.status !== 'active') return false;
-    const next = withSwappedProject(await idsInFocus(tx), outId, inId);
-    if (!next) return false;
-    await save(ctx, tx, next, { added: inId, replaced: outId });
-    return true;
-  });
-}
-
-/**
- * "Finalizar um projeto em foco tira o projeto da lista e libera a vaga". Reopening does not
+ * "Finalizar um projeto em foco tira o projeto da lista". Reopening does not
  * bring it back.
  */
 export async function releaseFocusProject(ctx: AppContext, tx: StoreTransaction, projectId: string): Promise<void> {
   const ids = recordedFocusProjects(await tx.priorities.get(FOCUS_LIST_ID));
   if (ids.includes(projectId)) await save(ctx, tx, ids.filter((id) => id !== projectId), { removed: projectId, reason: 'finished' });
+}
+
+/** A deleted project leaves the list without a trace: no event, as its history is erased too. */
+export async function forgetFocusProject(ctx: AppContext, tx: StoreTransaction, projectId: string): Promise<void> {
+  const list = await tx.priorities.get(FOCUS_LIST_ID);
+  if (!list?.itemIds.includes(projectId)) return;
+  await tx.priorities.put({ ...list, itemIds: list.itemIds.filter((id) => id !== projectId), updatedAt: ctx.clock.now().toISOString() });
 }

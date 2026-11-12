@@ -21,12 +21,11 @@ Eu escolho os projetos em foco quando quiser. O que fazer, eu escolho pondo tare
 
 ## Projetos em foco *(2)*
 
-- Os projetos em foco são até 3 projetos e formam uma lista separada das prioridades do dia.
-- Eu adiciono, troco e tiro projetos da lista a qualquer momento, pela lista de projetos ou pela página do projeto, no "⋯" do projeto. A lista vale até eu mudá-la; o tempo sozinho não a muda. A Revisão de Foco, que antes era o único lugar para trocar ou tirar um projeto, saiu do app.
-- "Colocar em foco" põe um projeto ativo numa vaga livre, no fim da lista. Na lista de projetos, cada vaga livre também tem "Colocar em foco".
-- Com a lista cheia, "Colocar em foco no lugar de…" troca um projeto ativo por um dos 3 em foco, numa mudança só: o novo fica na posição do que saiu.
-- "Tirar do foco", no "⋯" de um projeto em foco, tira o projeto da lista e libera a vaga.
-- Finalizar um projeto em foco tira o projeto da lista e libera a vaga. Reabrir o projeto não o devolve à lista; se eu quiser, adiciono de novo.
+- Os projetos em foco são quantos eu quiser (não há limite) e formam uma lista separada das prioridades do dia.
+- Eu adiciono e tiro projetos da lista a qualquer momento, pela lista de projetos ou pela página do projeto, no "⋯" do projeto. A lista vale até eu mudá-la; o tempo sozinho não a muda. A Revisão de Foco, que antes era o único lugar para trocar ou tirar um projeto, saiu do app.
+- "Colocar em foco" põe um projeto ativo no fim da lista. Na lista de projetos, um "Colocar em foco" abaixo da lista faz o mesmo.
+- "Tirar do foco", no "⋯" de um projeto em foco, tira o projeto da lista.
+- Finalizar um projeto em foco tira o projeto da lista. Reabrir o projeto não o devolve à lista; se eu quiser, adiciono de novo.
 
 ## Fila de execução *(7)*
 

@@ -82,7 +82,7 @@ Os tipos estão em `src/domain/entities.ts`. Todo registro tem `id` (UUID), `cre
 
 **`days`**: `lastCheckoutAt`, `startedAt`, `warmup`, `executionStartedAt` e `sectionOrder`.
 
-**`priorities`**: listas com id `escopo:período`. `day:AAAA-MM-DD` guarda as tarefas escolhidas à mão; as com prazo no dia entram na leitura (ADR-017). `focusProjects` é a lista única de até 3 projetos em foco, e cada mudança grava um evento com a lista inteira (ADR-038). `queue` é a fila de execução, sem limite, com o mesmo desenho (ADR-069): adicionar e remover gravam um evento com a lista inteira, reordenar não grava evento (ADR-040), finalizar ou abandonar tiram a tarefa, e quem lê só mostra tarefas abertas e não aguardando. As listas `next:<projectId>`, dos antigos próximos passos dos projetos, ficam no banco e no backup só como histórico: o app não as lê nem grava mais (ADR-070).
+**`priorities`**: listas com id `escopo:período`. `day:AAAA-MM-DD` guarda as tarefas escolhidas à mão; as com prazo no dia entram na leitura (ADR-017). `focusProjects` é a lista única de projetos em foco, sem limite de tamanho, e cada mudança grava um evento com a lista inteira (ADR-038). `queue` é a fila de execução, sem limite, com o mesmo desenho (ADR-069): adicionar e remover gravam um evento com a lista inteira, reordenar não grava evento (ADR-040), finalizar ou abandonar tiram a tarefa, e quem lê só mostra tarefas abertas e não aguardando. As listas `next:<projectId>`, dos antigos próximos passos dos projetos, ficam no banco e no backup só como histórico: o app não as lê nem grava mais (ADR-070).
 
 **`settings`**: um registro só, id `main`, que entra no backup.
 
@@ -102,7 +102,7 @@ Os tipos estão em `src/domain/entities.ts`. Todo registro tem `id` (UUID), `cre
 ## 5. Histórico de eventos
 
 - Cada mudança estrutural grava um evento: `type`, `entityType`, `entityId`, `at`, `day` e `data`. A lista completa está em `src/domain/events.ts`.
-- **Só acrescentar.** Os eventos nunca são editados nem apagados; a gravação usa `add`. A exceção é importar um backup ou desfazer a importação, que substituem o histórico inteiro e deixam `backup.imported` ou `backup.importUndone` no histórico novo (ADR-006).
+- **Só acrescentar.** Os eventos nunca são editados nem apagados; a gravação usa `add`. As exceções são importar um backup ou desfazer a importação, que substituem o histórico inteiro e deixam `backup.imported` ou `backup.importUndone` no histórico novo (ADR-006), e "Apagar projeto", que apaga os eventos do projeto e das linhas que iam com ele e deixa só um `project.deleted`, com os ids e sem texto, que o guard do backup automático lê como exclusão de propósito (ADR-074).
 - **Editar o texto de um bloco não gera evento** (ADR-004); criar, apagar e mudar o tipo geram.
 - **Exclusões deixam rastro:** um bloco apagado ou um recurso removido sai da tabela, mas deixa `block.deleted` ou `resource.removed`. É assim que o backup automático distingue um registro apagado de um perdido (seção 7).
 - **Formato dos detalhes:** cada tipo tem o seu `data` em `EventData`, e `record` só aceita esse formato. Um formato já gravado nunca muda: os antigos ficam em `LegacyEventData`, e uma mudança incompatível sobe a versão do evento (`v`, ausente = 1). Quem lê confere o valor, porque um backup importado pode trazer qualquer coisa (ADR-043).

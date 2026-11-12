@@ -30,7 +30,8 @@ describe('deleting rows the backup protects', () => {
     for (const name of files) {
       const lines = readFileSync(join(DIR, name), 'utf8').split('\n');
       lines.forEach((line, index) => {
-        if (!deletePattern.test(line)) return;
+        // `deleteProject` records one `project.deleted` for all its deletes, at the end.
+        if (!deletePattern.test(line) || line.includes('// covered by project.deleted')) return;
         const after = lines.slice(index + 1, index + 1 + WINDOW).join('\n');
         const recorded = after.match(recordPattern)?.[1];
         if (!recorded || !DELETION_EVENTS.has(recorded as never)) offenders.push(`${name}:${index + 1}`);

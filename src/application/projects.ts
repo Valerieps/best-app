@@ -1,10 +1,11 @@
 import { toDayKey } from '../domain/day';
 import type { Block, Project, Section } from '../domain/entities';
+import type { EntityType } from '../domain/events';
 import { positionBetween } from '../domain/position';
 import { isProjectIcon } from '../domain/projectPage';
 import { record } from './events';
 import type { AppContext, StoreTransaction } from './ports';
-import { releaseFocusProject } from './focusProjects';
+import { forgetFocusProject, releaseFocusProject } from './focusProjects';
 import { followTag, rewriteTags } from './projectTags';
 
 /** Where a project grew from: an idea, and the idea's project then (spec/ideias.md). */
@@ -76,6 +77,49 @@ export async function setProjectFinished(ctx: AppContext, projectId: string, fin
     });
     await record(ctx, tx, finished ? 'project.finished' : 'project.reopened', 'project', project.id, toDayKey(ctx.clock.now()));
     if (finished) await releaseFocusProject(ctx, tx, project.id);
+  });
+}
+
+/**
+ * "Apagar projeto": removes the project for good, with its history, for the ones made by mistake
+ * (ADR-072). What was written on its page (its tasks and notes there) goes with it. The tasks and
+ * notes written in the day notes stay, no longer linked to any project, and the day notes that
+ * were linked go back to being whiteboards. Nothing here can be undone.
+ */
+export async function deleteProject(ctx: AppContext, projectId: string): Promise<void> {
+  await ctx.store.transaction(async (tx) => {
+    const project = await tx.projects.get(projectId);
+    if (!project) return;
+    const at = ctx.clock.now().toISOString();
+    const erased: { entityType: EntityType; entityId: string }[] = [{ entityType: 'project', entityId: projectId }];
+
+    for (const section of await tx.sectionsOfProject(projectId)) {
+      if (section.projectPage === true || section.projectNote === true) {
+        for (const block of await tx.blocksInSection(section.id)) {
+          await tx.blocks.delete(block.id); // covered by project.deleted
+          erased.push({ entityType: 'block', entityId: block.id });
+        }
+        await tx.sections.delete(section.id); // covered by project.deleted
+        erased.push({ entityType: 'section', entityId: section.id });
+      } else {
+        await tx.sections.put({ ...section, projectId: null, updatedAt: at });
+      }
+    }
+    for (const block of await tx.blocksOfProject(projectId)) {
+      await tx.blocks.put({ ...block, projectId: null, updatedAt: at });
+    }
+    for (const resource of await tx.resourcesOf(projectId)) {
+      await tx.resources.delete(resource.id);
+      erased.push({ entityType: 'resource', entityId: resource.id });
+    }
+    for (const other of await tx.allProjects()) {
+      if (other.id !== projectId && other.fromProjectId === projectId) await tx.projects.put({ ...other, fromProjectId: null });
+    }
+    await forgetFocusProject(ctx, tx, projectId);
+    await tx.projects.delete(projectId); // covered by project.deleted
+    await tx.deleteEventsOfEntities(erased.map((row) => row.entityId));
+    // Written last, so it is the only trace left: ids only, for the backup guard.
+    await record(ctx, tx, 'project.deleted', 'project', projectId, toDayKey(ctx.clock.now()), { erased });
   });
 }
 
