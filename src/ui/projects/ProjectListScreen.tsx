@@ -14,15 +14,10 @@ import { formatShortDate, plural } from '../format';
 import { navigate, routeHash } from '../hooks';
 import { appContext, reader } from '../services';
 import { useLiveQuery } from '../useLiveQuery';
-import { enqueue } from '../writeQueue';
+import { enqueue, write } from '../writeQueue';
 import { ProjectActionsMenu } from './ProjectActions';
 import { ProjectIconBadge } from './ProjectIcon';
 
-function write(work: () => Promise<unknown>) {
-  enqueue(work).catch(() => {
-    // Logged by the queue; the screen shows the saved state again on its own.
-  });
-}
 
 /**
  * The project list (spec/projetos.md, "Projetos"): where projects are followed. The projects in

@@ -30,3 +30,11 @@ export function enqueue<T>(write: () => Promise<T>): Promise<T> {
 export function runAfterPendingWrites<T>(work: () => Promise<T>): Promise<T> {
   return add(work, () => {});
 }
+
+/**
+ * Queues a write from a screen and forgets it: a failure is already logged and shown by the
+ * queue, and the screen shows the saved state again on its own.
+ */
+export function write(work: () => Promise<unknown>): void {
+  enqueue(work).catch(() => {});
+}

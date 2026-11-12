@@ -1,7 +1,6 @@
 import { useEffect, useState, type MouseEvent } from 'react';
-import { setDeadline, setDeadlines, setTaskProject } from '../../application/dayTools';
-import { addToQueue } from '../../application/executionQueue';
-import { abandonTask, abandonTasks, setTaskDone } from '../../application/notebook';
+import { setDeadlines } from '../../application/dayTools';
+import { abandonTasks } from '../../application/notebook';
 import { loadActiveTasks, loadFinishedTasks, loadTaskListContext, type TaskListItem } from '../../application/queries';
 import { rangeBetween } from '../../domain/checkoutSteps';
 import { addDays, type DayKey } from '../../domain/day';
@@ -12,12 +11,13 @@ import { COLUMN_LABELS, DEFAULT_VIEW, parseView, sortByColumn, type TaskColumn, 
 import { AbandonAction } from '../components/AbandonAction';
 import { ProjectChip } from '../components/Chips';
 import { Icon } from '../components/Icon';
-import { DatePicker, type LineDragProps } from '../dayNote/BlockLine';
 import { Linkified } from '../components/Linkified';
 import { TaskText } from '../taskDetails/TaskText';
 import { ScreenHeader } from '../components/ScreenHeader';
 import { LoadingPage } from '../components/Skeleton';
-import { plural, postponedLabel, relativeDay } from '../format';
+import { plural, relativeDay } from '../format';
+import { TaskActionButtons, TaskCheckbox } from '../tasks/TaskControls';
+import { taskActions, taskText } from '../tasks/taskSurface';
 import { routeHash } from '../hooks';
 import { appContext, reader } from '../services';
 import { useLiveQuery } from '../useLiveQuery';
@@ -28,75 +28,6 @@ function ListPage({ title, className = '', children }: { title: string; classNam
       <ScreenHeader title={title} />
       {children}
     </main>
-  );
-}
-
-export function TaskRow({
-  item,
-  today,
-  action,
-  extra,
-  selection,
-  drag,
-  quietProject = false,
-  hideMeta = false,
-}: {
-  item: TaskListItem;
-  today: DayKey;
-  action?: React.ReactNode;
-  /** Shown on hover, after the meta. */
-  extra?: React.ReactNode;
-  /** In a batch selection, a click anywhere on the row picks it, highlighted, as in the planning. */
-  selection?: { on: boolean; onPick(event: MouseEvent): void };
-  /** Reordering by dragging the handle, as in the "Fila de execução". */
-  drag?: LineDragProps;
-  /** The project as small muted text under the task, instead of the chip at the end. */
-  quietProject?: boolean;
-  /** No deadline or postponement text on the row, as in the "Fila de execução". */
-  hideMeta?: boolean;
-}) {
-  const { task, project } = item;
-  const active = task.status === 'active';
-  const deadline = active && task.deadline ? `prazo ${relativeDay(task.deadline, today)}` : null;
-  const meta = hideMeta ? '' : [deadline, postponedLabel(task.postponeCount)].filter(Boolean).join(' · ');
-  return (
-    <li
-      className={`card-list__item card-list__item--stacked ${task.status === 'done' ? 'active-tasks__row--done' : ''} ${selection ? 'active-tasks__row--select' : ''} ${selection?.on ? 'active-tasks__row--on' : ''} ${drag?.dragging ? 'task-row--dragging' : ''} ${drag?.mark ? `task-row--drop-${drag.mark}` : ''}`}
-      onClick={selection?.onPick}
-      data-drag-group={drag?.group}
-      data-drag-id={drag ? task.id : undefined}
-    >
-      <div className="task-row">
-        {drag && (
-          <span className="task-row__handle" title="Arraste para mudar a ordem" aria-hidden="true" onPointerDown={drag.onStart}>
-            ⠿
-          </span>
-        )}
-        {action}
-        {selection ? (
-          <button type="button" className="task-row__text" aria-pressed={selection.on}>
-            <Linkified text={task.text || '(tarefa sem texto)'} />
-          </button>
-        ) : (
-          <span className="task-row__text">
-            <TaskText taskId={task.id} text={task.text} />
-          </span>
-        )}
-        {meta && (
-          <span className="list-meta">
-            <span className="muted">{meta}</span>
-          </span>
-        )}
-        {extra}
-        {/* Always the last item of the row, after the hover actions. */}
-        {project && !quietProject && <ProjectChip name={project.name} href={selection ? undefined : routeHash({ name: 'project', id: project.id })} />}
-      </div>
-      {project && quietProject && (
-        <a className="task-row__project" href={routeHash({ name: 'project', id: project.id })} title="Abrir a página do projeto">
-          {project.name}
-        </a>
-      )}
-    </li>
   );
 }
 
@@ -221,57 +152,25 @@ function BatchBar({ selected, today, onDone }: { selected: Set<string>; today: D
   );
 }
 
-/** On hover: queue, link to a project, change the deadline, or abandon the task, with a second click to confirm. */
+/** The hover actions of a task in a list: the table, or the "Fila de execução". */
 export function ActiveTaskActions({
   item,
+  today,
   projects,
-  inQueue,
+  surface,
+  inQueue = false,
 }: {
   item: TaskListItem;
+  today: DayKey;
   projects: Project[];
-  /** Whether the task is in the "Fila de execução"; absent hides the queue action. */
+  surface: 'table' | 'queue';
+  /** Whether the task is in the "Fila de execução": "Adicionar à fila" shows "Na fila". */
   inQueue?: boolean;
 }) {
-  const { task } = item;
+  const actions = taskActions(item.task, surface, { hasProject: Boolean(item.project), projectChoices: projects.length });
   return (
     <span className="active-tasks__actions">
-      {inQueue !== undefined && !task.waiting && (
-        <button
-          type="button"
-          className="line__action"
-          disabled={inQueue}
-          title={inQueue ? 'Já está na fila de execução' : 'Adicionar ao fim da fila de execução'}
-          onClick={() => void addToQueue(appContext, task.id)}
-        >
-          {inQueue ? 'Na fila' : 'Adicionar à fila'}
-        </button>
-      )}
-      {!item.project && projects.length > 0 && (
-        <select
-          className="line__action active-tasks__project"
-          value=""
-          onChange={(event) => event.target.value && void setTaskProject(appContext, task.id, event.target.value)}
-          aria-label={`Vincular "${task.text}" a um projeto`}
-          title="Vincular a um projeto"
-        >
-          <option value="">Projeto</option>
-          {projects.map((project) => (
-            <option key={project.id} value={project.id}>
-              {project.name}
-            </option>
-          ))}
-        </select>
-      )}
-      <DatePicker
-        label="Mudar o prazo máximo"
-        className="line__action"
-        value={task.deadline ?? null}
-        onChange={(date) => void setDeadline(appContext, task.id, date)}
-        clearLabel={task.deadline ? 'Tirar o prazo máximo' : undefined}
-      >
-        Prazo
-      </DatePicker>
-      <AbandonAction onAbandon={() => void abandonTask(appContext, task.id)} />
+      <TaskActionButtons task={item.task} today={today} actions={actions} isQueued={inQueue} projects={projects} />
     </span>
   );
 }
@@ -464,27 +363,21 @@ export function ActiveTasksScreen({ today }: { today: DayKey }) {
         >
           <td className="task-table__td task-table__td--check">
             {!picking && (
-              <input
-                type="checkbox"
-                checked={!open}
-                disabled={selecting}
-                onChange={() => void setTaskDone(appContext, id, open)}
-                aria-label={open ? `Finalizar "${item.task.text}"` : `Reabrir "${item.task.text}"`}
-              />
+              <TaskCheckbox task={item.task} disabled={selecting} />
             )}
           </td>
           <td className="task-table__td task-table__td--text">
             <div className="task-row">
               {picking ? (
                 <button type="button" className="task-row__text" aria-pressed={on}>
-                  <Linkified text={item.task.text || '(tarefa sem texto)'} />
+                  <Linkified text={taskText(item.task)} />
                 </button>
               ) : (
                 <span className="task-row__text">
                   <TaskText taskId={item.task.id} text={item.task.text} />
                 </span>
               )}
-              {!selecting && open && <ActiveTaskActions item={item} projects={context.activeProjects} inQueue={queueSet.has(id)} />}
+              {!selecting && open && <ActiveTaskActions item={item} today={today} projects={context.activeProjects} surface="table" inQueue={queueSet.has(id)} />}
             </div>
           </td>
           {columns.map((column) => (
