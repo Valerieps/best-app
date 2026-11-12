@@ -78,11 +78,15 @@ function Group({ title, count, children }: { title: string; count?: number; chil
   );
 }
 
-export function ExecuteScreen({ today }: { today: DayKey }) {
+/**
+ * The screen, or the same content in the right panel (`inPanel`), where the panel shows its own
+ * title (spec/navegacao.md, "Painel da direita").
+ */
+export function ExecuteScreen({ today, inPanel = false }: { today: DayKey; inPanel?: boolean }) {
   const data = useLiveQuery(() => loadExecute(reader, today), [today]);
   const [choice, setChoice] = useExecuteChoice();
-  if (!data) return <LoadingPage title="Executar" />;
-  return <ExecuteContent data={data} today={today} choice={choice} onChoice={setChoice} />;
+  if (!data) return inPanel ? <p className="muted">Carregando…</p> : <LoadingPage title="Executar" />;
+  return <ExecuteContent data={data} today={today} choice={choice} onChoice={setChoice} inPanel={inPanel} />;
 }
 
 function ExecuteContent({
@@ -90,11 +94,13 @@ function ExecuteContent({
   today,
   choice,
   onChoice,
+  inPanel,
 }: {
   data: ExecuteData;
   today: DayKey;
   choice: ExecuteViewChoice;
   onChoice(choice: ExecuteViewChoice): void;
+  inPanel: boolean;
 }) {
   const byId = new Map(data.items.map((item) => [item.task.id, item]));
   const priorities = data.priorities.map(({ task, automatic }) => ({
@@ -169,10 +175,8 @@ function ExecuteContent({
   const nothingNext =
     choice.scope === 'focus' && data.focusIds.length === 0 ? 'Nenhum projeto em foco.' : 'Nenhum próximo passo marcado.';
 
-  return (
-    <main className="page page--active-tasks execute">
-      <ScreenHeader title="Executar" />
-
+  const groups = (
+    <>
       <Group title="Prioridades do dia">
         {priorities.length === 0 ? (
           <p className="muted">Nenhuma prioridade para hoje.</p>
@@ -225,6 +229,14 @@ function ExecuteContent({
           ))
         )}
       </Group>
+    </>
+  );
+
+  if (inPanel) return <div className="execute execute--panel">{groups}</div>;
+  return (
+    <main className="page page--active-tasks execute">
+      <ScreenHeader title="Executar" />
+      {groups}
     </main>
   );
 }
