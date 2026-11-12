@@ -58,6 +58,7 @@ function QueueContent({ data, today, inPanel }: { data: ExecutionQueueData; toda
         item={item}
         today={today}
         quietProject
+        hideMeta
         drag={
           items.length < 2
             ? undefined
