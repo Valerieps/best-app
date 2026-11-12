@@ -7,6 +7,16 @@ export type TaskGroupBy = TaskListKey | 'none';
 
 export const TASK_LIST_KEYS: readonly TaskListKey[] = ['project', 'intendedDate', 'createdDate', 'postponeCount'];
 
+/** What the table of tasks can be sorted by: a column. */
+export type TaskSortKey = TaskListKey | 'text' | 'deadline';
+export const TASK_SORT_KEYS: readonly TaskSortKey[] = ['text', 'intendedDate', 'deadline', 'project', 'createdDate', 'postponeCount'];
+
+/** 'asc' is each key's natural order (see `sortTasks`); 'desc' reverses it. */
+export type SortDirection = 'asc' | 'desc';
+
+/** Which project's tasks the list shows: all, those in focus, those without a project, or one project. */
+export type ProjectFilter = 'all' | 'focus' | 'none' | `project:${string}`;
+
 export interface TaskListEntry {
   task: Block;
   project: Project | null;
@@ -26,6 +36,15 @@ export function inFocusProjects<T extends TaskListEntry>(items: readonly T[], fo
 /** Keeps only the tasks marked "Próximo" (spec/prioridades.md, "Próximos passos"). */
 export function onlyNextSteps<T extends TaskListEntry>(items: readonly T[], nextStepIds: readonly string[]): T[] {
   return items.filter((item) => nextStepIds.includes(item.task.id));
+}
+
+/** Keeps the tasks the project filter lets through. */
+export function filterByProject<T extends TaskListEntry>(items: readonly T[], filter: ProjectFilter, focusIds: readonly string[]): T[] {
+  if (filter === 'all') return [...items];
+  if (filter === 'focus') return inFocusProjects(items, focusIds);
+  if (filter === 'none') return items.filter((item) => item.task.projectId === null);
+  const id = filter.slice('project:'.length);
+  return items.filter((item) => item.task.projectId === id);
 }
 
 /** The local day a task was created on. */
@@ -49,28 +68,37 @@ function compareCreation(a: TaskListEntry, b: TaskListEntry): number {
   return a.task.createdAt < b.task.createdAt ? -1 : a.task.createdAt > b.task.createdAt ? 1 : 0;
 }
 
-/** Missing values (no project, no date) go last. */
-function compareMissingLast<V>(a: V | null, b: V | null, compare: (a: V, b: V) => number): number {
+/** Missing values (no project, no date) go last, whatever the direction. */
+function compareMissingLast<V>(a: V | null, b: V | null, compare: (a: V, b: V) => number, sign = 1): number {
   if (a === null || b === null) return a === b ? 0 : a === null ? 1 : -1;
-  return compare(a, b);
+  return sign * compare(a, b);
 }
 
-function compareBy(by: TaskListKey, a: TaskListEntry, b: TaskListEntry): number {
+function compareBy(by: TaskSortKey, a: TaskListEntry, b: TaskListEntry, sign = 1): number {
   if (by === 'project') {
-    return compareMissingLast(a.project?.name ?? null, b.project?.name ?? null, compareText);
+    return compareMissingLast(a.project?.name ?? null, b.project?.name ?? null, compareText, sign);
   }
   if (by === 'intendedDate') {
-    return compareMissingLast(a.task.intendedDate, b.task.intendedDate, compareText);
+    return compareMissingLast(a.task.intendedDate, b.task.intendedDate, compareText, sign);
   }
-  if (by === 'postponeCount') return b.task.postponeCount - a.task.postponeCount;
-  return compareCreation(a, b);
+  if (by === 'deadline') {
+    return compareMissingLast(a.task.deadline ?? null, b.task.deadline ?? null, compareText, sign);
+  }
+  if (by === 'text') return sign * compareText(a.task.text, b.task.text);
+  if (by === 'postponeCount') return sign * (b.task.postponeCount - a.task.postponeCount);
+  return sign * compareCreation(a, b);
 }
 
-/** Sorts by the chosen key, then by intended date, then by creation, so the order is total. */
-export function sortTasks<T extends TaskListEntry>(items: readonly T[], by: TaskListKey): T[] {
+/**
+ * Sorts by the chosen key, then by intended date, then by creation, so the order is total.
+ * Ascending is each key's natural order: text A to Z, dates from the nearest (creation from the
+ * oldest), projects by name, the most postponed first. Tasks without the value always go last.
+ */
+export function sortTasks<T extends TaskListEntry>(items: readonly T[], by: TaskSortKey, direction: SortDirection = 'asc'): T[] {
+  const sign = direction === 'asc' ? 1 : -1;
   return [...items].sort(
     (a, b) =>
-      compareBy(by, a, b) ||
+      compareBy(by, a, b, sign) ||
       compareBy('intendedDate', a, b) ||
       compareCreation(a, b) ||
       compareText(a.task.id, b.task.id),
@@ -86,9 +114,10 @@ export function sortTasks<T extends TaskListEntry>(items: readonly T[], by: Task
 export function groupTasks<T extends TaskListEntry>(
   items: readonly T[],
   groupBy: TaskGroupBy,
-  sortBy: TaskListKey,
+  sortBy: TaskSortKey,
+  direction: SortDirection = 'asc',
 ): TaskGroup<T>[] {
-  const sorted = sortTasks(items, sortBy);
+  const sorted = sortTasks(items, sortBy, direction);
   if (groupBy === 'none') return sorted.length ? [{ key: null, items: sorted }] : [];
   const groups = new Map<string | null, T[]>();
   for (const item of sorted) {

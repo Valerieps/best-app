@@ -659,6 +659,219 @@ select.line__action.active-tasks__project {
   display: flex;
 }
 
+/* The tasks table: a card with the count and the menus on top, headers that sort */
+.task-table__panel {
+  background: var(--color-surface);
+  border: var(--border-width) solid var(--color-border);
+  border-radius: var(--radius-lg);
+  padding: var(--space-4) var(--space-5);
+}
+
+.task-table__panel .active-tasks__controls {
+  align-items: center;
+}
+
+.task-table__count {
+  color: var(--color-text-muted);
+}
+
+.task-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.task-table__th {
+  text-align: left;
+  font-weight: 600;
+  white-space: nowrap;
+  padding: var(--space-2) var(--space-3);
+  border-bottom: var(--border-width) solid var(--color-border);
+}
+
+.task-table__th--check,
+.task-table__td--check {
+  width: 1%;
+  padding-right: 0;
+}
+
+.task-table__sort {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  border: none;
+  background: none;
+  padding: 0;
+  font: inherit;
+  font-weight: 600;
+  color: var(--color-text);
+  cursor: pointer;
+}
+
+.task-table__sort:hover {
+  color: var(--color-accent);
+}
+
+.task-table__td {
+  padding: var(--space-2) var(--space-3);
+  border-bottom: var(--border-width) solid var(--color-border);
+  vertical-align: middle;
+  color: var(--color-text-muted);
+  white-space: nowrap;
+}
+
+.task-table__td--text {
+  width: 100%;
+  white-space: normal;
+  color: var(--color-text);
+}
+
+.task-table__td--postponeCount {
+  text-align: right;
+}
+
+.task-table__row:hover {
+  background: var(--color-surface-soft);
+}
+
+.task-table__row:hover .active-tasks__actions,
+.task-table__row:focus-within .active-tasks__actions {
+  display: flex;
+}
+
+/* In a table row the highlight bar is drawn on the first cell. */
+.task-table__row.active-tasks__row--select {
+  border-left: none;
+}
+
+.task-table__row.active-tasks__row--on {
+  background: var(--color-select-bg);
+}
+
+.task-table__row.active-tasks__row--on > td:first-child {
+  box-shadow: inset var(--section-bar-width) 0 0 var(--color-accent);
+}
+
+.task-table__group-row > td {
+  padding: var(--space-3) 0 var(--space-1);
+  border-bottom: var(--border-width) solid var(--color-border);
+}
+
+.task-table__group-row .active-tasks__group-head {
+  margin-bottom: 0;
+}
+
+.task-table__empty {
+  margin: var(--space-3) var(--space-3) 0;
+}
+
+/* "Filtros" and "Colunas" */
+.table-menu__trigger {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+}
+
+.table-menu__trigger--on {
+  border-color: var(--color-accent);
+}
+
+.table-menu .dropdown__list {
+  padding: 0;
+  overflow: hidden;
+}
+
+.table-menu__panes {
+  display: flex;
+  min-width: 460px;
+  max-height: 420px;
+}
+
+.table-menu__categories {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: var(--space-2);
+  background: var(--color-hover);
+  min-width: 180px;
+}
+
+.table-menu__category {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border: none;
+  background: none;
+  border-radius: var(--radius-sm);
+  padding: var(--space-2) var(--space-3);
+  text-align: left;
+  color: var(--color-text);
+}
+
+.table-menu__category:hover,
+.table-menu__category--on {
+  background: var(--color-surface);
+}
+
+.table-menu__category--on {
+  font-weight: 600;
+}
+
+.table-menu__clear {
+  margin-top: auto;
+  padding: var(--space-2) var(--space-3);
+  text-align: left;
+  font-size: var(--font-size-sm);
+}
+
+.table-menu__options {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  padding: var(--space-2);
+  overflow-y: auto;
+}
+
+.table-menu__heading {
+  margin: var(--space-1) var(--space-3) var(--space-2);
+  font-size: var(--font-size-xs);
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--color-text-muted);
+}
+
+.table-menu__option {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin: 0;
+  border: none;
+  background: none;
+  border-radius: var(--radius-sm);
+  padding: var(--space-2) var(--space-3);
+  text-align: left;
+  color: var(--color-text);
+}
+
+button.table-menu__option:hover {
+  background: var(--color-surface-soft);
+}
+
+.table-menu__option[aria-checked='true'] {
+  font-weight: 600;
+}
+
+.table-menu__option--locked {
+  color: var(--color-text-muted);
+  cursor: default;
+}
+
+.table-menu__mark {
+  display: inline-flex;
+  width: 16px;
+  color: var(--color-accent);
+}
+
 .line__action.active-tasks__abandon--confirm,
 .active-tasks__batch .active-tasks__abandon--confirm {
   color: var(--color-warning-text);
