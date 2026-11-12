@@ -31,7 +31,6 @@ import { weekOf } from '../domain/week';
 import { comparePositions } from '../domain/position';
 import { buildDayPriorities, dayPriorityListId, type DayPriority } from '../domain/priorities';
 import { FOCUS_LIST_ID, focusProjectIds, hasFreeSlot } from '../domain/focusProjects';
-import { nextStepIds, nextStepsListId } from '../domain/nextSteps';
 import { QUEUE_LIST_ID, queueIds } from '../domain/executionQueue';
 import { activityByDay, lastActivityDay, recentlyFinished, stalledDays, type ActivityByDay } from '../domain/projectActivity';
 import { isDaySection, isStuckTask } from '../domain/projectPage';
@@ -347,8 +346,6 @@ export async function loadFocusProjectIds(reader: Reader, projects: readonly Pro
 export interface TaskListContext {
   activeProjects: Project[];
   focusIds: string[];
-  /** Ids of the tasks marked "Próximo", across projects (spec/prioridades.md, "Próximos passos"). */
-  nextStepIds: string[];
   /** Ids of the tasks in the "Fila de execução" (spec/prioridades.md). */
   queueIds: string[];
 }
@@ -360,7 +357,6 @@ export async function loadTaskListContext(reader: Reader): Promise<TaskListConte
       .filter((project) => project.status === 'active')
       .sort((a, b) => a.name.localeCompare(b.name, 'pt-BR', { sensitivity: 'base' })),
     focusIds: await loadFocusProjectIds(reader, projects),
-    nextStepIds: await loadAllNextStepIds(reader, await myActiveTasks(reader)),
     queueIds: await loadQueueIds(reader),
   };
 }
@@ -381,12 +377,6 @@ export async function loadExecutionQueue(reader: Reader): Promise<ExecutionQueue
 /** Ids of the tasks in the "Fila de execução", for the "Adicionar à fila" action elsewhere. */
 export async function loadQueueIds(reader: Reader): Promise<string[]> {
   return queueIds(await reader.priorityList(QUEUE_LIST_ID), await myActiveTasks(reader));
-}
-
-/** The valid next steps of every project, given the open tasks. */
-async function loadAllNextStepIds(reader: Reader, tasks: Block[]): Promise<string[]> {
-  const lists = await reader.priorityListsBetween(nextStepsListId(''), `${nextStepsListId('')}￿`);
-  return lists.flatMap((list) => nextStepIds(list, tasks, list.id.slice(nextStepsListId('').length)));
 }
 
 /** What the "⋯" of a project offers about the focus, in the list and on its page. */
@@ -515,8 +505,6 @@ export interface ProjectView extends ProjectActions {
   notes: SectionNotes[];
   /** Day-note sections linked to the project. */
   sections: number;
-  /** The tasks marked "Próximo" (up to 3, in the order marked), still open and in the project. */
-  nextStepIds: string[];
   /** The project's ideas without a destination, oldest first (spec/ideias.md). */
   ideas: Block[];
 }
@@ -537,7 +525,6 @@ export async function loadProject(reader: Reader, projectId: string): Promise<Pr
     doneTasks: await withOrigins(reader, done),
     notes: notesOfProject(kept, projectId),
     sections: sections.length,
-    nextStepIds: nextStepIds(await reader.priorityList(nextStepsListId(projectId)), tasks, projectId),
     ideas: sortIdeas(blocks.filter(isOpenIdea)),
     ...projectActions(project, priorityIds, projects),
   };

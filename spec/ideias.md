@@ -32,7 +32,7 @@ Por quê: muitas coisas que eu coleto são ideias incompletas, que talvez algum 
 
 ## Destinos
 
-- **Virar tarefa:** a ideia vira uma tarefa sem data, do mesmo projeto, quando tem um. Dali eu posso marcá-la como próximo passo (`prioridades.md`, "Próximos passos"). Ela conta como decidida no dia, então não entra no "Fechar o dia". O que eu escrevi sobre ela fica guardado, mas sem tela. *(decidido pelo agente; veja a issue #164)*
+- **Virar tarefa:** a ideia vira uma tarefa sem data, do mesmo projeto, quando tem um. Dali eu posso pô-la na fila de execução (`prioridades.md`, "Fila de execução"). Ela conta como decidida no dia, então não entra no "Fechar o dia". O que eu escrevi sobre ela fica guardado, mas sem tela. *(decidido pelo agente; veja a issue #164)*
 - **Virar projeto:** a ideia cresceu e vira um projeto próprio, que já nasce ativo. O projeto novo leva o que eu escrevi sobre a ideia, como notas, e guarda de qual projeto ela veio, quando veio de um. O nome do projeto é o texto da ideia sem a tag de projeto, e as tarefas que eu escrevi na página da ideia passam para o projeto novo. *(decidido pelo agente; veja a issue #164)*
 - **Largar:** a ideia sai de circulação, como a tarefa abandonada. Só o histórico de eventos guarda.
 - **Ainda não:** a ideia volta para a fila. O app conta quantas vezes eu disse "ainda não", como conta os adiamentos de uma tarefa. Depois de 3 vezes sem nenhuma nota nova sobre a ideia, a revisão sugere largar.

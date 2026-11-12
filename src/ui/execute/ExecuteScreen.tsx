@@ -33,7 +33,6 @@ function QueueContent({ data, today, inPanel }: { data: ExecutionQueueData; toda
   const byId = new Map(data.items.map((item) => [item.task.id, item]));
   const order = pending && pending.length === saved.length && pending.every((id) => byId.has(id)) ? pending : saved;
   const items = order.map((id) => byId.get(id)!);
-  const nextSet = new Set(data.nextStepIds);
 
   const { drag, start } = useLineDrag((_group, id, toIndex) => {
     const ids = moveItem(order, id, toIndex);
@@ -58,7 +57,6 @@ function QueueContent({ data, today, inPanel }: { data: ExecutionQueueData; toda
         key={task.id}
         item={item}
         today={today}
-        isNext={nextSet.has(task.id)}
         quietProject
         hideMeta
         drag={
@@ -86,7 +84,7 @@ function QueueContent({ data, today, inPanel }: { data: ExecutionQueueData; toda
                 Remover da fila
               </button>
             </span>
-            <ActiveTaskActions item={item} today={today} projects={data.activeProjects} isNext={nextSet.has(task.id)} />
+            <ActiveTaskActions item={item} today={today} projects={data.activeProjects} />
           </>
         }
       />

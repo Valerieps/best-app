@@ -51,7 +51,6 @@ Os termos marcados com ⚠ ainda têm mais de um sentido nos documentos.
 ## Prioridades
 
 - **Prioridades do dia:** até 3 tarefas em destaque dentro das tarefas do dia. (`spec/prioridades.md`)
-- **Próximo passo:** uma tarefa de projeto marcada como uma das até 3 próximas coisas a fazer nele. Não é data. (`spec/prioridades.md`)
 - **Fila de execução:** a tela de quando eu paro para fazer as coisas: as tarefas que eu escolhi fazer, na ordem que eu quiser. Substituiu a tela "Executar". (`spec/prioridades.md`)
 - **Projetos em foco:** até 3 projetos, que eu coloco, troco e tiro a qualquer momento; valem até eu mudá-los. Antes se chamavam "projetos prioritários da semana". (`spec/prioridades.md`)
 
