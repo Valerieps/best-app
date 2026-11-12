@@ -19,7 +19,7 @@ Os termos marcados com ⚠ ainda têm mais de um sentido nos documentos.
 
 - **Data de intenção (de execução):** o dia em que a tarefa aparecia na nota do dia. Saiu em 12/11/2026: o que eu quero fazer vai para a fila de execução. As datas antigas ficam guardadas. (`spec/tarefas.md`)
 - **Prazo máximo:** a segunda data, opcional. No dia do prazo, a tarefa vira prioridade do dia. (`spec/tarefas.md`)
-- **Adiamento:** era mudar a data de intenção para depois, ou tirá-la. Hoje só conta a tarefa que o "Fechar dias pendentes" devolve para a lista; os adiamentos de antes ficam guardados. (`spec/tarefas.md`)
+- **Adiamento:** era mudar a data de intenção para depois, ou tirá-la. Saiu: o app não conta mais, e o que foi contado fica guardado sem aparecer. (`spec/tarefas.md`)
 - **Tarefas:** a lista das tarefas abertas, ou seja, nem finalizadas nem abandonadas, que também mostra as finalizadas quando eu peço. Antes se chamava "tarefas ativas". (`spec/tarefas.md`)
 - **Pessoa:** alguém que eu cito com `@Nome`, de uma palavra só. Tem uma página com o que eu devo a ela e o que ela me deve. (`spec/pessoas.md`)
 - **Tag de projeto:** `#Projeto` numa linha, que liga só aquela linha a um projeto, vencendo o vínculo da seção. (`spec/nota-do-dia.md`)

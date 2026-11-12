@@ -106,7 +106,7 @@ Os tipos estão em `src/domain/entities.ts`. Todo registro tem `id` (UUID), `cre
 - **Editar o texto de um bloco não gera evento** (ADR-004); criar, apagar e mudar o tipo geram.
 - **Exclusões deixam rastro:** um bloco apagado ou um recurso removido sai da tabela, mas deixa `block.deleted` ou `resource.removed`. É assim que o backup automático distingue um registro apagado de um perdido (seção 7).
 - **Formato dos detalhes:** cada tipo tem o seu `data` em `EventData`, e `record` só aceita esse formato. Um formato já gravado nunca muda: os antigos ficam em `LegacyEventData`, e uma mudança incompatível sobe a versão do evento (`v`, ausente = 1). Quem lê confere o valor, porque um backup importado pode trazer qualquer coisa (ADR-043).
-- **Adiamento:** gera `task.postponed` e soma 1 em `postponeCount` quando a data de intenção muda para depois, ou quando "Fechar dias pendentes" devolve a tarefa sem data. A tarefa deixada sem mexer no "Fechar o dia", ou posta na fila por ele, fica sem data e sem contar adiamento (ADR-072).
+- **Adiamento:** não é mais contado (ADR-074). `postponeCount` e o evento `task.postponed` continuam no modelo e nos backups só para os dados antigos: nada novo os grava e nenhuma tela os lê.
 - **Ideias:** cada destino grava o seu evento no bloco da ideia: `idea.becameTask`, `idea.becameProject`, `idea.dropped` e `idea.notYet`, com a contagem (ADR-067).
 - **Métricas** são funções puras do domínio sobre os eventos de um período; uma métrica nova não exige migração.
 

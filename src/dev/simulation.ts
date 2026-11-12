@@ -23,7 +23,6 @@ import { setDayPriority, setDeadline, setIntendedDate, setSectionDetails } from 
 import { addDays, fromDayKey, toDayKey, type DayKey } from '../domain/day';
 import type { Block, Project, Section, SectionKind } from '../domain/entities';
 import { positionBetween } from '../domain/position';
-import { POSTPONE_ATTENTION_THRESHOLD } from '../domain/tasks';
 import type { NotesDecision, TaskDecision, WhiteboardDecision } from '../domain/triage';
 import { MemoryStore } from './memoryStore';
 
@@ -34,6 +33,9 @@ export interface CheckoutChoices {
   /** Taken out of the next work day at the planning step: they stay active without a date. */
   unplan?: Block[];
 }
+
+/** After this many carries to the next day, the script sends a task back to the task list. */
+const CARRIED_TOO_OFTEN = 4;
 
 /**
  * Plays days of use through the real use cases, with a clock that walks through the past.
@@ -47,6 +49,8 @@ export class Simulation {
   private moment: Date;
   private offset = 0;
   private readonly lastPosition = new Map<string, string>();
+  /** How many times the script carried each task to the next day; the app no longer counts it. */
+  private readonly carried = new Map<string, number>();
 
   /**
    * @param now the real current time; actions of today never go past it
@@ -197,8 +201,13 @@ export class Simulation {
     const decisions = defaultClosingDecisions(triage) satisfies TriageDecisions;
     for (const row of triage.rows) {
       if (row.suggestion.kind !== 'undate') continue;
-      const often = row.task.postponeCount >= POSTPONE_ATTENTION_THRESHOLD;
-      decisions.tasks.set(row.task.id, often ? { kind: 'undate' } : { kind: 'schedule', date: next });
+      const times = this.carried.get(row.task.id) ?? 0;
+      if (times >= CARRIED_TOO_OFTEN) {
+        decisions.tasks.set(row.task.id, { kind: 'undate' });
+      } else {
+        this.carried.set(row.task.id, times + 1);
+        decisions.tasks.set(row.task.id, { kind: 'schedule', date: next });
+      }
     }
     for (const [task, decision] of choices.tasks ?? []) decisions.tasks.set(task.id, decision);
     for (const [section, decision] of choices.notes ?? []) decisions.notes.set(section.id, decision);
