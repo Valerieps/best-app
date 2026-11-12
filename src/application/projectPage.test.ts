@@ -6,7 +6,7 @@ import { createBlock, linkSectionToProject, setTaskDone } from './notebook';
 import { renameResource, addLinkResource } from './objectives';
 import { createProject, createProjectTask, setProjectFinished, setProjectIcon } from './projects';
 import { loadDayNote, loadDayTriage, loadPendingDays, loadProject, loadProjectList } from './queries';
-import { setAppearance, setProjectListGroupOpen, setProjectPanelPinned, setRightPanelMenu, setRightPanelWidth, setSidebarCollapsed, setSidebarWidth } from './settings';
+import { setAppearance, setCenterCollapsed,setProjectListGroupOpen, setProjectPanelPinned, setRightPanelMenu, setRightPanelWidth, setSidebarCollapsed, setSidebarWidth } from './settings';
 
 const TODAY = '2026-10-11';
 
@@ -202,6 +202,17 @@ describe('right panel', () => {
     expect((await reader.settings())?.rightPanelWidth).toBe(420);
     await setRightPanelWidth(ctx, null);
     expect((await reader.settings())?.rightPanelWidth).toBeUndefined();
+  });
+});
+
+describe('center area', () => {
+  it('remembers whether it is collapsed, in the settings', async () => {
+    const { ctx, reader } = createTestContext();
+    expect((await reader.settings())?.centerCollapsed).toBeUndefined();
+    await setCenterCollapsed(ctx, true);
+    expect((await reader.settings())?.centerCollapsed).toBe(true);
+    await setCenterCollapsed(ctx, false);
+    expect((await reader.settings())?.centerCollapsed).toBe(false);
   });
 });
 
