@@ -63,6 +63,10 @@ New docs start with what goes in them and what does not ("Entra aqui" / "Não en
 Portuguese; ADRs, code and this file in English.
 
 ## Working with the owner
+- Ship with `npm run ship -- "<commit message>"`: it commits, opens the PR, turns on auto-merge and
+  waits until GitHub merges it. Do not run the `gh pr` steps by hand or poll with `sleep`.
+- Asked whether everything is merged or the session can be archived: run `npm run branches` and
+  report its answer.
 - The owner (Valeria) answers questions as a numbered list in the chat, or as nested items under
   each "Em aberto" question. Fold each answer into the text of its section and remove the
   answered question.
@@ -72,6 +76,25 @@ Portuguese; ADRs, code and this file in English.
 - The spec is written in the first person ("eu posso..."), in Brazilian Portuguese, keeping her
   voice, as in "triga" and "plim".
 - When she asks what you think of the app, she wants a frank assessment, including the risks.
+
+### Fewer rounds, fewer tokens
+Each step rereads the whole conversation, so long sessions and back-and-forth cost the most.
+- One session per task. When a task ends and the next one is unrelated, offer a new session
+  instead of continuing here.
+- Briefs for sessions you start are self-contained, so the child never needs this conversation.
+  Start mechanical work (docs, small UI fixes, issues) on Sonnet; keep Opus for design and
+  architecture.
+- A question ("o que acha", "me ajude a decidir", "vale a pena") gets an answer, not an
+  implementation.
+- Design or naming choices: show three or four directions side by side in the first round, not
+  one at a time.
+- Steps she does by hand in a console (Cloudflare, Google Cloud, GitHub settings): give the whole
+  checklist at once, with where to click, so she comes back only when stuck.
+- Fix what she named. Other problems you notice go in a list at the end, unfixed, unless she
+  asked you to fix them too.
+- When an artifact comment arrives, read every open thread on that artifact and answer them all
+  in one pass.
+- In the browser, check only what she asked; prefer page text over screenshots.
 
 ## Architecture Overview
 - Clean Architecture + Domain Driven Design (DDD)
@@ -96,13 +119,15 @@ Portuguese; ADRs, code and this file in English.
 - `npm run build` - typecheck, unit tests, and production build into `dist/` (CSP injected); a failing test stops the deploy
 - `npm run preview` - serve the production build locally
 - `npm run docs:check` - broken links between docs, and ADRs without a `**Status:**` line
+- `npm run ship -- "<message>"` - commit, push, open the PR, auto-merge and wait for the merge; `--no-wait` stops after auto-merge is on
+- `npm run branches` - what is not merged yet, per branch and worktree; `-- --clean` deletes merged local branches
 
 ## Deployment
 Cloudflare Pages, from the public GitHub repository. Build command `npm run build`, output directory `dist`.
 GitHub Actions (`.github/workflows/ci.yml`) runs the same build and `npm run docs:check` on every pull request. Branch
 protection on `main` requires its `build` check and a branch up to date with `main` before merging
-(ADR-058): wait with `gh pr checks <n> --watch`, and if the merge is refused because the branch is
-behind, bring it up to date and wait again. No direct pushes to `main`. No `dev` branch: each
+(ADR-058): `npm run ship` waits for that check and brings a branch that fell behind up to date by
+itself. No direct pushes to `main`. No `dev` branch: each
 branch's Cloudflare preview is the staging.
 
 ## Code Conventions
@@ -123,5 +148,6 @@ branch's Cloudflare preview is the staging.
   unilaterally when asking genuinely isn't possible (e.g. a non-interactive/autonomous run). Once
   resolved - by the user's answer or, failing that, your own decision - record it as an amendment
   to the right file in `spec/` itself, not an ADR - the spec should stay authoritative for
-  anything a product/business decision would settle. When you decided it yourself, also list it
-  under "Revisar as lacunas que o agente decidiu" in `ROADMAP.md`, so the owner can review it.
+  anything a product/business decision would settle. When you decided it yourself, also add it
+  as a new unchecked item to issue #164 ("Revisar as lacunas do spec que o agente decidiu"), so
+  the owner can review it.

@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState, type KeyboardEvent, type ReactNode } from 'react';
-import type { Project, Section } from '../../domain/entities';
+import type { Person, Project, Section } from '../../domain/entities';
+import { completeMention, isPeopleTitle, mentionAt, personOptions, unknownNames, type PersonOption } from '../../domain/people';
 import { ProjectChip } from '../components/Chips';
 import { Icon } from '../components/Icon';
 import { titleOptions, titleToSaveOnBlur, type TitleOption } from './sectionTitle';
@@ -10,6 +11,8 @@ interface Props {
   section: Section | null;
   kind: Section['kind'];
   projects: Project[];
+  /** The people a meeting title can cite with `@`. */
+  people: readonly Person[];
   onSaveTitle(title: string): void;
   onLinkProject(project: Project): void;
   onCreateProject(name: string): void;
@@ -17,6 +20,8 @@ interface Props {
   onUnlink(title: string): void;
   /** Renames the project of a linked section. */
   onRenameProject(name: string): void;
+  /** Creates the people the title cites who do not exist yet. */
+  onEnsurePeople(names: string[]): void;
   /** Shown at the right of the header, like the focus mode button. */
   trailing?: ReactNode;
 }
@@ -26,9 +31,10 @@ interface Props {
  * Section header: kind, an optional title and, when linked to a project, a link icon. While
  * typing the title, existing projects are suggested; choosing one links the section to it. On a
  * linked section, clicking the title opens its options: back to a whiteboard, renaming the
- * project, or moving the section to another project.
+ * project, or moving the section to another project. A meeting title that starts with `@` is a
+ * meeting with people: the `@` suggests people, and no project is suggested or created.
  */
-export function SectionHeader({ section, kind, projects, onSaveTitle, onLinkProject, onCreateProject, onUnlink, onRenameProject, trailing }: Props) {
+export function SectionHeader({ section, kind, projects, people, onSaveTitle, onLinkProject, onCreateProject, onUnlink, onRenameProject, onEnsurePeople, trailing }: Props) {
   const [title, setTitle] = useState(section?.title ?? '');
   const [open, setOpen] = useState(false);
   // Whether I typed since the field got the focus: until then, a linked section lists its options.
@@ -46,7 +52,21 @@ export function SectionHeader({ section, kind, projects, onSaveTitle, onLinkProj
     if (document.activeElement !== inputRef.current) setTitle(section?.title ?? '');
   }, [section?.title]);
 
-  const options: TitleOption[] = section !== null && open ? titleOptions(title, projects, project, edited) : [];
+  const withPeople = kind === 'meeting' && project === null && isPeopleTitle(title);
+  const mention = withPeople && open ? mentionAt(title, inputRef.current?.selectionStart ?? title.length) : null;
+  const personOpts: PersonOption[] = section !== null && mention ? personOptions(mention.query, people) : [];
+  const options: TitleOption[] = section !== null && open && !withPeople ? titleOptions(title, projects, project, edited) : [];
+  const shown = withPeople ? personOpts.length : options.length;
+
+  function choosePerson(option: PersonOption) {
+    if (!mention) return;
+    const name = option.type === 'person' ? option.person.name : option.name;
+    const done = completeMention(title, mention, name);
+    if (option.type === 'create') onEnsurePeople([name]);
+    setTitle(done.text);
+    setHighlight(0);
+    requestAnimationFrame(() => inputRef.current?.setSelectionRange(done.caret, done.caret));
+  }
 
   function choose(option: TitleOption) {
     setOpen(false);
@@ -81,22 +101,24 @@ export function SectionHeader({ section, kind, projects, onSaveTitle, onLinkProj
     }
     if (event.key === 'Enter') {
       event.preventDefault();
-      if (options.length > 0 && highlight >= 0) choose(options[Math.min(highlight, options.length - 1)]);
+      if (withPeople && personOpts.length > 0) choosePerson(personOpts[Math.min(highlight, personOpts.length - 1)]);
+      else if (options.length > 0 && highlight >= 0) choose(options[Math.min(highlight, options.length - 1)]);
       else {
         const save = titleToSaveOnBlur(title, section?.title ?? null, false);
         if (save !== null) onSaveTitle(save);
+        if (withPeople) onEnsurePeople(unknownNames(title, people));
         chose.current = true;
         inputRef.current?.blur();
       }
       return;
     }
-    if (options.length === 0) return;
+    if (shown === 0) return;
     if (event.key === 'ArrowDown') {
       event.preventDefault();
-      setHighlight((highlight + 1) % options.length);
+      setHighlight((highlight + 1) % shown);
     } else if (event.key === 'ArrowUp') {
       event.preventDefault();
-      setHighlight(highlight <= 0 ? options.length - 1 : highlight - 1);
+      setHighlight(highlight <= 0 ? shown - 1 : highlight - 1);
     }
   }
 
@@ -155,6 +177,7 @@ export function SectionHeader({ section, kind, projects, onSaveTitle, onLinkProj
           onBlur={() => {
             // Let a click on a suggestion land before closing.
             setTimeout(() => setOpen(false), 150);
+            if (withPeople && !chose.current) onEnsurePeople(unknownNames(title, people));
             const save = titleToSaveOnBlur(title, section?.title ?? null, chose.current);
             chose.current = false;
             if (save === null) return;
@@ -163,10 +186,28 @@ export function SectionHeader({ section, kind, projects, onSaveTitle, onLinkProj
           }}
           onKeyDown={onKeyDown}
           aria-label="Título da seção"
-          aria-expanded={options.length > 0}
+          aria-expanded={shown > 0}
           aria-autocomplete="list"
           role="combobox"
         />
+        {withPeople && personOpts.length > 0 && (
+          <ul className="suggestions" role="listbox">
+            {personOpts.map((option, index) => (
+              <li
+                key={option.type === 'person' ? option.person.id : 'create'}
+                role="option"
+                aria-selected={index === highlight}
+                className={`suggestions__item ${index === highlight ? 'suggestions__item--active' : ''}`}
+                onMouseDown={(event) => {
+                  event.preventDefault();
+                  choosePerson(option);
+                }}
+              >
+                {option.type === 'person' ? `@${option.person.name}` : <>Criar a pessoa “{option.name}”</>}
+              </li>
+            ))}
+          </ul>
+        )}
         {options.length > 0 && (
           <ul className="suggestions" role="listbox">
             {options.map((option, index) => (

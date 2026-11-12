@@ -15,21 +15,28 @@ import { DayNoteScreen } from './dayNote/DayNoteScreen';
 import { HabitsScreen } from './habits/HabitsScreen';
 import { navigate, routeHash, useRoute, useToday } from './hooks';
 import { ActiveTasksScreen } from './lists/ListScreens';
+import { ExecuteScreen } from './execute/ExecuteScreen';
 import { ObjectiveScreen, ObjectivesScreen } from './objectives/ObjectiveScreens';
 import { DashboardScreen, StartDayScreen, WarmupScreen } from './opening/OpeningScreens';
 import { useDueReminders, useReminderSignals } from './opening/Reminders';
 import { ProjectsScreen } from './projects/ProjectListScreen';
 import { ProjectScreen } from './projects/ProjectScreens';
 import { PeopleScreen, PersonScreen } from './people/PeopleScreens';
+import { IdeaScreen, IdeasScreen } from './ideas/IdeaScreens';
 import { backupNoticeLevel, needsBackupSetup, pickTopNotice, useSnoozedNotices } from './notices';
-import { autoBackup, db, reader } from './services';
+import { setCenterCollapsed } from '../application/settings';
+import { Icon } from './components/Icon';
+import { enqueue } from './writeQueue';
+import { appContext, autoBackup, db, reader } from './services';
 import { SettingsScreen } from './settings/SettingsScreen';
+import { RightPanel } from './RightPanel';
 import { Sidebar } from './Sidebar';
 import { PlacePalette } from './components/PlacePalette';
 import { useLiveQueryState } from './useLiveQuery';
 import { ErrorBoundary } from './components/ErrorBoundary';
 import { ScreenError } from './components/ErrorScreens';
 import { SaveErrorNotice } from './components/SaveErrorNotice';
+import { TaskDetailsHost } from './taskDetails/TaskDetailsDialog';
 import { reportSaveError } from './saveErrors';
 import { enabledRoute } from './features';
 import { applyAppearance, parseAppearance } from './theme/appearance';
@@ -69,6 +76,17 @@ export function App() {
   useEffect(() => {
     if (appearance) applyAppearance(appearance);
   }, [appearance]);
+  // The center area can fold into a strip on the left, leaving the room to the right panel.
+  const storedCenterCollapsed = useLiveQueryState(async () => (await reader.settings())?.centerCollapsed ?? false).value;
+  const [centerNow, setCenterNow] = useState<boolean | undefined>(undefined);
+  const centerCollapsed = centerNow ?? storedCenterCollapsed ?? false;
+  const toggleCenter = () => {
+    const next = !centerCollapsed;
+    setCenterNow(next);
+    enqueue(() => setCenterCollapsed(appContext, next)).catch(() => {
+      // Logged by the queue; the choice still holds on screen until the next load.
+    });
+  };
   const backupInterval = useAutoBackupInterval();
   useEffect(() => autoBackup.setInterval(backupInterval), [backupInterval]);
 
@@ -111,7 +129,18 @@ export function App() {
     <div className="shell">
       <Sidebar route={route} pendingDays={pendingDays} backupState={backupState} />
       <PlacePalette />
-      <div className="shell__main">
+      <div className={`shell__main ${centerCollapsed ? 'shell__main--collapsed' : ''}`}>
+        <button
+          type="button"
+          className="sidebar__toggle shell__collapse"
+          onClick={toggleCenter}
+          aria-expanded={!centerCollapsed}
+          title={centerCollapsed ? 'Abrir a área central' : 'Recolher a área central'}
+        >
+          <Icon name="sidebarLeft" />
+          <span className="visually-hidden">{centerCollapsed ? 'Abrir a área central' : 'Recolher a área central'}</span>
+        </button>
+        <div className="shell__content">
         {!focus && (notice === 'backupProblem' || notice === 'backupSetup') && (
           <BackupBanner
             state={backupState}
@@ -148,6 +177,7 @@ export function App() {
           )}
           {route.name === 'checkout' && <CheckoutScreen key={route.day} day={route.day} today={today} from={route.from} />}
           {route.name === 'active' && <ActiveTasksScreen today={today} />}
+          {route.name === 'execute' && <ExecuteScreen today={today} />}
           {route.name === 'rituals' && (
             <RitualsScreen today={today} assistant={route.assistant} pendingDays={pendingDays} />
           )}
@@ -155,7 +185,9 @@ export function App() {
           {route.name === 'project' && <ProjectScreen key={route.id} id={route.id} tab={route.tab ?? 'tasks'} today={today} />}
           {route.name === 'settings' && <SettingsScreen />}
           {route.name === 'people' && <PeopleScreen today={today} />}
-          {route.name === 'person' && <PersonScreen key={route.id} id={route.id} today={today} />}
+          {route.name === 'person' && <PersonScreen key={route.id} id={route.id} tab={route.tab ?? 'tasks'} today={today} />}
+          {route.name === 'ideas' && <IdeasScreen />}
+          {route.name === 'idea' && <IdeaScreen key={route.id} id={route.id} today={today} />}
           {route.name === 'objectives' && <ObjectivesScreen />}
           {route.name === 'objective' && <ObjectiveScreen id={route.id} />}
           {route.name === 'habits' && <HabitsScreen today={today} />}
@@ -166,6 +198,7 @@ export function App() {
             </main>
           )}
         </ErrorBoundary>
+        </div>
 
         {backup.pendingImport && (
           <ImportDialog
@@ -175,8 +208,10 @@ export function App() {
             onCancel={backup.cancelImport}
           />
         )}
+        <TaskDetailsHost today={today} />
         <SaveErrorNotice />
       </div>
+      <RightPanel route={route} today={today} fill={centerCollapsed} />
     </div>
   );
 }

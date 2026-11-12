@@ -1,7 +1,4 @@
-import { addDays, fromDayKey, toDayKey, type DayKey } from './day';
-import { ALL_DAYS } from './dayFlow';
 import type { Block, Section } from './entities';
-import { POSTPONE_ATTENTION_THRESHOLD } from './tasks';
 
 /** Section 2: rules behind the project page. */
 
@@ -34,94 +31,35 @@ export function projectInitial(name: string): string {
 
 /**
  * Sections that belong to a day note. The section that holds a project page's tasks does not,
- * nor do the notes written on a project page.
+ * nor do the notes written on a project page, nor the page of an idea (ADR-067).
  */
 export function isDaySection(section: Section): boolean {
-  return section.projectPage !== true && section.projectNote !== true;
+  return section.projectPage !== true && section.projectNote !== true && section.ideaId === undefined;
 }
 
-/**
- * "Travada": an active task postponed 3 times or more, or whose intended date already passed.
- * Uses the same threshold that makes a task ask for attention at checkout.
- */
-export function isStuckTask(task: Block, today: DayKey): boolean {
-  if (task.kind !== 'task' || task.status !== 'active' || task.waiting) return false;
-  return task.postponeCount >= POSTPONE_ATTENTION_THRESHOLD || (task.intendedDate !== null && task.intendedDate < today);
-}
-
-function byDateThenCreation(a: Block, b: Block): number {
-  // Tasks without a date go last.
-  const dateA = a.intendedDate ?? '9999-12-31';
-  const dateB = b.intendedDate ?? '9999-12-31';
-  if (dateA !== dateB) return dateA < dateB ? -1 : 1;
+function byCreation(a: Block, b: Block): number {
   return a.createdAt < b.createdAt ? -1 : a.createdAt > b.createdAt ? 1 : 0;
 }
 
-/** Why a task is stuck, spelled out on its card ("adiada 3 vezes · desde 18/09", "venceu em 09/10"). */
-export interface StuckReason {
-  /** Postponements, when they made the task stuck. */
-  postponed: number | null;
-  /** Since when it waits: its first intended date, or the day it was written. */
-  since: DayKey | null;
-  /** The intended date that already passed. */
-  overdueOn: DayKey | null;
-}
-
-export function stuckReason(task: Block, today: DayKey): StuckReason | null {
-  if (!isStuckTask(task, today)) return null;
-  const postponed = task.postponeCount >= POSTPONE_ATTENTION_THRESHOLD ? task.postponeCount : null;
-  return {
-    postponed,
-    since: postponed === null ? null : (task.firstIntendedDate ?? toDayKey(new Date(task.createdAt))),
-    overdueOn: task.intendedDate !== null && task.intendedDate < today ? task.intendedDate : null,
-  };
-}
-
 export interface ProjectTaskGroups {
-  /** "Travadas": postponed 3 times or more, or with an intended date already passed. */
-  stuck: Block[];
-  /** "Próximos dias": intended for today or later, and not stuck. */
-  upcoming: Block[];
-  /** "Sem data", and not stuck. */
-  undated: Block[];
-  /** "Aguardando": every task a person owes me, with or without a date. */
+  /** "Na fila": the project's tasks in the "Fila de execução", in the queue's order. */
+  queued: Block[];
+  /** "A fazer": every other task of mine, out of the queue. */
+  open: Block[];
+  /** "Aguardando": every task a person owes me. */
   waiting: Block[];
 }
 
 /**
- * The project's active tasks in the page's levels of emphasis, each group by date then creation.
- * A stuck task shows only among the stuck ones; a waiting task only among the waiting ones.
+ * The project's active tasks in the page's groups, each by creation. A task shows only once: a
+ * waiting task only among the waiting ones, a queued task only in "Na fila". Tasks have no
+ * intended date any more, so nothing is "travada" (ADR-072).
  */
-export function groupProjectTasks(active: readonly Block[], today: DayKey): ProjectTaskGroups {
-  const sorted = [...active].sort(byDateThenCreation);
+export function groupProjectTasks(active: readonly Block[], queueIds: readonly string[] = []): ProjectTaskGroups {
+  const sorted = [...active].sort(byCreation);
   const waiting = sorted.filter((task) => task.waiting === true);
-  const stuck = sorted.filter((task) => isStuckTask(task, today));
-  const rest = sorted.filter((task) => !stuck.includes(task) && !waiting.includes(task));
-  return {
-    stuck,
-    waiting,
-    upcoming: rest.filter((task) => task.intendedDate !== null),
-    undated: rest.filter((task) => task.intendedDate === null),
-  };
-}
-
-/** How many days "Próximos dias" shows, as columns of a calendar. */
-export const AGENDA_DAYS = 3;
-
-/**
- * "Próximos dias" as a small calendar: the next 3 active days, starting today when today is
- * active, each with the tasks intended for it. Tasks of other days do not show.
- */
-export function agendaColumns(
-  upcoming: readonly Block[],
-  today: DayKey,
-  activeDays: readonly number[] = ALL_DAYS,
-): { day: DayKey; tasks: Block[] }[] {
-  const active = activeDays.length > 0 ? activeDays : ALL_DAYS;
-  const days: DayKey[] = [];
-  let day = today;
-  for (let i = 0; days.length < AGENDA_DAYS && i < 7 * AGENDA_DAYS; i++, day = addDays(day, 1)) {
-    if (active.includes(fromDayKey(day).getDay())) days.push(day);
-  }
-  return days.map((each) => ({ day: each, tasks: upcoming.filter((task) => task.intendedDate === each) }));
+  const mine = sorted.filter((task) => task.waiting !== true);
+  const byId = new Map(mine.map((task) => [task.id, task]));
+  const queued = queueIds.flatMap((id) => byId.get(id) ?? []);
+  return { queued, open: mine.filter((task) => !queued.includes(task)), waiting };
 }

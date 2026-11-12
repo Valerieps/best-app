@@ -64,7 +64,7 @@ describe('parseBackup', () => {
     const v1 = { format: 'best-app-backup', schemaVersion: 1, exportedAt: '2026-10-11', tables: tables() } as Record<string, unknown>;
     for (const name of ['priorities', 'reflections', 'settings', 'reminders', 'objectives', 'resources', 'habits', 'habitLogs']) delete (v1.tables as Record<string, unknown>)[name];
     const result = parseBackup(v1);
-    expect(result).toMatchObject({ ok: true, backup: { schemaVersion: 10, tables: { priorities: [], reflections: [], settings: [], reminders: [], habits: [], habitLogs: [], people: [] } } });
+    expect(result).toMatchObject({ ok: true, backup: { schemaVersion: 11, tables: { priorities: [], reflections: [], settings: [], reminders: [], habits: [], habitLogs: [], people: [] } } });
   });
 
   it('upgrades a version 5 backup, turning month priority projects into week ones and then the list in focus', () => {
@@ -72,7 +72,7 @@ describe('parseBackup', () => {
     const day = { id: 'day:2026-10-11', scope: 'day' as const, period: '2026-10-11', itemIds: ['t1'], updatedAt: '' };
     const v5 = { format: 'best-app-backup', schemaVersion: 5, exportedAt: '2026-10-11', tables: { ...tables(), priorities: [month, day] } };
     const result = parseBackup(v5);
-    expect(result).toMatchObject({ ok: true, backup: { schemaVersion: 10 } });
+    expect(result).toMatchObject({ ok: true, backup: { schemaVersion: 11 } });
     expect(result.ok && result.backup.tables.priorities).toEqual([
       day,
       { id: 'weekProjects:2026-W40', scope: 'weekProjects', period: '2026-W40', itemIds: ['p1'], updatedAt: '2026-10-02T10:00:00.000Z' },
@@ -120,6 +120,26 @@ describe('parseBackup', () => {
     expect(result.ok && result.backup.tables.blocks).toEqual([{ id: 't1', kind: 'task', status: 'active', intendedDate: null }]);
     expect(result.ok && result.backup.tables.sections).toEqual([{ ...notes, notesDestination: 'wiki' }]);
     expect(result.ok && result.backup.tables.reflections).toEqual([review]);
+  });
+
+  it('turns the notes a version 10 backup wrote with "[?] " into ideas, linked like new ideas', () => {
+    const linked = { id: 's1', day: '2026-11-01', projectId: 'p1', notesDestination: 'wiki' };
+    const loose = { id: 's2', day: '2026-11-02', projectId: null, notesDestination: 'wiki' };
+    const blocks = [
+      { id: 'b1', kind: 'note', text: '[?] App de receitas', sectionId: 's1', projectId: null },
+      { id: 'b2', kind: 'note', text: '[?] Horta #Casa', sectionId: 's2', projectId: 'p2' },
+      { id: 'b3', kind: 'note', text: 'Uma nota [?] no meio', sectionId: 's2', projectId: null },
+      { id: 'b4', kind: 'task', text: '[?] Tarefa', sectionId: 's2', projectId: null },
+    ];
+    const v10 = { format: 'best-app-backup', schemaVersion: 10, exportedAt: '2026-11-03T10:00:00.000Z', tables: tables({ sections: [linked, loose] as never, blocks: blocks as never }) };
+    const result = parseBackup(v10);
+    const idea = { ideaStatus: 'open', notYetCount: 0, lastNotYetAt: null, ideaSectionId: null };
+    expect(result.ok && result.backup.tables.blocks).toEqual([
+      { ...blocks[0], kind: 'idea', text: 'App de receitas', projectId: 'p1', ...idea },
+      { ...blocks[1], kind: 'idea', text: 'Horta #Casa', projectId: 'p2', ...idea },
+      blocks[2],
+      blocks[3],
+    ]);
   });
 
   it('rejects a backup from a newer version of the app', () => {

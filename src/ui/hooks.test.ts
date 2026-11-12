@@ -8,6 +8,7 @@ describe('routes', () => {
     { name: 'checkout', day: '2026-10-11' },
     { name: 'checkout', day: '2026-10-11', from: 'rituals' },
     { name: 'active' },
+    { name: 'execute' },
     { name: 'rituals' },
     { name: 'rituals', assistant: 'pendingDays' },
     { name: 'rituals', assistant: 'whiteboards' },
@@ -20,6 +21,8 @@ describe('routes', () => {
     { name: 'objectives' },
     { name: 'objective', id: 'o-1' },
     { name: 'habits' },
+    { name: 'ideas' },
+    { name: 'idea', id: 'b-1' },
   ])('round-trips %o', (route) => {
     expect(parseRoute(routeHash(route))).toEqual(route);
   });

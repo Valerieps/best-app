@@ -18,6 +18,7 @@ import type {
 import type { DomainEvent } from '../domain/events';
 import { toDayKey } from '../domain/day';
 import { migrateMonthPriorityLists, migrateToFocusList } from '../domain/focusProjects';
+import { noteToIdea } from '../domain/ideas';
 import { keepDeferredNotes } from '../domain/reviewsRemoved';
 import { undateArchivedTask } from '../domain/tasks';
 
@@ -37,7 +38,7 @@ export interface Snapshot {
 export const DATABASE_NAME = 'best-app';
 
 /** The last version declared below; raise it with each new `this.version(n)`. */
-export const DATABASE_VERSION = 10;
+export const DATABASE_VERSION = 11;
 
 /** Snapshot of the data as it was before the last database upgrade (ADR-059). */
 export const UPGRADE_SNAPSHOT_ID = 'beforeUpgrade';
@@ -173,6 +174,23 @@ export class AppDatabase extends Dexie {
           .filter((row: Record<string, unknown>) => row.notesDestination === 'weeklyReflection')
           .modify((row: Record<string, unknown>) => {
             Object.assign(row, keepDeferredNotes(row));
+          });
+      });
+    // Ideas (phase 7, ADR-067): blocks get searchable by kind, and notes written with `[?] `
+    // before ideas existed become ideas.
+    this.version(11)
+      .stores({ blocks: 'id, sectionId, status, intendedDate, projectId, deadline, kind' })
+      .upgrade(async (tx) => {
+        await snapshotBeforeUpgrade(tx);
+        const sectionProjects = new Map<string, string | null>();
+        for (const section of (await tx.table('sections').toArray()) as Record<string, unknown>[]) {
+          sectionProjects.set(section.id as string, typeof section.projectId === 'string' ? section.projectId : null);
+        }
+        await tx
+          .table('blocks')
+          .filter((row: Record<string, unknown>) => noteToIdea(row, null) !== row)
+          .modify((row: Record<string, unknown>) => {
+            Object.assign(row, noteToIdea(row, sectionProjects.get(row.sectionId as string) ?? null));
           });
       });
   }

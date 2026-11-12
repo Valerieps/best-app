@@ -13,6 +13,7 @@ export interface PalettePlace {
 export function palettePlaces(features: { objectives: boolean; habits: boolean }): PalettePlace[] {
   return [
     { key: 'day', label: 'Hoje', icon: 'sun', route: { name: 'day' } },
+    { key: 'execute', label: 'Fila de execução', icon: 'bolt', route: { name: 'execute' } },
     { key: 'rituals', label: 'Rituais', icon: 'repeat', route: { name: 'rituals' } },
     { key: 'projects', label: 'Projetos', icon: 'folder', route: { name: 'projects' } },
     ...(features.objectives
@@ -21,6 +22,7 @@ export function palettePlaces(features: { objectives: boolean; habits: boolean }
     ...(features.habits ? [{ key: 'habits', label: 'Hábitos', icon: 'leaf' as const, route: { name: 'habits' as const } }] : []),
     { key: 'active', label: 'Tarefas', icon: 'checklist', route: { name: 'active' } },
     { key: 'people', label: 'Pessoas', icon: 'users', route: { name: 'people' } },
+    { key: 'ideas', label: 'Ideias', icon: 'bulb', route: { name: 'ideas' } },
     { key: 'data', label: 'Dados e backup', icon: 'database', route: { name: 'data' } },
     { key: 'settings', label: 'Configurações', icon: 'settings', route: { name: 'settings' } },
   ];

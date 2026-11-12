@@ -2,6 +2,7 @@ import { toDayKey, type DayKey } from '../domain/day';
 import type { Section } from '../domain/entities';
 import type { DayTriage, NotesDecision, TaskDecision, WhiteboardDecision } from '../domain/triage';
 import { record } from './events';
+import { queueIn, releaseFromQueue } from './executionQueue';
 import { addHabitIn } from './habits';
 import { moveIntendedDate } from './intendedDate';
 import { addResourceIn } from './objectives';
@@ -65,6 +66,11 @@ export async function applyTaskDecision(
     if (task.status !== 'active') return;
     if (decision.kind === 'keep') {
       // Settled for the day, as it is: only `lastTriagedDay` changes, below.
+    } else if (decision.kind === 'queue') {
+      // Into the queue, and out of any day: a task of mine has no intended date any more (ADR-072).
+      task = await moveIntendedDate(ctx, tx, task, null, day, 'checkout', { postpone: false });
+      await tx.blocks.put(task);
+      await queueIn(ctx, tx, task.id, day);
     } else if (decision.kind === 'schedule' || decision.kind === 'undate') {
       const to = decision.kind === 'schedule' ? decision.date : null;
       // A task left untouched in the triage goes to the task list without counting as postponed.
@@ -73,9 +79,11 @@ export async function applyTaskDecision(
     } else if (decision.kind === 'habit') {
       const habit = await addHabitIn(ctx, tx, { name: task.text || 'Hábito', criterion: '', weekdays: [], objectiveId: null });
       task = { ...task, status: 'converted', closedAt: nowIso(ctx), updatedAt: nowIso(ctx) };
+      await releaseFromQueue(ctx, tx, task, 'abandoned', day);
       await record(ctx, tx, 'task.convertedToHabit', 'block', task.id, day, { habitId: habit.id });
     } else {
       task = { ...task, status: 'abandoned', closedAt: nowIso(ctx), updatedAt: nowIso(ctx) };
+      await releaseFromQueue(ctx, tx, task, 'abandoned', day);
       await record(ctx, tx, 'task.abandoned', 'block', task.id, day);
     }
   }

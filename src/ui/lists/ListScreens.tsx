@@ -1,15 +1,20 @@
 import { useEffect, useState, type MouseEvent } from 'react';
-import { setDeadline, setDeadlines, setIntendedDate, setIntendedDates, setTaskProject } from '../../application/dayTools';
+import { setDeadline, setDeadlines, setTaskProject } from '../../application/dayTools';
+import { addToQueue } from '../../application/executionQueue';
 import { abandonTask, abandonTasks, setTaskDone } from '../../application/notebook';
 import { loadActiveTasks, loadFinishedTasks, loadTaskListContext, type TaskListItem } from '../../application/queries';
 import { rangeBetween } from '../../domain/checkoutSteps';
 import { addDays, type DayKey } from '../../domain/day';
 import type { Project } from '../../domain/entities';
-import { TASK_LIST_KEYS, groupTasks, inFocusProjects, type TaskGroupBy, type TaskListKey } from '../../domain/taskList';
+import { TASK_LIST_KEYS, creationDay, filterByProject, groupTasks, type TaskGroupBy, type TaskListKey, type TaskSortKey } from '../../domain/taskList';
+import { ColumnsMenu, FiltersMenu } from './TaskTableMenus';
+import { COLUMN_LABELS, DEFAULT_VIEW, parseView, sortByColumn, type TaskColumn, type TaskListView, type TaskShow } from './taskTableView';
+import { AbandonAction } from '../components/AbandonAction';
 import { ProjectChip } from '../components/Chips';
 import { Icon } from '../components/Icon';
-import { DatePicker } from '../dayNote/BlockLine';
+import { DatePicker, type LineDragProps } from '../dayNote/BlockLine';
 import { Linkified } from '../components/Linkified';
+import { TaskText } from '../taskDetails/TaskText';
 import { ScreenHeader } from '../components/ScreenHeader';
 import { LoadingPage } from '../components/Skeleton';
 import { plural, postponedLabel, relativeDay } from '../format';
@@ -26,12 +31,15 @@ function ListPage({ title, className = '', children }: { title: string; classNam
   );
 }
 
-function TaskRow({
+export function TaskRow({
   item,
   today,
   action,
   extra,
   selection,
+  drag,
+  quietProject = false,
+  hideMeta = false,
 }: {
   item: TaskListItem;
   today: DayKey;
@@ -40,18 +48,30 @@ function TaskRow({
   extra?: React.ReactNode;
   /** In a batch selection, a click anywhere on the row picks it, highlighted, as in the planning. */
   selection?: { on: boolean; onPick(event: MouseEvent): void };
+  /** Reordering by dragging the handle, as in the "Fila de execução". */
+  drag?: LineDragProps;
+  /** The project as small muted text under the task, instead of the chip at the end. */
+  quietProject?: boolean;
+  /** No deadline or postponement text on the row, as in the "Fila de execução". */
+  hideMeta?: boolean;
 }) {
   const { task, project } = item;
-  const when = task.intendedDate ? relativeDay(task.intendedDate, today) : 'sem data';
   const active = task.status === 'active';
   const deadline = active && task.deadline ? `prazo ${relativeDay(task.deadline, today)}` : null;
-  const meta = [active ? when : null, deadline, postponedLabel(task.postponeCount)].filter(Boolean).join(' · ');
+  const meta = hideMeta ? '' : [deadline, postponedLabel(task.postponeCount)].filter(Boolean).join(' · ');
   return (
     <li
-      className={`card-list__item card-list__item--stacked ${task.status === 'done' ? 'active-tasks__row--done' : ''} ${selection ? 'active-tasks__row--select' : ''} ${selection?.on ? 'active-tasks__row--on' : ''}`}
+      className={`card-list__item card-list__item--stacked ${task.status === 'done' ? 'active-tasks__row--done' : ''} ${selection ? 'active-tasks__row--select' : ''} ${selection?.on ? 'active-tasks__row--on' : ''} ${drag?.dragging ? 'task-row--dragging' : ''} ${drag?.mark ? `task-row--drop-${drag.mark}` : ''}`}
       onClick={selection?.onPick}
+      data-drag-group={drag?.group}
+      data-drag-id={drag ? task.id : undefined}
     >
       <div className="task-row">
+        {drag && (
+          <span className="task-row__handle" title="Arraste para mudar a ordem" aria-hidden="true" onPointerDown={drag.onStart}>
+            ⠿
+          </span>
+        )}
         {action}
         {selection ? (
           <button type="button" className="task-row__text" aria-pressed={selection.on}>
@@ -59,7 +79,7 @@ function TaskRow({
           </button>
         ) : (
           <span className="task-row__text">
-            <Linkified text={task.text || '(tarefa sem texto)'} />
+            <TaskText taskId={task.id} text={task.text} />
           </span>
         )}
         {meta && (
@@ -69,54 +89,34 @@ function TaskRow({
         )}
         {extra}
         {/* Always the last item of the row, after the hover actions. */}
-        {project && <ProjectChip name={project.name} href={selection ? undefined : routeHash({ name: 'project', id: project.id })} />}
+        {project && !quietProject && <ProjectChip name={project.name} href={selection ? undefined : routeHash({ name: 'project', id: project.id })} />}
       </div>
+      {project && quietProject && (
+        <a className="task-row__project" href={routeHash({ name: 'project', id: project.id })} title="Abrir a página do projeto">
+          {project.name}
+        </a>
+      )}
     </li>
   );
 }
 
 const KEY_LABELS: Record<TaskListKey, string> = {
   project: 'projeto',
-  intendedDate: 'data de intenção',
   createdDate: 'data de criação',
   postponeCount: 'adiamentos',
 };
 
 const VIEW_KEY = 'best-app:activeTasksView';
 
-interface TaskListView {
-  groupBy: TaskGroupBy;
-  sortBy: TaskListKey;
-  /** Only the tasks of the projects in focus. */
-  focusOnly: boolean;
-}
-
-const DEFAULT_VIEW: TaskListView = { groupBy: 'none', sortBy: 'intendedDate', focusOnly: false };
-
-/** Which tasks the list shows. Not remembered: the screen always opens on the open tasks. */
-type TaskShow = 'open' | 'done' | 'all';
-
-const SHOW_LABELS: Record<TaskShow, string> = { open: 'não concluídas', done: 'concluídas', all: 'todas' };
-
-function isKey(value: unknown): value is TaskListKey {
-  return TASK_LIST_KEYS.includes(value as TaskListKey);
-}
-
 function readView(): TaskListView {
   try {
-    const parsed: unknown = JSON.parse(localStorage.getItem(VIEW_KEY) ?? '{}');
-    const saved = (parsed ?? {}) as Partial<Record<keyof TaskListView, unknown>>;
-    return {
-      groupBy: saved.groupBy === 'none' || isKey(saved.groupBy) ? saved.groupBy : DEFAULT_VIEW.groupBy,
-      sortBy: isKey(saved.sortBy) ? saved.sortBy : DEFAULT_VIEW.sortBy,
-      focusOnly: saved.focusOnly === true,
-    };
+    return parseView(localStorage.getItem(VIEW_KEY));
   } catch {
     return DEFAULT_VIEW;
   }
 }
 
-/** How the active tasks are grouped and sorted. A convenience of this browser only. */
+/** How the tasks table is grouped, sorted, filtered and which columns it shows. A convenience of this browser only. */
 function useTaskListView(): [TaskListView, (view: TaskListView) => void] {
   const [view, setView] = useState(readView);
   const update = (next: TaskListView) => {
@@ -129,23 +129,23 @@ function useTaskListView(): [TaskListView, (view: TaskListView) => void] {
   };
   return [view, update];
 }
-
 function groupTitle(groupBy: TaskListKey, key: string | null, items: TaskListItem[], today: DayKey): string {
   if (groupBy === 'project') return items[0]?.project?.name ?? 'Sem projeto';
   if (groupBy === 'postponeCount') {
     const count = Number(key);
     return count === 0 ? 'Nunca adiada' : `Adiada ${count} ${count === 1 ? 'vez' : 'vezes'}`;
   }
-  if (key === null) return 'Sem data';
-  const day = relativeDay(key, today);
+  const day = relativeDay(key ?? '', today);
   return day.charAt(0).toUpperCase() + day.slice(1);
 }
 
-function TaskGroupSection({
+/** A group of the table: a header row that opens and closes it, then its tasks. */
+function TaskGroupRows({
   title,
   count,
   open,
   onToggle,
+  colSpan,
   extra,
   children,
 }: {
@@ -153,64 +153,44 @@ function TaskGroupSection({
   count: number;
   open: boolean;
   onToggle(): void;
+  colSpan: number;
   /** After the toggle, such as "selecionar grupo". */
   extra?: React.ReactNode;
   children: React.ReactNode;
 }) {
   return (
-    <section className="active-tasks__group">
-      <div className="active-tasks__group-head">
-        <button type="button" className="active-tasks__toggle" aria-expanded={open} onClick={onToggle}>
-          <Icon name={open ? 'chevronDown' : 'chevronRight'} size="sm" />
-          <span className="active-tasks__group-title">{title}</span>
-          <span className="badge" aria-label={plural(count, 'tarefa', 'tarefas')}>
-            {count}
-          </span>
-        </button>
-        {extra}
-      </div>
+    <tbody className="task-table__group">
+      <tr className="task-table__group-row">
+        <td colSpan={colSpan}>
+          <div className="active-tasks__group-head">
+            <button type="button" className="active-tasks__toggle" aria-expanded={open} onClick={onToggle}>
+              <Icon name={open ? 'chevronDown' : 'chevronRight'} size="sm" />
+              <span className="active-tasks__group-title">{title}</span>
+              <span className="badge" aria-label={plural(count, 'tarefa', 'tarefas')}>
+                {count}
+              </span>
+            </button>
+            {extra}
+          </div>
+        </td>
+      </tr>
       {open && children}
-    </section>
+    </tbody>
   );
 }
-
-/** Bottom bar of the selection: the same intended date or deadline for all, or abandon them all. */
+/** Bottom bar of the selection: the same deadline for all, or abandon them all. */
 function BatchBar({ selected, today, onDone }: { selected: Set<string>; today: DayKey; onDone(message: string): void }) {
-  const [intended, setIntended] = useState<DayKey>(addDays(today, 1));
   const [deadline, setDeadlineDate] = useState<DayKey>(addDays(today, 7));
-  const [confirming, setConfirming] = useState(false);
   const ids = [...selected];
   const none = ids.length === 0;
   const count = plural(ids.length, 'tarefa', 'tarefas');
   const run = (work: Promise<void>, message: string) => {
-    setConfirming(false);
     void work.then(() => onDone(message));
   };
   return (
     <div className="batch-bar active-tasks__batch" role="region" aria-label="Edição em lote">
       <span className="batch-bar__count">
         <b>{none ? 'Nenhuma tarefa selecionada' : plural(ids.length, 'tarefa selecionada', 'tarefas selecionadas')}</b>
-      </span>
-      <span className="batch-bar__actions">
-        <span className="muted">Data de intenção</span>
-        <input
-          type="date"
-          className="date-input"
-          min={today}
-          value={intended}
-          onChange={(event) => event.target.value && setIntended(event.target.value)}
-          aria-label="Data de intenção para as tarefas selecionadas"
-        />
-        <button
-          type="button"
-          disabled={none}
-          onClick={() => run(setIntendedDates(appContext, ids, intended), `${count} → ${relativeDay(intended, today)}`)}
-        >
-          Aplicar
-        </button>
-        <button type="button" disabled={none} onClick={() => run(setIntendedDates(appContext, ids, null), `${count} sem data`)}>
-          Sem data
-        </button>
       </span>
       <span className="batch-bar__actions">
         <span className="muted">Prazo</span>
@@ -232,25 +212,40 @@ function BatchBar({ selected, today, onDone }: { selected: Set<string>; today: D
           Tirar prazo
         </button>
       </span>
-      <button
-        type="button"
+      <AbandonAction
+        count={count}
         disabled={none}
-        className={confirming ? 'active-tasks__abandon--confirm' : ''}
-        onClick={() => (confirming ? run(abandonTasks(appContext, ids), `${count} abandonada${ids.length === 1 ? '' : 's'}`) : setConfirming(true))}
-        onBlur={() => setConfirming(false)}
-      >
-        {confirming ? `Confirmar abandono de ${count}` : 'Abandonar'}
-      </button>
+        onAbandon={() => run(abandonTasks(appContext, ids), `${count} abandonada${ids.length === 1 ? '' : 's'}`)}
+      />
     </div>
   );
 }
 
-/** On hover: change the two dates, or abandon the task, with a second click to confirm. */
-function ActiveTaskActions({ item, today, projects }: { item: TaskListItem; today: DayKey; projects: Project[] }) {
-  const [confirming, setConfirming] = useState(false);
+/** On hover: queue, link to a project, change the deadline, or abandon the task, with a second click to confirm. */
+export function ActiveTaskActions({
+  item,
+  projects,
+  inQueue,
+}: {
+  item: TaskListItem;
+  projects: Project[];
+  /** Whether the task is in the "Fila de execução"; absent hides the queue action. */
+  inQueue?: boolean;
+}) {
   const { task } = item;
   return (
     <span className="active-tasks__actions">
+      {inQueue !== undefined && !task.waiting && (
+        <button
+          type="button"
+          className="line__action"
+          disabled={inQueue}
+          title={inQueue ? 'Já está na fila de execução' : 'Adicionar ao fim da fila de execução'}
+          onClick={() => void addToQueue(appContext, task.id)}
+        >
+          {inQueue ? 'Na fila' : 'Adicionar à fila'}
+        </button>
+      )}
       {!item.project && projects.length > 0 && (
         <select
           className="line__action active-tasks__project"
@@ -268,16 +263,6 @@ function ActiveTaskActions({ item, today, projects }: { item: TaskListItem; toda
         </select>
       )}
       <DatePicker
-        label="Mudar a data de intenção"
-        className="line__action"
-        value={task.intendedDate}
-        min={today}
-        onChange={(date) => void setIntendedDate(appContext, task.id, date)}
-        clearLabel={task.intendedDate ? 'Tirar a data de intenção' : undefined}
-      >
-        Data
-      </DatePicker>
-      <DatePicker
         label="Mudar o prazo máximo"
         className="line__action"
         value={task.deadline ?? null}
@@ -286,45 +271,33 @@ function ActiveTaskActions({ item, today, projects }: { item: TaskListItem; toda
       >
         Prazo
       </DatePicker>
-      <button
-        type="button"
-        className={`line__action ${confirming ? 'active-tasks__abandon--confirm' : ''}`}
-        onClick={() => (confirming ? void abandonTask(appContext, task.id) : setConfirming(true))}
-        onBlur={() => setConfirming(false)}
-        title="Tirar a tarefa de circulação sem fazer. O histórico guarda o abandono."
-      >
-        {confirming ? 'Confirmar abandono' : 'Abandonar'}
-      </button>
+      <AbandonAction onAbandon={() => void abandonTask(appContext, task.id)} />
     </span>
   );
 }
 
-function TaskListControls({
+function TaskTableControls({
   view,
   onChange,
   show,
   onShow,
+  projects,
+  count,
   children,
 }: {
   view: TaskListView;
   onChange(view: TaskListView): void;
   show: TaskShow;
   onShow(show: TaskShow): void;
-  /** Buttons on the right: collapse all, select several. */
+  projects: Project[];
+  /** Tasks in the table, after the filters. */
+  count: number;
+  /** Buttons before the menus: collapse all, select several. */
   children?: React.ReactNode;
 }) {
   return (
     <div className="active-tasks__controls">
-      <label>
-        Mostrar{' '}
-        <select className="text-input" value={show} onChange={(event) => onShow(event.target.value as TaskShow)}>
-          {(Object.keys(SHOW_LABELS) as TaskShow[]).map((key) => (
-            <option key={key} value={key}>
-              {SHOW_LABELS[key]}
-            </option>
-          ))}
-        </select>
-      </label>
+      <span className="task-table__count">{plural(count, 'tarefa', 'tarefas')}</span>
       <label>
         Agrupar por{' '}
         <select
@@ -340,31 +313,50 @@ function TaskListControls({
           ))}
         </select>
       </label>
-      <label>
-        Ordenar por{' '}
-        <select
-          className="text-input"
-          value={view.sortBy}
-          onChange={(event) => onChange({ ...view, sortBy: event.target.value as TaskListKey })}
-        >
-          {TASK_LIST_KEYS.map((key) => (
-            <option key={key} value={key}>
-              {KEY_LABELS[key]}
-            </option>
-          ))}
-        </select>
-      </label>
-      <label>
-        <input
-          type="checkbox"
-          checked={view.focusOnly}
-          onChange={(event) => onChange({ ...view, focusOnly: event.target.checked })}
-        />
-        Só projetos em foco
-      </label>
-      <span className="active-tasks__controls-end">{children}</span>
+      <span className="active-tasks__controls-end">
+        {children}
+        <FiltersMenu view={view} onChange={onChange} show={show} onShow={onShow} projects={projects} />
+        <ColumnsMenu view={view} onChange={onChange} />
+      </span>
     </div>
   );
+}
+
+/** A column header that sorts the table; a second click reverses the order. */
+function SortHeader({ column, view, onChange }: { column: TaskSortKey; view: TaskListView; onChange(view: TaskListView): void }) {
+  const on = view.sortBy === column;
+  const direction = on ? (view.direction === 'asc' ? 'ascending' : 'descending') : 'none';
+  return (
+    <th scope="col" aria-sort={direction} className={`task-table__th task-table__th--${column}`}>
+      <button
+        type="button"
+        className={`task-table__sort ${on ? 'task-table__sort--on' : ''}`}
+        onClick={() => onChange(sortByColumn(view, column))}
+        title={on ? 'Inverter a ordem' : `Ordenar por ${COLUMN_LABELS[column].toLowerCase()}`}
+      >
+        {COLUMN_LABELS[column]}
+        {on && <Icon name={view.direction === 'asc' ? 'arrowDown' : 'arrowUp'} size="sm" />}
+      </button>
+    </th>
+  );
+}
+
+/** One cell of an optional column. */
+function ColumnCell({ column, item, today, selecting }: { column: TaskColumn; item: TaskListItem; today: DayKey; selecting: boolean }) {
+  const { task, project } = item;
+  const active = task.status === 'active';
+  const dash = <span className="muted">—</span>;
+  let content: React.ReactNode;
+  if (column === 'deadline') {
+    content = active && task.deadline ? relativeDay(task.deadline, today) : dash;
+  } else if (column === 'project') {
+    content = project ? <ProjectChip name={project.name} href={selecting ? undefined : routeHash({ name: 'project', id: project.id })} /> : dash;
+  } else if (column === 'createdDate') {
+    content = relativeDay(creationDay(task), today);
+  } else {
+    content = task.postponeCount > 0 ? task.postponeCount : dash;
+  }
+  return <td className={`task-table__td task-table__td--${column}`}>{content}</td>;
 }
 
 export function ActiveTasksScreen({ today }: { today: DayKey }) {
@@ -397,17 +389,22 @@ export function ActiveTasksScreen({ today }: { today: DayKey }) {
   }, [selecting]);
 
   if (!openItems || !doneItems || !context) return <LoadingPage title="Tarefas" />;
-  const { groupBy, sortBy, focusOnly } = view;
+  const { groupBy, sortBy, direction, columns } = view;
+  // A project that is no longer active drops out of the menu, so its filter would hide everything.
+  const project =
+    view.project.startsWith('project:') && !context.activeProjects.some((item) => `project:${item.id}` === view.project) ? 'all' : view.project;
   const allItems = show === 'open' ? openItems : show === 'done' ? doneItems : [...openItems, ...doneItems];
-  const items = focusOnly ? inFocusProjects(allItems, context.focusIds) : allItems;
-  const groups = groupTasks(items, groupBy, sortBy);
+  const items = filterByProject(allItems, project, context.focusIds);
+  const groups = groupTasks(items, groupBy, sortBy, direction);
   const groupId = (key: string | null) => `${groupBy}:${key ?? ''}`;
+  const queueSet = new Set(context.queueIds);
   const isOpen = (item: TaskListItem) => item.task.status === 'active';
   // Only open tasks can be selected: the batch actions are for them.
   const shownIds = groups.flatMap((group) => group.items.filter(isOpen).map((item) => item.task.id));
   // A task that left the list (finished, abandoned) drops out of the selection.
   const stillSelected = new Set(shownIds.filter((id) => selected.has(id)));
   const allCollapsed = groups.length > 0 && groups.every((group) => collapsed.has(groupId(group.key)));
+  const colSpan = 2 + columns.length;
 
   function toggleGroup(key: string | null) {
     const id = groupId(key);
@@ -453,41 +450,64 @@ export function ActiveTasksScreen({ today }: { today: DayKey }) {
     setFlash('');
   }
 
-  const list = (groupItems: TaskListItem[]) => (
-    <ul className="card-list">
-      {groupItems.map((item) => {
-        const id = item.task.id;
-        const open = isOpen(item);
-        return (
-          <TaskRow
-            key={id}
-            item={item}
-            today={today}
-            action={
-              selecting && open ? undefined : (
-                <input
-                  type="checkbox"
-                  checked={!open}
-                  disabled={selecting}
-                  onChange={() => void setTaskDone(appContext, id, open)}
-                  aria-label={open ? `Finalizar "${item.task.text}"` : `Reabrir "${item.task.text}"`}
-                />
-              )
-            }
-            selection={selecting && open ? { on: selected.has(id), onPick: (event) => pick(id, event) } : undefined}
-            extra={selecting || !open ? undefined : <ActiveTaskActions item={item} today={today} projects={context.activeProjects} />}
-          />
-        );
-      })}
-    </ul>
-  );
+  const rows = (groupItems: TaskListItem[]) =>
+    groupItems.map((item) => {
+      const id = item.task.id;
+      const open = isOpen(item);
+      const picking = selecting && open;
+      const on = picking && selected.has(id);
+      return (
+        <tr
+          key={id}
+          className={`task-table__row ${open ? '' : 'active-tasks__row--done'} ${picking ? 'active-tasks__row--select' : ''} ${on ? 'active-tasks__row--on' : ''}`}
+          onClick={picking ? (event) => pick(id, event) : undefined}
+        >
+          <td className="task-table__td task-table__td--check">
+            {!picking && (
+              <input
+                type="checkbox"
+                checked={!open}
+                disabled={selecting}
+                onChange={() => void setTaskDone(appContext, id, open)}
+                aria-label={open ? `Finalizar "${item.task.text}"` : `Reabrir "${item.task.text}"`}
+              />
+            )}
+          </td>
+          <td className="task-table__td task-table__td--text">
+            <div className="task-row">
+              {picking ? (
+                <button type="button" className="task-row__text" aria-pressed={on}>
+                  <Linkified text={item.task.text || '(tarefa sem texto)'} />
+                </button>
+              ) : (
+                <span className="task-row__text">
+                  <TaskText taskId={item.task.id} text={item.task.text} />
+                </span>
+              )}
+              {!selecting && open && <ActiveTaskActions item={item} projects={context.activeProjects} inQueue={queueSet.has(id)} />}
+            </div>
+          </td>
+          {columns.map((column) => (
+            <ColumnCell key={column} column={column} item={item} today={today} selecting={selecting} />
+          ))}
+        </tr>
+      );
+    });
+
   return (
     <ListPage title="Tarefas" className="page--active-tasks">
       {openItems.length === 0 && doneItems.length === 0 ? (
         <p className="muted">Nenhuma tarefa ainda.</p>
       ) : (
-        <>
-          <TaskListControls view={view} onChange={setView} show={show} onShow={setShow}>
+        <div className="task-table__panel">
+          <TaskTableControls
+            view={view}
+            onChange={setView}
+            show={show}
+            onShow={setShow}
+            projects={context.activeProjects}
+            count={items.length}
+          >
             {groupBy !== 'none' && (
               <button type="button" className="small" onClick={toggleAll}>
                 {allCollapsed ? 'Abrir todos' : 'Recolher todos'}
@@ -501,34 +521,31 @@ export function ActiveTasksScreen({ today }: { today: DayKey }) {
             >
               {selecting ? 'Pronto' : 'Selecionar várias'}
             </button>
-          </TaskListControls>
-          {selecting && (
-            <p className="muted">
-              {flash || 'Shift + clique seleciona um intervalo.'}
-            </p>
-          )}
-          {items.length === 0 && (
-            <p className="muted">
-              {allItems.length === 0
-                ? show === 'done'
-                  ? 'Nenhuma tarefa concluída.'
-                  : 'Nenhuma tarefa por fazer.'
-                : context.focusIds.length === 0
-                  ? 'Nenhum projeto em foco.'
-                  : 'Nenhuma tarefa nos projetos em foco.'}
-            </p>
-          )}
-          {groupBy === 'none'
-            ? list(groups[0]?.items ?? [])
-            : groups.map((group) => {
+          </TaskTableControls>
+          {selecting && <p className="muted">{flash || 'Shift + clique seleciona um intervalo.'}</p>}
+          <table className="task-table">
+            <thead>
+              <tr>
+                <th scope="col" className="task-table__th task-table__th--check" aria-label="Concluída" />
+                <SortHeader column="text" view={view} onChange={setView} />
+                {columns.map((column) => (
+                  <SortHeader key={column} column={column} view={view} onChange={setView} />
+                ))}
+              </tr>
+            </thead>
+            {groupBy === 'none' ? (
+              <tbody>{rows(groups[0]?.items ?? [])}</tbody>
+            ) : (
+              groups.map((group) => {
                 const all = group.items.filter(isOpen).every((item) => selected.has(item.task.id));
                 return (
-                  <TaskGroupSection
+                  <TaskGroupRows
                     key={groupId(group.key)}
                     title={groupTitle(groupBy, group.key, group.items, today)}
                     count={group.items.length}
                     open={!collapsed.has(groupId(group.key))}
                     onToggle={() => toggleGroup(group.key)}
+                    colSpan={colSpan}
                     extra={
                       selecting &&
                       group.items.some(isOpen) && (
@@ -538,11 +555,24 @@ export function ActiveTasksScreen({ today }: { today: DayKey }) {
                       )
                     }
                   >
-                    {list(group.items)}
-                  </TaskGroupSection>
+                    {rows(group.items)}
+                  </TaskGroupRows>
                 );
-              })}
-        </>
+              })
+            )}
+          </table>
+          {items.length === 0 && (
+            <p className="muted task-table__empty">
+              {allItems.length === 0
+                ? show === 'done'
+                  ? 'Nenhuma tarefa concluída.'
+                  : 'Nenhuma tarefa por fazer.'
+                : project === 'focus' && context.focusIds.length === 0
+                  ? 'Nenhum projeto em foco.'
+                  : 'Nenhuma tarefa com esses filtros.'}
+            </p>
+          )}
+        </div>
       )}
       {selecting && (
         <BatchBar

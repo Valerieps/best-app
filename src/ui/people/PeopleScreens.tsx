@@ -31,19 +31,21 @@ function sectionLabel(section: Section | null): string {
   return `${section.title ?? 'Sem título'} · ${formatShortDate(section.day)} · ${formatTime(section.createdAt)}`;
 }
 
-/** One open task between me and someone: done by the checkbox, with its age and its date. */
+/** One open task between me and someone: done by the checkbox, with its age and, when waiting, the day to follow up. */
 function ItemRow({ item, today, person, section }: { item: PersonItem; today: DayKey; person?: Person | null; section: Section | null }) {
   const { task } = item;
   const waiting = task.waiting === true;
-  const dateLabel = task.intendedDate ? `${waiting ? 'cobrar ' : ''}${relativeDay(task.intendedDate, today)}` : null;
+  const finished = task.status === 'done';
+  // Only a waiting task keeps a date, the day to follow up; mine have none (ADR-072).
+  const dateLabel = waiting && task.intendedDate ? `cobrar ${relativeDay(task.intendedDate, today)}` : null;
   return (
     <li className="card-list__item people__item">
       <input
         type="checkbox"
         className="line__check"
-        checked={false}
-        onChange={() => write(() => setTaskDone(appContext, task.id, true))}
-        aria-label={waiting ? 'Concluir: chegou' : 'Finalizar tarefa'}
+        checked={finished}
+        onChange={() => write(() => setTaskDone(appContext, task.id, !finished))}
+        aria-label={finished ? 'Reabrir tarefa' : waiting ? 'Concluir: chegou' : 'Finalizar tarefa'}
       />
       <span className="people__item-text">
         <MarkdownText text={task.text || '(tarefa sem texto)'} />
@@ -52,17 +54,17 @@ function ItemRow({ item, today, person, section }: { item: PersonItem; today: Da
       <span className="list-meta">
         {/* The person is already in the text, as a mention: only a task citing nobody says so. */}
         {person === null && <span className="chip chip--muted">sem pessoa</span>}
-        <span className="muted">{openForLabel(item.openDays)}</span>
-        <DatePicker
-          label={waiting ? 'Data para cobrar' : 'Data de intenção'}
+        {!finished && <span className="muted">{openForLabel(item.openDays)}</span>}
+        {!finished && waiting && <DatePicker
+          label="Data para cobrar"
           className={dateLabel ? 'line__chip' : 'line__action'}
           value={task.intendedDate}
           min={today}
           onChange={(date) => write(() => setIntendedDate(appContext, task.id, date))}
-          clearLabel={waiting ? 'Tirar a data para cobrar' : 'Tirar a data de intenção'}
+          clearLabel="Tirar a data para cobrar"
         >
-          {dateLabel ?? (waiting ? 'Cobrar' : 'Data')}
-        </DatePicker>
+          {dateLabel ?? 'Cobrar'}
+        </DatePicker>}
       </span>
     </li>
   );
@@ -75,7 +77,7 @@ function ItemList({ items, today, empty, sectionsById, withPerson }: {
   sectionsById: ReadonlyMap<string, Section>;
   withPerson?: boolean;
 }) {
-  if (items.length === 0) return <p className="muted">{empty}</p>;
+  if (items.length === 0) return empty ? <p className="muted">{empty}</p> : null;
   return (
     <ul className="card-list">
       {items.map((item) => (
@@ -275,7 +277,7 @@ function DeleteConfirm({ person, onDone }: { person: Person; onDone(): void }) {
 }
 
 function MentionList({ view }: { view: PersonView }) {
-  if (view.mentions.length === 0) return <p className="muted">Nenhuma nota cita @{view.person.name}.</p>;
+  if (view.mentions.length === 0) return <p className="muted">Nenhuma nota cita @{view.person.name} nem foi escrita numa reunião com a pessoa.</p>;
   return (
     <ul className="card-list">
       {view.mentions.map(({ note, section }) => (
@@ -290,7 +292,7 @@ function MentionList({ view }: { view: PersonView }) {
   );
 }
 
-export function PersonScreen({ id, today }: { id: string; today: DayKey }) {
+export function PersonScreen({ id, tab, today }: { id: string; tab: 'tasks' | 'notes'; today: DayKey }) {
   const view = useLiveQuery(() => loadPersonView(reader, id, today), [id, today]);
   const [editing, setEditing] = useState<Editing>(null);
   const [mergeInto, setMergeInto] = useState<string | null>(null);
@@ -347,9 +349,28 @@ export function PersonScreen({ id, today }: { id: string; today: DayKey }) {
           <ItemList items={view.iOwe} today={today} empty="Nada a entregar." sectionsById={view.sectionsById} />
         </Group>
       </div>
-      <Group title="Menções" count={view.mentions.length}>
-        <MentionList view={view} />
-      </Group>
+      <div className="project-tabs" role="tablist" aria-label="Conteúdo da pessoa">
+        <button type="button" role="tab" aria-selected={tab === 'tasks'} className="project-tabs__tab" onClick={() => navigate({ name: 'person', id })}>
+          Tarefas <span className="project-tabs__count">{view.active.length}</span>
+        </button>
+        <button type="button" role="tab" aria-selected={tab === 'notes'} className="project-tabs__tab" onClick={() => navigate({ name: 'person', id, tab: 'notes' })}>
+          Notas <span className="project-tabs__count">{view.mentions.length}</span>
+        </button>
+      </div>
+      {tab === 'tasks' ? (
+        <div role="tabpanel" aria-label="Tarefas">
+          <ItemList items={view.active} today={today} empty="Nenhuma tarefa ativa." sectionsById={view.sectionsById} />
+          {view.done.length > 0 && (
+            <Group title="Feitas" count={view.done.length}>
+              <ItemList items={view.done} today={today} empty="" sectionsById={view.sectionsById} />
+            </Group>
+          )}
+        </div>
+      ) : (
+        <div role="tabpanel" aria-label="Notas">
+          <MentionList view={view} />
+        </div>
+      )}
     </main>
   );
 }

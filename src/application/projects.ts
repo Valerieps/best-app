@@ -5,9 +5,16 @@ import { isProjectIcon } from '../domain/projectPage';
 import { record } from './events';
 import type { AppContext, StoreTransaction } from './ports';
 import { releaseFocusProject } from './focusProjects';
+import { followTag, rewriteTags } from './projectTags';
+
+/** Where a project grew from: an idea, and the idea's project then (spec/ideias.md). */
+export interface ProjectOrigin {
+  fromIdeaId: string;
+  fromProjectId: string | null;
+}
 
 /** Creates a project inside an existing transaction. */
-export async function addProject(ctx: AppContext, tx: StoreTransaction, name: string): Promise<Project> {
+export async function addProject(ctx: AppContext, tx: StoreTransaction, name: string, origin?: ProjectOrigin): Promise<Project> {
   const trimmed = name.trim();
   if (!trimmed) throw new Error('Project name must not be empty');
 
@@ -20,9 +27,13 @@ export async function addProject(ctx: AppContext, tx: StoreTransaction, name: st
     createdAt: at,
     updatedAt: at,
     finishedAt: null,
+    ...(origin ? { fromIdeaId: origin.fromIdeaId, fromProjectId: origin.fromProjectId } : {}),
   };
   await tx.projects.put(project);
-  await record(ctx, tx, 'project.created', 'project', project.id, toDayKey(now), { name: project.name });
+  await record(ctx, tx, 'project.created', 'project', project.id, toDayKey(now), {
+    name: project.name,
+    ...(origin ? { fromIdeaId: origin.fromIdeaId, ...(origin.fromProjectId ? { fromProjectId: origin.fromProjectId } : {}) } : {}),
+  });
   return project;
 }
 
@@ -40,6 +51,8 @@ export async function renameProjectIn(ctx: AppContext, tx: StoreTransaction, pro
   if (!trimmed) return null;
   const project = await tx.projects.get(projectId);
   if (!project || project.name === trimmed) return null;
+  // The tags are found by the old name, so they are rewritten before the project changes (ADR-066).
+  await rewriteTags(ctx, tx, project.id, trimmed, await tx.allProjects());
   await tx.projects.put({ ...project, name: trimmed, updatedAt: ctx.clock.now().toISOString() });
   await record(ctx, tx, 'project.renamed', 'project', project.id, toDayKey(ctx.clock.now()), {
     from: project.name,
@@ -141,7 +154,7 @@ export async function createProjectTask(ctx: AppContext, projectId: string, text
       sectionId: section.id,
       projectId: project.id,
     });
-    return task;
+    return followTag(ctx, tx, task, null);
   });
 }
 
@@ -205,6 +218,7 @@ export async function createProjectNote(ctx: AppContext, projectId: string, text
       };
       await tx.blocks.put(note);
       await record(ctx, tx, 'block.created', 'block', note.id, day, { kind: 'note', sectionId: section.id });
+      await followTag(ctx, tx, note, null);
     }
     return section;
   });

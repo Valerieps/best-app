@@ -6,7 +6,7 @@ import { createBlock, linkSectionToProject, setTaskDone } from './notebook';
 import { renameResource, addLinkResource } from './objectives';
 import { createProject, createProjectTask, setProjectFinished, setProjectIcon } from './projects';
 import { loadDayNote, loadDayTriage, loadPendingDays, loadProject, loadProjectList } from './queries';
-import { setAppearance, setProjectListGroupOpen, setProjectPanelPinned, setSidebarCollapsed, setSidebarWidth } from './settings';
+import { setAppearance, setCenterCollapsed,setProjectListGroupOpen, setProjectPanelPinned, setRightPanelMenu, setRightPanelWidth, setSidebarCollapsed, setSidebarWidth } from './settings';
 
 const TODAY = '2026-10-11';
 
@@ -107,21 +107,20 @@ describe('project list', () => {
       ['Agitado', null],
       ['Quieto', 14],
     ]);
-    expect(view.summary).toEqual({ active: 2, stalled: 1, stuck: 0 });
+    expect(view.summary).toEqual({ active: 2, stalled: 1 });
   });
 
-  it('counts stuck tasks and keeps finished projects apart', async () => {
+  it('counts active tasks and keeps finished projects apart', async () => {
     const { ctx, reader } = createTestContext();
     const project = await createProject(ctx, 'Reforma da cozinha');
-    const task = (await createProjectTask(ctx, project.id, 'Pedir orçamento'))!;
-    await setIntendedDate(ctx, task.id, '2026-10-11');
+    await createProjectTask(ctx, project.id, 'Pedir orçamento');
     const done = await createProject(ctx, 'Mudança');
     await setProjectFinished(ctx, done.id, true);
 
     const view = await loadProjectList(reader, '2026-10-13');
-    expect(view.others.map((item) => [item.project.name, item.activeTasks, item.stuckTasks])).toEqual([['Reforma da cozinha', 1, 1]]);
+    expect(view.others.map((item) => [item.project.name, item.activeTasks])).toEqual([['Reforma da cozinha', 1]]);
     expect(view.finished.map((item) => [item.project.name, item.stalledDays])).toEqual([['Mudança', null]]);
-    expect(view.summary).toEqual({ active: 1, stalled: 0, stuck: 1 });
+    expect(view.summary).toEqual({ active: 1, stalled: 0 });
   });
 
   it('remembers which groups are open, in the settings', async () => {
@@ -183,6 +182,36 @@ describe('sidebar', () => {
     expect((await reader.settings())?.sidebarWidth).toBe(320);
     await setSidebarWidth(ctx, null);
     expect((await reader.settings())?.sidebarWidth).toBeUndefined();
+  });
+});
+
+describe('right panel', () => {
+  it('starts collapsed and remembers the menu left open, in the settings', async () => {
+    const { ctx, reader } = createTestContext();
+    expect((await reader.settings())?.rightPanelMenu).toBeUndefined();
+    await setRightPanelMenu(ctx, 'execute');
+    expect((await reader.settings())?.rightPanelMenu).toBe('execute');
+    await setRightPanelMenu(ctx, null);
+    expect((await reader.settings())?.rightPanelMenu).toBeNull();
+  });
+
+  it('remembers the width it was dragged to, and forgets it to go back to the default', async () => {
+    const { ctx, reader } = createTestContext();
+    await setRightPanelWidth(ctx, 420);
+    expect((await reader.settings())?.rightPanelWidth).toBe(420);
+    await setRightPanelWidth(ctx, null);
+    expect((await reader.settings())?.rightPanelWidth).toBeUndefined();
+  });
+});
+
+describe('center area', () => {
+  it('remembers whether it is collapsed, in the settings', async () => {
+    const { ctx, reader } = createTestContext();
+    expect((await reader.settings())?.centerCollapsed).toBeUndefined();
+    await setCenterCollapsed(ctx, true);
+    expect((await reader.settings())?.centerCollapsed).toBe(true);
+    await setCenterCollapsed(ctx, false);
+    expect((await reader.settings())?.centerCollapsed).toBe(false);
   });
 });
 

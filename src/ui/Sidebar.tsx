@@ -144,7 +144,7 @@ export function Sidebar({ route, pendingDays, backupState }: Props) {
     <button
       key={entry.place}
       type="button"
-      className={`sidebar__item ${extraClass} ${isCurrent(entry) ? 'sidebar__item--current' : ''}`}
+      className={`sidebar__item ${extraClass} ${entry.place === 'day' ? 'sidebar__item--day' : ''} ${isCurrent(entry) ? 'sidebar__item--current' : ''}`}
       aria-current={isCurrent(entry) ? 'page' : undefined}
       onClick={() => navigate(entry.route)}
     >

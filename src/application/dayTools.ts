@@ -64,6 +64,9 @@ export async function setDayPriority(ctx: AppContext, taskId: string, on: boolea
     const list = (await tx.priorities.get(id)) ?? { id, scope: 'day' as const, period: day, itemIds: [], updatedAt: '' };
     let itemIds: string[];
     if (on) {
+      // Only tasks are priorities: a note or an idea never is (spec/ideias.md).
+      const block = await tx.blocks.get(taskId);
+      if (block && block.kind !== 'task') return;
       const statuses = new Map<string, string | null>();
       for (const itemId of list.itemIds) statuses.set(itemId, (await tx.blocks.get(itemId))?.status ?? null);
       itemIds = promote(list.itemIds, taskId, (itemId) => statuses.get(itemId) === 'active');
@@ -73,27 +76,6 @@ export async function setDayPriority(ctx: AppContext, taskId: string, on: boolea
     if (itemIds.join() === list.itemIds.join()) return;
     await tx.priorities.put({ ...list, itemIds, updatedAt: ctx.clock.now().toISOString() });
     await record(ctx, tx, on ? 'priority.added' : 'priority.removed', 'priorities', id, day, { taskId, itemIds });
-  });
-}
-
-/**
- * Moves a priority of today to another intended date, from the priorities block, once its
- * countdown ends: the task gets the new date and leaves today's chosen priorities. A task that
- * is due today stays an automatic priority (spec/prioridades.md, "Prioridades do dia").
- */
-export async function moveDayPriority(ctx: AppContext, taskId: string, date: DayKey | null): Promise<void> {
-  await ctx.store.transaction(async (tx) => {
-    const task = await tx.blocks.get(taskId);
-    if (!task || task.kind !== 'task' || task.status !== 'active') return;
-    const day = today(ctx);
-    await tx.blocks.put(await moveIntendedDate(ctx, tx, task, date, day, 'dayNote'));
-    if (date === day) return;
-    const id = dayPriorityListId(day);
-    const list = await tx.priorities.get(id);
-    if (!list?.itemIds.includes(taskId)) return;
-    const itemIds = demote(list.itemIds, taskId);
-    await tx.priorities.put({ ...list, itemIds, updatedAt: ctx.clock.now().toISOString() });
-    await record(ctx, tx, 'priority.removed', 'priorities', id, day, { taskId, itemIds });
   });
 }
 

@@ -1,36 +1,27 @@
-import { addDays, type DayKey } from './day';
 import type { TaskDecision } from './triage';
 
 /**
  * "Fechar o dia" in steps (spec/checkout.md, "Fechamento em etapas"). Each step handles one kind
- * of decision, and a step with nothing to decide is skipped. "late" is the board of the late
- * tasks, "triage" the board of the tasks of the day.
+ * of decision, and a step with nothing to decide is skipped. "triage" is the board of the tasks
+ * of the day and the "Fila de execução"; there is no board of late tasks any more, since tasks
+ * have no intended date (ADR-072).
  */
-export type CheckoutStep = 'late' | 'triage' | 'reminders';
+export type CheckoutStep = 'triage' | 'reminders';
 
-export const CHECKOUT_STEP_ORDER: readonly CheckoutStep[] = ['late', 'triage', 'reminders'];
+export const CHECKOUT_STEP_ORDER: readonly CheckoutStep[] = ['triage', 'reminders'];
 
 /** How many items each step that can be empty has to decide. */
 export interface StepCounts {
-  /** Tasks dated before today that are not in the triage of the day. */
-  late: number;
   reminders: number;
 }
 
-export function stepCounts(late: number, reminders: number): StepCounts {
-  return { late, reminders };
+export function stepCounts(reminders: number): StepCounts {
+  return { reminders };
 }
 
 /** The board of the day always shows: it closes the day even when it is empty. */
 export function stepHasItems(step: CheckoutStep, counts: StepCounts): boolean {
-  switch (step) {
-    case 'late':
-      return counts.late > 0;
-    case 'reminders':
-      return counts.reminders > 0;
-    default:
-      return true;
-  }
+  return step === 'reminders' ? counts.reminders > 0 : true;
 }
 
 export function checkoutSteps(counts: StepCounts): CheckoutStep[] {
@@ -49,44 +40,34 @@ export function previousStep(plan: readonly CheckoutStep[], current: CheckoutSte
   return [...plan.slice(0, Math.max(index, 0))].reverse().find((step) => stepHasItems(step, counts)) ?? null;
 }
 
-/** A card of a checkout board: its task, its date, and the suggestion when it is in the triage. */
+/** A card of the board: a task of the triage of the day, with what it gets when left untouched. */
 export interface BoardCard {
   id: string;
-  date: DayKey | null;
-  /** Set for a task of the triage of the day, which always gets a decision. */
-  suggestion?: TaskDecision;
+  suggestion: TaskDecision;
 }
 
-/** What I did on a board, saved only when I move on. */
+/** What I did on the board, saved only when I move on. */
 export interface BoardMarks {
-  /** A new date; null is "remover data de intenção". */
-  dates: ReadonlyMap<string, DayKey | null>;
+  /** Dragged into the "Fila de execução". */
+  queued: ReadonlySet<string>;
   abandoned: ReadonlySet<string>;
-  /** Only tasks of the triage have the box to finish them. */
   finished: ReadonlySet<string>;
 }
 
 /**
- * What moving on from a board saves: a decision for each task of the triage (its suggestion
- * when untouched) and for each abandoned task, and a date change for the other moved tasks.
+ * What moving on from the board saves: a decision for each card. Abandoning wins over finishing,
+ * which wins over the queue; a card left alone keeps its suggestion and simply stays linked to its
+ * project or person (spec/checkout.md, "Quadro do fechamento").
  */
-export function boardOutcome(
-  cards: readonly BoardCard[],
-  marks: BoardMarks,
-): { decisions: Map<string, TaskDecision>; changes: { taskId: string; date: DayKey | null }[] } {
+export function boardOutcome(cards: readonly BoardCard[], marks: BoardMarks): Map<string, TaskDecision> {
   const decisions = new Map<string, TaskDecision>();
-  const changes: { taskId: string; date: DayKey | null }[] = [];
   for (const card of cards) {
-    const moved = marks.dates.has(card.id);
-    const date = marks.dates.get(card.id) ?? null;
     if (marks.abandoned.has(card.id)) decisions.set(card.id, { kind: 'abandon' });
-    else if (card.suggestion) {
-      if (marks.finished.has(card.id)) decisions.set(card.id, { kind: 'finish' });
-      else if (moved) decisions.set(card.id, date === null ? { kind: 'undate' } : { kind: 'schedule', date });
-      else decisions.set(card.id, card.suggestion);
-    } else if (moved && date !== card.date) changes.push({ taskId: card.id, date });
+    else if (marks.finished.has(card.id)) decisions.set(card.id, { kind: 'finish' });
+    else if (marks.queued.has(card.id)) decisions.set(card.id, { kind: 'queue' });
+    else decisions.set(card.id, card.suggestion);
   }
-  return { decisions, changes };
+  return decisions;
 }
 
 /** A group of the triage: the tasks of one project, or the ones without a project (`projectId` null). */
@@ -109,40 +90,6 @@ export function groupByProject<T>(items: readonly T[], projectOf: (item: T) => s
   }
   const result = [...groups].map(([projectId, list]) => ({ projectId, items: list }));
   return [...result.filter((group) => group.projectId !== null), ...result.filter((group) => group.projectId === null)];
-}
-
-/** The planning is a board of three columns (spec/checkout.md, "Planejamento do dia seguinte"). */
-export const PLANNING_COLUMNS = 3;
-
-/** A column of the planning board: the late tasks, all together, or the tasks of one day. */
-export type PlanningColumn = { kind: 'late' } | { kind: 'day'; day: DayKey };
-
-/**
- * The columns of the planning board. The late tasks (dated before today) come first, all in one
- * column, when there are any. Then today, when a task is dated for it and it is not the target
- * already, and the target day with the days after it, until there are three columns (or `count`).
- */
-export function planningColumns(
-  dates: readonly (DayKey | null)[],
-  today: DayKey,
-  target: DayKey,
-  count: number = PLANNING_COLUMNS,
-): PlanningColumn[] {
-  const columns: PlanningColumn[] = [];
-  if (dates.some((date) => date !== null && date < today)) columns.push({ kind: 'late' });
-  if (today < target && dates.includes(today)) columns.push({ kind: 'day', day: today });
-  for (let day = target; columns.length < count; day = addDays(day, 1)) columns.push({ kind: 'day', day });
-  return columns;
-}
-
-/**
- * The column of a task with this date, as an index in `columns`; -1 when it is not on the board:
- * without a date (the "algum dia", in the task list) or dated after the last column.
- */
-export function planningColumnOf(date: DayKey | null, columns: readonly PlanningColumn[], today: DayKey): number {
-  if (date === null) return -1;
-  if (date < today) return columns.findIndex((column) => column.kind === 'late');
-  return columns.findIndex((column) => column.kind === 'day' && column.day === date);
 }
 
 /** The items between two others, both included, in list order: Shift + click selects a range. */

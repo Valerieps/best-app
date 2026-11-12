@@ -1,13 +1,10 @@
 import {
   findDuplicateProjects,
-  findForgottenTasks,
   findWhiteboardGroups,
-  normalizeForgottenTaskDays,
   type DuplicateGroup,
   type WhiteboardGroup,
 } from '../domain/assistants';
 import { assistantCards, oldestDay, type AssistantCard } from '../domain/cleanupStatus';
-import { planningColumnOf, planningColumns, type PlanningColumn } from '../domain/checkoutSteps';
 import { addDays, fromDayKey, toDayKey, type DayKey } from '../domain/day';
 import { buildDayNote, type DayNoteSection } from '../domain/dayNote';
 import type {
@@ -24,15 +21,17 @@ import type {
   WarmupItem,
 } from '../domain/entities';
 import { habitStats, isExpectedOn, type HabitStats } from '../domain/habits';
+import { isOpenIdea, sortIdeas } from '../domain/ideas';
 import { daysBetween as daysInRange, monthKey, monthRange, type MonthKey } from '../domain/month';
 import { dayStage, dueReminders, type DayStage } from '../domain/dayFlow';
 import { weekOf } from '../domain/week';
 import { comparePositions } from '../domain/position';
 import { buildDayPriorities, dayPriorityListId, type DayPriority } from '../domain/priorities';
 import { FOCUS_LIST_ID, focusProjectIds, hasFreeSlot } from '../domain/focusProjects';
+import { QUEUE_LIST_ID, queueIds } from '../domain/executionQueue';
 import { activityByDay, lastActivityDay, recentlyFinished, stalledDays, type ActivityByDay } from '../domain/projectActivity';
-import { isDaySection, isStuckTask } from '../domain/projectPage';
-import { buildPeopleOverview, buildPersonPage, type PeopleOverview, type PersonPage } from '../domain/people';
+import { isDaySection } from '../domain/projectPage';
+import { buildPeopleOverview, buildPersonPage, meetingPeople, type PeopleOverview, type PersonPage } from '../domain/people';
 import { buildDayTriage, findPendingDays, isTriagePending, type DayTriage } from '../domain/triage';
 import type { Reader } from './ports';
 
@@ -182,7 +181,8 @@ export interface SectionNotes {
  * any more (ADR-050): a project page shows the entries of its sections.
  */
 export async function loadSectionNotes(reader: Reader): Promise<SectionNotes[]> {
-  const sections = await reader.wikiSections();
+  // An idea's page is not a kept note: it shows only on the idea (ADR-067).
+  const sections = (await reader.wikiSections()).filter((section) => section.ideaId === undefined);
   const blocks = await reader.blocksInSections(sections.map((section) => section.id));
   const projects = await reader.projects();
   const projectById = new Map(projects.map((project) => [project.id, project]));
@@ -198,46 +198,14 @@ export async function loadSectionNotes(reader: Reader): Promise<SectionNotes[]> 
     .filter((entry) => entry.notes.length > 0);
 }
 
-export interface PlanningView {
-  target: DayKey;
-  /** The board's columns (`planningColumns`), each with its tasks. */
-  columns: { column: PlanningColumn; items: TaskListItem[] }[];
-}
-
 /**
- * The planning step of the checkout, as a board: the late tasks, today when it has tasks, and the
- * target day with the days after it. Tasks without a date, or dated after the last column, stay
- * out. The late ones go from the oldest date, and the tasks of the projects in focus come first
- * in each column, in the order of the projects (spec/prioridades.md, "Projetos em foco").
- * `exclude` leaves out tasks shown elsewhere (the triage of the day), and `late: false` leaves
- * out the late tasks and their column. `columns` is how many columns of days, three by default.
+ * The notes of a project: a note follows its section's project, unless its tag gave it another
+ * one (ADR-066), so a tagged note shows in the tagged project and leaves the section's.
  */
-export async function loadPlanning(
-  reader: Reader,
-  target: DayKey,
-  today: DayKey,
-  options: { exclude?: ReadonlySet<string>; late?: boolean; columns?: number } = {},
-): Promise<PlanningView> {
-  const { exclude, late = true, columns: count } = options;
-  const items = (await loadActiveTasks(reader)).filter(
-    (item) => !exclude?.has(item.task.id) && (late || item.task.intendedDate === null || item.task.intendedDate >= today),
-  );
-  const focusIds = await loadFocusProjectIds(reader, await reader.projects());
-  const rank = (item: TaskListItem) => {
-    const index = item.task.projectId ? focusIds.indexOf(item.task.projectId) : -1;
-    return index === -1 ? focusIds.length : index;
-  };
-  // A stable sort keeps the usual order inside each project.
-  const focusFirst = (list: TaskListItem[]) => list.map((item, index) => ({ item, index })).sort((a, b) => rank(a.item) - rank(b.item) || a.index - b.index).map(({ item }) => item);
-  const columns = planningColumns(items.map((item) => item.task.intendedDate), today, target, count);
-  const byDate = (a: TaskListItem, b: TaskListItem) => ((a.task.intendedDate ?? '') < (b.task.intendedDate ?? '') ? -1 : a.task.intendedDate === b.task.intendedDate ? 0 : 1);
-  return {
-    target,
-    columns: columns.map((column, index) => {
-      const list = focusFirst(items.filter((item) => planningColumnOf(item.task.intendedDate, columns, today) === index));
-      return { column, items: column.kind === 'late' ? [...list].sort(byDate) : list };
-    }),
-  };
+export function notesOfProject(kept: readonly SectionNotes[], projectId: string): SectionNotes[] {
+  return kept
+    .map((entry) => ({ ...entry, notes: entry.notes.filter((note) => (note.projectId ?? entry.section.projectId) === projectId) }))
+    .filter((entry) => entry.notes.length > 0);
 }
 
 /** The day's priorities: chosen by hand plus tasks whose deadline is the day (1b). */
@@ -268,8 +236,6 @@ export async function loadCleanup(reader: Reader): Promise<CleanupView> {
 
 export interface CleanupDashboard extends CleanupView {
   pendingDays: DayKey[];
-  /** "Tarefas esquecidas", the oldest first, with where each one came from. */
-  forgottenTasks: TaskListItem[];
   /** One card per assistant, most urgent first. */
   cards: AssistantCard[];
 }
@@ -279,12 +245,6 @@ export async function loadCleanupDashboard(reader: Reader, today: DayKey): Promi
   const cleanup = await loadCleanup(reader);
   const pendingDays = await loadPendingDays(reader, today);
   const settings = await reader.settings();
-  const forgotten = findForgottenTasks(
-    await reader.tasksWithStatus('active'),
-    today,
-    normalizeForgottenTaskDays(settings?.forgottenTaskDays),
-  );
-  const forgottenTasks = await withOrigins(reader, forgotten);
   const findings = {
     pendingDays: { count: pendingDays.length, oldest: oldestDay(pendingDays) },
     whiteboards: {
@@ -296,13 +256,8 @@ export async function loadCleanupDashboard(reader: Reader, today: DayKey): Promi
       count: cleanup.duplicates.length,
       oldest: oldestDay(cleanup.duplicates.map((group) => group.projects[1] && toDayKey(new Date(group.projects[1].createdAt)))),
     },
-    // Colored by how many there are (COUNTED_ASSISTANTS); the age still shows on the card.
-    forgottenTasks: {
-      count: forgotten.length,
-      oldest: forgotten[0] ? toDayKey(new Date(forgotten[0].createdAt)) : null,
-    },
   };
-  return { ...cleanup, pendingDays, forgottenTasks, cards: assistantCards(findings, today, settings?.cleanupAgeLimits) };
+  return { ...cleanup, pendingDays, cards: assistantCards(findings, today, settings?.cleanupAgeLimits) };
 }
 
 export interface MenuCounts {
@@ -310,13 +265,16 @@ export interface MenuCounts {
   active: number;
   /** Active people. */
   people: number;
+  /** Ideas without a destination yet (spec/ideias.md). */
+  ideas: number;
 }
 
 export async function loadMenuCounts(reader: Reader): Promise<MenuCounts> {
   const active = (await myActiveTasks(reader)).length;
   const projects = (await reader.projects()).filter((project) => project.status === 'active').length;
   const people = (await reader.people()).filter((person) => person.status === 'active').length;
-  return { projects, active, people };
+  const ideas = (await reader.ideas()).filter(isOpenIdea).length;
+  return { projects, active, people, ideas };
 }
 
 /** The projects in focus, active ones only, in the order chosen. */
@@ -329,6 +287,8 @@ export async function loadFocusProjectIds(reader: Reader, projects: readonly Pro
 export interface TaskListContext {
   activeProjects: Project[];
   focusIds: string[];
+  /** Ids of the tasks in the "Fila de execução" (spec/prioridades.md). */
+  queueIds: string[];
 }
 
 export async function loadTaskListContext(reader: Reader): Promise<TaskListContext> {
@@ -338,7 +298,38 @@ export async function loadTaskListContext(reader: Reader): Promise<TaskListConte
       .filter((project) => project.status === 'active')
       .sort((a, b) => a.name.localeCompare(b.name, 'pt-BR', { sensitivity: 'base' })),
     focusIds: await loadFocusProjectIds(reader, projects),
+    queueIds: await loadQueueIds(reader),
   };
+}
+
+/** Everything the task details window shows for one task; null when the task no longer exists. */
+export interface TaskDetails extends TaskListContext {
+  item: TaskListItem;
+}
+
+export async function loadTaskDetails(reader: Reader, taskId: string): Promise<TaskDetails | null> {
+  const [task] = await reader.blocksByIds([taskId]);
+  if (!task || task.kind !== 'task') return null;
+  const [item] = await withOrigins(reader, [task]);
+  return { ...(await loadTaskListContext(reader)), item };
+}
+
+/** What the "Fila de execução" needs (spec/prioridades.md, "Fila de execução"). */
+export interface ExecutionQueueData extends TaskListContext {
+  /** The tasks in the queue, in its order. */
+  items: TaskListItem[];
+}
+
+export async function loadExecutionQueue(reader: Reader): Promise<ExecutionQueueData> {
+  const tasks = await myActiveTasks(reader);
+  const byId = new Map(tasks.map((task) => [task.id, task]));
+  const ids = queueIds(await reader.priorityList(QUEUE_LIST_ID), tasks);
+  return { ...(await loadTaskListContext(reader)), items: await withOrigins(reader, ids.map((id) => byId.get(id)!)) };
+}
+
+/** Ids of the tasks in the "Fila de execução", for the "Adicionar à fila" action elsewhere. */
+export async function loadQueueIds(reader: Reader): Promise<string[]> {
+  return queueIds(await reader.priorityList(QUEUE_LIST_ID), await myActiveTasks(reader));
 }
 
 /** What the "⋯" of a project offers about the focus, in the list and on its page. */
@@ -366,7 +357,6 @@ export interface ProjectListItem extends ProjectActions {
   project: Project;
   objective: Objective | null;
   activeTasks: number;
-  stuckTasks: number;
   finishedLastTwoWeeks: number;
   lastActivityDay: DayKey | null;
   /** Days without activity when the project is stalled; null otherwise. */
@@ -381,7 +371,7 @@ export interface ProjectListView {
   others: ProjectListItem[];
   finished: ProjectListItem[];
   /** "4 ativos · 1 parado · 3 travadas" */
-  summary: { active: number; stalled: number; stuck: number };
+  summary: { active: number; stalled: number };
   /** Whether "Outros ativos" and "Finalizados" are open, from the settings. */
   open: Record<ProjectListGroup, boolean>;
   objectives: Objective[];
@@ -415,7 +405,7 @@ export async function loadActivities(reader: Reader, projects: readonly Project[
   });
 }
 
-/** The project list (section 2): where projects are followed, with their activity maps. */
+/** The project list (section 2): where projects are followed. */
 export async function loadProjectList(reader: Reader, today: DayKey): Promise<ProjectListView> {
   const projects = (await reader.projects()).filter((project) => project.status !== 'merged');
   const objectives = await reader.objectives();
@@ -427,7 +417,6 @@ export async function loadProjectList(reader: Reader, today: DayKey): Promise<Pr
       project,
       objective: objectives.find((objective) => objective.id === project.objectiveId) ?? null,
       activeTasks: active.length,
-      stuckTasks: active.filter((task) => isStuckTask(task, today)).length,
       finishedLastTwoWeeks: recentlyFinished(activity, today),
       lastActivityDay: lastActivityDay(activity, today),
       stalledDays,
@@ -451,7 +440,6 @@ export async function loadProjectList(reader: Reader, today: DayKey): Promise<Pr
     summary: {
       active: active.length,
       stalled: active.filter((item) => item.stalledDays !== null).length,
-      stuck: active.reduce((sum, item) => sum + item.stuckTasks, 0),
     },
     open: { ...PROJECT_LIST_GROUPS_OPEN, ...settings?.projectListGroups },
     objectives,
@@ -467,13 +455,16 @@ export interface ProjectView extends ProjectActions {
   notes: SectionNotes[];
   /** Day-note sections linked to the project. */
   sections: number;
+  /** The project's ideas without a destination, oldest first (spec/ideias.md). */
+  ideas: Block[];
 }
 
 export async function loadProject(reader: Reader, projectId: string): Promise<ProjectView | null> {
   const projects = await reader.projects();
   const project = projects.find((candidate) => candidate.id === projectId);
   if (!project) return null;
-  const tasks = (await reader.blocksOfProject(projectId)).filter((block) => block.kind === 'task');
+  const blocks = await reader.blocksOfProject(projectId);
+  const tasks = blocks.filter((block) => block.kind === 'task');
   const sections = (await reader.sectionsOfProject(projectId)).filter(isDaySection);
   const kept = await loadSectionNotes(reader);
   const done = tasks.filter((task) => task.status === 'done').sort((a, b) => ((a.closedAt ?? '') < (b.closedAt ?? '') ? 1 : -1));
@@ -482,8 +473,9 @@ export async function loadProject(reader: Reader, projectId: string): Promise<Pr
     project,
     activeTasks: await withOrigins(reader, tasks.filter((task) => task.status === 'active').sort(byIntendedDateThenCreation)),
     doneTasks: await withOrigins(reader, done),
-    notes: kept.filter((entry) => entry.section.projectId === projectId),
+    notes: notesOfProject(kept, projectId),
     sections: sections.length,
+    ideas: sortIdeas(blocks.filter(isOpenIdea)),
     ...projectActions(project, priorityIds, projects),
   };
 }
@@ -619,7 +611,10 @@ export async function loadHabits(reader: Reader, today: DayKey): Promise<HabitVi
 /** Blocks that may cite someone, with the sections they were written in (spec/pessoas.md). */
 async function mentionContext(reader: Reader) {
   const people = await reader.people();
-  const blocks = await reader.blocksWithMentions();
+  // Meetings titled with people count as a mention of them for everything written inside.
+  const meetings = (await reader.sectionsWithMentions()).filter((section) => meetingPeople(section, people).length > 0);
+  const inMeetings = await reader.blocksInSections(meetings.map((section) => section.id));
+  const blocks = [...new Map([...(await reader.blocksWithMentions()), ...inMeetings].map((block) => [block.id, block])).values()];
   const sections = await reader.sectionsByIds([...new Set(blocks.map((block) => block.sectionId))]);
   return { people, blocks, sectionsById: new Map(sections.map((section) => [section.id, section])) };
 }
@@ -636,7 +631,7 @@ export interface PeopleView extends PeopleOverview {
 /** The "Pessoas" screen. */
 export async function loadPeopleView(reader: Reader, today: DayKey): Promise<PeopleView> {
   const { people, blocks, sectionsById } = await mentionContext(reader);
-  return { ...buildPeopleOverview(people, blocks, today), sectionsById };
+  return { ...buildPeopleOverview(people, blocks, today, sectionsById), sectionsById };
 }
 
 export interface PersonView extends PersonPage {
@@ -654,4 +649,39 @@ export async function loadPersonView(reader: Reader, personId: string, today: Da
     .filter((each) => each.id !== person.id && each.status !== 'merged')
     .sort((a, b) => a.name.localeCompare(b.name, 'pt-BR'));
   return { ...buildPersonPage(person, blocks, people, sectionsById, today), sectionsById, others };
+}
+
+/** An idea in the list of ideas: its project, and the day it was written. */
+export interface IdeaItem {
+  idea: Block;
+  project: Project | null;
+  day: DayKey | null;
+}
+
+/** "Ideias": every idea without a destination, oldest first (spec/ideias.md). */
+export async function loadIdeas(reader: Reader): Promise<IdeaItem[]> {
+  const ideas = sortIdeas((await reader.ideas()).filter(isOpenIdea));
+  const projects = new Map((await reader.projects()).map((project) => [project.id, project]));
+  const sections = new Map((await reader.sectionsByIds([...new Set(ideas.map((idea) => idea.sectionId))])).map((section) => [section.id, section]));
+  return ideas.map((idea) => ({
+    idea,
+    project: idea.projectId ? (projects.get(idea.projectId) ?? null) : null,
+    day: sections.get(idea.sectionId)?.day ?? null,
+  }));
+}
+
+/** An idea's page: the idea, where it was written, and the lines I wrote about it. */
+export interface IdeaView extends IdeaItem {
+  /** The section it was written in: a day note's, or another idea's page. */
+  origin: Section | null;
+  lines: Block[];
+}
+
+export async function loadIdea(reader: Reader, ideaId: string): Promise<IdeaView | null> {
+  const [idea] = await reader.blocksByIds([ideaId]);
+  if (!idea || idea.kind !== 'idea') return null;
+  const [origin] = await reader.sectionsByIds([idea.sectionId]);
+  const project = idea.projectId ? ((await reader.projects()).find((candidate) => candidate.id === idea.projectId) ?? null) : null;
+  const lines = idea.ideaSectionId ? (await reader.blocksInSections([idea.ideaSectionId])).sort(comparePositions) : [];
+  return { idea, project, day: origin?.day ?? null, origin: origin ?? null, lines };
 }

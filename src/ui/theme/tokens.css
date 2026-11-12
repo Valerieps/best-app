@@ -84,22 +84,16 @@
   --color-status0-strong: #3d7a35;
   --color-status1-bg: #fbf5dc;
   --color-status1-border: #eedf9f;
-  --color-status1-strong: #b38900;
+  /* 4.6:1 on --color-status1-bg, so it can be text; the dots keep the lighter --color-dot-attention */
+  --color-status1-strong: #8a6a00;
   --color-status2-bg: #fcecdc;
   --color-status2-border: #f1c9a0;
   --color-status2-strong: #c4570e;
-  --color-status3-bg: #fdecea;
-  --color-status3-border: #f0a8a0;
-  --color-status3-strong: #b42318;
+  /* Urgent is the danger color, so the two never drift apart (dark theme included) */
+  --color-status3-bg: var(--color-danger-bg);
+  --color-status3-border: var(--color-danger-border);
+  --color-status3-strong: var(--color-danger);
 
-  /* Activity map of the projects: empty, then four tints of the project lilac */
-  --color-activity-0: #ebe8e1;
-  --color-activity-1: #d9d3f7;
-  --color-activity-2: #b0a5ec;
-  --color-activity-3: #7f71dc;
-  --color-activity-4: #4b3fb3;
-  --activity-cell: 10px;
-  --activity-gap: 2px;
 
   /* Fireworks */
   --color-firework-1: #e8a33d;
@@ -142,6 +136,7 @@
   --topbar-height: 56px;
   --sidebar-width: 260px;
   --sidebar-collapsed-width: 48px;
+  --right-panel-width: 360px;
   --project-panel-width: 260px;
 
   /* Motion: short transitions where the screen changes state (issue #120), off with reduced motion */
@@ -221,16 +216,7 @@
     --color-status2-bg: #33231a;
     --color-status2-border: #64401f;
     --color-status2-strong: #f09a55;
-    --color-status3-bg: #3a1f1d;
-    --color-status3-border: #7a3a33;
-    --color-status3-strong: #ff8a7a;
 
-    /* Activity map: from the empty cell up to the lightest lilac, so more activity stands out more */
-    --color-activity-0: #2a2830;
-    --color-activity-1: #3b3566;
-    --color-activity-2: #5a4fa3;
-    --color-activity-3: #8478d9;
-    --color-activity-4: #b3a8f7;
   }
 }
 
@@ -300,14 +286,5 @@
   --color-status2-bg: #33231a;
   --color-status2-border: #64401f;
   --color-status2-strong: #f09a55;
-  --color-status3-bg: #3a1f1d;
-  --color-status3-border: #7a3a33;
-  --color-status3-strong: #ff8a7a;
 
-  /* Activity map: from the empty cell up to the lightest lilac, so more activity stands out more */
-  --color-activity-0: #2a2830;
-  --color-activity-1: #3b3566;
-  --color-activity-2: #5a4fa3;
-  --color-activity-3: #8478d9;
-  --color-activity-4: #b3a8f7;
 }

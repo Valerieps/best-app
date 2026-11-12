@@ -1,19 +1,21 @@
-import { useEffect, useState, type KeyboardEvent, type ReactNode } from 'react';
+import { useEffect, useRef, useState, type KeyboardEvent, type ReactNode } from 'react';
+import { NEW_TASK_SHORTCUT, isNewTaskKey, isTypingTarget } from './newTaskShortcut';
 import { setDayPriority, setDeadline, setIntendedDate } from '../../application/dayTools';
-import { setTaskDone, setTaskWaiting, updateBlockText } from '../../application/notebook';
+import { addToQueue } from '../../application/executionQueue';
+import { abandonTask, setTaskDone, setTaskWaiting, updateBlockText } from '../../application/notebook';
 import { ensurePeople } from '../../application/people';
 import { createProjectTask, renameProject, setProjectIcon } from '../../application/projects';
-import { loadDayPriorities, loadProject, loadProjectResources } from '../../application/queries';
+import { loadDayPriorities, loadProject, loadProjectResources, loadQueueIds } from '../../application/queries';
 import { setProjectPanelPinned } from '../../application/settings';
 import { type DayKey } from '../../domain/day';
 import type { Block } from '../../domain/entities';
-import { agendaColumns, groupProjectTasks, stuckReason } from '../../domain/projectPage';
-import { BlockLine, DatePicker, type LineHandlers } from '../dayNote/BlockLine';
+import { groupProjectTasks } from '../../domain/projectPage';
+import { BlockLine, type LineHandlers } from '../dayNote/BlockLine';
+import { MarkdownText } from '../dayNote/MarkdownText';
 import { requestFocus } from '../dayNote/focus';
 import { Icon } from '../components/Icon';
 import { BackButton, ScreenHeader } from '../components/ScreenHeader';
 import { LoadingPage } from '../components/Skeleton';
-import { formatLongDate, formatShortDate, stuckReasonLabel, weekdayName } from '../format';
 import { navigate } from '../hooks';
 import { appContext, reader } from '../services';
 import { useLiveQuery } from '../useLiveQuery';
@@ -49,9 +51,19 @@ function useNarrow(): boolean {
   return narrow;
 }
 
-/** "Nova tarefa", between "Próximos dias" and "Sem data": Enter creates the task and keeps the field for the next one. */
+/** "Nova tarefa", above "Na fila": Enter creates the task and keeps the field for the next one; Ctrl + A focuses it. */
 function NewTaskField({ projectId }: { projectId: string }) {
   const [text, setText] = useState('');
+  const inputRef = useRef<HTMLInputElement>(null);
+  useEffect(() => {
+    const onKey = (event: globalThis.KeyboardEvent) => {
+      if (!isNewTaskKey(event) || event.isComposing || isTypingTarget(event.target)) return;
+      event.preventDefault();
+      inputRef.current?.focus();
+    };
+    document.addEventListener('keydown', onKey);
+    return () => document.removeEventListener('keydown', onKey);
+  }, []);
   const onKeyDown = (event: KeyboardEvent<HTMLInputElement>) => {
     if (event.key === 'Enter' && !event.nativeEvent.isComposing) {
       event.preventDefault();
@@ -67,9 +79,11 @@ function NewTaskField({ projectId }: { projectId: string }) {
     <label className="new-task">
       <Icon name="plus" size="sm" />
       <input
+        ref={inputRef}
         className="new-task__input"
         value={text}
         placeholder="Nova tarefa"
+        title={`Nova tarefa (${NEW_TASK_SHORTCUT})`}
         aria-label="Nova tarefa do projeto"
         onChange={(event) => setText(event.target.value)}
         onKeyDown={onKeyDown}
@@ -98,6 +112,7 @@ export function ProjectScreen({ id, tab, today }: { id: string; tab: 'tasks' | '
   const objectives = useLiveQuery(() => reader.objectives()) ?? [];
   const resources = useLiveQuery(() => loadProjectResources(reader, id), [id]) ?? [];
   const dayPriorities = useLiveQuery(() => loadDayPriorities(reader, today), [today]) ?? [];
+  const queued = useLiveQuery(() => loadQueueIds(reader)) ?? [];
   const settings = useLiveQuery(() => reader.settings());
   const pinned = settings?.projectPanelPinned ?? false;
   const narrow = useNarrow();
@@ -146,11 +161,11 @@ export function ProjectScreen({ id, tab, today }: { id: string; tab: 'tasks' | '
   const { project } = view;
   const active = view.activeTasks.map((item) => item.task);
   const done = view.doneTasks.map((item) => item.task);
-  const groups = groupProjectTasks(active, today);
-  const agenda = agendaColumns(groups.upcoming, today, settings?.activeDays);
+  const groups = groupProjectTasks(active, queued);
+  const queueIds = new Set(queued);
   const priorityIds = new Set(dayPriorities.map((priority) => priority.task.id));
   // Arrow keys move through the lines in the order they show.
-  const shownLines = [...groups.stuck, ...agenda.flatMap((entry) => entry.tasks), ...groups.undated, ...groups.waiting, ...done];
+  const shownLines = [...groups.queued, ...groups.open, ...groups.waiting, ...done];
 
   const handlers: LineHandlers = {
     onSaveText: (block, text) => write(() => updateBlockText(appContext, block.id, text)),
@@ -167,11 +182,13 @@ export function ProjectScreen({ id, tab, today }: { id: string; tab: 'tasks' | '
     onSetDate: (block, date) => write(() => setIntendedDate(appContext, block.id, date)),
     onSetDeadline: (block, date) => write(() => setDeadline(appContext, block.id, date)),
     onTogglePriority: (block, on) => write(() => setDayPriority(appContext, block.id, on)),
+    onAddToQueue: (block) => write(() => addToQueue(appContext, block.id)),
     onSetWaiting: (block, waiting) => write(() => setTaskWaiting(appContext, block.id, waiting)),
+    onAbandon: (block) => write(() => abandonTask(appContext, block.id)),
     onEnsurePeople: (names) => write(() => ensurePeople(appContext, names)),
   };
 
-  const line = (task: Block, hideDate = false) => (
+  const line = (task: Block) => (
     <BlockLine
       key={task.id}
       block={task}
@@ -179,9 +196,9 @@ export function ProjectScreen({ id, tab, today }: { id: string; tab: 'tasks' | '
       day={null}
       today={today}
       isPriority={priorityIds.has(task.id)}
+      isQueued={queueIds.has(task.id)}
       allowNewLines={false}
       handlers={handlers}
-      hideDate={hideDate}
     />
   );
 
@@ -228,60 +245,35 @@ export function ProjectScreen({ id, tab, today }: { id: string; tab: 'tasks' | '
             <div role="tabpanel" aria-label="Tarefas" className="project-tasks">
               {active.length === 0 && <p className="muted project-tasks__empty">Nenhuma tarefa ativa.</p>}
 
-              {groups.stuck.length > 0 && (
-                <section className="stuck" aria-label="Travadas">
-                  <h3 className="stuck__title">
-                    Travadas <span className="task-group__count">{groups.stuck.length}</span>
+              <NewTaskField projectId={project.id} />
+
+              {groups.queued.length > 0 && (
+                <section className="project-queue" aria-label="Na fila">
+                  <h3 className="task-group__title">
+                    Na fila <span className="task-group__count">{groups.queued.length}</span>
                   </h3>
-                  {groups.stuck.map((task) => {
-                    const reason = stuckReason(task, today);
-                    return (
-                      <div className="stuck__card" key={task.id}>
-                        {line(task, true)}
-                        <div className="stuck__foot">
-                          <span className="stuck__reason">{reason ? stuckReasonLabel(reason) : ''}</span>
-                          <DatePicker
-                            label="Dar uma nova data de intenção"
-                            className="small stuck__date"
-                            value={task.intendedDate}
-                            min={today}
-                            onChange={(date) => handlers.onSetDate(task, date)}
-                          >
-                            Nova data
-                          </DatePicker>
-                        </div>
-                      </div>
-                    );
-                  })}
+                  {groups.queued.map((task) => line(task))}
                 </section>
               )}
 
-              {/* "Próximos dias" as a calendar of the next 3 active days; later tasks do not show. */}
-              <section className="agenda" aria-label="Próximos dias">
-                <h3 className="task-group__title">Próximos dias</h3>
-                <div className="agenda__columns">
-                  {agenda.map(({ day, tasks }) => (
-                    <div className={`agenda__day ${day === today ? 'agenda__day--today' : ''}`} key={day} aria-label={formatLongDate(day)}>
-                      <p className="agenda__date">
-                        <span className="agenda__weekday">{weekdayName(day)}</span>
-                        <span className="agenda__number">{day === today ? `hoje · ${formatShortDate(day)}` : formatShortDate(day)}</span>
-                      </p>
-                      <div className="agenda__tasks">
-                        {tasks.length > 0 ? tasks.map((task) => line(task, true)) : <p className="muted agenda__empty">Nada marcado</p>}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </section>
-
-              <NewTaskField projectId={project.id} />
-
-              <FoldedGroup label="Sem data" count={groups.undated.length} initiallyOpen className="task-group--undated">
-                {groups.undated.map((task) => line(task))}
+              <FoldedGroup label="A fazer" count={groups.open.length} initiallyOpen className="task-group--open">
+                {groups.open.map((task) => line(task))}
               </FoldedGroup>
 
               <FoldedGroup label="Aguardando" count={groups.waiting.length} initiallyOpen className="task-group--waiting">
                 {groups.waiting.map((task) => line(task))}
+              </FoldedGroup>
+
+              {/* The project's ideas (spec/ideias.md): not tasks, so out of the groups above. */}
+              <FoldedGroup label="Ideias" count={view.ideas.length} initiallyOpen className="task-group--ideas">
+                {view.ideas.map((idea) => (
+                  <button type="button" key={idea.id} className="project-ideas__item" onClick={() => navigate({ name: 'idea', id: idea.id })}>
+                    <span className="line__idea" aria-hidden="true">
+                      <Icon name="bulb" size="sm" />
+                    </span>
+                    <MarkdownText text={idea.text || '(ideia sem texto)'} />
+                  </button>
+                ))}
               </FoldedGroup>
 
               <FoldedGroup label="Feitas" count={done.length} initiallyOpen={false} className="task-group--done">

@@ -1,7 +1,6 @@
-import { normalizeForgottenTaskDays } from '../domain/assistants';
 import { normalizeLimits, type AssistantId } from '../domain/cleanupStatus';
 import { toDayKey } from '../domain/day';
-import type { Appearance, AutoBackupInterval, DayNoteFocus, ProjectListGroup, Settings, WarmupItem } from '../domain/entities';
+import type { Appearance, AutoBackupInterval, DayNoteFocus, ProjectListGroup, RightPanelMenu, Settings, WarmupItem } from '../domain/entities';
 import { record } from './events';
 import type { AppContext } from './ports';
 
@@ -40,11 +39,6 @@ export function setCleanupLimits(ctx: AppContext, id: AssistantId, limits: reado
   });
 }
 
-/** Days without a date before a task counts as forgotten; null brings back the default. */
-export function setForgottenTaskDays(ctx: AppContext, days: number | null): Promise<void> {
-  return updateSettings(ctx, { forgottenTaskDays: days === null ? undefined : normalizeForgottenTaskDays(days) });
-}
-
 /** Whether the project page's side column stays docked. One choice for every project. */
 export function setProjectPanelPinned(ctx: AppContext, pinned: boolean): Promise<void> {
   return updateSettings(ctx, { projectPanelPinned: pinned });
@@ -58,6 +52,21 @@ export function setProjectListGroupOpen(ctx: AppContext, group: ProjectListGroup
 /** Whether the sidebar is collapsed. Kept with the settings, like the other interface choices. */
 export function setSidebarCollapsed(ctx: AppContext, collapsed: boolean): Promise<void> {
   return updateSettings(ctx, { sidebarCollapsed: collapsed });
+}
+
+/** The menu open in the right panel; null collapses it to its strip. Kept with the settings, like the sidebar. */
+export function setRightPanelMenu(ctx: AppContext, menu: RightPanelMenu | null): Promise<void> {
+  return updateSettings(ctx, { rightPanelMenu: menu });
+}
+
+/** Width of the open right panel, in pixels, set by dragging its edge; null brings back the default. */
+export function setRightPanelWidth(ctx: AppContext, width: number | null): Promise<void> {
+  return updateSettings(ctx, { rightPanelWidth: width ?? undefined });
+}
+
+/** Whether the center area is collapsed to a strip, leaving the room to the right panel. */
+export function setCenterCollapsed(ctx: AppContext, collapsed: boolean): Promise<void> {
+  return updateSettings(ctx, { centerCollapsed: collapsed });
 }
 
 /** The app's appearance; "system" follows the system and is stored as absent, the default. */

@@ -25,6 +25,8 @@ export type Route =
   /** `from` is where the closing goes back to when it ends: the day note, or "Rituais". */
   | { name: 'checkout'; day: DayKey; from?: 'rituals' }
   | { name: 'active' }
+  /** "Fila de execução": the tasks I chose to do next (spec/prioridades.md). */
+  | { name: 'execute' }
   /** `assistant` opens one assistant's details; omitted shows the dashboard. */
   /** The "Rituais" screen, or one of its assistants when `assistant` is set. */
   | { name: 'rituals'; assistant?: AssistantId }
@@ -35,7 +37,11 @@ export type Route =
   | { name: 'settings' }
   /** People cited with `@` (spec/pessoas.md). */
   | { name: 'people' }
-  | { name: 'person'; id: string }
+  /** `tab` opens the notes tab; omitted shows the tasks. */
+  | { name: 'person'; id: string; tab?: 'notes' }
+  /** The ideas without a destination, and one idea's page (spec/ideias.md). */
+  | { name: 'ideas' }
+  | { name: 'idea'; id: string }
   /** Sections 4 and 6. */
   | { name: 'objectives' }
   | { name: 'objective'; id: string }
@@ -46,7 +52,6 @@ const ASSISTANT_SLUGS: Record<AssistantId, string> = {
   pendingDays: 'dias-em-aberto',
   whiteboards: 'secoes-soltas',
   duplicates: 'projetos-repetidos',
-  forgottenTasks: 'tarefas-esquecidas',
 };
 
 export function parseRoute(hash: string): Route {
@@ -59,6 +64,8 @@ export function parseRoute(hash: string): Route {
       return parts[2] === 'rituais' ? { name: 'checkout', day: parts[1], from: 'rituals' } : { name: 'checkout', day: parts[1] };
     case 'tarefas':
       return { name: 'active' };
+    case 'executar':
+      return { name: 'execute' };
     // The archived tasks list is gone (ADR-049); its old address opens the task list.
     case 'arquivadas':
       return { name: 'active' };
@@ -87,7 +94,14 @@ export function parseRoute(hash: string): Route {
     case 'pessoas':
       return { name: 'people' };
     case 'pessoa':
-      return parts[1] ? { name: 'person', id: decodeURIComponent(parts[1]) } : { name: 'people' };
+      if (!parts[1]) return { name: 'people' };
+      return parts[2] === 'notas'
+        ? { name: 'person', id: decodeURIComponent(parts[1]), tab: 'notes' }
+        : { name: 'person', id: decodeURIComponent(parts[1]) };
+    case 'ideias':
+      return { name: 'ideas' };
+    case 'ideia':
+      return parts[1] ? { name: 'idea', id: decodeURIComponent(parts[1]) } : { name: 'ideas' };
     case 'objetivos':
       return { name: 'objectives' };
     case 'objetivo':
@@ -107,6 +121,8 @@ export function routeHash(route: Route): string {
       return `#/checkout/${route.day}${route.from === 'rituals' ? '/rituais' : ''}`;
     case 'active':
       return '#/tarefas';
+    case 'execute':
+      return '#/executar';
     case 'rituals':
       return route.assistant ? `#/rituais/${ASSISTANT_SLUGS[route.assistant]}` : '#/rituais';
     case 'data':
@@ -120,7 +136,11 @@ export function routeHash(route: Route): string {
     case 'people':
       return '#/pessoas';
     case 'person':
-      return `#/pessoa/${encodeURIComponent(route.id)}`;
+      return `#/pessoa/${encodeURIComponent(route.id)}${route.tab === 'notes' ? '/notas' : ''}`;
+    case 'ideas':
+      return '#/ideias';
+    case 'idea':
+      return `#/ideia/${encodeURIComponent(route.id)}`;
     case 'objectives':
       return '#/objetivos';
     case 'objective':

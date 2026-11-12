@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react';
 import { applyTriage, completeCheckout, defaultClosingDecisions } from '../../application/checkout';
-import type { Reader } from '../../application/ports';
-import { loadDayTriage, loadPlanning, loadReminderQuestions } from '../../application/queries';
+import { loadDayTriage, loadReminderQuestions } from '../../application/queries';
 import { checkoutSteps, nextStep, previousStep, stepCounts, type CheckoutStep } from '../../domain/checkoutSteps';
 import type { DayKey } from '../../domain/day';
 import type { Project, Reminder } from '../../domain/entities';
@@ -23,13 +22,7 @@ interface Props {
   from?: 'rituals';
 }
 
-const STEP_LABELS: Record<CheckoutStep, string> = { late: 'Atrasadas', triage: 'Tarefas', reminders: 'Lembretes' };
-
-/** How many late tasks the first board has: dated before today, and not in the triage of the day. */
-async function countLate(source: Reader, triage: DayTriage, today: DayKey): Promise<number> {
-  const view = await loadPlanning(source, triage.nextDay, today, { exclude: new Set(triage.rows.map((row) => row.task.id)) });
-  return view.columns.find(({ column }) => column.kind === 'late')?.items.length ?? 0;
-}
+const STEP_LABELS: Record<CheckoutStep, string> = { triage: 'Tarefas', reminders: 'Lembretes' };
 
 /**
  * The checkout in steps (spec/checkout.md, "Fechamento em etapas"): one kind of decision per
@@ -38,7 +31,6 @@ async function countLate(source: Reader, triage: DayTriage, today: DayKey): Prom
  */
 export function CheckoutScreen({ day, today, from }: Props) {
   const [triage, setTriage] = useState<DayTriage | null>(null);
-  const [late, setLate] = useState(0);
   const [celebrating, setCelebrating] = useState(false);
   const [projects, setProjects] = useState<Project[]>([]);
   const [reminders, setReminders] = useState<Reminder[]>([]);
@@ -59,11 +51,10 @@ export function CheckoutScreen({ day, today, from }: Props) {
             reader.projects(),
             loadReminderQuestions(reader, day),
           ]);
-          return [dayTriage, allProjects, questions, await countLate(reader, dayTriage, today)] as const;
+          return [dayTriage, allProjects, questions] as const;
         },
-        ([dayTriage, allProjects, questions, lateCount]) => {
-          const steps = checkoutSteps(stepCounts(lateCount, questions.length));
-          setLate(lateCount);
+        ([dayTriage, allProjects, questions]) => {
+          const steps = checkoutSteps(stepCounts(questions.length));
           setProjects(allProjects);
           setReminders(questions);
           setTriage(dayTriage);
@@ -79,7 +70,7 @@ export function CheckoutScreen({ day, today, from }: Props) {
   if (!triage || !step) return <LoadingPage title={`Fechar o dia · ${formatLongDate(day)}`} />;
 
   const reminderCount = (answered: boolean) => (answered ? 0 : reminders.length);
-  const counts = stepCounts(late, reminderCount(remindersAnswered));
+  const counts = stepCounts(reminderCount(remindersAnswered));
   const previous = previousStep(plan, step, counts);
   const onBack = previous ? () => setStep(previous) : null;
   const last = nextStep(plan, step, counts) === null;
@@ -101,11 +92,9 @@ export function CheckoutScreen({ day, today, from }: Props) {
         return;
       }
       const answered = remindersAnswered || step === 'reminders';
-      const lateCount = await countLate(reader, fresh, today);
       setTriage(fresh);
-      setLate(lateCount);
       setRemindersAnswered(answered);
-      setStep(nextStep(plan, step, stepCounts(lateCount, reminderCount(answered))) ?? 'triage');
+      setStep(nextStep(plan, step, stepCounts(reminderCount(answered))) ?? 'triage');
     } finally {
       setBusy(false);
     }
@@ -137,10 +126,9 @@ export function CheckoutScreen({ day, today, from }: Props) {
             ))}
           </ol>
         </nav>
-        {(step === 'late' || step === 'triage') && (
+        {step === 'triage' && (
           <BoardStep
             key={step}
-            mode={step}
             day={day}
             today={today}
             triage={triage}

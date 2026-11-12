@@ -7,7 +7,14 @@ import type { DayKey } from './day';
  * Timestamps are ISO 8601 strings.
  */
 
-export type BlockKind = 'task' | 'note';
+/** `idea` (phase 7): a line written with `[?] ` (spec/ideias.md). Not a task: no date, no triage. */
+export type BlockKind = 'task' | 'note' | 'idea';
+
+/**
+ * Idea only (spec/ideias.md, "Destinos"): `open` until it gets a destination; `becameProject` and
+ * `dropped` take it out of circulation. An idea that became a task is a task (`kind: 'task'`).
+ */
+export type IdeaStatus = 'open' | 'becameProject' | 'dropped';
 
 /** converted (section 6): the task became a habit at checkout and left circulation. */
 export type TaskStatus = 'active' | 'done' | 'abandoned' | 'converted';
@@ -49,6 +56,14 @@ export interface Block {
    * the day to follow up ("data para cobrar"). Absent in records saved before people existed.
    */
   waiting?: boolean;
+  /** Idea only (phase 7, ADR-067). Absent in other blocks. */
+  ideaStatus?: IdeaStatus;
+  /** Idea only: how many times I said "ainda não" to it. */
+  notYetCount?: number;
+  /** Idea only: when I last said "ainda não", or null. */
+  lastNotYetAt?: string | null;
+  /** Idea only: the hidden section where I write what I think about it, created on first use. */
+  ideaSectionId?: string | null;
 }
 
 export type SectionKind = 'general' | 'meeting';
@@ -92,6 +107,12 @@ export interface Section {
    * the project page. Its `day` is the day it was written. Absent in other sections.
    */
   projectNote?: boolean;
+  /**
+   * Phase 7: the idea whose page this section is; it holds what I write about the idea (ADR-067).
+   * It belongs to no day note and no project: its tasks get the idea's project when written.
+   * Absent in other sections.
+   */
+  ideaId?: string;
 }
 
 /** `merged` projects were joined into another one (`mergedInto`) by the duplicates assistant. */
@@ -111,6 +132,9 @@ export interface Project {
   objectiveId?: string | null;
   /** Section 2: one of `PROJECT_ICONS`; absent or null shows the name's initial. */
   icon?: string | null;
+  /** Phase 7: the idea this project grew from, and the idea's project then (spec/ideias.md). */
+  fromIdeaId?: string | null;
+  fromProjectId?: string | null;
 }
 
 /** Someone cited with `@Nome` (spec/pessoas.md). `merged` people were joined into `mergedInto`. */
@@ -148,14 +172,15 @@ export type WarmupResult = 'done' | 'skipped' | 'later';
 
 /**
  * Ordered priorities. Ids look like `day:2026-10-11` (the day's tasks) or `focusProjects` (section
- * 2, the single list of projects in focus). `weekProjects:2026-W42` lists are the week's priority
- * projects from before the single list (ADR-035), kept as history; before version 6
+ * 2, the single list of projects in focus) or `queue` (the "Fila de execução", ADR-069). `weekProjects:2026-W42` lists are the week's priority
+ * projects from before the single list (ADR-035), kept as history, and so are the `next:<projectId>`
+ * lists of the project next steps, removed in favor of the queue (ADR-070); before version 6
  * they were per month, with ids `month:AAAA-MM`.
  */
 export interface PriorityList {
   id: string;
-  /** `focusProjects` and `weekProjects` list projects; `day` lists tasks. */
-  scope: 'day' | 'focusProjects' | 'weekProjects';
+  /** `focusProjects` and `weekProjects` list projects; `day`, `queue` and the old `nextSteps` list tasks. */
+  scope: 'day' | 'focusProjects' | 'weekProjects' | 'nextSteps' | 'queue';
   /** A day (AAAA-MM-DD), an ISO week (AAAA-Www) for the old week lists, or empty. */
   period: string;
   itemIds: string[];
@@ -226,6 +251,15 @@ export interface Settings {
   /** Width of the open sidebar, in pixels, dragged by the user. Absent means the default width. */
   sidebarWidth?: number;
   /**
+   * The menu open in the right panel (spec/navegacao.md, "Painel da direita"). Absent or null
+   * means the panel is collapsed to its strip of icons, the default.
+   */
+  rightPanelMenu?: RightPanelMenu | null;
+  /** Width of the open right panel, in pixels, dragged by the user. Absent means the default width. */
+  rightPanelWidth?: number;
+  /** Whether the center area is collapsed to a narrow strip on the left. Absent means open. */
+  centerCollapsed?: boolean;
+  /**
    * The part of the day note shown alone, in focus mode (spec/nota-do-dia.md, "Modo foco").
    * Absent or null shows the whole note. Only the user leaves it.
    */
@@ -245,6 +279,9 @@ export type AutoBackupInterval = 'afterChange' | 'quarterHour' | 'hour';
 
 /** Collapsible groups of the project list: "Outros ativos" (open by default) and "Finalizados" (closed). */
 export type ProjectListGroup = 'others' | 'finished';
+
+/** Menus of the right panel (spec/navegacao.md, "Painel da direita"). */
+export type RightPanelMenu = 'execute';
 
 export interface WarmupItem {
   id: string;

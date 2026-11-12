@@ -21,11 +21,16 @@ import {
   splitKind,
   updateBlockText,
   type NewBlockTarget,
+  createBlocks,
+  pasteLines,
 } from '../../application/notebook';
-import { moveDayPriority, setDayPriority, setDeadline, setIntendedDate } from '../../application/dayTools';
+import { chainedPositions } from './paste';
+import { setDayPriority, setDeadline, setIntendedDate } from '../../application/dayTools';
 import { ensurePeople } from '../../application/people';
+import { usePeople } from '../people/PeopleContext';
 import { setDayNoteFocus } from '../../application/settings';
-import { loadDayNote, loadDayPriorities } from '../../application/queries';
+import { loadDayNote, loadDayPriorities, loadQueueIds } from '../../application/queries';
+import { addToQueue } from '../../application/executionQueue';
 import { detectKind } from '../../domain/blockKind';
 import type { DayKey } from '../../domain/day';
 import type { DayNoteSection } from '../../domain/dayNote';
@@ -50,6 +55,7 @@ import { ScreenHeader } from '../components/ScreenHeader';
 import { SkeletonLines } from '../components/Skeleton';
 import { formatLongDate } from '../format';
 import { navigate } from '../hooks';
+import { newIdeaFields } from '../../domain/ideas';
 import { RemindersBanner } from '../opening/Reminders';
 import { opensLineBelow } from './lineBelow';
 import { SectionHeader } from './SectionHeader';
@@ -132,6 +138,7 @@ function draftBlock(id: string, sectionId: string, kind: BlockKind, text: string
   const at = new Date().toISOString();
   return {
     ...(kind === 'task' && waiting ? { waiting: true } : {}),
+    ...(kind === 'idea' ? newIdeaFields() : {}),
     id,
     kind,
     text,
@@ -171,6 +178,7 @@ export function DayNoteScreen({
   const view = useLiveQuery(() => loadDayNote(reader, day, today), [day, today]);
   const prioritiesDay = focus ? focus.day : today;
   const priorities = useLiveQuery(() => loadDayPriorities(reader, prioritiesDay), [prioritiesDay]) ?? [];
+  const queueIds = new Set(useLiveQuery(() => loadQueueIds(reader)) ?? []);
   const [pinned, setPinned] = usePinnedPriorities();
   const [collapsedParts, toggleCollapsedPart] = useCollapsedParts();
   // The arrows page only through days that still have pending items (1b).
@@ -473,8 +481,8 @@ export function DayNoteScreen({
     onEnter: (block, text, caret, newCaret = 0) => {
       const slot = slotOf(block);
       if (!slot) return;
-      // Enter on an empty task line that is still free turns it into a note, like a checklist.
-      if (block.kind === 'task' && text === '' && isFree(block)) {
+      // Enter on an empty task or idea line that is still free turns it into a note, like a checklist.
+      if (block.kind !== 'note' && text === '' && isFree(block)) {
         write(() => changeBlockKind(ctx, block.id, 'note', ''));
         return;
       }
@@ -485,8 +493,24 @@ export function DayNoteScreen({
       requestFocus(target.blockId!, newCaret);
       write(() => splitBlock(ctx, block.id, text, caret, target));
     },
+    onPasteLines: (block, pasted, options) => {
+      const slot = slotOf(block);
+      if (!slot) return;
+      const own = slot.entry.blocks;
+      const carried = slot.ownIndex === -1;
+      const lower = carried ? null : slot.block.position;
+      const upper = (carried ? own[0] : own[slot.ownIndex + 1])?.position ?? null;
+      const positions = chainedPositions(lower, upper, pasted.length - 1, positionBetween);
+      const targets = positions.map((position) => newLineTarget(slot.entry, position));
+      targets.forEach((target, index) => {
+        const detected = options.detectRest ? detectKind(pasted[index + 1]) : { kind: 'note' as const, text: pasted[index + 1], waiting: undefined };
+        showDraft(slot.entry, target, detected.kind, detected.text, detected.waiting);
+      });
+      requestFocus(targets[targets.length - 1].blockId!, options.caret);
+      write(() => pasteLines(ctx, block.id, pasted, targets, { detectFirst: options.detectFirst, detectRest: options.detectRest }));
+    },
     onBackspaceAtStart: (block, text) => {
-      if (block.kind === 'task') {
+      if (block.kind === 'task' || (block.kind === 'idea' && isFree(block))) {
         write(() => changeBlockKind(ctx, block.id, 'note', text));
         return;
       }
@@ -501,7 +525,8 @@ export function DayNoteScreen({
         write(() => deleteBlock(ctx, block.id));
       }
     },
-    onMakeTask: (block, text, waiting) => write(() => changeBlockKind(ctx, block.id, 'task', text, waiting)),
+    onMakeTask: (block, text, waiting, kind = 'task') => write(() => changeBlockKind(ctx, block.id, kind, text, waiting)),
+    onOpenIdea: (block) => navigate({ name: 'idea', id: block.id }),
     onSetWaiting: (block, waiting) => write(() => setTaskWaiting(ctx, block.id, waiting)),
     onEnsurePeople: (names) => write(() => ensurePeople(ctx, names)),
     onToggleDone: (block, done) => write(() => setTaskDone(ctx, block.id, done)),
@@ -513,6 +538,7 @@ export function DayNoteScreen({
     onSetDate: (block, date) => write(() => setIntendedDate(ctx, block.id, date)),
     onSetDeadline: (block, date) => write(() => setDeadline(ctx, block.id, date)),
     onTogglePriority: (block, on) => write(() => setDayPriority(ctx, block.id, on)),
+    onAddToQueue: (block) => write(() => addToQueue(ctx, block.id)),
     onMove: (block, direction) => {
       const slot = slotOf(block);
       if (slot) reorder(slot, moveByOne(groupOf(slot).ids, block.id, direction));
@@ -524,7 +550,21 @@ export function DayNoteScreen({
   const lineProps = { day, today, allowNewLines: writable, handlers };
   const partKeys = parts.map((part) => part.key);
   const projects = view.projects;
+  const people = usePeople();
   const onlyPriorities = parts.every((part) => part.kind === 'priorities');
+
+  /** Text with line breaks pasted into an empty line at the end of a section: one line per line of text. */
+  function createPastedLines(entry: Entry, pasted: string[], caret: number) {
+    setAppendingTo(null);
+    const positions = chainedPositions(entry.blocks.at(-1)?.position ?? null, null, pasted.length, positionBetween);
+    const targets = positions.map((position) => newLineTarget(entry, position));
+    targets.forEach((target, index) => {
+      const { kind, text, waiting } = detectKind(pasted[index]);
+      showDraft(entry, target, kind, text, waiting);
+    });
+    requestFocus(targets[targets.length - 1].blockId!, caret);
+    write(() => createBlocks(ctx, targets, pasted));
+  }
 
   /** Creates a line at the end of a section: its first line, or the one typed after clicking below the lines. */
   function createFirstLine(entry: Entry, typed: string, caret?: number) {
@@ -637,8 +677,8 @@ export function DayNoteScreen({
       onTogglePin={isToday && !focus ? () => setPinned(!pinned) : undefined}
       onToggleDone={(taskId, done) => write(() => setTaskDone(ctx, taskId, done))}
       onDemote={(taskId) => write(() => setDayPriority(ctx, taskId, false))}
-      onMoveDate={(taskId, date) => write(() => moveDayPriority(ctx, taskId, date))}
       onSetDeadline={(taskId, date) => write(() => setDeadline(ctx, taskId, date))}
+      queue={{ ids: queueIds, onAdd: (taskId) => write(() => addToQueue(ctx, taskId)) }}
       trailing={focusButton(PRIORITIES_PART, 'nas prioridades do dia')}
     />
   );
@@ -674,6 +714,7 @@ export function DayNoteScreen({
               block={block}
               free={false}
               isPriority={priorityIds.has(block.id)}
+              isQueued={queueIds.has(block.id)}
               drag={dragProps(entry, true, block, index)}
               selected={selectedIds.has(block.id)}
               {...lineProps}
@@ -694,11 +735,13 @@ export function DayNoteScreen({
           section={section}
           kind={kind}
           projects={projects}
+          people={people}
           onSaveTitle={(title) => section && write(() => setSectionTitle(ctx, section.id, title))}
           onLinkProject={(project) => section && write(() => titleSectionWithProject(ctx, section.id, project.id))}
           onCreateProject={(name) => section && write(() => convertSectionToProject(ctx, section.id, name))}
           onUnlink={(title) => section && write(() => unlinkSection(ctx, section.id, title))}
           onRenameProject={(name) => section && write(() => renameSectionProject(ctx, section.id, name))}
+          onEnsurePeople={(names) => write(() => ensurePeople(ctx, names))}
           trailing={
             <>
               <FormatToolbar />
@@ -713,6 +756,7 @@ export function DayNoteScreen({
             block={block}
             free={isFree(block)}
             isPriority={priorityIds.has(block.id)}
+            isQueued={queueIds.has(block.id)}
             drag={dragProps(entry, false, block, index)}
             selected={selectedIds.has(block.id)}
             {...lineProps}
@@ -723,6 +767,7 @@ export function DayNoteScreen({
             id={`ghost:${section?.id ?? DAY_ENTRY}`}
             placeholder={NOTE_HINT}
             onCreate={(text, caret) => createFirstLine(entry, text, caret)}
+            onPasteLines={(pasted, caret) => createPastedLines(entry, pasted, caret)}
           />
         )}
         {writable && !isCollapsed(part.key) && entry.blocks.length > 0 && appendingTo === entry.key && (
@@ -730,6 +775,7 @@ export function DayNoteScreen({
             id={`ghost:end:${entry.key}`}
             placeholder={NOTE_HINT}
             onCreate={(text, caret) => createFirstLine(entry, text, caret)}
+            onPasteLines={(pasted, caret) => createPastedLines(entry, pasted, caret)}
             onLeave={() => setAppendingTo(null)}
           />
         )}

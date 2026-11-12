@@ -50,6 +50,11 @@ export interface StoreTransaction {
   allPeople(): Promise<Person[]>;
   /** Blocks whose text has an `@`: the ones that may cite someone (spec/pessoas.md). */
   blocksWithMentions(): Promise<Block[]>;
+  /** Sections whose title has an `@`: the meetings that may be with someone (spec/pessoas.md). */
+  sectionsWithMentions(): Promise<Section[]>;
+  allProjects(): Promise<Project[]>;
+  /** Blocks whose text has a `#`: the ones that may carry a project tag (ADR-066). */
+  blocksWithTags(): Promise<Block[]>;
   blocksInSection(sectionId: string): Promise<Block[]>;
   blocksOfProject(projectId: string): Promise<Block[]>;
   sectionsOfProject(projectId: string): Promise<Section[]>;
@@ -88,6 +93,8 @@ export interface Reader {
   settings(): Promise<Settings | undefined>;
   blocksOfProject(projectId: string): Promise<Block[]>;
   sectionsOfProject(projectId: string): Promise<Section[]>;
+  /** Every idea, whatever its status (spec/ideias.md). */
+  ideas(): Promise<Block[]>;
   pendingReminders(): Promise<Reminder[]>;
   dayRecord(day: DayKey): Promise<DayRecord | undefined>;
   objectives(): Promise<Objective[]>;
@@ -99,6 +106,8 @@ export interface Reader {
   people(): Promise<Person[]>;
   /** Blocks whose text has an `@`: the ones that may cite someone (spec/pessoas.md). */
   blocksWithMentions(): Promise<Block[]>;
+  /** Sections whose title has an `@`: the meetings that may be with someone (spec/pessoas.md). */
+  sectionsWithMentions(): Promise<Section[]>;
 }
 
 export interface AppContext {

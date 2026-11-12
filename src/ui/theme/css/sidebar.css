@@ -1,0 +1,528 @@
+/* The sidebar's right edge can be dragged to change its width; the main area shrinks along */
+.sidebar__resize {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: 6px;
+  cursor: col-resize;
+  touch-action: none;
+}
+
+.sidebar__resize:hover,
+.sidebar__resize:focus-visible,
+.resizing-sidebar .sidebar__resize {
+  background: var(--color-border-strong);
+  outline: none;
+}
+
+.resizing-sidebar {
+  cursor: col-resize;
+  user-select: none;
+}
+
+/* Dragging the edge follows the mouse at once */
+.resizing-sidebar .sidebar {
+  transition: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sidebar {
+    transition: none;
+  }
+}
+
+.sidebar--collapsed {
+  width: var(--sidebar-collapsed-width);
+  align-items: center;
+  padding: var(--space-4) var(--space-1);
+}
+
+.sidebar__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+  margin-bottom: var(--space-4);
+}
+
+button.sidebar__name {
+  border: none;
+  background: none;
+  padding: var(--space-1) var(--space-3);
+  font-weight: 600;
+  font-size: var(--font-size-md);
+}
+
+button.sidebar__toggle {
+  display: inline-flex;
+  border: none;
+  background: none;
+  padding: var(--space-1);
+  color: var(--color-text-muted);
+}
+
+button.sidebar__toggle:hover {
+  color: var(--color-text);
+}
+
+/* Collapsed, each place is its icon alone; the name shows on hover */
+.sidebar--collapsed > .sidebar__toggle {
+  margin-bottom: var(--space-4);
+}
+
+button.sidebar__item.sidebar__icon {
+  position: relative;
+  justify-content: center;
+  padding: var(--space-2);
+}
+
+/* The "Rituais" counter and the backup dot sit on the corner of their icon */
+.sidebar__icon > .badge {
+  position: absolute;
+  top: 0;
+  right: 0;
+  margin-left: 0;
+  min-width: 14px;
+  padding: 0 3px;
+  line-height: 14px;
+}
+
+.sidebar__icon > .backup-status {
+  position: absolute;
+  right: var(--space-1);
+  bottom: var(--space-1);
+}
+
+.sidebar__icon .backup-status__label {
+  display: none;
+}
+
+.sidebar__group {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  margin-bottom: var(--space-4);
+}
+
+button.sidebar__item {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  text-align: left;
+  border: var(--border-width) solid transparent;
+  background: none;
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--radius-md);
+  font-size: var(--font-size-md);
+}
+
+button.sidebar__item:hover {
+  background: var(--color-surface);
+}
+
+button.sidebar__item--current {
+  background: var(--color-brand-soft);
+  color: var(--color-brand-strong);
+  font-weight: 600;
+}
+
+button.sidebar__item > .icon {
+  color: var(--color-text-muted);
+}
+
+/* "Hoje" is where the day starts and ends, so it weighs more than the other places */
+button.sidebar__item--day {
+  font-weight: 600;
+}
+
+button.sidebar__item--day > .icon {
+  color: var(--color-brand);
+}
+
+button.sidebar__item--current > .icon {
+  color: var(--color-brand-strong);
+}
+
+.sidebar__label {
+  flex: 1;
+  min-width: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+}
+
+.sidebar__footer {
+  margin-top: auto;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  border-top: var(--border-width) solid var(--color-border);
+  padding-top: var(--space-3);
+}
+
+button.sidebar__footer-item {
+  font-size: var(--font-size-sm);
+}
+
+.sidebar__footer .sidebar__label {
+  white-space: nowrap;
+}
+
+.sidebar__footer .backup-status {
+  min-width: 0;
+}
+
+.sidebar__footer .backup-status__label {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Backup status: a colored dot and a short label; details on hover and in "Dados e backup" */
+.backup-status {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: var(--font-size-sm);
+  color: var(--color-text-muted);
+}
+
+.backup-status__dot {
+  width: 8px;
+  height: 8px;
+  border-radius: var(--radius-pill);
+  flex-shrink: 0;
+  background: var(--color-dot-off);
+}
+
+.backup-status--ok .backup-status__dot { background: var(--color-dot-ok); }
+.backup-status--attention .backup-status__dot { background: var(--color-dot-attention); }
+.backup-status--problem .backup-status__dot { background: var(--color-dot-problem); }
+
+.backup-status--problem {
+  color: var(--color-danger);
+  font-weight: 600;
+}
+
+.badge {
+  display: inline-block;
+  min-width: 18px;
+  padding: 0 6px;
+  margin-left: var(--space-1);
+  border-radius: var(--radius-pill);
+  background: var(--color-mark-bg);
+  color: var(--color-mark-text);
+  font-size: var(--font-size-xs);
+  text-align: center;
+}
+
+.dropdown {
+  position: relative;
+}
+
+.dropdown__list {
+  position: absolute;
+  z-index: 15;
+  top: calc(100% + var(--space-1));
+  min-width: 240px;
+  padding: var(--space-1);
+  display: flex;
+  flex-direction: column;
+  background: var(--color-surface);
+  border: var(--border-width) solid var(--color-border);
+  border-radius: var(--radius-md);
+  box-shadow: 0 6px 24px var(--color-shadow-soft);
+}
+
+.dropdown__list--right {
+  right: 0;
+}
+
+.dropdown__list--left {
+  left: 0;
+}
+
+.dropdown__item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: var(--space-3);
+  border: none;
+  background: none;
+  text-align: left;
+  padding: var(--space-2) var(--space-3);
+}
+
+.dropdown__item:hover {
+  background: var(--color-surface-soft);
+}
+
+.dropdown__divider {
+  border: none;
+  border-top: var(--border-width) solid var(--color-border);
+  margin: var(--space-1) 0;
+  width: 100%;
+}
+
+/* Every screen's title: xl/600, then sections in md/600 and groups in sm/600 */
+.screen-header {
+  margin-bottom: var(--space-5);
+}
+
+/* The arrow back sits on the title's line, in place of a link above it */
+.icon-button.screen-header__back {
+  display: inline-grid;
+  place-items: center;
+  padding: var(--space-1);
+  margin-left: calc(-1 * var(--space-1));
+  border-radius: var(--radius-sm);
+  color: var(--color-text-muted);
+}
+
+.icon-button.screen-header__back:hover {
+  background: var(--color-hover);
+  color: var(--color-text);
+}
+
+.screen-header__h1 {
+  margin: 0;
+  font-size: var(--font-size-xl);
+  font-weight: 600;
+  line-height: 1.3;
+}
+
+.screen-header__row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+}
+
+.screen-header__title {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-width: 0;
+}
+
+.screen-header__actions button.primary {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+}
+
+.screen-header__actions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+/* "Fechar o dia" in the day note's header, in the sidebar's tones instead of the black accent */
+.page--note .screen-header__actions button.primary {
+  background: var(--color-surface-soft);
+  border-color: var(--color-border-strong);
+  color: var(--color-text);
+}
+
+.page--note .screen-header__actions button.primary:hover {
+  background: var(--color-hover);
+}
+
+.screen-header__tools {
+  margin-top: var(--space-3);
+}
+
+.day-title {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.day-title__date {
+  margin: 0;
+  font-size: var(--font-size-xl);
+  font-weight: 600;
+}
+
+.day-title__arrow:disabled {
+  opacity: 0.25;
+}
+
+.screen-notices {
+  display: grid;
+  gap: var(--space-2);
+  margin-bottom: var(--space-4);
+}
+
+/* On the white main area, the notices stay light and keep only their border */
+.screen-notices .banner {
+  background: var(--color-surface-soft);
+  border: var(--border-width) solid var(--color-warning-border);
+  border-radius: var(--radius-md);
+}
+
+.opening__sun {
+  fill: none;
+  stroke: var(--color-firework-1);
+  stroke-width: 2.5;
+  stroke-linecap: round;
+}
+
+/* Line icons (components/Icon.tsx) */
+.icon {
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  vertical-align: -4px;
+}
+
+.icon--sm {
+  width: 14px;
+  height: 14px;
+  vertical-align: -2px;
+}
+
+.icon--lg {
+  width: 24px;
+  height: 24px;
+}
+
+.icon--filled {
+  fill: currentColor;
+}
+
+/* Tints for project icons, from the section and feedback tokens */
+.tone--lilac { background: var(--color-project-bg); color: var(--color-project-text); }
+.tone--blue { background: var(--color-meeting-bg); color: var(--color-meeting-text); }
+.tone--amber { background: var(--color-whiteboard-bg); color: var(--color-whiteboard-text); }
+.tone--green { background: var(--color-success-bg); color: var(--color-success-text); }
+.tone--pink { background: var(--color-danger-bg); color: var(--color-danger); }
+
+.project-icon {
+  display: inline-grid;
+  place-items: center;
+  flex-shrink: 0;
+  border-radius: var(--radius-md);
+  font-weight: 600;
+}
+
+.project-icon--sm {
+  width: 24px;
+  height: 24px;
+  border-radius: var(--radius-sm);
+  font-size: var(--font-size-sm);
+}
+
+.project-icon--md {
+  width: 32px;
+  height: 32px;
+}
+
+.project-icon--lg {
+  width: 44px;
+  height: 44px;
+  font-size: var(--font-size-lg);
+}
+
+.project-link {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+/* The right panel (spec/navegacao.md, "Painel da direita"): a strip of icons, always there, and
+   the open menu beside the center, which shrinks along */
+.right-panel {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  flex: none;
+  display: flex;
+  height: 100vh;
+  background: var(--color-surface-soft);
+  border-left: var(--border-width) solid var(--color-border);
+}
+
+.right-panel {
+  margin-left: auto;
+}
+
+.right-panel--fill {
+  flex: 1;
+}
+
+.right-panel--fill .right-panel__body {
+  flex: 1;
+  width: auto;
+}
+
+.right-panel__body {
+  position: relative;
+  width: var(--right-panel-width);
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: var(--space-4) var(--space-4) var(--space-6);
+  border-right: var(--border-width) solid var(--color-border);
+}
+
+.right-panel__title {
+  margin: 0 0 var(--space-4);
+  font-size: var(--font-size-md);
+  font-weight: 600;
+}
+
+.right-panel__strip {
+  width: var(--sidebar-collapsed-width);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-1);
+  padding: var(--space-4) var(--space-1);
+}
+
+.right-panel__strip > .right-panel__toggle {
+  margin-bottom: var(--space-4);
+}
+
+.right-panel__strip button.sidebar__icon:disabled {
+  opacity: 0.4;
+  cursor: default;
+  background: none;
+}
+
+/* "Executar" in the panel: narrower, so its groups and controls wrap */
+.execute--panel .execute__controls {
+  flex-wrap: wrap;
+}
+
+.execute--panel .execute__group + .execute__group {
+  margin-top: var(--space-4);
+}
+
+.right-panel__resize {
+  position: absolute;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  width: 6px;
+  cursor: col-resize;
+  touch-action: none;
+}
+
+.right-panel__resize:hover,
+.right-panel__resize:focus-visible,
+.resizing-right-panel .right-panel__resize {
+  background: var(--color-border-strong);
+  outline: none;
+}
+
+.resizing-right-panel {
+  cursor: col-resize;
+  user-select: none;
+}

@@ -1,16 +1,16 @@
 import { describe, expect, it } from 'vitest';
 import { PLACE_ICONS, sidebarGroups } from './sidebarPlaces';
 
-const counts = { projects: 3, active: 7, people: 2 };
+const counts = { projects: 3, active: 7, people: 2, ideas: 5 };
 const hidden = { objectives: false, habits: false };
 
 describe('sidebar places', () => {
   it('lists the places in groups and in order, with the footer last', () => {
     const groups = sidebarGroups({ counts, dueCount: 0, features: hidden });
     expect(groups.map((group) => [group.key, group.entries.map((entry) => entry.label)])).toEqual([
-      ['start', ['Hoje', 'Rituais']],
+      ['start', ['Hoje', 'Fila de execução', 'Rituais']],
       ['planning', ['Projetos']],
-      ['lists', ['Tarefas', 'Pessoas']],
+      ['lists', ['Tarefas', 'Pessoas', 'Ideias']],
       ['footer', ['Dados e backup', 'Configurações']],
     ]);
   });
@@ -27,6 +27,7 @@ describe('sidebar places', () => {
     expect(byPlace.projects.count).toBe(3);
     expect(byPlace.active.count).toBe(7);
     expect(byPlace.people.count).toBe(2);
+    expect(byPlace.ideas.count).toBe(5);
     expect(entries.filter((entry) => entry.due !== undefined)).toEqual([byPlace.rituals]);
     expect(byPlace.rituals.due).toBe(4);
   });

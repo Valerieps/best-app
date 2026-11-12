@@ -3,12 +3,14 @@ import type { Route } from './hooks';
 /** The places of the sidebar. */
 export type SidebarPlace =
   | 'day'
+  | 'execute'
   | 'rituals'
   | 'projects'
   | 'objectives'
   | 'habits'
   | 'active'
   | 'people'
+  | 'ideas'
   | 'data'
   | 'settings';
 
@@ -24,6 +26,8 @@ export function sidebarPlace(route: Route): SidebarPlace {
       return 'objectives';
     case 'person':
       return 'people';
+    case 'idea':
+      return 'ideas';
     case 'checkout':
       return 'rituals';
     default:

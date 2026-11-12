@@ -17,16 +17,16 @@ Os termos marcados com ⚠ ainda têm mais de um sentido nos documentos.
 
 ## Tarefas e datas
 
-- **Data de intenção (de execução):** o dia em que a tarefa aparece na nota do dia. (`spec/tarefas.md`)
+- **Data de intenção (de execução):** o dia em que a tarefa aparecia na nota do dia. Saiu em 12/11/2026: o que eu quero fazer vai para a fila de execução. As datas antigas ficam guardadas. (`spec/tarefas.md`)
 - **Prazo máximo:** a segunda data, opcional. No dia do prazo, a tarefa vira prioridade do dia. (`spec/tarefas.md`)
-- **Adiamento:** mudar a data de intenção para depois, ou tirar a data, inclusive no fechamento do dia. A tarefa deixada sem mexer na triagem do "Fechar o dia" não conta. (`spec/tarefas.md`)
+- **Adiamento:** era mudar a data de intenção para depois, ou tirá-la. Hoje só conta a tarefa que o "Fechar dias pendentes" devolve para a lista; os adiamentos de antes ficam guardados. (`spec/tarefas.md`)
 - **Tarefas:** a lista das tarefas abertas, ou seja, nem finalizadas nem abandonadas, que também mostra as finalizadas quando eu peço. Antes se chamava "tarefas ativas". (`spec/tarefas.md`)
-- **Tarefa esquecida:** tarefa aberta sem data de intenção criada há 15 dias ou mais (configurável), em risco de abandono. Quem cuida dela é o assistente "Tarefas esquecidas". (`spec/assistentes.md`)
-- **Tarefa travada:** tarefa de projeto adiada 3 vezes ou mais, ou com a data de intenção vencida. ⚠ Não confundir com o assistente "Prioridades travadas". (`spec/projetos.md`)
 - **Pessoa:** alguém que eu cito com `@Nome`, de uma palavra só. Tem uma página com o que eu devo a ela e o que ela me deve. (`spec/pessoas.md`)
+- **Tag de projeto:** `#Projeto` numa linha, que liga só aquela linha a um projeto, vencendo o vínculo da seção. (`spec/nota-do-dia.md`)
+- **Ideia:** algo que eu ainda nem sei se quero fazer, capturado com `[?] `. Não é tarefa. (`spec/ideias.md`)
 - **Menção:** `@Nome` numa linha, que liga a linha à pessoa. Numa tarefa, quer dizer que eu devo aquilo à pessoa. (`spec/pessoas.md`)
 - **Aguardando:** uma tarefa que alguém me deve, criada com `[a] ` no começo da linha. Fica fora da lista de tarefas. (`spec/pessoas.md`)
-- **Data para cobrar:** a data de intenção de uma tarefa aguardando: o dia em que ela aparece na nota do dia para eu cobrar. Mudá-la não conta como adiamento. (`spec/pessoas.md`)
+- **Data para cobrar:** a data de uma tarefa aguardando: o dia em que ela aparece na nota do dia para eu cobrar. Continuou quando a data de intenção saiu. Mudá-la não conta como adiamento. (`spec/pessoas.md`)
 - **Dia seguinte:** num fechamento do dia, o próximo dia ativo depois do dia triado, nunca antes de hoje. (`spec/checkout.md`)
 - **Dias ativos:** os dias da semana em que o app espera uso; os outros não contam como pulados. (`spec/abertura-do-dia.md`, "Rituais pulados")
 
@@ -40,15 +40,16 @@ Os termos marcados com ⚠ ainda têm mais de um sentido nos documentos.
 
 ## Fechar o dia e triagem
 
-- **Fechar o dia:** o ritual diário e curto que dá destino ao que perece de um dia para o outro: as tarefas do dia, os lembretes ignorados e o planejamento do dia seguinte. As notas ficam onde foram escritas. Em texto corrido, "o fechamento do dia". Antes se chamava checkout, nome que o código ainda usa. ⚠ "Fechamento completo" tem três definições. (`spec/checkout.md`)
+- **Fechar o dia:** o ritual diário e curto que dá destino ao que perece de um dia para o outro: as tarefas do dia, que eu ponho na fila de execução, abandono ou deixo no projeto, e os lembretes ignorados. As notas ficam onde foram escritas. Em texto corrido, "o fechamento do dia". Antes se chamava checkout, nome que o código ainda usa. ⚠ "Fechamento completo" tem três definições. (`spec/checkout.md`)
 - **Fechamento pendente:** um dia com algum item ainda sem destino. (`spec/checkout.md`)
 - **Auto-triagem:** as regras que decidem sozinhas (**automático**), pré-selecionam (**sugerido**) ou deixam para mim (**sempre manual**). (`spec/checkout.md`)
-- **Fechar dias pendentes:** aplica a auto-triagem a vários dias pendentes de uma vez; as tarefas não feitas voltam sem data. (`spec/checkout.md`)
-- **Planejamento do dia seguinte:** escolher, na lista de tarefas ativas, as tarefas da próxima nota do dia. Não é o mesmo que priorizar. (`spec/checkout.md`)
+- **Fechar dias pendentes:** aplica a auto-triagem a vários dias pendentes de uma vez; as tarefas não feitas ficam na lista, fora da fila. (`spec/checkout.md`)
+- **Planejamento do dia seguinte:** escolher as tarefas da próxima nota do dia dando a elas uma data. Saiu com a data de intenção (12/11/2026): no "Fechar o dia", eu ponho tarefas na fila de execução. (`spec/checkout.md`)
 
 ## Prioridades
 
 - **Prioridades do dia:** até 3 tarefas em destaque dentro das tarefas do dia. (`spec/prioridades.md`)
+- **Fila de execução:** a tela de quando eu paro para fazer as coisas: as tarefas que eu escolhi fazer, na ordem que eu quiser. Substituiu a tela "Executar". (`spec/prioridades.md`)
 - **Projetos em foco:** até 3 projetos, que eu coloco, troco e tiro a qualquer momento; valem até eu mudá-los. Antes se chamavam "projetos prioritários da semana". (`spec/prioridades.md`)
 
 ## Projetos e objetivos

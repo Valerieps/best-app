@@ -7,6 +7,7 @@
  */
 
 import { mentionStartingAt } from '../../domain/people';
+import { tagStartingAt } from '../../domain/projectTags';
 
 export type HeadingLevel = 1 | 2 | 3 | 4;
 export type ListKind = 'bullet' | 'numbered';
@@ -21,6 +22,8 @@ export interface ListItem {
 
 export interface LineStructure {
   heading: HeadingLevel | null;
+  /** A blockquote line (`> `). */
+  quote: boolean;
   list: ListItem | null;
   /** Length of the line's prefix (heading marks, or indentation and list marker). */
   prefixLength: number;
@@ -31,20 +34,23 @@ export interface LineStructure {
 export const MAX_LIST_DEPTH = 4;
 const INDENT = '  ';
 const HEADING = /^(#{1,4}) /;
+const QUOTE = /^> /;
 const LIST = /^( *)([-*+]|\d{1,9}[.)]) /;
 
 export function parseLine(text: string): LineStructure {
   const heading = HEADING.exec(text);
   if (heading) {
     const length = heading[0].length;
-    return { heading: heading[1].length as HeadingLevel, list: null, prefixLength: length, content: text.slice(length) };
+    return { heading: heading[1].length as HeadingLevel, quote: false, list: null, prefixLength: length, content: text.slice(length) };
   }
+  if (QUOTE.test(text)) return { heading: null, quote: true, list: null, prefixLength: 2, content: text.slice(2) };
   const list = LIST.exec(text);
   if (list) {
     const numbered = /\d/.test(list[2]);
     const length = list[0].length;
     return {
       heading: null,
+      quote: false,
       list: {
         kind: numbered ? 'numbered' : 'bullet',
         number: numbered ? Number.parseInt(list[2], 10) : 0,
@@ -54,7 +60,7 @@ export function parseLine(text: string): LineStructure {
       content: text.slice(length),
     };
   }
-  return { heading: null, list: null, prefixLength: 0, content: text };
+  return { heading: null, quote: false, list: null, prefixLength: 0, content: text };
 }
 
 /**
@@ -80,9 +86,14 @@ export type InlineNode =
   | { type: 'text'; text: string }
   | { type: 'bold'; children: InlineNode[] }
   | { type: 'italic'; children: InlineNode[] }
+  | { type: 'strike'; children: InlineNode[] }
+  /** Inline code: its content is literal, never read as Markdown. */
+  | { type: 'code'; text: string }
   | { type: 'link'; href: string; children: InlineNode[] }
   /** `@Nome`, a person cited in the line (spec/pessoas.md). */
-  | { type: 'mention'; name: string };
+  | { type: 'mention'; name: string }
+  /** `#Projeto` or `#[Nome do projeto]`, the project tag (ADR-066); `raw` is the text as typed. */
+  | { type: 'tag'; name: string; raw: string };
 
 /** Only web and mail links open; anything else (javascript:, data:...) stays plain text. */
 const SAFE_HREF = /^(https?:\/\/|mailto:)\S+$/i;
@@ -93,7 +104,13 @@ export function safeHref(href: string): string | null {
   return SAFE_HREF.test(trimmed) ? trimmed : null;
 }
 
-/** Bold (`**x**`), italic (`_x_` or `*x*`), links (`[x](url)`) and bare web addresses. */
+/** Characters a backslash can escape, to write them literally. */
+const ESCAPABLE = '\\*_[]()`~@#';
+
+/**
+ * Bold (`**x**`), italic (`_x_` or `*x*`), strikethrough (`~~x~~`), code (`` `x` ``), links
+ * (`[x](url)`), bare web addresses, mentions and project tags. A backslash before a marker writes it literally.
+ */
 export function parseInline(text: string): InlineNode[] {
   const nodes: InlineNode[] = [];
   let plain = '';
@@ -104,11 +121,23 @@ export function parseInline(text: string): InlineNode[] {
   let i = 0;
   while (i < text.length) {
     const rest = text.slice(i);
+    if (text[i] === '\\' && i + 1 < text.length && ESCAPABLE.includes(text[i + 1])) {
+      plain += text[i + 1];
+      i += 2;
+      continue;
+    }
     const mention = mentionStartingAt(text, i, plain ? plain[plain.length - 1] : i > 0 ? text[i - 1] : '');
     if (mention) {
       pushText();
       nodes.push({ type: 'mention', name: mention.name });
       i += mention.length;
+      continue;
+    }
+    const tag = tagStartingAt(text, i, plain ? plain[plain.length - 1] : i > 0 ? text[i - 1] : '');
+    if (tag) {
+      pushText();
+      nodes.push({ type: 'tag', name: tag.name, raw: text.slice(i, i + tag.length) });
+      i += tag.length;
       continue;
     }
     const match = matchAt(text, i);
@@ -133,6 +162,14 @@ export function parseInline(text: string): InlineNode[] {
 }
 
 function matchAt(text: string, i: number): { node: InlineNode; length: number } | null {
+  if (text[i] === '`') {
+    const close = text.indexOf('`', i + 1);
+    if (close > i + 1) return { node: { type: 'code', text: text.slice(i + 1, close) }, length: close + 1 - i };
+  }
+  if (text.startsWith('~~', i)) {
+    const close = findClose(text, i + 2, '~~');
+    if (close !== -1) return { node: { type: 'strike', children: parseInline(text.slice(i + 2, close)) }, length: close + 2 - i };
+  }
   if (text.startsWith('**', i)) {
     const close = findClose(text, i + 2, '**');
     if (close !== -1) return { node: { type: 'bold', children: parseInline(text.slice(i + 2, close)) }, length: close + 2 - i };
@@ -162,7 +199,7 @@ function findClose(text: string, from: number, marker: string): number {
   while (at !== -1) {
     // `*` alone must not close on the first star of `**`.
     const partOfDouble = marker === '*' && (text[at + 1] === '*' || text[at - 1] === '*');
-    if (text[at - 1] !== ' ' && !partOfDouble) return at;
+    if (text[at - 1] !== ' ' && text[at - 1] !== '\\' && !partOfDouble) return at;
     at = text.indexOf(marker, at + marker.length);
   }
   return -1;
@@ -171,7 +208,8 @@ function findClose(text: string, from: number, marker: string): number {
 /** Whether a line has anything to format, so plain lines keep the bare text field. */
 export function hasMarkdown(text: string): boolean {
   const line = parseLine(text);
-  if (line.heading || line.list) return true;
+  if (line.heading || line.quote || line.list) return true;
+  if (/\\[\\*_[\]()`~@#]/.test(text)) return true;
   return parseInline(text).some((node) => node.type !== 'text');
 }
 
@@ -193,6 +231,9 @@ export type FormatCommand =
   | 'h2'
   | 'h3'
   | 'h4'
+  | 'quote'
+  | 'code'
+  | 'strike'
   | 'bullet'
   | 'numbered'
   | 'indent'
@@ -204,8 +245,14 @@ export function applyFormat(command: FormatCommand, edit: LineEdit): LineEdit {
       return toggleWrap(edit, '**');
     case 'italic':
       return toggleWrap(edit, '_');
+    case 'code':
+      return toggleWrap(edit, '`');
+    case 'strike':
+      return toggleWrap(edit, '~~');
     case 'link':
       return insertLink(edit);
+    case 'quote':
+      return toggleQuote(edit);
     case 'h1':
     case 'h2':
     case 'h3':
@@ -273,6 +320,10 @@ export function toggleHeading(edit: LineEdit, level: HeadingLevel): LineEdit {
   return withPrefix(edit, current === level ? '' : `${'#'.repeat(level)} `);
 }
 
+export function toggleQuote(edit: LineEdit): LineEdit {
+  return withPrefix(edit, parseLine(edit.text).quote ? '' : '> ');
+}
+
 export function toggleList(edit: LineEdit, kind: ListKind): LineEdit {
   const list = parseLine(edit.text).list;
   if (list?.kind === kind) return withPrefix(edit, '');
@@ -321,6 +372,7 @@ export function formatShortcut(event: {
     if (event.code === 'KeyB') return 'bold';
     if (event.code === 'KeyI') return 'italic';
     if (event.code === 'KeyK') return 'link';
+    if (event.code === 'KeyE') return 'code';
     return null;
   }
   switch (event.code) {
@@ -332,6 +384,10 @@ export function formatShortcut(event: {
       return 'h3';
     case 'Digit4':
       return 'h4';
+    case 'KeyX':
+      return 'strike';
+    case 'Digit9':
+      return 'quote';
     case 'Digit7':
       return 'numbered';
     case 'Digit8':
@@ -345,6 +401,9 @@ export const FORMAT_SHORTCUTS: Record<FormatCommand, string> = {
   bold: 'Ctrl + B',
   italic: 'Ctrl + I',
   link: 'Ctrl + K',
+  code: 'Ctrl + E',
+  strike: 'Ctrl + Shift + X',
+  quote: 'Ctrl + Shift + 9',
   h1: 'Ctrl + Shift + 1',
   h2: 'Ctrl + Shift + 2',
   h3: 'Ctrl + Shift + 3',

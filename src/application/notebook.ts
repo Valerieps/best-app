@@ -1,11 +1,16 @@
 import { detectKind } from '../domain/blockKind';
 import { toDayKey, type DayKey } from '../domain/day';
 import type { Block, BlockKind, Section, SectionKind } from '../domain/entities';
+import { isPeopleTitle } from '../domain/people';
 import { adoptFirstPart, carriedPosition, placeInOrder, type Ordered } from '../domain/order';
 import { canEditFreely, lastTriagedDayAfterReopen } from '../domain/tasks';
 import { record } from './events';
+import { releaseFromQueue } from './executionQueue';
 import type { AppContext, StoreTransaction } from './ports';
 import { addProject, renameProjectIn } from './projects';
+import { followTag } from './projectTags';
+import { followsSection, tagProject } from '../domain/projectTags';
+import { newIdeaFields } from '../domain/ideas';
 
 /** Use cases of the day note: sections, blocks and checking tasks off. */
 
@@ -71,7 +76,15 @@ export async function setSectionTitle(ctx: AppContext, sectionId: string, title:
   await ctx.store.transaction(async (tx) => {
     const section = await getOrThrow(tx.sections.get(sectionId), 'Section');
     if (section.title === next) return;
-    await tx.sections.put({ ...section, title: next, updatedAt: nowIso(ctx) });
+    // A meeting titled with people belongs to them, not to a project: no whiteboard to settle.
+    const withPeople =
+      section.kind === 'meeting' && section.projectId === null && next !== null && isPeopleTitle(next) && section.whiteboardDecision === 'pending';
+    await tx.sections.put({
+      ...section,
+      title: next,
+      ...(withPeople ? { whiteboardDecision: 'keptUnlinked' as const } : {}),
+      updatedAt: nowIso(ctx),
+    });
     await record(ctx, tx, 'section.titleChanged', 'section', section.id, section.day, { from: section.title, to: next });
   });
 }
@@ -88,8 +101,10 @@ export async function linkSection(
   const linked: Section = { ...section, projectId, updatedAt: at };
   await tx.sections.put(linked);
   await record(ctx, tx, 'section.linkedToProject', 'section', section.id, day, { projectId });
+  const projects = await tx.allProjects();
   for (const block of await tx.blocksInSection(section.id)) {
-    if (block.kind !== 'task' || block.projectId === projectId) continue;
+    // A tagged task stays in its tag's project (ADR-066).
+    if (!followsSection(block.kind) || block.projectId === projectId || tagProject(block.text, projects)) continue;
     await tx.blocks.put({ ...block, projectId, updatedAt: at });
     await record(ctx, tx, 'block.linkedToProject', 'block', block.id, day, { projectId });
   }
@@ -177,8 +192,9 @@ export async function unlinkSection(ctx: AppContext, sectionId: string, title: s
     }
     await tx.sections.put({ ...section, title: next, projectId: null, updatedAt: at });
     await record(ctx, tx, 'section.unlinkedFromProject', 'section', section.id, day, { projectId });
+    const projects = await tx.allProjects();
     for (const block of await tx.blocksInSection(section.id)) {
-      if (block.kind !== 'task' || block.projectId !== projectId) continue;
+      if (!followsSection(block.kind) || block.projectId !== projectId || tagProject(block.text, projects)) continue;
       await tx.blocks.put({ ...block, projectId: null, updatedAt: at });
       await record(ctx, tx, 'block.linkedToProject', 'block', block.id, day, { projectId: null });
     }
@@ -207,12 +223,13 @@ function newBlock(
   const at = nowIso(ctx);
   return {
     ...(kind === 'task' && waiting ? { waiting: true } : {}),
+    ...(kind === 'idea' ? newIdeaFields() : {}),
     id: id ?? ctx.ids.next(),
     kind,
     text,
     sectionId: section.id,
     position,
-    projectId: kind === 'task' ? section.projectId : null,
+    projectId: followsSection(kind) ? section.projectId : null,
     createdAt: at,
     updatedAt: at,
     status: kind === 'task' ? 'active' : null,
@@ -238,7 +255,7 @@ async function addBlock(
   await tx.blocks.put(block);
   await record(ctx, tx, 'block.created', 'block', block.id, today(ctx), { kind, sectionId: section.id });
   if (kind === 'note') await reopenNotesIfTriaged(ctx, tx, section);
-  return block;
+  return followTag(ctx, tx, block, null);
 }
 
 export interface NewBlockTarget {
@@ -273,12 +290,19 @@ export async function createBlock(ctx: AppContext, target: NewBlockTarget, typed
   });
 }
 
+/** Saves a block's new text, and the project its tag says (ADR-066). */
+async function putText(ctx: AppContext, tx: StoreTransaction, block: Block, text: string): Promise<Block> {
+  const saved: Block = { ...block, text, updatedAt: nowIso(ctx) };
+  await tx.blocks.put(saved);
+  return followTag(ctx, tx, saved, block.text);
+}
+
 /** Saves typed text. Plain text edits do not go into the event history (ADR-004). */
 export async function updateBlockText(ctx: AppContext, blockId: string, text: string): Promise<void> {
   await ctx.store.transaction(async (tx) => {
     const block = await tx.blocks.get(blockId);
     if (!block || block.text === text) return;
-    await tx.blocks.put({ ...block, text, updatedAt: nowIso(ctx) });
+    await putText(ctx, tx, block, text);
   });
 }
 
@@ -291,7 +315,7 @@ export async function restoreUnsavedText(ctx: AppContext, blockId: string, text:
   return ctx.store.transaction(async (tx) => {
     const block = await tx.blocks.get(blockId);
     if (!block || block.updatedAt !== base || block.text === text) return false;
-    await tx.blocks.put({ ...block, text, updatedAt: nowIso(ctx) });
+    await putText(ctx, tx, block, text);
     return true;
   });
 }
@@ -314,7 +338,7 @@ export async function splitBlock(
     const block = await getOrThrow(tx.blocks.get(blockId), 'Block');
     const before = fullText.slice(0, caret);
     const after = fullText.slice(caret);
-    if (block.text !== before) await tx.blocks.put({ ...block, text: before, updatedAt: nowIso(ctx) });
+    if (block.text !== before) await putText(ctx, tx, block, before);
 
     const section = await targetSection(ctx, tx, target);
     const kind = splitKind(block.kind, after);
@@ -339,24 +363,90 @@ async function requireFreeBlock(ctx: AppContext, tx: StoreTransaction, blockId: 
 export async function changeBlockKind(ctx: AppContext, blockId: string, kind: BlockKind, text: string, waiting = false): Promise<void> {
   await ctx.store.transaction(async (tx) => {
     const { block, section } = await requireFreeBlock(ctx, tx, blockId);
-    if (block.kind === kind) {
-      if (block.text !== text) await tx.blocks.put({ ...block, text, updatedAt: nowIso(ctx) });
-      return;
+    await changeKindIn(ctx, tx, block, section, kind, text, waiting);
+  });
+}
+
+async function changeKindIn(
+  ctx: AppContext,
+  tx: StoreTransaction,
+  block: Block,
+  section: Section,
+  kind: BlockKind,
+  text: string,
+  waiting: boolean,
+): Promise<void> {
+  if (block.kind === kind) {
+    if (block.text !== text) await putText(ctx, tx, block, text);
+    return;
+  }
+  const { waiting: _wasWaiting, ideaStatus: _s, notYetCount: _n, lastNotYetAt: _l, ideaSectionId: _i, ...rest } = block;
+  const changed: Block = {
+    ...rest,
+    kind,
+    text,
+    status: kind === 'task' ? 'active' : null,
+    projectId: followsSection(kind) ? section.projectId : null,
+    ...(kind === 'task' && waiting ? { waiting: true } : {}),
+    ...(kind === 'idea' ? newIdeaFields() : {}),
+    updatedAt: nowIso(ctx),
+  };
+  await tx.blocks.put(changed);
+  await record(ctx, tx, 'block.kindChanged', 'block', block.id, today(ctx), { from: block.kind, to: kind });
+  if (kind === 'task' && waiting) await record(ctx, tx, 'task.waitingChanged', 'block', block.id, today(ctx), { waiting: true });
+  if (kind === 'note') await reopenNotesIfTriaged(ctx, tx, section);
+  // The new kind starts from the section's project; a tag still wins (ADR-066).
+  await followTag(ctx, tx, changed, null);
+}
+
+export interface PasteOptions {
+  /** The first line goes through kind detection ("[] " makes the line a task): a free note, not a project note. */
+  detectFirst: boolean;
+  /** The new lines go through kind detection; false for notes kept on a project page. */
+  detectRest: boolean;
+  /** Lines of a kept note on a project page: created like `splitKeptNote` does, without reopening a triage. */
+  kept?: boolean;
+}
+
+/**
+ * Pasting text with line breaks into a line (ADR-062): `lines[0]` is the new text of the line
+ * and each other line becomes a block at the matching target, in order. One transaction, so a
+ * paste is saved whole or not at all.
+ */
+export async function pasteLines(ctx: AppContext, blockId: string, lines: string[], targets: NewBlockTarget[], options: PasteOptions): Promise<void> {
+  await ctx.store.transaction(async (tx) => {
+    const block = await getOrThrow(tx.blocks.get(blockId), 'Block');
+    const first = options.detectFirst && block.kind === 'note' ? detectKind(lines[0]) : { kind: block.kind, text: lines[0], waiting: undefined };
+    if (first.kind !== 'note' && block.kind === 'note') {
+      const { block: free, section } = await requireFreeBlock(ctx, tx, blockId);
+      await changeKindIn(ctx, tx, free, section, first.kind, first.text, first.waiting === true);
+    } else if (block.text !== lines[0]) {
+      await putText(ctx, tx, block, lines[0]);
     }
-    const { waiting: _wasWaiting, ...rest } = block;
-    const changed: Block = {
-      ...rest,
-      kind,
-      text,
-      status: kind === 'task' ? 'active' : null,
-      projectId: kind === 'task' ? section.projectId : null,
-      ...(kind === 'task' && waiting ? { waiting: true } : {}),
-      updatedAt: nowIso(ctx),
-    };
-    await tx.blocks.put(changed);
-    await record(ctx, tx, 'block.kindChanged', 'block', block.id, today(ctx), { from: block.kind, to: kind });
-    if (kind === 'task' && waiting) await record(ctx, tx, 'task.waitingChanged', 'block', block.id, today(ctx), { waiting: true });
-    if (kind === 'note') await reopenNotesIfTriaged(ctx, tx, section);
+    for (let i = 1; i < lines.length; i += 1) {
+      const target = targets[i - 1];
+      const section = await targetSection(ctx, tx, target);
+      const detected = options.detectRest ? detectKind(lines[i]) : { kind: 'note' as BlockKind, text: lines[i], waiting: undefined };
+      if (options.kept) {
+        const note = newBlock(ctx, section, 'note', lines[i], target.position, target.blockId);
+        await tx.blocks.put(note);
+        await record(ctx, tx, 'block.created', 'block', note.id, today(ctx), { kind: 'note', sectionId: section.id });
+        await followTag(ctx, tx, note, null);
+      } else {
+        await addBlock(ctx, tx, section, detected.kind, detected.text, target.position, target.blockId, detected.waiting);
+      }
+    }
+  });
+}
+
+/** Pasting text with line breaks into an empty line that is not saved yet: one block per line. */
+export async function createBlocks(ctx: AppContext, targets: NewBlockTarget[], typed: string[]): Promise<void> {
+  await ctx.store.transaction(async (tx) => {
+    for (let i = 0; i < typed.length; i += 1) {
+      const section = await targetSection(ctx, tx, targets[i]);
+      const { kind, text, waiting } = detectKind(typed[i]);
+      await addBlock(ctx, tx, section, kind, text, targets[i].position, targets[i].blockId, waiting);
+    }
   });
 }
 
@@ -398,11 +488,11 @@ export async function splitKeptNote(
     const block = await tx.blocks.get(blockId);
     if (!block || block.kind !== 'note') return null;
     const section = await getOrThrow(tx.sections.get(block.sectionId), 'Section');
-    await tx.blocks.put({ ...block, text: fullText.slice(0, caret), updatedAt: nowIso(ctx) });
+    await putText(ctx, tx, block, fullText.slice(0, caret));
     const note = newBlock(ctx, section, 'note', fullText.slice(caret), position, newId);
     await tx.blocks.put(note);
     await record(ctx, tx, 'block.created', 'block', note.id, today(ctx), { kind: 'note', sectionId: section.id });
-    return note;
+    return followTag(ctx, tx, note, null);
   });
 }
 
@@ -412,7 +502,7 @@ export async function mergeKeptNote(ctx: AppContext, blockId: string, fullText: 
     const block = await tx.blocks.get(blockId);
     const previous = await tx.blocks.get(previousId);
     if (!block || !previous || block.kind !== 'note' || previous.kind !== 'note') return;
-    await tx.blocks.put({ ...previous, text: previous.text + fullText, updatedAt: nowIso(ctx) });
+    await putText(ctx, tx, previous, previous.text + fullText);
     await tx.blocks.delete(block.id);
     await record(ctx, tx, 'block.deleted', 'block', block.id, today(ctx), { kind: block.kind, mergedInto: previousId });
   });
@@ -423,7 +513,7 @@ export async function mergeIntoPrevious(ctx: AppContext, blockId: string, fullTe
   await ctx.store.transaction(async (tx) => {
     const { block } = await requireFreeBlock(ctx, tx, blockId);
     const previous = await getOrThrow(tx.blocks.get(previousId), 'Block');
-    await tx.blocks.put({ ...previous, text: previous.text + fullText, updatedAt: nowIso(ctx) });
+    await putText(ctx, tx, previous, previous.text + fullText);
     await tx.blocks.delete(block.id);
     await record(ctx, tx, 'block.deleted', 'block', block.id, today(ctx), { kind: block.kind, mergedInto: previousId });
   });
@@ -433,6 +523,7 @@ export async function mergeIntoPrevious(ctx: AppContext, blockId: string, fullTe
 export async function finishTaskIn(ctx: AppContext, tx: StoreTransaction, task: Block, day: DayKey): Promise<Block> {
   const finished: Block = { ...task, status: 'done', closedAt: nowIso(ctx), updatedAt: nowIso(ctx) };
   await tx.blocks.put(finished);
+  await releaseFromQueue(ctx, tx, task, 'finished', day);
   await record(ctx, tx, 'task.finished', 'block', task.id, day, {
     intendedDate: task.intendedDate,
     firstIntendedDate: task.firstIntendedDate,
@@ -491,6 +582,7 @@ export async function abandonTasks(ctx: AppContext, taskIds: readonly string[]):
       const task = await tx.blocks.get(taskId);
       if (!task || task.kind !== 'task' || task.status !== 'active') continue;
       await tx.blocks.put({ ...task, status: 'abandoned', closedAt: nowIso(ctx), updatedAt: nowIso(ctx) });
+      await releaseFromQueue(ctx, tx, task, 'abandoned');
       await record(ctx, tx, 'task.abandoned', 'block', task.id, today(ctx));
     }
   });

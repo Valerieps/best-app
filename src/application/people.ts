@@ -58,6 +58,11 @@ async function rewriteMentions(ctx: AppContext, tx: StoreTransaction, from: stri
     const text = renameMentions(block.text, from, to);
     if (text !== block.text) await tx.blocks.put({ ...block, text, updatedAt: at });
   }
+  // The titles of meetings with people cite them too.
+  for (const section of await tx.sectionsWithMentions()) {
+    const title = renameMentions(section.title ?? '', from, to);
+    if (title !== section.title) await tx.sections.put({ ...section, title, updatedAt: at });
+  }
 }
 
 export type RenameResult = { ok: true } | { ok: false; reason: 'invalid' | 'taken'; other?: Person };

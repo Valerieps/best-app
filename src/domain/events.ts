@@ -42,8 +42,11 @@ export interface EventData {
   'block.deleted': { kind: BlockKind; text: string } | { kind: BlockKind; mergedInto: string };
   /** `sectionId` when the new note moved to a note on its project's page ("Tarefas esquecidas"). */
   'block.kindChanged': { from: BlockKind; to: BlockKind; sectionId?: string };
-  /** `projectId` null when a triage unlinks the task; `mergedFrom` when projects were merged. */
-  'block.linkedToProject': { projectId: string | null; mergedFrom?: string };
+  /**
+   * `projectId` null when a triage unlinks the task; `mergedFrom` when projects were merged;
+   * `byTag` when a project tag in the text moved the block (ADR-066).
+   */
+  'block.linkedToProject': { projectId: string | null; mergedFrom?: string; byTag?: true };
   'task.intendedDateChanged': { from: DayKey | null; to: DayKey | null; reason: DateChangeReason };
   'task.deadlineChanged': { from: DayKey | null; to: DayKey | null };
   'task.postponed': { from: DayKey | null; to: DayKey | null; reason: DateChangeReason };
@@ -69,9 +72,9 @@ export interface EventData {
   'task.waitingChanged': { waiting: boolean };
   /**
    * `projectPage` and `projectId` when the section is a project's page; `projectNote` and
-   * `projectId` when it is a note written on a project's page.
+   * `projectId` when it is a note written on a project's page; `ideaId` when it is an idea's page.
    */
-  'section.created': { kind: SectionKind; projectPage?: true; projectNote?: true; projectId?: string };
+  'section.created': { kind: SectionKind; projectPage?: true; projectNote?: true; projectId?: string; ideaId?: string };
   'section.titleChanged': { from: string | null; to: string | null };
   'section.linkedToProject': { projectId: string; mergedFrom?: string };
   /** The section went back to being a whiteboard; `projectId` is the project it left. */
@@ -85,7 +88,8 @@ export interface EventData {
   /** `weeklyReflection` is a destination from before ADR-060. */
   'section.notesReopened': { from: NotesDestination | 'weeklyReflection' };
   'section.detailsChanged': { participants: string | null; docLink: string | null };
-  'project.created': { name: string };
+  /** `fromIdeaId` and `fromProjectId` when the project grew from an idea (spec/ideias.md). */
+  'project.created': { name: string; fromIdeaId?: string; fromProjectId?: string };
   'project.renamed': { from: string; to: string };
   'project.finished': NoData;
   'project.reopened': NoData;
@@ -96,17 +100,33 @@ export interface EventData {
    * A change of a priority list, carrying the whole list after it. Day priorities (entity
    * `day:<day>`) name the task; the list in focus names the project, and a removal says why:
    * `removed` by hand, `finished` with the project, `review` in the Revisão de Foco (history
-   * only, ADR-060). An addition that took another project's place names it in `replaced`.
+   * only, ADR-060). An addition that took another project's place names it in `replaced`. The
+   * project next steps (entity `next:<projectId>`, ADR-065, removed by ADR-070) named the task and
+   * the project, and a removal said why: `removed`, `finished`, `abandoned` or `moved`; history only.
+   * The "Fila de execução" (entity `queue`, ADR-069) names the task, and a removal says why:
+   * `removed` by hand, `finished` or `abandoned`.
    */
-  'priority.added': { taskId: string; itemIds: string[] } | { projectId: string; itemIds: string[]; replaced?: string };
+  'priority.added':
+    | { taskId: string; itemIds: string[] }
+    | { projectId: string; itemIds: string[]; replaced?: string }
+    | { taskId: string; projectId: string; itemIds: string[]; replaced?: string };
   'priority.removed':
     | { taskId: string; itemIds: string[] }
+    | { taskId: string; reason: 'removed' | 'finished' | 'abandoned'; itemIds: string[] }
+    | { taskId: string; projectId: string; reason: 'removed' | 'finished' | 'abandoned' | 'moved'; itemIds: string[] }
     | { projectId: string; reason: 'removed' | 'finished' | 'review'; itemIds: string[] };
   /**
    * History only: a review was closed, with a snapshot of the metrics it showed. The reviews
    * were removed (ADR-060); the closed ones stay in the history and in the backup.
    */
   'reflection.closed': { kind: 'focus' | 'direction'; since: string | null; metrics: Record<string, unknown> };
+  /** The idea's destinations (spec/ideias.md, "Destinos"), on the idea's block. */
+  'idea.becameTask': { projectId: string | null };
+  /** `projectId` is the new project; `fromProjectId` the idea's project then, if any. */
+  'idea.becameProject': { projectId: string; fromProjectId: string | null };
+  'idea.dropped': NoData;
+  /** "Ainda não": `count` is how many times so far, this one included. */
+  'idea.notYet': { count: number };
   'settings.changed': Partial<Omit<Settings, 'id' | 'updatedAt'>>;
   'day.started': NoData;
   'day.executionStarted': NoData;

@@ -1,0 +1,238 @@
+/* A line or part of the day note that appears while the note is on screen (entryMotion.ts) */
+.line--entering,
+.day-part--entering {
+  animation: motion-fade-in var(--motion-base) var(--ease-out) backwards;
+}
+
+/* The next step of "Fechar o dia" */
+.checkout-step {
+  animation: motion-rise-in var(--motion-base) var(--ease-out) backwards;
+}
+
+/* Menus and suggestion lists opening */
+.dropdown__list,
+.suggestions {
+  animation: motion-pop-in var(--motion-fast) var(--ease-out) backwards;
+}
+
+@keyframes motion-fade-in {
+  from {
+    opacity: 0;
+  }
+}
+
+@keyframes motion-rise-in {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+}
+
+@keyframes motion-pop-in {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  button,
+  .checkout-stepper__bar,
+  .line--task .line__text,
+  .line--task .line__rendered {
+    transition: none;
+  }
+
+  button:not(.link, .day-part__handle):active:not(:disabled) {
+    transform: none;
+  }
+
+  .line--entering,
+  .day-part--entering,
+  .checkout-step,
+  .dropdown__list,
+  .suggestions {
+    animation: none;
+  }
+}
+
+/* First-use screen: the backup folder is chosen before anything else. */
+.backup-setup {
+  padding: var(--space-5);
+  text-align: center;
+}
+
+.backup-setup__title {
+  margin: 0;
+  font-size: var(--font-size-xl);
+}
+
+.backup-setup__text {
+  margin: 0;
+  max-width: 34rem;
+  color: var(--color-text-muted);
+}
+
+.backup-interval {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.backup-interval select {
+  width: auto;
+}
+
+/* Ctrl + K: go to a place of the sidebar (spec/navegacao.md, "Global") */
+.palette {
+  width: min(480px, calc(100vw - 2 * var(--space-4)));
+  margin: 15vh auto auto;
+  padding: 0;
+  border: var(--border-width) solid var(--color-border);
+  border-radius: var(--radius-lg);
+  color: var(--color-text);
+  background: var(--color-surface);
+  box-shadow: 0 var(--space-3) var(--space-6) var(--color-shadow);
+}
+
+.palette::backdrop {
+  background: var(--color-backdrop);
+}
+
+.palette__input {
+  width: 100%;
+  padding: var(--space-3) var(--space-4);
+  border: 0;
+  border-bottom: var(--border-width) solid var(--color-border);
+  border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+  font: inherit;
+  font-size: var(--font-size-md);
+  color: inherit;
+  background: transparent;
+  outline: none;
+}
+
+.palette__list {
+  margin: 0;
+  padding: var(--space-2);
+  list-style: none;
+}
+
+.palette__list:empty {
+  display: none;
+}
+
+.palette__option {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+}
+
+.palette__option--active {
+  color: var(--color-brand-strong);
+  background: var(--color-brand-soft);
+}
+
+.palette__empty {
+  margin: 0;
+  padding: var(--space-3) var(--space-4);
+  font-size: var(--font-size-sm);
+}
+
+/* "Fechar o dia", board: the drop zone above the board, and the card with its box. */
+.plan-drops {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--space-3);
+  margin-top: var(--space-3);
+}
+
+.plan-drop {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  min-height: 48px;
+  padding: var(--space-2);
+  border: var(--border-width) dashed var(--color-border-strong);
+  border-radius: var(--radius-md);
+  color: var(--color-text-muted);
+  font-size: var(--font-size-sm);
+}
+
+.plan-drop--danger {
+  color: var(--color-danger);
+}
+
+.plan-drop--on {
+  border-style: solid;
+  border-color: var(--color-accent);
+  background: var(--color-select-bg);
+}
+
+.plan-drop--danger.plan-drop--on {
+  border-color: var(--color-danger);
+}
+
+.plan-card__row {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-2);
+}
+
+.plan-card__row > input[type='checkbox'] {
+  flex: none;
+  margin-top: 3px;
+}
+
+.plan-card__done {
+  text-decoration: line-through;
+}
+
+/* "Fechar o dia": the closing uses almost the whole screen, without a frame around the steps. */
+.page--full {
+  max-width: none;
+  padding-left: var(--space-4);
+  padding-right: var(--space-4);
+}
+
+.card--plain {
+  border: none;
+  border-radius: 0;
+  background: transparent;
+}
+
+.checkout-step--board {
+  max-width: none;
+}
+
+/* What does not fit in a card is cut, never spilling out of it. */
+.plan-card,
+.plan-card__row,
+.plan-card__text,
+.plan-card__meta {
+  min-width: 0;
+  max-width: 100%;
+}
+
+.plan-card {
+  overflow: hidden;
+}
+
+.plan-card__row > .plan-card__text {
+  flex: 1;
+}
+
+.plan-card__text > span:first-child {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.plan-card .chip {
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
