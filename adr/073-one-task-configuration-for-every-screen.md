@@ -1,0 +1,12 @@
+# ADR-073: One task configuration for every screen
+
+**Status:** Accepted
+**Date:** 2026-11-12
+**Decision:** A task's behavior and look on screen live in `src/ui/tasks/`:
+- `taskSurface.ts` is the single table (`SURFACE_ACTIONS`) of which actions each screen (surface) offers — day note, project page, idea page, task table, day priorities, person page and execution queue — plus the rules that hold everywhere: a closed task keeps only "Detalhes"; a waiting task gets its follow-up day and no priority, queue or deadline; a task of mine gets no date (ADR-072); "Projeto" only for a task without project when there is a project to pick. It also owns the labels (untitled text, dates in words, the checkbox's name).
+- `TaskControls.tsx` holds the pieces every task line uses: `TaskCheckbox`, `PriorityStar`, `TaskDateChips` and `TaskActionButtons`, always in the same order.
+- `taskCommands.ts` is the only place that turns an action into a write, always through the write queue (`write` in `writeQueue.ts`, which replaces seven local copies). The task details window (`TaskDetailsDialog`) writes through it too.
+
+`BlockLine` takes a `surface` prop and no longer receives task callbacks (`onToggleDone`, `onSetDate`, `onSetDeadline`, `onTogglePriority`, `onAddToQueue`, `onSetWaiting`, `onAbandon`). The old `TaskRow`, used only by the queue, moved into the queue screen. `DatePicker` moved to `src/ui/components/`.
+**Why:** The same task was drawn by five separate pieces of code (the editor line, the task table, the priorities block, the person page, the queue), each deciding its own actions, labels and write path. Adding or changing an action meant editing up to eight files, and they had drifted: the idea page showed a ☆ that did nothing, the table, the queue and the details window wrote outside the write queue, and the checkbox had four different labels. Now a change of behavior is one line in `SURFACE_ACTIONS`, tested in `taskSurface.test.ts`.
+**Consequences:** The per-screen differences that remain are explicit in `SURFACE_ACTIONS`, each one a product rule from `spec/`. The execution queue keeps its own "Remover da fila", and its rows show no dates. "Detalhes" is a button only where the text is an editable field (`BlockLine`); elsewhere a click on the text opens the details (`TaskText`). The "Fechar o dia" board is not a task line and keeps its own layout; it only shares `taskText`.
