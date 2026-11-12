@@ -1,6 +1,6 @@
 # Tarefas e datas
 
-- **Entra aqui:** a tarefa, a lista de tarefas (com mostrar, agrupar e ordenar), a data de intenção, o prazo máximo, o adiamento e a tela "Próximos dias".
+- **Entra aqui:** a tarefa, a tabela de tarefas (com colunas, filtros, agrupar e ordenar), a data de intenção, o prazo máximo, o adiamento e a tela "Próximos dias".
 - **Não entra aqui:** os destinos da tarefa no fechamento do dia (`checkout.md`), as prioridades (`prioridades.md`) e as tarefas de projeto (`projetos.md`).
 
 ## Tarefas *(1a)*
@@ -14,18 +14,22 @@
 - Conta como adiamento toda mudança da data de intenção para depois, também a que eu faço no fechamento do dia. Tirar a data de intenção, deixando a tarefa sem data, também conta como adiamento, e o "Fechar dias pendentes" conta o adiamento de cada tarefa que devolve sem data. A tarefa que eu deixo sem mexer na triagem do "Fechar o dia" vai para a lista sem data e não conta (`checkout.md`).
 - O app guarda stats de quantos adiamentos e da distância entre a primeira intenção de execução e a ação final (finalizar, abandonar).
 
-## Agrupar e ordenar as tarefas *(1b)*
+## A tabela de tarefas *(1b)*
 
-- Na tela de tarefas, eu posso agrupar e ordenar as tarefas por projeto, por data de intenção, por data de criação ou por quantidade de adiamentos. Dá para usar as duas coisas ao mesmo tempo: agrupar por uma e ordenar por outra (ou pela mesma).
-- Um seletor "Mostrar" escolhe entre as tarefas não concluídas, as concluídas ou todas. A tela sempre abre nas não concluídas, e essa escolha não fica guardada. Agrupar, ordenar e "Só projetos em foco" valem também para as concluídas.
+- A tela de tarefas é uma tabela. A coluna "Tarefa" está sempre lá; as outras são "Data" (de intenção), "Prazo", "Projeto", "Criada em" e "Adiamentos". O botão "Colunas" mostra ou esconde cada uma delas, e "Tarefa" aparece com um cadeado. Sem nada escolhido, aparecem "Data", "Prazo" e "Projeto".
+- Em cima da tabela, ficam a quantidade de tarefas que ela mostra, o "Agrupar por" e os botões "Filtros" e "Colunas".
+- Clicar no título de uma coluna ordena a tabela por ela, e um segundo clique inverte a ordem. Uma seta no título mostra a coluna e o sentido. Sem nada escolhido, a tabela segue ordenada pela data de intenção, do dia mais próximo para o mais distante.
+- Na ordem normal, "Tarefa" vai de A a Z; "Data" e "Prazo", do dia mais próximo para o mais distante; "Criada em", da mais antiga para a mais nova; "Projeto", pelo nome do projeto em ordem alfabética; "Adiamentos", da mais adiada para a menos adiada. As tarefas sem projeto, sem data ou sem prazo vão para o fim, nos dois sentidos. Quando empata, vale a data de intenção e depois a de criação.
+- O botão "Filtros" abre um menu com as categorias à esquerda e as opções da escolhida à direita, com a opção ativa marcada. O botão mostra quantos filtros estão ativos, e "Limpar filtros" volta tudo ao normal. As categorias:
+  - "Mostrar": as tarefas não concluídas, as concluídas ou todas. A tela sempre abre nas não concluídas, e essa escolha não fica guardada.
+  - "Projeto": todos, só os projetos em foco (`projetos.md`), só as tarefas sem projeto, ou um projeto ativo.
+- Os filtros combinam entre si e com agrupar e ordenar, e valem também para as concluídas.
 - Uma tarefa concluída aparece riscada, com o checkbox marcado: desmarcar reabre a tarefa, com a data que ela tinha. Ela não tem as ações do hover e não entra em "Selecionar várias".
-- Sem nada escolhido, a lista não tem grupos e segue ordenada pela data de intenção, como antes.
-- Ordenar por projeto segue o nome do projeto, em ordem alfabética; por data de intenção, do dia mais próximo para o mais distante; por data de criação, da mais antiga para a mais nova; por adiamentos, da mais adiada para a menos adiada. As tarefas sem projeto ou sem data vão para o fim. Quando empata, vale a data de intenção e depois a de criação.
-- Agrupado, cada grupo é uma sublista com título e quantidade de tarefas, e eu posso recolher e abrir cada uma. Os grupos seguem a mesma ordem: projetos por nome, dias do mais cedo para o mais tarde, adiamentos da mais adiada ("Adiada 3 vezes") até "Nunca adiada", e "Sem projeto" ou "Sem data" por último. Na data de criação, o grupo é o dia em que a tarefa foi criada.
-- O título do grupo de um dia usa "Hoje", "Amanhã" e "Ontem" quando é o caso, e a data curta nos outros dias.
-- Um seletor "Só projetos em foco" deixa na lista só as tarefas dos projetos em foco (`projetos.md`), e combina com agrupar e ordenar.
-- A escolha de agrupar, ordenar e do seletor fica guardada neste navegador. Os grupos sempre abrem abertos, e um botão recolhe ou abre todos de uma vez.
-- No hover de uma tarefa, eu posso mudar a data de intenção e o prazo máximo, como na nota do dia, e abandonar a tarefa. Uma tarefa sem projeto também ganha "Projeto", que a vincula a um dos projetos ativos. Toda tarefa minha ganha "Adicionar à fila" (`prioridades.md`, "Fila de execução") *(7)*. Abandonar é um ícone de lixeira, em todas as telas onde existe: nesta lista, na seleção de várias tarefas, na tela de um projeto (no hover de qualquer tarefa ativa) e na área de soltar do quadro do fechamento. Na lista e na tela do projeto ele pede um segundo clique para confirmar, e a tarefa sai da tela. A linha mostra o prazo, quando tem.
+- Eu posso agrupar por projeto, por data de intenção, por data de criação ou por quantidade de adiamentos, e ordenar por outra coluna (ou pela mesma). Sem nada escolhido, a tabela não tem grupos.
+- Agrupado, cada grupo é uma linha com título e quantidade de tarefas, e eu posso recolher e abrir cada um. Os grupos seguem a ordem: projetos por nome, dias do mais cedo para o mais tarde, adiamentos da mais adiada ("Adiada 3 vezes") até "Nunca adiada", e "Sem projeto" ou "Sem data" por último. Na data de criação, o grupo é o dia em que a tarefa foi criada.
+- O título do grupo de um dia usa "Hoje", "Amanhã" e "Ontem" quando é o caso, e a data curta nos outros dias. As datas das colunas seguem a mesma regra.
+- O agrupar, a ordem, as colunas e o filtro de projeto ficam guardados neste navegador. Os grupos sempre abrem abertos, e um botão recolhe ou abre todos de uma vez.
+- No hover de uma linha, eu posso mudar a data de intenção e o prazo máximo, como na nota do dia, e abandonar a tarefa. Uma tarefa sem projeto também ganha "Projeto", que a vincula a um dos projetos ativos. Toda tarefa minha ganha "Adicionar à fila" (`prioridades.md`, "Fila de execução") *(7)*. Abandonar é um ícone de lixeira, em todas as telas onde existe: nesta lista, na seleção de várias tarefas, na tela de um projeto (no hover de qualquer tarefa ativa) e na área de soltar do quadro do fechamento. Na lista e na tela do projeto ele pede um segundo clique para confirmar, e a tarefa sai da tela.
 - Em "Selecionar várias", como no planejamento do fechamento do dia, a caixa de seleção some e eu clico na linha para selecionar, que fica destacada (Shift + clique pega um intervalo, e cada grupo tem "selecionar grupo") e, na barra de baixo, dou a todas a mesma data de intenção ou o mesmo prazo, tiro a data ou o prazo de todas, ou abandono todas, também com um segundo clique para confirmar. Esc ou "Pronto" sai da seleção.
 
 ## Prazo máximo e origem *(1b)*
