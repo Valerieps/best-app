@@ -1,3 +1,4 @@
+import { openTaskDetails } from '../taskDetails/taskDetailsStore';
 import { useCallback, useContext, useEffect, useLayoutEffect, useRef, useState, type ClipboardEvent, type KeyboardEvent, type MouseEvent, type PointerEvent, type ReactNode } from 'react';
 import { detectKind } from '../../domain/blockKind';
 import type { DayKey } from '../../domain/day';
@@ -550,7 +551,7 @@ export function BlockLine({ block, free, day, today, isPriority, isQueued = fals
     </button>
   );
   const convertible = block.kind === 'note' && free && !notesOnly;
-  const hasActions = open || convertible;
+  const hasActions = isTask || convertible;
 
   const structure = parseLine(text);
   const prefixLength = structure.list ? structure.prefixLength : 0;
@@ -701,6 +702,11 @@ export function BlockLine({ block, free, day, today, isPriority, isQueued = fals
       {hasActions && (
         <span className="line__tail">
           <span className="line__actions">
+            {isTask && (
+              <button type="button" className="line__action" title="Ver e editar todos os detalhes da tarefa" onClick={() => openTaskDetails(block.id)}>
+                Detalhes
+              </button>
+            )}
             {open && !waiting && !isPriority && starButton()}
             {open && isTask && !waiting && handlers.onAddToQueue && (
               <button

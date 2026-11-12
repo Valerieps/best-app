@@ -36,6 +36,7 @@ import { useLiveQueryState } from './useLiveQuery';
 import { ErrorBoundary } from './components/ErrorBoundary';
 import { ScreenError } from './components/ErrorScreens';
 import { SaveErrorNotice } from './components/SaveErrorNotice';
+import { TaskDetailsHost } from './taskDetails/TaskDetailsDialog';
 import { reportSaveError } from './saveErrors';
 import { enabledRoute } from './features';
 import { applyAppearance, parseAppearance } from './theme/appearance';
@@ -207,6 +208,7 @@ export function App() {
             onCancel={backup.cancelImport}
           />
         )}
+        <TaskDetailsHost today={today} />
         <SaveErrorNotice />
       </div>
       <RightPanel route={route} today={today} fill={centerCollapsed} />

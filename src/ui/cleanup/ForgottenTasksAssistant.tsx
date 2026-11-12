@@ -5,7 +5,7 @@ import { daysBetween, toDayKey, type DayKey } from '../../domain/day';
 import type { DayTriage, TaskRow } from '../../domain/triage';
 import { BoardStep } from '../checkout/BoardStep';
 import { ProjectChip } from '../components/Chips';
-import { Linkified } from '../components/Linkified';
+import { TaskText } from '../taskDetails/TaskText';
 import { Segmented } from '../components/Segmented';
 import { plural } from '../format';
 import { appContext, reader } from '../services';
@@ -90,7 +90,7 @@ export function ForgottenTasksAssistant({ items, today, onDone }: { items: TaskL
             <li className="card-list__item card-list__item--stacked" key={task.id}>
               <div className="triage-row triage-row--flush">
                 <span className="triage-row__label">
-                  <Linkified text={task.text || '(tarefa sem texto)'} />{' '}
+                  <TaskText taskId={task.id} text={task.text} />{' '}
                   {project && <ProjectChip name={project.name} />}{' '}
                   <span className="muted">criada há {plural(age, 'dia', 'dias')}</span>
                 </span>
