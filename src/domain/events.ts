@@ -103,7 +103,7 @@ export interface EventData {
    * only, ADR-060). An addition that took another project's place names it in `replaced`. A
    * project's next steps (entity `next:<projectId>`, ADR-065) name the task and the project, and a
    * removal says why: `removed` by hand, `finished`, `abandoned`, or `moved` out of the project.
-   * The "Fila de execução" (entity `queue`, ADR-068) names the task, and a removal says why:
+   * The "Fila de execução" (entity `queue`, ADR-069) names the task, and a removal says why:
    * `removed` by hand, `finished` or `abandoned`.
    */
   'priority.added':

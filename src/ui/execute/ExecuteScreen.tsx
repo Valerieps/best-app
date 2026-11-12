@@ -16,13 +16,17 @@ import { useLiveQuery } from '../useLiveQuery';
 const TITLE = 'Fila de execução';
 const GROUP = 'queue';
 
-export function ExecuteScreen({ today }: { today: DayKey }) {
+/**
+ * The screen, or the same content in the right panel (`inPanel`), where the panel shows its own
+ * title (spec/navegacao.md, "Painel da direita").
+ */
+export function ExecuteScreen({ today, inPanel = false }: { today: DayKey; inPanel?: boolean }) {
   const data = useLiveQuery(() => loadExecutionQueue(reader), []);
-  if (!data) return <LoadingPage title={TITLE} />;
-  return <QueueContent data={data} today={today} />;
+  if (!data) return inPanel ? <p className="muted">Carregando…</p> : <LoadingPage title={TITLE} />;
+  return <QueueContent data={data} today={today} inPanel={inPanel} />;
 }
 
-function QueueContent({ data, today }: { data: ExecutionQueueData; today: DayKey }) {
+function QueueContent({ data, today, inPanel }: { data: ExecutionQueueData; today: DayKey; inPanel: boolean }) {
   // The order dragged, shown at once until the saved queue catches up.
   const [pending, setPending] = useState<string[] | null>(null);
   const saved = data.items.map((item) => item.task.id);
@@ -88,14 +92,18 @@ function QueueContent({ data, today }: { data: ExecutionQueueData; today: DayKey
     );
   };
 
+  const content =
+    items.length === 0 ? (
+      <p className="muted">A fila está vazia. Use "Adicionar à fila" no hover de qualquer tarefa.</p>
+    ) : (
+      <ul className="card-list">{items.map(row)}</ul>
+    );
+
+  if (inPanel) return <div className="execute execute--panel">{content}</div>;
   return (
     <main className="page page--active-tasks execute">
       <ScreenHeader title={TITLE} />
-      {items.length === 0 ? (
-        <p className="muted">A fila está vazia. Use "Adicionar à fila" no hover de qualquer tarefa.</p>
-      ) : (
-        <ul className="card-list">{items.map(row)}</ul>
-      )}
+      {content}
     </main>
   );
 }

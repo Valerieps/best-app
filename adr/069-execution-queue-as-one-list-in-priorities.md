@@ -1,4 +1,4 @@
-# ADR-068: Execution queue as one list in `priorities`
+# ADR-069: Execution queue as one list in `priorities`
 
 **Status:** Accepted
 **Date:** 2026-11-12

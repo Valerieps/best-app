@@ -2,7 +2,7 @@ import type { Block, PriorityList } from './entities';
 
 /**
  * "Fila de execução" (spec/prioridades.md): the tasks I chose to do next, in the order I added
- * them, which I can change by hand. One list in `priorities`, id `queue` (ADR-068). It holds
+ * them, which I can change by hand. One list in `priorities`, id `queue` (ADR-069). It holds
  * until I change it: days passing do not empty it.
  */
 

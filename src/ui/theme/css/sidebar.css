@@ -435,3 +435,81 @@ button.sidebar__footer-item {
   align-items: center;
   gap: var(--space-2);
 }
+
+/* The right panel (spec/navegacao.md, "Painel da direita"): a strip of icons, always there, and
+   the open menu beside the center, which shrinks along */
+.right-panel {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  flex: none;
+  display: flex;
+  height: 100vh;
+  background: var(--color-surface-soft);
+  border-left: var(--border-width) solid var(--color-border);
+}
+
+.right-panel__body {
+  position: relative;
+  width: var(--right-panel-width);
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: var(--space-4) var(--space-4) var(--space-6);
+  border-right: var(--border-width) solid var(--color-border);
+}
+
+.right-panel__title {
+  margin: 0 0 var(--space-4);
+  font-size: var(--font-size-md);
+  font-weight: 600;
+}
+
+.right-panel__strip {
+  width: var(--sidebar-collapsed-width);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-1);
+  padding: var(--space-4) var(--space-1);
+}
+
+.right-panel__strip > .right-panel__toggle {
+  margin-bottom: var(--space-4);
+}
+
+.right-panel__strip button.sidebar__icon:disabled {
+  opacity: 0.4;
+  cursor: default;
+  background: none;
+}
+
+/* "Executar" in the panel: narrower, so its groups and controls wrap */
+.execute--panel .execute__controls {
+  flex-wrap: wrap;
+}
+
+.execute--panel .execute__group + .execute__group {
+  margin-top: var(--space-4);
+}
+
+.right-panel__resize {
+  position: absolute;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  width: 6px;
+  cursor: col-resize;
+  touch-action: none;
+}
+
+.right-panel__resize:hover,
+.right-panel__resize:focus-visible,
+.resizing-right-panel .right-panel__resize {
+  background: var(--color-border-strong);
+  outline: none;
+}
+
+.resizing-right-panel {
+  cursor: col-resize;
+  user-select: none;
+}

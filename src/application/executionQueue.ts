@@ -4,7 +4,7 @@ import { QUEUE_LIST_ID, canQueue, recordedQueue, reorderedQueue, withQueued, wit
 import { record } from './events';
 import type { AppContext, StoreTransaction } from './ports';
 
-/** "Fila de execução" (spec/prioridades.md, ADR-068): the tasks I chose to do next, in my order. */
+/** "Fila de execução" (spec/prioridades.md, ADR-069): the tasks I chose to do next, in my order. */
 
 async function saveQueue(ctx: AppContext, tx: StoreTransaction, itemIds: string[]): Promise<void> {
   const list: PriorityList = { id: QUEUE_LIST_ID, scope: 'queue', period: '', itemIds, updatedAt: ctx.clock.now().toISOString() };

@@ -6,7 +6,7 @@ import { createBlock, linkSectionToProject, setTaskDone } from './notebook';
 import { renameResource, addLinkResource } from './objectives';
 import { createProject, createProjectTask, setProjectFinished, setProjectIcon } from './projects';
 import { loadDayNote, loadDayTriage, loadPendingDays, loadProject, loadProjectList } from './queries';
-import { setAppearance, setProjectListGroupOpen, setProjectPanelPinned, setSidebarCollapsed, setSidebarWidth } from './settings';
+import { setAppearance, setProjectListGroupOpen, setProjectPanelPinned, setRightPanelMenu, setRightPanelWidth, setSidebarCollapsed, setSidebarWidth } from './settings';
 
 const TODAY = '2026-10-11';
 
@@ -183,6 +183,25 @@ describe('sidebar', () => {
     expect((await reader.settings())?.sidebarWidth).toBe(320);
     await setSidebarWidth(ctx, null);
     expect((await reader.settings())?.sidebarWidth).toBeUndefined();
+  });
+});
+
+describe('right panel', () => {
+  it('starts collapsed and remembers the menu left open, in the settings', async () => {
+    const { ctx, reader } = createTestContext();
+    expect((await reader.settings())?.rightPanelMenu).toBeUndefined();
+    await setRightPanelMenu(ctx, 'execute');
+    expect((await reader.settings())?.rightPanelMenu).toBe('execute');
+    await setRightPanelMenu(ctx, null);
+    expect((await reader.settings())?.rightPanelMenu).toBeNull();
+  });
+
+  it('remembers the width it was dragged to, and forgets it to go back to the default', async () => {
+    const { ctx, reader } = createTestContext();
+    await setRightPanelWidth(ctx, 420);
+    expect((await reader.settings())?.rightPanelWidth).toBe(420);
+    await setRightPanelWidth(ctx, null);
+    expect((await reader.settings())?.rightPanelWidth).toBeUndefined();
   });
 });
 

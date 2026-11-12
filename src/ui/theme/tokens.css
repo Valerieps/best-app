@@ -144,6 +144,7 @@
   --topbar-height: 56px;
   --sidebar-width: 260px;
   --sidebar-collapsed-width: 48px;
+  --right-panel-width: 360px;
   --project-panel-width: 260px;
 
   /* Motion: short transitions where the screen changes state (issue #120), off with reduced motion */

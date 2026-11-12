@@ -46,7 +46,7 @@ Por quê: na hora de executar, eu não sabia no que focar, e a única forma de p
 Por quê: a tela "Executar" mostrava tudo o que pedia atenção, em quatro listas, e eu ainda tinha que escolher ali o que fazer. Na fila, eu escolho antes e só executo, na ordem que eu quiser. Decidido em 12/11/2026; a fila substituiu a tela "Executar".
 
 - É a tela de quando eu paro para fazer as coisas: mostra só as tarefas que eu pus na fila. Prioridades do dia, tarefas atrasadas, prazos chegando e próximos passos continuam nos lugares deles (a nota do dia, a lista de tarefas, a página do projeto) e não aparecem aqui.
-- A tela abre pela barra lateral, no grupo Hoje, logo abaixo de "Hoje", com o nome "Fila de execução". Ela não substitui "Próximos dias" (`tarefas.md`).
+- A tela abre pela barra lateral, no grupo Hoje, logo abaixo de "Hoje", com o nome "Fila de execução". Ela não substitui "Próximos dias" (`tarefas.md`). Ela também abre inteira no painel da direita, ao lado de qualquer tela (`navegacao.md`, "Painel da direita").
 - Toda tarefa aberta minha ganha, no hover, "Adicionar à fila": na nota do dia, no bloco de prioridades, na lista de tarefas e na página do projeto. Uma tarefa que já está na fila mostra "Na fila", sem efeito, e não ganha outra marca na linha. Uma tarefa aguardando (`pessoas.md`) não é minha para fazer e não ganha a ação.
 - A tarefa entra no fim da fila: a fila fica na ordem em que eu adicionei. Uma alça à esquerda de cada tarefa deixa eu arrastar para mudar a ordem.
 - Dentro da fila, cada tarefa tem "Remover da fila", que a tira da fila sem mudar mais nada nela.

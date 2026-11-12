@@ -1,13 +1,13 @@
 # Navegação
 
-- **Entra aqui:** onde cada opção mora (barra lateral, cabeçalho da tela, ações do item), o menu "Rituais" e a fila de avisos.
+- **Entra aqui:** onde cada opção mora (barra lateral, painel da direita, cabeçalho da tela, ações do item), o menu "Rituais" e a fila de avisos.
 - **Não entra aqui:** o comportamento de cada tela (fica no arquivo da funcionalidade).
 
 Toda opção do app mora num de três níveis, e cada nível tem um lugar fixo, para eu saber onde procurar.
 
 ## 1. Global: a barra lateral, igual em toda tela
 
-- Tudo o que é global fica numa única barra lateral fixa, à esquerda. Não há barra de cima nem gaveta: o centro fica limpo para eu focar no trabalho. A área central é toda branca em toda tela, como no Obsidian, para dar a sensação de que tudo é área de trabalho *(1b)*. O rascunho é o `rascunhos/rascunho-barra-lateral_1.png`, mas dele vale só a barra lateral, e os itens são os desta lista.
+- Tudo o que é global fica numa única barra lateral fixa, à esquerda; à direita fica só o painel da direita, com alguns menus que eu quero ver ao lado da tela ("Painel da direita", abaixo). Não há barra de cima nem gaveta: o centro fica limpo para eu focar no trabalho. A área central é toda branca em toda tela, como no Obsidian, para dar a sensação de que tudo é área de trabalho *(1b)*. O rascunho é o `rascunhos/rascunho-barra-lateral_1.png`, mas dele vale só a barra lateral, e os itens são os desta lista.
 - O app ainda não tem versão para celular: a barra lateral é pensada para a tela do computador.
 - Eu posso recolher a barra lateral num botão no topo dela. Recolhida, ela vira uma faixa estreita com o botão de abrir e o ícone de cada lugar, que leva a ele; o nome aparece como dica no hover, e o contador de "Rituais" fica junto do ícone dele. Recolher e abrir é uma transição suave, e a área central acompanha *(1b)*. O app lembra se deixei a barra aberta ou recolhida. Aberta, eu posso arrastar a borda direita dela com o mouse para deixá-la mais larga ou mais estreita, e a área central encolhe ou cresce junto *(1b)*. A largura vai de 200 a 480 pixels, começa em 260, e um clique duplo na borda volta para ela. O app lembra a largura que escolhi.
 - No topo da barra fica o nome do app, "Vesper Tasks", que também é o título da aba do navegador. Clicar nele abre a nota do dia.
@@ -19,6 +19,15 @@ Toda opção do app mora num de três níveis, e cada nível tem um lugar fixo, 
 - Só um aviso aparece por vez no topo da tela, nesta ordem: backup bloqueado, com erro ou parado há mais de 24 horas, fechamento pendente, backup ainda não ativado. Quando um some, o próximo aparece. Os lembretes que voltaram ficam fora dessa fila e aparecem sempre, porque são o único sinal deles.
 - O aviso de fechamento pendente e o de backup não ativado têm "Lembrar depois", que os esconde até o dia seguinte. O contador de "Rituais" continua mostrando os dias pendentes. O aviso de backup bloqueado, com erro ou parado há mais de 24 horas não pode ser adiado.
 - Quando uma mudança não é salva, a tela volta ao que está salvo e um aviso curto aparece no rodapé, fora da fila do topo: "Uma mudança não foi salva. A tela mostra o que está salvo; tente de novo." Ele some sozinho depois de 8 segundos, ou antes, se eu fechar; com o mouse em cima, ou com o foco do teclado dentro dele, ele espera, e os 8 segundos recomeçam inteiros quando o mouse ou o foco saem. Se outra mudança falhar enquanto ele está na tela, ele conta as mudanças e os 8 segundos recomeçam.
+
+### Painel da direita *(1b)*
+
+- Na direita de toda tela que tem a barra lateral há uma faixa estreita com um ícone por menu, como a faixa da direita do Obsidian. Clicar num ícone abre aquele menu num painel ao lado da tela, e a área central encolhe junto; clicar de novo no mesmo ícone recolhe o painel. No topo da faixa, um botão abre e recolhe o painel, e Ctrl + Alt + B (⌘ + Option + B no Mac) faz o mesmo de qualquer tela; Ctrl + B continua sendo negrito na nota do dia.
+- Por enquanto o único menu é a "Fila de execução", inteira, como na tela (`prioridades.md`, "Fila de execução"). Ela continua também na barra lateral, para quando eu quero a tela cheia.
+- O painel começa recolhido, e o app lembra se deixei aberto e qual menu.
+- Aberto, eu posso arrastar a borda esquerda dele para deixá-lo mais largo ou mais estreito. A largura vai de 280 a 560 pixels, começa em 360, e um clique duplo na borda volta para ela. O app lembra a largura que escolhi.
+- O painel aparece em toda tela com a barra lateral, também no "Fechar o dia" e no modo foco. Quando o centro já mostra a mesma tela do menu, como a "Fila de execução", o painel fica recolhido e o ícone dela fica apagado, para a mesma tela não aparecer duas vezes.
+- Um link dentro do painel, como o nome de um projeto, abre no centro, e o painel continua aberto.
 
 ## 2. Da tela: um cabeçalho no topo do centro
 

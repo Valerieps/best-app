@@ -26,6 +26,7 @@ import { IdeaScreen, IdeasScreen } from './ideas/IdeaScreens';
 import { backupNoticeLevel, needsBackupSetup, pickTopNotice, useSnoozedNotices } from './notices';
 import { autoBackup, db, reader } from './services';
 import { SettingsScreen } from './settings/SettingsScreen';
+import { RightPanel } from './RightPanel';
 import { Sidebar } from './Sidebar';
 import { PlacePalette } from './components/PlacePalette';
 import { useLiveQueryState } from './useLiveQuery';
@@ -182,6 +183,7 @@ export function App() {
         )}
         <SaveErrorNotice />
       </div>
+      <RightPanel route={route} today={today} />
     </div>
   );
 }
