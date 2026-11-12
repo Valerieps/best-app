@@ -1,13 +1,17 @@
 import { useState } from 'react';
-import { removeFromQueue, reorderQueue } from '../../application/executionQueue';
-import { setTaskDone } from '../../application/notebook';
+import { reorderQueue } from '../../application/executionQueue';
 import { loadExecutionQueue, type ExecutionQueueData, type TaskListItem } from '../../application/queries';
 import type { DayKey } from '../../domain/day';
 import { moveItem } from '../../domain/order';
 import { ScreenHeader } from '../components/ScreenHeader';
 import { LoadingPage } from '../components/Skeleton';
 import { isSamePlace, useLineDrag } from '../dayNote/lineDrag';
-import { ActiveTaskActions, TaskRow } from '../lists/ListScreens';
+import { Linkified } from '../components/Linkified';
+import { routeHash } from '../hooks';
+import { ActiveTaskActions } from '../lists/ListScreens';
+import { taskCommands } from '../tasks/taskCommands';
+import { TaskCheckbox } from '../tasks/TaskControls';
+import { taskText } from '../tasks/taskSurface';
 import { appContext, reader } from '../services';
 import { useLiveQuery } from '../useLiveQuery';
 
@@ -51,43 +55,46 @@ function QueueContent({ data, today, inPanel }: { data: ExecutionQueueData; toda
   };
 
   const row = (item: TaskListItem, index: number) => {
-    const { task } = item;
+    const { task, project } = item;
+    const dragging = drag?.id === task.id;
+    const drop = mark(index);
     return (
-      <TaskRow
+      <li
         key={task.id}
-        item={item}
-        today={today}
-        quietProject
-        hideMeta
-        drag={
-          items.length < 2
-            ? undefined
-            : { group: GROUP, onStart: (event) => start(event, GROUP, task.id), dragging: drag?.id === task.id, mark: mark(index) }
-        }
-        action={
-          <input
-            type="checkbox"
-            checked={false}
-            onChange={() => void setTaskDone(appContext, task.id, true)}
-            aria-label={`Finalizar "${task.text}"`}
-          />
-        }
-        extra={
-          <>
-            <span className="active-tasks__actions">
-              <button
-                type="button"
-                className="line__action"
-                title="Tirar da fila; a tarefa continua como está"
-                onClick={() => void removeFromQueue(appContext, task.id)}
-              >
-                Remover da fila
-              </button>
+        className={`card-list__item card-list__item--stacked ${dragging ? 'task-row--dragging' : ''} ${drop ? `task-row--drop-${drop}` : ''}`}
+        data-drag-group={GROUP}
+        data-drag-id={task.id}
+      >
+        <div className="task-row">
+          {items.length > 1 && (
+            <span className="task-row__handle" title="Arraste para mudar a ordem" aria-hidden="true" onPointerDown={(event) => start(event, GROUP, task.id)}>
+              ⠿
             </span>
-            <ActiveTaskActions item={item} today={today} projects={data.activeProjects} />
-          </>
-        }
-      />
+          )}
+          <TaskCheckbox task={task} />
+          <span className="task-row__text">
+            <Linkified text={taskText(task)} />
+          </span>
+          {/* The queue's own action; the rest are the same as in every list (taskSurface.ts). */}
+          <span className="active-tasks__actions">
+            <button
+              type="button"
+              className="line__action"
+              title="Tirar da fila; a tarefa continua como está"
+              onClick={() => taskCommands.removeFromQueue(task.id)}
+            >
+              Remover da fila
+            </button>
+          </span>
+          <ActiveTaskActions item={item} today={today} projects={data.activeProjects} surface="queue" />
+        </div>
+        {/* Only the project's name, quiet, under the task: no dates on the queue's cards. */}
+        {project && (
+          <a className="task-row__project" href={routeHash({ name: 'project', id: project.id })} title="Abrir a página do projeto">
+            {project.name}
+          </a>
+        )}
+      </li>
     );
   };
 

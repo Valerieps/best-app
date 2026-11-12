@@ -15,6 +15,7 @@ import { boardDayLabel, plural, relativeDay } from '../format';
 import { appContext, reader } from '../services';
 import { useLiveQuery } from '../useLiveQuery';
 import { noDecisions, StepFooter, StepQuestion, useStepKeys } from './StepParts';
+import { taskText } from '../tasks/taskSurface';
 
 interface Props {
   /** "late": the late tasks; "triage": the tasks of the day, in a first column "Sem data". */
@@ -233,7 +234,7 @@ export function BoardStep({ mode, day, today, triage, projects, busy, onBack, on
 
   const renderCard = (item: TaskListItem) => {
     const id = item.task.id;
-    const text = item.task.text || '(tarefa sem texto)';
+    const text = taskText(item.task);
     const date = dateOf(item);
     const isAbandoned = abandoned.has(id);
     const isFinished = finished.has(id);

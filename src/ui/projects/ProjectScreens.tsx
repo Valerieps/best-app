@@ -1,8 +1,6 @@
 import { useEffect, useRef, useState, type KeyboardEvent, type ReactNode } from 'react';
 import { NEW_TASK_SHORTCUT, isNewTaskKey, isTypingTarget } from './newTaskShortcut';
-import { setDayPriority, setDeadline, setIntendedDate } from '../../application/dayTools';
-import { addToQueue } from '../../application/executionQueue';
-import { abandonTask, setTaskDone, setTaskWaiting, updateBlockText } from '../../application/notebook';
+import { updateBlockText } from '../../application/notebook';
 import { ensurePeople } from '../../application/people';
 import { createProjectTask, renameProject, setProjectIcon } from '../../application/projects';
 import { loadDayPriorities, loadProject, loadProjectResources, loadQueueIds } from '../../application/queries';
@@ -10,7 +8,9 @@ import { setProjectPanelPinned } from '../../application/settings';
 import { type DayKey } from '../../domain/day';
 import type { Block } from '../../domain/entities';
 import { groupProjectTasks, stuckReason } from '../../domain/projectPage';
-import { BlockLine, DatePicker, type LineHandlers } from '../dayNote/BlockLine';
+import { BlockLine, type LineHandlers } from '../dayNote/BlockLine';
+import { DatePicker } from '../components/DatePicker';
+import { taskCommands } from '../tasks/taskCommands';
 import { MarkdownText } from '../dayNote/MarkdownText';
 import { requestFocus } from '../dayNote/focus';
 import { Icon } from '../components/Icon';
@@ -20,18 +20,13 @@ import { stuckReasonLabel } from '../format';
 import { navigate } from '../hooks';
 import { appContext, reader } from '../services';
 import { useLiveQuery } from '../useLiveQuery';
-import { enqueue } from '../writeQueue';
+import { write } from '../writeQueue';
 import { ProjectActionsMenu } from './ProjectActions';
 import { ProjectIconPicker } from './ProjectIcon';
 import { panelOnOpen } from './panelState';
 import { ProjectNotes } from './ProjectNotes';
 import { ProjectSidePanel } from './ProjectSidePanel';
 
-function write(work: () => Promise<unknown>) {
-  enqueue(work).catch(() => {
-    // Logged by the queue; the screen shows the saved state again on its own.
-  });
-}
 
 /** Below this width the docked column would squeeze the tasks, so it only opens over them. */
 const NARROW_QUERY = '(max-width: 900px)';
@@ -174,18 +169,11 @@ export function ProjectScreen({ id, tab, today }: { id: string; tab: 'tasks' | '
     onEnter: () => {},
     onBackspaceAtStart: () => {},
     onMakeTask: () => {},
-    onToggleDone: (block, isDone) => write(() => setTaskDone(appContext, block.id, isDone)),
     onArrow: (block, direction) => {
       const index = shownLines.findIndex((line) => line.id === block.id);
       const target = shownLines[index + (direction === 'up' ? -1 : 1)];
       if (target) requestFocus(target.id, direction === 'up' ? 'end' : 0);
     },
-    onSetDate: (block, date) => write(() => setIntendedDate(appContext, block.id, date)),
-    onSetDeadline: (block, date) => write(() => setDeadline(appContext, block.id, date)),
-    onTogglePriority: (block, on) => write(() => setDayPriority(appContext, block.id, on)),
-    onAddToQueue: (block) => write(() => addToQueue(appContext, block.id)),
-    onSetWaiting: (block, waiting) => write(() => setTaskWaiting(appContext, block.id, waiting)),
-    onAbandon: (block) => write(() => abandonTask(appContext, block.id)),
     onEnsurePeople: (names) => write(() => ensurePeople(appContext, names)),
   };
 
@@ -201,6 +189,7 @@ export function ProjectScreen({ id, tab, today }: { id: string; tab: 'tasks' | '
       allowNewLines={false}
       handlers={handlers}
       hideDate={hideDate}
+      surface="project"
     />
   );
 
@@ -264,7 +253,7 @@ export function ProjectScreen({ id, tab, today }: { id: string; tab: 'tasks' | '
                             className="small stuck__date"
                             value={task.intendedDate}
                             min={today}
-                            onChange={(date) => handlers.onSetDate(task, date)}
+                            onChange={(date) => taskCommands.setDate(task.id, date)}
                           >
                             Nova data
                           </DatePicker>

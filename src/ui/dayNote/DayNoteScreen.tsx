@@ -15,8 +15,6 @@ import {
   reorderDayParts,
   reorderSectionLines,
   setSectionTitle,
-  setTaskDone,
-  setTaskWaiting,
   splitBlock,
   splitKind,
   updateBlockText,
@@ -25,12 +23,10 @@ import {
   pasteLines,
 } from '../../application/notebook';
 import { chainedPositions } from './paste';
-import { moveDayPriority, setDayPriority, setDeadline, setIntendedDate } from '../../application/dayTools';
 import { ensurePeople } from '../../application/people';
 import { usePeople } from '../people/PeopleContext';
 import { setDayNoteFocus } from '../../application/settings';
 import { loadDayNote, loadDayPriorities, loadQueueIds } from '../../application/queries';
-import { addToQueue } from '../../application/executionQueue';
 import { detectKind } from '../../domain/blockKind';
 import type { DayKey } from '../../domain/day';
 import type { DayNoteSection } from '../../domain/dayNote';
@@ -40,7 +36,7 @@ import { comparePositions, positionBetween } from '../../domain/position';
 import { canEditFreely } from '../../domain/tasks';
 import { appContext as ctx, reader } from '../services';
 import { useLiveQuery } from '../useLiveQuery';
-import { enqueue } from '../writeQueue';
+import { enqueue, write } from '../writeQueue';
 import { BlockLine, GhostLine, NOTE_HINT, type LineDragProps, type LineHandlers } from './BlockLine';
 import { requestFocus } from './focus';
 import { NoteSettledContext, useEnteringKeys, useNoteSettled } from './entryMotion';
@@ -156,11 +152,6 @@ function draftBlock(id: string, sectionId: string, kind: BlockKind, text: string
   };
 }
 
-function write(work: () => Promise<unknown>) {
-  enqueue(work).catch(() => {
-    // Logged by the queue; the screen shows the saved state again on its own.
-  });
-}
 
 export function DayNoteScreen({
   day,
@@ -527,18 +518,12 @@ export function DayNoteScreen({
     },
     onMakeTask: (block, text, waiting, kind = 'task') => write(() => changeBlockKind(ctx, block.id, kind, text, waiting)),
     onOpenIdea: (block) => navigate({ name: 'idea', id: block.id }),
-    onSetWaiting: (block, waiting) => write(() => setTaskWaiting(ctx, block.id, waiting)),
     onEnsurePeople: (names) => write(() => ensurePeople(ctx, names)),
-    onToggleDone: (block, done) => write(() => setTaskDone(ctx, block.id, done)),
     onArrow: (block, direction) => {
       const index = lines.findIndex((line) => line.block.id === block.id);
       const next = lines[index + (direction === 'up' ? -1 : 1)];
       if (next) requestFocus(next.block.id, direction === 'up' ? 'end' : 0);
     },
-    onSetDate: (block, date) => write(() => setIntendedDate(ctx, block.id, date)),
-    onSetDeadline: (block, date) => write(() => setDeadline(ctx, block.id, date)),
-    onTogglePriority: (block, on) => write(() => setDayPriority(ctx, block.id, on)),
-    onAddToQueue: (block) => write(() => addToQueue(ctx, block.id)),
     onMove: (block, direction) => {
       const slot = slotOf(block);
       if (slot) reorder(slot, moveByOne(groupOf(slot).ids, block.id, direction));
@@ -675,11 +660,7 @@ export function DayNoteScreen({
       today={prioritiesDay}
       pinned={pinned}
       onTogglePin={isToday && !focus ? () => setPinned(!pinned) : undefined}
-      onToggleDone={(taskId, done) => write(() => setTaskDone(ctx, taskId, done))}
-      onDemote={(taskId) => write(() => setDayPriority(ctx, taskId, false))}
-      onMoveDate={(taskId, date) => write(() => moveDayPriority(ctx, taskId, date))}
-      onSetDeadline={(taskId, date) => write(() => setDeadline(ctx, taskId, date))}
-      queue={{ ids: queueIds, onAdd: (taskId) => write(() => addToQueue(ctx, taskId)) }}
+      queueIds={queueIds}
       trailing={focusButton(PRIORITIES_PART, 'nas prioridades do dia')}
     />
   );

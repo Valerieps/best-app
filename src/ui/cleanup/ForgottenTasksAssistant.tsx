@@ -10,6 +10,7 @@ import { Segmented } from '../components/Segmented';
 import { plural } from '../format';
 import { appContext, reader } from '../services';
 import { useLiveQuery } from '../useLiveQuery';
+import { taskText } from '../tasks/taskSurface';
 
 /** "Colocar data" waits for the board; the other two are saved on "Seguir". */
 type Choice = ForgottenTaskAction | 'date';
@@ -90,7 +91,7 @@ export function ForgottenTasksAssistant({ items, today, onDone }: { items: TaskL
             <li className="card-list__item card-list__item--stacked" key={task.id}>
               <div className="triage-row triage-row--flush">
                 <span className="triage-row__label">
-                  <Linkified text={task.text || '(tarefa sem texto)'} />{' '}
+                  <Linkified text={taskText(task)} />{' '}
                   {project && <ProjectChip name={project.name} />}{' '}
                   <span className="muted">criada há {plural(age, 'dia', 'dias')}</span>
                 </span>

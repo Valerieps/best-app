@@ -47,6 +47,7 @@ As telas chamam as funções de `application/queries.ts` dentro de `useLiveQuery
 - **Datas** de calendário são `AAAA-MM-DD` no fuso local, e o dia vira à meia-noite (ADR-005). Semanas são ISO, como `2026-W42` (ADR-020).
 - **Ordem sem reescrever vizinhos.** `position` é um índice fracionário; a ordem das partes do dia fica em `days.sectionOrder` (ADR-040).
 - **O editor tem um campo de texto por bloco** (`ui/dayNote/BlockLine.tsx`), não um editor de documento único como ProseMirror, para manter um registro por bloco. Seleção de várias linhas e listas são feitas por cima disso (ADR-051).
+- **Uma tarefa se comporta igual em todas as telas.** Quais ações ela oferece em cada tela está numa tabela só (`ui/tasks/taskSurface.ts`); o checkbox, as datas e as ações do hover são os mesmos componentes (`ui/tasks/TaskControls.tsx`), e o que cada ação grava passa por `ui/tasks/taskCommands.ts`. Nenhuma tela decide sozinha o que a tarefa mostra; só a Fila de execução tem uma ação própria (ADR-072).
 - **O texto do bloco guarda o Markdown cru**, sem campo novo; a formatação é só na tela (ADR-048).
 - **Texto do usuário nunca vira HTML**, e links abrem só `http`, `https` e `mailto`, com `rel="noopener noreferrer"` (`SEGURANCA.md`).
 - **Abandonar esconde, não apaga**, para o histórico continuar íntegro.

@@ -4,9 +4,7 @@ import type { DayKey } from '../../domain/day';
 import type { Block, Project } from '../../domain/entities';
 import { completeMention, mentionAt, personOptions, unknownNames, type PersonOption } from '../../domain/people';
 import { completeTag, formatTag, tagAt, tagOptions } from '../../domain/projectTags';
-import { AbandonAction } from '../components/AbandonAction';
 import { Icon } from '../components/Icon';
-import { relativeDay } from '../format';
 import { usePeople } from '../people/PeopleContext';
 import { useProjects } from '../projects/ProjectsContext';
 import { useSaveOnPageLeave } from '../pageLeave';
@@ -15,7 +13,10 @@ import { pendingFocusId, useFocusTarget } from './focus';
 import { entersWithMotion, NoteSettledContext } from './entryMotion';
 import { partMoveKey } from './lineDrag';
 import { isSelectAllKey, selectsAllLines } from './blockSelection';
-import { isPriorityKey, PRIORITY_SHORTCUT } from './priorityShortcut';
+import { isPriorityKey } from './priorityShortcut';
+import { taskCommands } from '../tasks/taskCommands';
+import { PriorityStar, shownChips, TaskActionButtons, TaskCheckbox, TaskDateChips } from '../tasks/TaskControls';
+import { taskActions, type TaskAction, type TaskSurface } from '../tasks/taskSurface';
 import {
   applyFormat,
   FORMAT_EVENT,
@@ -50,19 +51,9 @@ export interface LineHandlers {
   onMakeTask(block: Block, text: string, waiting?: boolean, kind?: 'task' | 'idea'): void;
   /** Opens an idea's page (spec/ideias.md). Absent: the idea's marker is not a button. */
   onOpenIdea?(block: Block): void;
-  /** Marks a task as something a person owes me, or back as mine. Absent hides the action. */
-  onSetWaiting?(block: Block, waiting: boolean): void;
   /** Creates the people the line cites who do not exist yet (spec/pessoas.md). */
   onEnsurePeople?(names: string[]): void;
-  onToggleDone(block: Block, done: boolean): void;
   onArrow(block: Block, direction: 'up' | 'down'): void;
-  onSetDate(block: Block, date: DayKey | null): void;
-  onSetDeadline(block: Block, date: DayKey | null): void;
-  onTogglePriority(block: Block, on: boolean): void;
-  /** "Adicionar à fila" (spec/prioridades.md, "Fila de execução"). Absent hides the action. */
-  onAddToQueue?(block: Block): void;
-  /** Takes an active task out of circulation (trash icon, confirmed with a second click). Absent hides the action. */
-  onAbandon?(block: Block): void;
   /** Alt + ↑/↓: moves the line inside its group (request 2). Absent where lines keep their order. */
   onMove?(block: Block, direction: 'up' | 'down'): void;
   /**
@@ -110,67 +101,14 @@ interface Props {
   selected?: boolean;
   /** The line stays a note: "[] " does not make it a task (a kept note on a project page). */
   notesOnly?: boolean;
+  /** The screen the line is on, which decides a task's actions (`taskSurface.ts`). */
+  surface?: TaskSurface;
 }
 
 /** Hint on an empty line, shown only while the line is being written (P3 in the UX review of 2026-10-12, issue #19). */
 export const NOTE_HINT = 'Escreva, ou comece com [] e espaço para criar uma tarefa';
 
-/** A hidden date field opened by a button: a shortcut, or the chip of a date already set. */
-export function DatePicker({
-  label,
-  value,
-  min,
-  onChange,
-  className,
-  children,
-  clearLabel,
-}: {
-  label: string;
-  value: DayKey | null;
-  min?: DayKey;
-  onChange(date: DayKey | null): void;
-  className: string;
-  children: string;
-  /** With a date set, shows a × that clears it, instead of relying on the calendar's own button (issue #70). */
-  clearLabel?: string;
-}) {
-  const ref = useRef<HTMLInputElement>(null);
-  return (
-    <span className="line__picker">
-      <button
-        type="button"
-        className={className}
-        title={label}
-        aria-label={label}
-        onClick={() => {
-          const input = ref.current;
-          if (!input) return;
-          if (typeof input.showPicker === 'function') input.showPicker();
-          else input.focus();
-        }}
-      >
-        {children}
-      </button>
-      <input
-        ref={ref}
-        type="date"
-        className="line__date-input"
-        tabIndex={-1}
-        aria-hidden="true"
-        min={min}
-        value={value ?? ''}
-        onChange={(event) => onChange(event.target.value || null)}
-      />
-      {clearLabel && value && (
-        <button type="button" className="line__clear line__reveal" title={clearLabel} aria-label={clearLabel} onClick={() => onChange(null)}>
-          ×
-        </button>
-      )}
-    </span>
-  );
-}
-
-export function BlockLine({ block, free, day, today, isPriority, isQueued = false, allowNewLines, handlers, extraMeta, hideDate = false, drag, selected = false, notesOnly = false }: Props) {
+export function BlockLine({ block, free, day, today, isPriority, isQueued = false, allowNewLines, handlers, extraMeta, hideDate = false, drag, selected = false, notesOnly = false, surface = 'dayNote' }: Props) {
   const ref = useRef<HTMLTextAreaElement>(null);
   const [text, setText] = useState(block.text);
   const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -361,13 +299,13 @@ export function BlockLine({ block, free, day, today, isPriority, isQueued = fals
       }
     }
     // "[a] " at the start of one of my tasks makes it something a person owes me.
-    if (block.kind === 'task' && block.status === 'active' && !block.waiting && handlers.onSetWaiting) {
+    if (block.kind === 'task' && !block.waiting && actions.has('waiting')) {
       const detected = detectKind(value);
       if (detected.waiting) {
         history.current = emptyHistory();
         setText(detected.text);
         latest.current.text = detected.text;
-        handlers.onSetWaiting(block, true);
+        taskCommands.setWaiting(block.id, true);
         if (saveTimer.current) clearTimeout(saveTimer.current);
         saveTimer.current = setTimeout(flush, SAVE_DELAY_MS);
         return;
@@ -462,7 +400,7 @@ export function BlockLine({ block, free, day, today, isPriority, isQueued = fals
     }
     if (isPriorityKey(event)) {
       event.preventDefault();
-      if (block.kind === 'task' && block.status === 'active' && !block.waiting) handlers.onTogglePriority(block, !isPriority);
+      if (actions.has('priority')) taskCommands.setPriority(block.id, !isPriority);
       return;
     }
     if (event.altKey && (event.key === 'ArrowUp' || event.key === 'ArrowDown') && handlers.onMove) {
@@ -512,45 +450,13 @@ export function BlockLine({ block, free, day, today, isPriority, isQueued = fals
   const isIdea = block.kind === 'idea';
   const ideaOutcome = isIdea && block.ideaStatus === 'becameProject' ? 'virou projeto' : isIdea && block.ideaStatus === 'dropped' ? 'largada' : null;
   const done = isTask && block.status === 'done';
-  const open = isTask && block.status === 'active';
   // Something a person owes me: its date is the day to follow up (spec/pessoas.md).
   const waiting = isTask && block.waiting === true;
-  const deadline = block.deadline ?? null;
-  const showDate = isTask && !hideDate && block.intendedDate !== null && block.intendedDate !== day;
-  const dateLabel = showDate ? `${waiting ? 'cobrar ' : ''}${relativeDay(block.intendedDate!, today)}` : '';
-  const deadlineLabel = deadline ? `prazo ${relativeDay(deadline, today)}` : '';
-  const pickDate = (label: string, className: string, children: string, clearLabel?: string) => (
-    <DatePicker
-      label={label}
-      className={className}
-      value={block.intendedDate}
-      min={today}
-      onChange={(date) => handlers.onSetDate(block, date)}
-      clearLabel={clearLabel}
-    >
-      {children}
-    </DatePicker>
-  );
-  const pickDeadline = (label: string, className: string, children: string, clearLabel?: string) => (
-    <DatePicker label={label} className={className} value={deadline} onChange={(date) => handlers.onSetDeadline(block, date)} clearLabel={clearLabel}>
-      {children}
-    </DatePicker>
-  );
-  const priorityLabel = `${isPriority ? 'Tirar das prioridades do dia' : 'Promover a prioridade do dia'} (${PRIORITY_SHORTCUT})`;
-  const starButton = () => (
-    <button
-      type="button"
-      className={`line__star ${isPriority ? 'line__star--on' : ''}`}
-      title={priorityLabel}
-      aria-label={priorityLabel}
-      aria-pressed={isPriority}
-      onClick={() => handlers.onTogglePriority(block, !isPriority)}
-    >
-      {isPriority ? '★' : '☆'}
-    </button>
-  );
+  // Notes and ideas have no task actions.
+  const actions = isTask ? taskActions(block, surface) : new Set<TaskAction>();
+  const chips = isTask ? shownChips(block, { day, hideDate }) : { date: false, deadline: false };
   const convertible = block.kind === 'note' && free && !notesOnly;
-  const hasActions = open || convertible;
+  const hasActions = actions.size > 0 || convertible;
 
   const structure = parseLine(text);
   const prefixLength = structure.list ? structure.prefixLength : 0;
@@ -588,13 +494,7 @@ export function BlockLine({ block, free, day, today, isPriority, isQueued = fals
         </span>
       )}
       {isTask && (
-        <input
-          type="checkbox"
-          className="line__check"
-          checked={done}
-          onChange={(event) => handlers.onToggleDone(block, event.target.checked)}
-          aria-label={done ? 'Reabrir tarefa' : 'Finalizar tarefa'}
-        />
+        <TaskCheckbox task={block} className="line__check" />
       )}
       {isIdea &&
         (handlers.onOpenIdea ? (
@@ -685,49 +585,16 @@ export function BlockLine({ block, free, day, today, isPriority, isQueued = fals
         {extraMeta}
         {waiting && <span className="chip chip--waiting">aguardando</span>}
         {ideaOutcome && <span className="chip chip--muted">{ideaOutcome}</span>}
-        {showDate &&
-          (open
-            ? waiting
-              ? pickDate('Mudar a data para cobrar', 'line__chip', dateLabel, 'Tirar a data para cobrar')
-              : pickDate('Mudar a data de intenção', 'line__chip', dateLabel, 'Tirar a data de intenção')
-            : <span className="muted">{dateLabel}</span>)}
-        {deadline &&
-          (open ? pickDeadline('Mudar o prazo máximo', 'line__chip', deadlineLabel, 'Tirar o prazo máximo') : <span className="chip chip--muted">{deadlineLabel}</span>)}
+        {isTask && <TaskDateChips task={block} today={today} chips={chips} />}
       </span>
-      {open && !waiting && isPriority && starButton()}
+      {actions.has('priority') && isPriority && <PriorityStar on onToggle={() => taskCommands.setPriority(block.id, false)} />}
       {/* Shortcuts on hover and focus, right after the text. They float over what follows instead of
           taking room, so showing them never rewraps the text. The checkbox finalizes, so there is no
           separate button for it. */}
       {hasActions && (
         <span className="line__tail">
           <span className="line__actions">
-            {open && !waiting && !isPriority && starButton()}
-            {open && isTask && !waiting && handlers.onAddToQueue && (
-              <button
-                type="button"
-                className="line__action"
-                disabled={isQueued}
-                title={isQueued ? 'Já está na fila de execução' : 'Adicionar ao fim da fila de execução'}
-                onClick={() => handlers.onAddToQueue?.(block)}
-              >
-                {isQueued ? 'Na fila' : 'Adicionar à fila'}
-              </button>
-            )}
-            {open && !showDate && (waiting
-              ? pickDate('Data para cobrar', 'line__action', 'Cobrar')
-              : pickDate(hideDate ? 'Mudar a data de intenção' : 'Data de intenção', 'line__action', 'Data'))}
-            {open && !waiting && !deadline && pickDeadline('Prazo máximo', 'line__action', 'Prazo')}
-            {open && handlers.onSetWaiting && (
-              <button
-                type="button"
-                className="line__action"
-                title={waiting ? 'Voltar a ser uma tarefa minha' : 'Marcar como algo que alguém me deve'}
-                onClick={() => handlers.onSetWaiting?.(block, !waiting)}
-              >
-                {waiting ? 'Não é aguardando' : 'Aguardando'}
-              </button>
-            )}
-            {open && handlers.onAbandon && <AbandonAction onAbandon={() => handlers.onAbandon?.(block)} />}
+            <TaskActionButtons task={block} today={today} actions={actions} isPriority={isPriority} isQueued={isQueued} chips={chips} />
             {convertible && (
               <button type="button" className="line__action" onClick={() => handlers.onMakeTask(block, text)}>
                 Converter em tarefa

@@ -9,13 +9,8 @@ import { Icon } from '../components/Icon';
 import { navigate } from '../hooks';
 import { appContext } from '../services';
 import { FEATURES } from '../features';
-import { enqueue } from '../writeQueue';
+import { write } from '../writeQueue';
 
-function write(work: () => Promise<unknown>) {
-  enqueue(work).catch(() => {
-    // Logged by the queue; the screen shows the saved state again on its own.
-  });
-}
 
 interface Props {
   project: Project;
