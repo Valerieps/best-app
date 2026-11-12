@@ -12,7 +12,7 @@ describe('reading the saved view of the tasks table', () => {
     const view = parseView(
       JSON.stringify({ groupBy: 'project', sortBy: 'deadline', direction: 'desc', project: 'project:p1', nextOnly: true, columns: ['project', 'bogus', 'intendedDate'] }),
     );
-    expect(view).toEqual({ groupBy: 'project', sortBy: 'deadline', direction: 'desc', project: 'project:p1', nextOnly: true, columns: ['intendedDate', 'project'] });
+    expect(view).toEqual({ groupBy: 'project', sortBy: 'deadline', direction: 'desc', project: 'project:p1', columns: ['intendedDate', 'project'] });
     expect(parseView(JSON.stringify({ sortBy: 'nope', project: 'project:', groupBy: 'text' }))).toEqual(DEFAULT_VIEW);
   });
 
@@ -45,6 +45,6 @@ describe('showing and hiding columns', () => {
 describe('the filter count', () => {
   it('counts what differs from the default', () => {
     expect(activeFilterCount(DEFAULT_VIEW, 'open')).toBe(0);
-    expect(activeFilterCount({ ...DEFAULT_VIEW, project: 'focus', nextOnly: true }, 'all')).toBe(3);
+    expect(activeFilterCount({ ...DEFAULT_VIEW, project: 'focus' }, 'all')).toBe(2);
   });
 });

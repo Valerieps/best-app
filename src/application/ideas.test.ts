@@ -3,7 +3,7 @@ import { createTestContext } from '../test/fixtures';
 import { positionBetween } from '../domain/position';
 import { setDayPriority } from './dayTools';
 import { addIdeaLine, changeIdeaLineKind, dropIdea, ideaToProject, ideaToTask, notYetIdea, splitIdeaLine } from './ideas';
-import { setNextStep } from './nextSteps';
+import { addToQueue } from './executionQueue';
 import { changeBlockKind, createBlock, createSection, linkSectionToProject, updateBlockText } from './notebook';
 import { createProject } from './projects';
 import {
@@ -15,6 +15,7 @@ import {
   loadIdeas,
   loadMenuCounts,
   loadProject,
+  loadQueueIds,
   loadSectionNotes,
 } from './queries';
 
@@ -78,13 +79,13 @@ describe('where an idea shows', () => {
     expect((await loadMenuCounts(reader)).ideas).toBe(1);
   });
 
-  it('never in the task list, the priorities, the next steps or the closing of the day', async () => {
-    const { ctx, reader, idea, project } = await setup();
+  it('never in the task list, the priorities, the queue or the closing of the day', async () => {
+    const { ctx, reader, idea } = await setup();
     await setDayPriority(ctx, idea.id, true);
-    await setNextStep(ctx, idea.id, true);
+    await addToQueue(ctx, idea.id);
     expect(await loadActiveTasks(reader)).toEqual([]);
     expect(await loadDayPriorities(reader, TODAY)).toEqual([]);
-    expect((await loadProject(reader, project.id))?.nextStepIds).toEqual([]);
+    expect(await loadQueueIds(reader)).toEqual([]);
     expect((await loadDayTriage(reader, TODAY, TODAY)).rows).toEqual([]);
   });
 
@@ -139,9 +140,9 @@ describe("an idea's destinations", () => {
     expect((await loadDayTriage(reader, TODAY, TODAY)).rows).toEqual([]);
     expect(await loadIdeas(reader)).toEqual([]);
     expect(await eventsOf(db, idea.id)).toContainEqual(['idea.becameTask', { projectId: project.id }]);
-    // From there it can be a next step.
-    await setNextStep(ctx, idea.id, true);
-    expect((await loadProject(reader, project.id))?.nextStepIds).toEqual([idea.id]);
+    // From there it can go to the queue.
+    await addToQueue(ctx, idea.id);
+    expect(await loadQueueIds(reader)).toEqual([idea.id]);
   });
 
   it('"Virar projeto": an active project that keeps the origin and takes what I wrote as a note', async () => {

@@ -6,7 +6,6 @@ import { adoptFirstPart, carriedPosition, placeInOrder, type Ordered } from '../
 import { canEditFreely, lastTriagedDayAfterReopen } from '../domain/tasks';
 import { record } from './events';
 import { releaseFromQueue } from './executionQueue';
-import { releaseNextStep } from './nextSteps';
 import type { AppContext, StoreTransaction } from './ports';
 import { addProject, renameProjectIn } from './projects';
 import { followTag } from './projectTags';
@@ -106,7 +105,6 @@ export async function linkSection(
   for (const block of await tx.blocksInSection(section.id)) {
     // A tagged task stays in its tag's project (ADR-066).
     if (!followsSection(block.kind) || block.projectId === projectId || tagProject(block.text, projects)) continue;
-    await releaseNextStep(ctx, tx, block, 'moved', day);
     await tx.blocks.put({ ...block, projectId, updatedAt: at });
     await record(ctx, tx, 'block.linkedToProject', 'block', block.id, day, { projectId });
   }
@@ -197,7 +195,6 @@ export async function unlinkSection(ctx: AppContext, sectionId: string, title: s
     const projects = await tx.allProjects();
     for (const block of await tx.blocksInSection(section.id)) {
       if (!followsSection(block.kind) || block.projectId !== projectId || tagProject(block.text, projects)) continue;
-      await releaseNextStep(ctx, tx, block, 'moved', day);
       await tx.blocks.put({ ...block, projectId: null, updatedAt: at });
       await record(ctx, tx, 'block.linkedToProject', 'block', block.id, day, { projectId: null });
     }
@@ -526,7 +523,6 @@ export async function mergeIntoPrevious(ctx: AppContext, blockId: string, fullTe
 export async function finishTaskIn(ctx: AppContext, tx: StoreTransaction, task: Block, day: DayKey): Promise<Block> {
   const finished: Block = { ...task, status: 'done', closedAt: nowIso(ctx), updatedAt: nowIso(ctx) };
   await tx.blocks.put(finished);
-  await releaseNextStep(ctx, tx, task, 'finished', day);
   await releaseFromQueue(ctx, tx, task, 'finished', day);
   await record(ctx, tx, 'task.finished', 'block', task.id, day, {
     intendedDate: task.intendedDate,
@@ -586,7 +582,6 @@ export async function abandonTasks(ctx: AppContext, taskIds: readonly string[]):
       const task = await tx.blocks.get(taskId);
       if (!task || task.kind !== 'task' || task.status !== 'active') continue;
       await tx.blocks.put({ ...task, status: 'abandoned', closedAt: nowIso(ctx), updatedAt: nowIso(ctx) });
-      await releaseNextStep(ctx, tx, task, 'abandoned');
       await releaseFromQueue(ctx, tx, task, 'abandoned');
       await record(ctx, tx, 'task.abandoned', 'block', task.id, today(ctx));
     }

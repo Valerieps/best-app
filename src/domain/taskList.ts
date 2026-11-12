@@ -33,11 +33,6 @@ export function inFocusProjects<T extends TaskListEntry>(items: readonly T[], fo
   return items.filter((item) => item.task.projectId !== null && focusIds.includes(item.task.projectId));
 }
 
-/** Keeps only the tasks marked "Próximo" (spec/prioridades.md, "Próximos passos"). */
-export function onlyNextSteps<T extends TaskListEntry>(items: readonly T[], nextStepIds: readonly string[]): T[] {
-  return items.filter((item) => nextStepIds.includes(item.task.id));
-}
-
 /** Keeps the tasks the project filter lets through. */
 export function filterByProject<T extends TaskListEntry>(items: readonly T[], filter: ProjectFilter, focusIds: readonly string[]): T[] {
   if (filter === 'all') return [...items];

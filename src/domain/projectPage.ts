@@ -80,8 +80,8 @@ export function stuckReason(task: Block, today: DayKey): StuckReason | null {
 export interface ProjectTaskGroups {
   /** "Travadas": postponed 3 times or more, or with an intended date already passed. */
   stuck: Block[];
-  /** "Próximos passos": the tasks marked "Próximo", in the order marked, right after the stuck ones. */
-  next: Block[];
+  /** "Na fila": the project's tasks in the "Fila de execução", in the queue's order, right after the stuck ones. */
+  queued: Block[];
   /** "Próximos dias": intended for today or later, and not stuck. */
   upcoming: Block[];
   /** "Sem data", and not stuck. */
@@ -93,19 +93,19 @@ export interface ProjectTaskGroups {
 /**
  * The project's active tasks in the page's levels of emphasis, each group by date then creation.
  * A stuck task shows only among the stuck ones; a waiting task only among the waiting ones. A
- * next step that is not stuck shows only among the next steps, with its date on the line.
+ * queued task that is not stuck shows only in "Na fila", with its date on the line.
  */
-export function groupProjectTasks(active: readonly Block[], today: DayKey, nextIds: readonly string[] = []): ProjectTaskGroups {
+export function groupProjectTasks(active: readonly Block[], today: DayKey, queueIds: readonly string[] = []): ProjectTaskGroups {
   const sorted = [...active].sort(byDateThenCreation);
   const waiting = sorted.filter((task) => task.waiting === true);
   const stuck = sorted.filter((task) => isStuckTask(task, today));
   const open = sorted.filter((task) => !stuck.includes(task) && !waiting.includes(task));
   const byId = new Map(open.map((task) => [task.id, task]));
-  const next = nextIds.flatMap((id) => byId.get(id) ?? []);
-  const rest = open.filter((task) => !next.includes(task));
+  const queued = queueIds.flatMap((id) => byId.get(id) ?? []);
+  const rest = open.filter((task) => !queued.includes(task));
   return {
     stuck,
-    next,
+    queued,
     waiting,
     upcoming: rest.filter((task) => task.intendedDate !== null),
     undated: rest.filter((task) => task.intendedDate === null),

@@ -30,8 +30,6 @@ export interface TaskListView {
   sortBy: TaskSortKey;
   direction: SortDirection;
   project: ProjectFilter;
-  /** Only the tasks marked "Próximo" in their projects. */
-  nextOnly: boolean;
   /** The optional columns shown, in table order. */
   columns: TaskColumn[];
 }
@@ -41,7 +39,6 @@ export const DEFAULT_VIEW: TaskListView = {
   sortBy: 'intendedDate',
   direction: 'asc',
   project: 'all',
-  nextOnly: false,
   columns: ['intendedDate', 'deadline', 'project'],
 };
 
@@ -79,7 +76,6 @@ export function parseView(raw: string | null): TaskListView {
     sortBy: isSortKey(saved.sortBy) ? saved.sortBy : DEFAULT_VIEW.sortBy,
     direction: saved.direction === 'desc' ? 'desc' : 'asc',
     project: isProjectFilter(saved.project) ? saved.project : saved.focusOnly === true ? 'focus' : 'all',
-    nextOnly: saved.nextOnly === true,
     columns,
   };
 }
@@ -98,5 +94,5 @@ export function toggleColumn(view: TaskListView, column: TaskColumn): TaskListVi
 
 /** How many filters differ from the default, for the badge on "Filtros". */
 export function activeFilterCount(view: TaskListView, show: TaskShow): number {
-  return (show !== 'open' ? 1 : 0) + (view.project !== 'all' ? 1 : 0) + (view.nextOnly ? 1 : 0);
+  return (show !== 'open' ? 1 : 0) + (view.project !== 'all' ? 1 : 0);
 }

@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import type { Block, Project } from './entities';
-import { creationDay, filterByProject, groupTasks, inFocusProjects, onlyNextSteps, sortTasks, type TaskListEntry } from './taskList';
+import { creationDay, filterByProject, groupTasks, inFocusProjects, sortTasks, type TaskListEntry } from './taskList';
 
 function project(id: string, name: string): Project {
   return { id, name, status: 'active', createdAt: '', updatedAt: '', finishedAt: null };
@@ -121,14 +121,6 @@ describe('filtering by project', () => {
     expect(ids(filterByProject(all, 'focus', ['p2']))).toEqual(['b']);
     expect(ids(filterByProject(all, 'none', []))).toEqual(['c']);
     expect(ids(filterByProject(all, 'project:p1', []))).toEqual(['a', 'd']);
-  });
-});
-
-describe('next steps only', () => {
-  it('keeps only the tasks marked, and combines with the focus filter', () => {
-    expect(ids(onlyNextSteps(all, ['a', 'b']))).toEqual(['a', 'b']);
-    expect(onlyNextSteps(all, [])).toEqual([]);
-    expect(ids(onlyNextSteps(inFocusProjects(all, ['p1']), ['a', 'b']))).toEqual(['a']);
   });
 });
 

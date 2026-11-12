@@ -59,8 +59,6 @@ export interface LineHandlers {
   onSetDate(block: Block, date: DayKey | null): void;
   onSetDeadline(block: Block, date: DayKey | null): void;
   onTogglePriority(block: Block, on: boolean): void;
-  /** Marks or unmarks "Próximo", a next step of the task's project. Absent hides the action. */
-  onToggleNext?(block: Block, on: boolean): void;
   /** "Adicionar à fila" (spec/prioridades.md, "Fila de execução"). Absent hides the action. */
   onAddToQueue?(block: Block): void;
   /** Takes an active task out of circulation (trash icon, confirmed with a second click). Absent hides the action. */
@@ -98,8 +96,6 @@ interface Props {
   day: DayKey | null;
   today: DayKey;
   isPriority: boolean;
-  /** Marked "Próximo" in its project (spec/prioridades.md, "Próximos passos"). */
-  isNext?: boolean;
   /** In the "Fila de execução": the action shows "Na fila", disabled. */
   isQueued?: boolean;
   /** False when looking at a past day: Enter does not create lines there. */
@@ -174,7 +170,7 @@ export function DatePicker({
   );
 }
 
-export function BlockLine({ block, free, day, today, isPriority, isNext = false, isQueued = false, allowNewLines, handlers, extraMeta, hideDate = false, drag, selected = false, notesOnly = false }: Props) {
+export function BlockLine({ block, free, day, today, isPriority, isQueued = false, allowNewLines, handlers, extraMeta, hideDate = false, drag, selected = false, notesOnly = false }: Props) {
   const ref = useRef<HTMLTextAreaElement>(null);
   const [text, setText] = useState(block.text);
   const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -689,7 +685,6 @@ export function BlockLine({ block, free, day, today, isPriority, isNext = false,
         {extraMeta}
         {waiting && <span className="chip chip--waiting">aguardando</span>}
         {ideaOutcome && <span className="chip chip--muted">{ideaOutcome}</span>}
-        {isNext && open && <span className="chip chip--next" title="Um dos próximos passos do projeto">próximo</span>}
         {showDate &&
           (open
             ? waiting
@@ -716,17 +711,6 @@ export function BlockLine({ block, free, day, today, isPriority, isNext = false,
                 onClick={() => handlers.onAddToQueue?.(block)}
               >
                 {isQueued ? 'Na fila' : 'Adicionar à fila'}
-              </button>
-            )}
-            {open && !waiting && block.projectId !== null && handlers.onToggleNext && (
-              <button
-                type="button"
-                className="line__action"
-                title={isNext ? 'Tirar dos próximos passos do projeto' : 'Marcar como um dos próximos passos do projeto'}
-                aria-pressed={isNext}
-                onClick={() => handlers.onToggleNext?.(block, !isNext)}
-              >
-                {isNext ? 'Não é próximo' : 'Próximo'}
               </button>
             )}
             {open && !showDate && (waiting

@@ -1,7 +1,6 @@
 import { useEffect, useState, type KeyboardEvent, type ReactNode } from 'react';
 import { setDayPriority, setDeadline, setIntendedDate } from '../../application/dayTools';
 import { addToQueue } from '../../application/executionQueue';
-import { setNextStep } from '../../application/nextSteps';
 import { abandonTask, setTaskDone, setTaskWaiting, updateBlockText } from '../../application/notebook';
 import { ensurePeople } from '../../application/people';
 import { createProjectTask, renameProject, setProjectIcon } from '../../application/projects';
@@ -52,7 +51,7 @@ function useNarrow(): boolean {
   return narrow;
 }
 
-/** "Nova tarefa", between "Próximos dias" and "Sem data": Enter creates the task and keeps the field for the next one. */
+/** "Nova tarefa", between "Na fila" and "Sem data": Enter creates the task and keeps the field for the next one. */
 function NewTaskField({ projectId }: { projectId: string }) {
   const [text, setText] = useState('');
   const onKeyDown = (event: KeyboardEvent<HTMLInputElement>) => {
@@ -150,12 +149,11 @@ export function ProjectScreen({ id, tab, today }: { id: string; tab: 'tasks' | '
   const { project } = view;
   const active = view.activeTasks.map((item) => item.task);
   const done = view.doneTasks.map((item) => item.task);
-  const groups = groupProjectTasks(active, today, view.nextStepIds);
-  const nextIds = new Set(view.nextStepIds);
+  const groups = groupProjectTasks(active, today, queued);
   const queueIds = new Set(queued);
   const priorityIds = new Set(dayPriorities.map((priority) => priority.task.id));
   // Arrow keys move through the lines in the order they show.
-  const shownLines = [...groups.stuck, ...groups.next,...groups.undated, ...groups.waiting, ...done];
+  const shownLines = [...groups.stuck, ...groups.queued, ...groups.undated, ...groups.waiting, ...done];
 
   const handlers: LineHandlers = {
     onSaveText: (block, text) => write(() => updateBlockText(appContext, block.id, text)),
@@ -172,7 +170,6 @@ export function ProjectScreen({ id, tab, today }: { id: string; tab: 'tasks' | '
     onSetDate: (block, date) => write(() => setIntendedDate(appContext, block.id, date)),
     onSetDeadline: (block, date) => write(() => setDeadline(appContext, block.id, date)),
     onTogglePriority: (block, on) => write(() => setDayPriority(appContext, block.id, on)),
-    onToggleNext: (block, on) => write(() => setNextStep(appContext, block.id, on)),
     onAddToQueue: (block) => write(() => addToQueue(appContext, block.id)),
     onSetWaiting: (block, waiting) => write(() => setTaskWaiting(appContext, block.id, waiting)),
     onAbandon: (block) => write(() => abandonTask(appContext, block.id)),
@@ -187,7 +184,6 @@ export function ProjectScreen({ id, tab, today }: { id: string; tab: 'tasks' | '
       day={null}
       today={today}
       isPriority={priorityIds.has(task.id)}
-      isNext={nextIds.has(task.id)}
       isQueued={queueIds.has(task.id)}
       allowNewLines={false}
       handlers={handlers}
@@ -266,12 +262,12 @@ export function ProjectScreen({ id, tab, today }: { id: string; tab: 'tasks' | '
                 </section>
               )}
 
-              {groups.next.length > 0 && (
-                <section className="next-steps" aria-label="Próximos passos">
+              {groups.queued.length > 0 && (
+                <section className="project-queue" aria-label="Na fila">
                   <h3 className="task-group__title">
-                    Próximos passos <span className="task-group__count">{groups.next.length}</span>
+                    Na fila <span className="task-group__count">{groups.queued.length}</span>
                   </h3>
-                  {groups.next.map((task) => line(task))}
+                  {groups.queued.map((task) => line(task))}
                 </section>
               )}
 

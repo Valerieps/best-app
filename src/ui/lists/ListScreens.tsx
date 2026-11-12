@@ -1,13 +1,12 @@
 import { useEffect, useState, type MouseEvent } from 'react';
 import { setDeadline, setDeadlines, setIntendedDate, setIntendedDates, setTaskProject } from '../../application/dayTools';
 import { addToQueue } from '../../application/executionQueue';
-import { setNextStep } from '../../application/nextSteps';
 import { abandonTask, abandonTasks, setTaskDone } from '../../application/notebook';
 import { loadActiveTasks, loadFinishedTasks, loadTaskListContext, type TaskListItem } from '../../application/queries';
 import { rangeBetween } from '../../domain/checkoutSteps';
 import { addDays, type DayKey } from '../../domain/day';
 import type { Project } from '../../domain/entities';
-import { TASK_LIST_KEYS, creationDay, filterByProject, groupTasks, onlyNextSteps, type TaskGroupBy, type TaskListKey, type TaskSortKey } from '../../domain/taskList';
+import { TASK_LIST_KEYS, creationDay, filterByProject, groupTasks, type TaskGroupBy, type TaskListKey, type TaskSortKey } from '../../domain/taskList';
 import { ColumnsMenu, FiltersMenu } from './TaskTableMenus';
 import { COLUMN_LABELS, DEFAULT_VIEW, parseView, sortByColumn, type TaskColumn, type TaskListView, type TaskShow } from './taskTableView';
 import { AbandonAction } from '../components/AbandonAction';
@@ -34,7 +33,6 @@ function ListPage({ title, className = '', children }: { title: string; classNam
 export function TaskRow({
   item,
   today,
-  isNext = false,
   action,
   extra,
   selection,
@@ -43,8 +41,6 @@ export function TaskRow({
 }: {
   item: TaskListItem;
   today: DayKey;
-  /** Marked "Próximo" in its project. */
-  isNext?: boolean;
   action?: React.ReactNode;
   /** Shown on hover, after the meta. */
   extra?: React.ReactNode;
@@ -83,7 +79,6 @@ export function TaskRow({
             <Linkified text={task.text || '(tarefa sem texto)'} />
           </span>
         )}
-        {isNext && active && <span className="chip chip--next" title="Um dos próximos passos do projeto">próximo</span>}
         {meta && (
           <span className="list-meta">
             <span className="muted">{meta}</span>
@@ -252,14 +247,12 @@ export function ActiveTaskActions({
   item,
   today,
   projects,
-  isNext,
   inQueue,
   onIntendedDate,
 }: {
   item: TaskListItem;
   today: DayKey;
   projects: Project[];
-  isNext: boolean;
   /** Whether the task is in the "Fila de execução"; absent hides the queue action. */
   inQueue?: boolean;
   /** Replaces the plain date change, as for a priority of the day, which leaves the priorities. */
@@ -277,17 +270,6 @@ export function ActiveTaskActions({
           onClick={() => void addToQueue(appContext, task.id)}
         >
           {inQueue ? 'Na fila' : 'Adicionar à fila'}
-        </button>
-      )}
-      {item.project && !task.waiting && (
-        <button
-          type="button"
-          className="line__action"
-          aria-pressed={isNext}
-          title={isNext ? 'Tirar dos próximos passos do projeto' : 'Marcar como um dos próximos passos do projeto'}
-          onClick={() => void setNextStep(appContext, task.id, !isNext)}
-        >
-          {isNext ? 'Não é próximo' : 'Próximo'}
         </button>
       )}
       {!item.project && projects.length > 0 && (
@@ -445,16 +427,14 @@ export function ActiveTasksScreen({ today }: { today: DayKey }) {
   }, [selecting]);
 
   if (!openItems || !doneItems || !context) return <LoadingPage title="Tarefas" />;
-  const { groupBy, sortBy, direction, nextOnly, columns } = view;
+  const { groupBy, sortBy, direction, columns } = view;
   // A project that is no longer active drops out of the menu, so its filter would hide everything.
   const project =
     view.project.startsWith('project:') && !context.activeProjects.some((item) => `project:${item.id}` === view.project) ? 'all' : view.project;
   const allItems = show === 'open' ? openItems : show === 'done' ? doneItems : [...openItems, ...doneItems];
-  const byProject = filterByProject(allItems, project, context.focusIds);
-  const items = nextOnly ? onlyNextSteps(byProject, context.nextStepIds) : byProject;
+  const items = filterByProject(allItems, project, context.focusIds);
   const groups = groupTasks(items, groupBy, sortBy, direction);
   const groupId = (key: string | null) => `${groupBy}:${key ?? ''}`;
-  const nextSet = new Set(context.nextStepIds);
   const queueSet = new Set(context.queueIds);
   const isOpen = (item: TaskListItem) => item.task.status === 'active';
   // Only open tasks can be selected: the batch actions are for them.
@@ -542,12 +522,7 @@ export function ActiveTasksScreen({ today }: { today: DayKey }) {
                   <Linkified text={item.task.text || '(tarefa sem texto)'} />
                 </span>
               )}
-              {nextSet.has(id) && open && (
-                <span className="chip chip--next" title="Um dos próximos passos do projeto">
-                  próximo
-                </span>
-              )}
-              {!selecting && open && <ActiveTaskActions item={item} today={today} projects={context.activeProjects} isNext={nextSet.has(id)} inQueue={queueSet.has(id)} />}
+              {!selecting && open && <ActiveTaskActions item={item} today={today} projects={context.activeProjects} inQueue={queueSet.has(id)} />}
             </div>
           </td>
           {columns.map((column) => (
@@ -630,11 +605,9 @@ export function ActiveTasksScreen({ today }: { today: DayKey }) {
                 ? show === 'done'
                   ? 'Nenhuma tarefa concluída.'
                   : 'Nenhuma tarefa por fazer.'
-                : nextOnly && (project !== 'focus' || context.focusIds.length > 0)
-                  ? 'Nenhum próximo passo marcado.'
-                  : project === 'focus' && context.focusIds.length === 0
-                    ? 'Nenhum projeto em foco.'
-                    : 'Nenhuma tarefa com esses filtros.'}
+                : project === 'focus' && context.focusIds.length === 0
+                  ? 'Nenhum projeto em foco.'
+                  : 'Nenhuma tarefa com esses filtros.'}
             </p>
           )}
         </div>

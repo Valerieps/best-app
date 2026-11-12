@@ -5,9 +5,9 @@ import { Dropdown } from '../components/Dropdown';
 import { Icon } from '../components/Icon';
 import { COLUMN_LABELS, TASK_COLUMNS, activeFilterCount, toggleColumn, type TaskListView, type TaskShow } from './taskTableView';
 
-type FilterCategory = 'show' | 'project' | 'next';
+type FilterCategory = 'show' | 'project';
 
-const CATEGORY_LABELS: Record<FilterCategory, string> = { show: 'Mostrar', project: 'Projeto', next: 'Próximos passos' };
+const CATEGORY_LABELS: Record<FilterCategory, string> = { show: 'Mostrar', project: 'Projeto' };
 
 interface Option<V> {
   value: V;
@@ -91,7 +91,7 @@ export function FiltersMenu({
                 className="link table-menu__clear"
                 onClick={() => {
                   onShow('open');
-                  onChange({ ...view, project: 'all', nextOnly: false });
+                  onChange({ ...view, project: 'all' });
                 }}
               >
                 Limpar filtros
@@ -112,17 +112,6 @@ export function FiltersMenu({
           )}
           {category === 'project' && (
             <OptionList title="Projeto" value={view.project} onPick={(project) => onChange({ ...view, project })} options={projectOptions} />
-          )}
-          {category === 'next' && (
-            <OptionList
-              title="Próximos passos"
-              value={view.nextOnly}
-              onPick={(nextOnly) => onChange({ ...view, nextOnly })}
-              options={[
-                { value: false, label: 'Todas as tarefas' },
-                { value: true, label: 'Só próximos passos' },
-              ]}
-            />
           )}
         </div>
       )}
