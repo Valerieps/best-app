@@ -201,7 +201,9 @@ export function ProjectSidePanel({ view, objectives, resources, pinned, floating
       ? `Finalizado em ${formatShortDate(toDayKey(new Date(project.finishedAt)))}`
       : project.status === 'finished'
         ? 'Finalizado'
-        : 'Ativo';
+        : project.status === 'backlog'
+          ? 'Backlog'
+          : 'Ativo';
   return (
     <aside className={`project-panel ${floating ? 'project-panel--floating' : ''}`} aria-label="Sobre o projeto">
       <div className="project-panel__head">

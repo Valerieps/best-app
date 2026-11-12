@@ -1,6 +1,6 @@
 import { toDayKey } from '../domain/day';
 import type { PriorityList } from '../domain/entities';
-import { FOCUS_LIST_ID, recordedFocusProjects, withAddedProject, withRemovedProject, withSwappedProject } from '../domain/focusProjects';
+import { FOCUS_LIST_ID, hasFreeSlot, recordedFocusProjects, withAddedProject, withRemovedProject, withSwappedProject } from '../domain/focusProjects';
 import { record } from './events';
 import type { AppContext, StoreTransaction } from './ports';
 
@@ -17,7 +17,7 @@ async function idsInFocus(tx: StoreTransaction): Promise<string[]> {
 
 type Change =
   | { added: string; replaced?: string }
-  | { removed: string; reason: 'removed' | 'finished' };
+  | { removed: string; reason: 'removed' | 'finished' | 'backlog' };
 
 /** Saves the whole list. The event carries it too, which is the history of the list. */
 async function save(ctx: AppContext, tx: StoreTransaction, itemIds: string[], change: Change) {
@@ -34,23 +34,35 @@ async function save(ctx: AppContext, tx: StoreTransaction, itemIds: string[], ch
 
 /** "Colocar em foco": an active project takes a free slot. Returns whether it was added. */
 export async function addFocusProject(ctx: AppContext, projectId: string): Promise<boolean> {
-  return ctx.store.transaction(async (tx) => {
-    if ((await tx.projects.get(projectId))?.status !== 'active') return false;
-    const next = withAddedProject(await idsInFocus(tx), projectId);
-    if (!next) return false;
-    await save(ctx, tx, next, { added: projectId });
-    return true;
-  });
+  return ctx.store.transaction((tx) => addFocusProjectIn(ctx, tx, projectId));
+}
+
+/** "Colocar em foco" inside a transaction. */
+export async function addFocusProjectIn(ctx: AppContext, tx: StoreTransaction, projectId: string): Promise<boolean> {
+  if ((await tx.projects.get(projectId))?.status !== 'active') return false;
+  const next = withAddedProject(await idsInFocus(tx), projectId);
+  if (!next) return false;
+  await save(ctx, tx, next, { added: projectId });
+  return true;
+}
+
+/** Whether the focus can hold the project: it is in focus already or a slot is free. */
+export async function canTakeFocusIn(tx: StoreTransaction, projectId: string): Promise<boolean> {
+  const ids = await idsInFocus(tx);
+  return ids.includes(projectId) || hasFreeSlot(ids);
 }
 
 /** "Tirar do foco": frees the project's slot. Returns whether it was in the list. */
 export async function removeFocusProject(ctx: AppContext, projectId: string): Promise<boolean> {
-  return ctx.store.transaction(async (tx) => {
-    const next = withRemovedProject(await idsInFocus(tx), projectId);
-    if (!next) return false;
-    await save(ctx, tx, next, { removed: projectId, reason: 'removed' });
-    return true;
-  });
+  return ctx.store.transaction((tx) => removeFocusProjectIn(ctx, tx, projectId));
+}
+
+/** "Tirar do foco" inside a transaction. */
+export async function removeFocusProjectIn(ctx: AppContext, tx: StoreTransaction, projectId: string): Promise<boolean> {
+  const next = withRemovedProject(await idsInFocus(tx), projectId);
+  if (!next) return false;
+  await save(ctx, tx, next, { removed: projectId, reason: 'removed' });
+  return true;
 }
 
 /**
@@ -71,7 +83,12 @@ export async function swapFocusProject(ctx: AppContext, outId: string, inId: str
  * "Finalizar um projeto em foco tira o projeto da lista e libera a vaga". Reopening does not
  * bring it back.
  */
-export async function releaseFocusProject(ctx: AppContext, tx: StoreTransaction, projectId: string): Promise<void> {
+export async function releaseFocusProject(
+  ctx: AppContext,
+  tx: StoreTransaction,
+  projectId: string,
+  reason: 'finished' | 'backlog' = 'finished',
+): Promise<void> {
   const ids = recordedFocusProjects(await tx.priorities.get(FOCUS_LIST_ID));
-  if (ids.includes(projectId)) await save(ctx, tx, ids.filter((id) => id !== projectId), { removed: projectId, reason: 'finished' });
+  if (ids.includes(projectId)) await save(ctx, tx, ids.filter((id) => id !== projectId), { removed: projectId, reason });
 }

@@ -4,7 +4,7 @@ import { positionBetween } from '../domain/position';
 import { isProjectIcon } from '../domain/projectPage';
 import { record } from './events';
 import type { AppContext, StoreTransaction } from './ports';
-import { releaseFocusProject } from './focusProjects';
+import { addFocusProjectIn, canTakeFocusIn, releaseFocusProject, removeFocusProjectIn } from './focusProjects';
 import { followTag, rewriteTags } from './projectTags';
 
 /** Where a project grew from: an idea, and the idea's project then (spec/ideias.md). */
@@ -76,6 +76,32 @@ export async function setProjectFinished(ctx: AppContext, projectId: string, fin
     });
     await record(ctx, tx, finished ? 'project.finished' : 'project.reopened', 'project', project.id, toDayKey(ctx.clock.now()));
     if (finished) await releaseFocusProject(ctx, tx, project.id);
+  });
+}
+
+/** Where the project list puts a project: in focus, among the other active ones, or in the backlog. */
+export type ProjectPlace = 'focus' | 'active' | 'backlog';
+
+/**
+ * Moves a project to any place of the list, from any other, finished included (spec/projetos.md,
+ * "Lista de projetos"). Going to the focus needs a free slot; with the list full nothing changes.
+ * Returns whether the project is now where it was asked to be.
+ */
+export async function setProjectPlace(ctx: AppContext, projectId: string, place: ProjectPlace): Promise<boolean> {
+  return ctx.store.transaction(async (tx) => {
+    const project = await tx.projects.get(projectId);
+    if (!project || project.status === 'merged') return false;
+    if (place === 'focus' && !(await canTakeFocusIn(tx, projectId))) return false;
+    const status = place === 'backlog' ? 'backlog' : 'active';
+    if (project.status !== status) {
+      const at = ctx.clock.now().toISOString();
+      await tx.projects.put({ ...project, status, finishedAt: null, updatedAt: at });
+      await record(ctx, tx, status === 'backlog' ? 'project.backlogged' : 'project.reopened', 'project', project.id, toDayKey(ctx.clock.now()));
+    }
+    if (place === 'backlog') await releaseFocusProject(ctx, tx, project.id, 'backlog');
+    if (place === 'active') await removeFocusProjectIn(ctx, tx, project.id);
+    if (place === 'focus') await addFocusProjectIn(ctx, tx, project.id);
+    return true;
   });
 }
 

@@ -92,14 +92,17 @@ export interface EventData {
   'project.created': { name: string; fromIdeaId?: string; fromProjectId?: string };
   'project.renamed': { from: string; to: string };
   'project.finished': NoData;
+  /** Finished or in backlog, then active again. */
   'project.reopened': NoData;
+  /** Moved to the backlog, from active or finished. */
+  'project.backlogged': NoData;
   'project.merged': { into: string };
   'project.iconChanged': { from: string | null; to: string | null };
   'project.linkedToObjective': { objectiveId: string | null };
   /**
    * A change of a priority list, carrying the whole list after it. Day priorities (entity
    * `day:<day>`) name the task; the list in focus names the project, and a removal says why:
-   * `removed` by hand, `finished` with the project, `review` in the Revisão de Foco (history
+   * `removed` by hand, `finished` with the project, `backlog` when the project went to the backlog, `review` in the Revisão de Foco (history
    * only, ADR-060). An addition that took another project's place names it in `replaced`. The
    * project next steps (entity `next:<projectId>`, ADR-065, removed by ADR-070) named the task and
    * the project, and a removal said why: `removed`, `finished`, `abandoned` or `moved`; history only.
@@ -114,7 +117,7 @@ export interface EventData {
     | { taskId: string; itemIds: string[] }
     | { taskId: string; reason: 'removed' | 'finished' | 'abandoned'; itemIds: string[] }
     | { taskId: string; projectId: string; reason: 'removed' | 'finished' | 'abandoned' | 'moved'; itemIds: string[] }
-    | { projectId: string; reason: 'removed' | 'finished' | 'review'; itemIds: string[] };
+    | { projectId: string; reason: 'removed' | 'finished' | 'backlog' | 'review'; itemIds: string[] };
   /**
    * History only: a review was closed, with a snapshot of the metrics it showed. The reviews
    * were removed (ADR-060); the closed ones stay in the history and in the backup.

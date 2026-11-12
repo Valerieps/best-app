@@ -305,6 +305,8 @@ export interface ProjectListView {
   priority: ProjectListItem[];
   /** Other active projects, most recent activity first. */
   others: ProjectListItem[];
+  /** Projects kept for later, by name. */
+  backlog: ProjectListItem[];
   finished: ProjectListItem[];
   /** "4 ativos · 1 parado · 3 travadas" */
   summary: { active: number; stalled: number };
@@ -314,7 +316,7 @@ export interface ProjectListView {
 }
 
 /** Defaults of the collapsible groups of the project list. */
-export const PROJECT_LIST_GROUPS_OPEN: Record<ProjectListGroup, boolean> = { others: true, finished: false };
+export const PROJECT_LIST_GROUPS_OPEN: Record<ProjectListGroup, boolean> = { others: true, backlog: false, finished: false };
 
 /** Activity of each project, from the events of its tasks, notes and day sections (ADR-034). */
 export async function loadActivities(reader: Reader, projects: readonly Project[], today: DayKey) {
@@ -372,6 +374,7 @@ export async function loadProjectList(reader: Reader, today: DayKey): Promise<Pr
         const dayB = b.lastActivityDay ?? '';
         return dayA !== dayB ? (dayA < dayB ? 1 : -1) : byName(a, b);
       }),
+    backlog: items.filter((item) => item.project.status === 'backlog').sort(byName),
     finished: finished.sort((a, b) => ((a.project.finishedAt ?? '') < (b.project.finishedAt ?? '') ? 1 : -1)),
     summary: {
       active: active.length,
