@@ -13,14 +13,17 @@ async function saveQueue(ctx: AppContext, tx: StoreTransaction, itemIds: string[
 
 /** Adds an open task of mine to the end of the queue. A waiting or closed task is left out. */
 export async function addToQueue(ctx: AppContext, taskId: string): Promise<void> {
-  await ctx.store.transaction(async (tx) => {
-    const task = await tx.blocks.get(taskId);
-    if (!canQueue(task)) return;
-    const itemIds = withQueued(recordedQueue(await tx.priorities.get(QUEUE_LIST_ID)), taskId);
-    if (!itemIds) return;
-    await saveQueue(ctx, tx, itemIds);
-    await record(ctx, tx, 'priority.added', 'priorities', QUEUE_LIST_ID, toDayKey(ctx.clock.now()), { taskId, itemIds });
-  });
+  await ctx.store.transaction((tx) => queueIn(ctx, tx, taskId));
+}
+
+/** `addToQueue` inside a transaction, as "Fechar o dia" does for the tasks I put in the queue. */
+export async function queueIn(ctx: AppContext, tx: StoreTransaction, taskId: string, day?: DayKey): Promise<void> {
+  const task = await tx.blocks.get(taskId);
+  if (!canQueue(task)) return;
+  const itemIds = withQueued(recordedQueue(await tx.priorities.get(QUEUE_LIST_ID)), taskId);
+  if (!itemIds) return;
+  await saveQueue(ctx, tx, itemIds);
+  await record(ctx, tx, 'priority.added', 'priorities', QUEUE_LIST_ID, day ?? toDayKey(ctx.clock.now()), { taskId, itemIds });
 }
 
 /** "Remover da fila": the task stays as it was, only out of the queue. */

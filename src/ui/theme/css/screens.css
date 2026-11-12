@@ -577,10 +577,6 @@ button.plan-row--on:hover {
   font-variant-numeric: tabular-nums;
 }
 
-.checkout-step--batch {
-  padding-bottom: 120px;
-}
-
 .batch-bar {
   position: fixed;
   left: 0;
@@ -640,10 +636,10 @@ button.plan-row--on:hover {
   margin-left: calc(-1 * var(--space-1));
 }
 
-/* "Fechar o dia", planning: a board of three columns with a card per task. */
+/* "Fechar o dia": a board of two columns, the tasks of the day and the queue, with a card per task. */
 .plan-board {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: var(--space-3);
   margin-top: var(--space-3);
   align-items: start;
@@ -671,8 +667,8 @@ button.plan-row--on:hover {
   font-weight: 600;
 }
 
-.plan-column--late .plan-column__title {
-  color: var(--color-danger);
+.plan-column--queue .plan-column__title {
+  color: var(--color-accent);
 }
 
 .plan-column__cards {
@@ -713,18 +709,10 @@ li.plan-card:active {
   opacity: 0.6;
 }
 
-button.plan-card--select {
-  width: 100%;
-  font: inherit;
-  text-align: left;
-  color: inherit;
-  user-select: none;
-}
-
-button.plan-card--on,
-button.plan-card--on:hover {
-  border-color: var(--color-accent);
-  background: var(--color-select-bg);
+/* A task already in the queue: there for context, not dragged. */
+li.plan-card--fixed {
+  cursor: default;
+  box-shadow: none;
 }
 
 .plan-card__text {

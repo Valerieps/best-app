@@ -1,5 +1,4 @@
 import { addDays, fromDayKey, type DayKey } from '../domain/day';
-import type { StuckReason } from '../domain/projectPage';
 
 /** Date and time labels in Brazilian Portuguese. */
 
@@ -96,17 +95,6 @@ export function linkDomain(url: string): string {
 /** "outubro" */
 export function monthName(day: DayKey): string {
   return fromDayKey(day).toLocaleDateString('pt-BR', { month: 'long' });
-}
-
-/** Why a task is stuck: "adiada 3 vezes · desde 18/09", "venceu em 09/10", or both. */
-export function stuckReasonLabel(reason: StuckReason): string {
-  return [
-    reason.overdueOn ? `venceu em ${formatShortDate(reason.overdueOn)}` : null,
-    reason.postponed !== null ? postponedLabel(reason.postponed) : null,
-    reason.since ? `desde ${formatShortDate(reason.since)}` : null,
-  ]
-    .filter(Boolean)
-    .join(' · ');
 }
 
 /** Date block of the project agenda: "amanhã" over "13", a weekday within the week, else the month. */
