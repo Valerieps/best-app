@@ -4,8 +4,7 @@ import type { DayKey } from '../../domain/day';
 import type { Block, Project } from '../../domain/entities';
 import type { DayTriage } from '../../domain/triage';
 import { Icon, type IconName } from '../components/Icon';
-import { Linkified } from '../components/Linkified';
-import { taskText } from '../tasks/taskSurface';
+import { TaskText } from '../taskDetails/TaskText';
 
 /** Pieces shared by the steps of the checkout (spec/checkout.md, "Fechamento em etapas"). */
 
@@ -109,7 +108,7 @@ export function TaskReplica({ task, meta }: { task: Block; meta?: ReactNode }) {
     <div className="task-replica">
       <span className="task-box" aria-hidden="true" />
       <span className="task-replica__text">
-        <Linkified text={taskText(task)} />
+        <TaskText taskId={task.id} text={task.text} />
         {meta && <span className="task-replica__meta">{meta}</span>}
       </span>
     </div>

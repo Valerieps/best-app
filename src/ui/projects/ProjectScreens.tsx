@@ -7,16 +7,13 @@ import { loadDayPriorities, loadProject, loadProjectResources, loadQueueIds } fr
 import { setProjectPanelPinned } from '../../application/settings';
 import { type DayKey } from '../../domain/day';
 import type { Block } from '../../domain/entities';
-import { groupProjectTasks, stuckReason } from '../../domain/projectPage';
+import { groupProjectTasks } from '../../domain/projectPage';
 import { BlockLine, type LineHandlers } from '../dayNote/BlockLine';
-import { DatePicker } from '../components/DatePicker';
-import { taskCommands } from '../tasks/taskCommands';
 import { MarkdownText } from '../dayNote/MarkdownText';
 import { requestFocus } from '../dayNote/focus';
 import { Icon } from '../components/Icon';
 import { BackButton, ScreenHeader } from '../components/ScreenHeader';
 import { LoadingPage } from '../components/Skeleton';
-import { stuckReasonLabel } from '../format';
 import { navigate } from '../hooks';
 import { appContext, reader } from '../services';
 import { useLiveQuery } from '../useLiveQuery';
@@ -157,11 +154,11 @@ export function ProjectScreen({ id, tab, today }: { id: string; tab: 'tasks' | '
   const { project } = view;
   const active = view.activeTasks.map((item) => item.task);
   const done = view.doneTasks.map((item) => item.task);
-  const groups = groupProjectTasks(active, today, queued);
+  const groups = groupProjectTasks(active, queued);
   const queueIds = new Set(queued);
   const priorityIds = new Set(dayPriorities.map((priority) => priority.task.id));
   // Arrow keys move through the lines in the order they show.
-  const shownLines = [...groups.stuck, ...groups.queued, ...groups.undated, ...groups.waiting, ...done];
+  const shownLines = [...groups.queued, ...groups.open, ...groups.waiting, ...done];
 
   const handlers: LineHandlers = {
     onSaveText: (block, text) => write(() => updateBlockText(appContext, block.id, text)),
@@ -177,7 +174,7 @@ export function ProjectScreen({ id, tab, today }: { id: string; tab: 'tasks' | '
     onEnsurePeople: (names) => write(() => ensurePeople(appContext, names)),
   };
 
-  const line = (task: Block, hideDate = false) => (
+  const line = (task: Block) => (
     <BlockLine
       key={task.id}
       block={task}
@@ -188,7 +185,6 @@ export function ProjectScreen({ id, tab, today }: { id: string; tab: 'tasks' | '
       isQueued={queueIds.has(task.id)}
       allowNewLines={false}
       handlers={handlers}
-      hideDate={hideDate}
       surface="project"
     />
   );
@@ -236,34 +232,6 @@ export function ProjectScreen({ id, tab, today }: { id: string; tab: 'tasks' | '
             <div role="tabpanel" aria-label="Tarefas" className="project-tasks">
               {active.length === 0 && <p className="muted project-tasks__empty">Nenhuma tarefa ativa.</p>}
 
-              {groups.stuck.length > 0 && (
-                <section className="stuck" aria-label="Travadas">
-                  <h3 className="stuck__title">
-                    Travadas <span className="task-group__count">{groups.stuck.length}</span>
-                  </h3>
-                  {groups.stuck.map((task) => {
-                    const reason = stuckReason(task, today);
-                    return (
-                      <div className="stuck__card" key={task.id}>
-                        {line(task, true)}
-                        <div className="stuck__foot">
-                          <span className="stuck__reason">{reason ? stuckReasonLabel(reason) : ''}</span>
-                          <DatePicker
-                            label="Dar uma nova data de intenção"
-                            className="small stuck__date"
-                            value={task.intendedDate}
-                            min={today}
-                            onChange={(date) => taskCommands.setDate(task.id, date)}
-                          >
-                            Nova data
-                          </DatePicker>
-                        </div>
-                      </div>
-                    );
-                  })}
-                </section>
-              )}
-
               <NewTaskField projectId={project.id} />
 
               {groups.queued.length > 0 && (
@@ -275,8 +243,8 @@ export function ProjectScreen({ id, tab, today }: { id: string; tab: 'tasks' | '
                 </section>
               )}
 
-              <FoldedGroup label="Sem data" count={groups.undated.length} initiallyOpen className="task-group--undated">
-                {groups.undated.map((task) => line(task))}
+              <FoldedGroup label="A fazer" count={groups.open.length} initiallyOpen className="task-group--open">
+                {groups.open.map((task) => line(task))}
               </FoldedGroup>
 
               <FoldedGroup label="Aguardando" count={groups.waiting.length} initiallyOpen className="task-group--waiting">

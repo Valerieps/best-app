@@ -94,21 +94,19 @@ interface Props {
   handlers: LineHandlers;
   /** More metadata before the dates, like "adiada 3×" on the project page. */
   extraMeta?: ReactNode;
-  /** The intended date is shown elsewhere, like the project agenda's date block: no chip, only the hover shortcut. */
-  hideDate?: boolean;
   drag?: LineDragProps;
   /** Part of the lines selected together (spec/nota-do-dia.md, "Selecionar várias linhas"). */
   selected?: boolean;
   /** The line stays a note: "[] " does not make it a task (a kept note on a project page). */
   notesOnly?: boolean;
-  /** The screen the line is on, which decides a task's actions (`taskSurface.ts`). */
+  /** The screen the line is on, which decides a task's actions (`tasks/taskSurface.ts`). */
   surface?: TaskSurface;
 }
 
 /** Hint on an empty line, shown only while the line is being written (P3 in the UX review of 2026-10-12, issue #19). */
 export const NOTE_HINT = 'Escreva, ou comece com [] e espaço para criar uma tarefa';
 
-export function BlockLine({ block, free, day, today, isPriority, isQueued = false, allowNewLines, handlers, extraMeta, hideDate = false, drag, selected = false, notesOnly = false, surface = 'dayNote' }: Props) {
+export function BlockLine({ block, free, day, today, isPriority, isQueued = false, allowNewLines, handlers, extraMeta, drag, selected = false, notesOnly = false, surface = 'dayNote' }: Props) {
   const ref = useRef<HTMLTextAreaElement>(null);
   const [text, setText] = useState(block.text);
   const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -450,11 +448,11 @@ export function BlockLine({ block, free, day, today, isPriority, isQueued = fals
   const isIdea = block.kind === 'idea';
   const ideaOutcome = isIdea && block.ideaStatus === 'becameProject' ? 'virou projeto' : isIdea && block.ideaStatus === 'dropped' ? 'largada' : null;
   const done = isTask && block.status === 'done';
-  // Something a person owes me: its date is the day to follow up (spec/pessoas.md).
+  // Something a person owes me (spec/pessoas.md).
   const waiting = isTask && block.waiting === true;
   // Notes and ideas have no task actions.
   const actions = isTask ? taskActions(block, surface) : new Set<TaskAction>();
-  const chips = isTask ? shownChips(block, { day, hideDate }) : { date: false, deadline: false };
+  const chips = isTask ? shownChips(block, day) : { date: false, deadline: false };
   const convertible = block.kind === 'note' && free && !notesOnly;
   const hasActions = actions.size > 0 || convertible;
 

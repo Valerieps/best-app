@@ -11,11 +11,10 @@ import {
 /** The columns of the tasks table that can be shown or hidden. "Tarefa" is always shown. */
 export type TaskColumn = Exclude<TaskSortKey, 'text'>;
 
-export const TASK_COLUMNS: readonly TaskColumn[] = ['intendedDate', 'deadline', 'project', 'createdDate', 'postponeCount'];
+export const TASK_COLUMNS: readonly TaskColumn[] = ['deadline', 'project', 'createdDate', 'postponeCount'];
 
 export const COLUMN_LABELS: Record<TaskSortKey, string> = {
   text: 'Tarefa',
-  intendedDate: 'Data',
   deadline: 'Prazo',
   project: 'Projeto',
   createdDate: 'Criada em',
@@ -36,10 +35,10 @@ export interface TaskListView {
 
 export const DEFAULT_VIEW: TaskListView = {
   groupBy: 'none',
-  sortBy: 'intendedDate',
+  sortBy: 'createdDate',
   direction: 'asc',
   project: 'all',
-  columns: ['intendedDate', 'deadline', 'project'],
+  columns: ['deadline', 'project'],
 };
 
 function isListKey(value: unknown): value is TaskListKey {

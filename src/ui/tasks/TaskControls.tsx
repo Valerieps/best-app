@@ -4,11 +4,12 @@ import type { Project } from '../../domain/entities';
 import { AbandonAction } from '../components/AbandonAction';
 import { DatePicker } from '../components/DatePicker';
 import { PRIORITY_SHORTCUT } from '../dayNote/priorityShortcut';
+import { openTaskDetails } from '../taskDetails/taskDetailsStore';
 import { taskCommands } from './taskCommands';
-import { dateLabels, deadlineLabel, doneLabel, intendedDateLabel, type TaskAction, type TaskFields } from './taskSurface';
+import { deadlineLabel, doneLabel, followUpLabel, type TaskAction, type TaskFields } from './taskSurface';
 
 /**
- * The pieces every task line is made of, shared by all screens (ADR-072). Which actions show
+ * The pieces every task line is made of, shared by all screens (ADR-073). Which actions show
  * comes from `taskActions`; what they do comes from `taskCommands`.
  */
 
@@ -39,9 +40,10 @@ export function PriorityStar({ on, onToggle, label }: { on: boolean; onToggle():
 }
 
 /** Which dates a line shows as chips: those chips change the date, so no hover action repeats them. */
-export function shownChips(task: TaskFields, { day = null, hideDate = false }: { day?: DayKey | null; hideDate?: boolean } = {}) {
+export function shownChips(task: TaskFields, day: DayKey | null = null) {
   return {
-    date: !hideDate && task.intendedDate !== null && task.intendedDate !== day,
+    // Only a waiting task has a date: the day to follow up, not repeated on that day's note.
+    date: Boolean(task.waiting) && task.intendedDate !== null && task.intendedDate !== day,
     deadline: Boolean(task.deadline),
   };
 }
@@ -55,34 +57,37 @@ export function TaskDateChips({
   today,
   chips,
   hideDeadline = false,
-  onDate = (date) => taskCommands.setDate(task.id, date),
 }: {
   task: Task;
   today: DayKey;
   chips: { date: boolean; deadline: boolean };
   /** The deadline is shown another way, like the priorities' "prazo hoje" icon. */
   hideDeadline?: boolean;
-  /** Replaces the plain date change, as for a priority of the day. */
-  onDate?(date: DayKey | null): void;
 }) {
   const open = task.status === 'active';
-  const dateText = intendedDateLabel(task, today);
-  const deadlineText = deadlineLabel(task, today);
-  const labels = dateLabels(task);
+  const followUp = followUpLabel(task, today);
+  const deadline = deadlineLabel(task, today);
   return (
     <>
       {chips.date &&
-        dateText &&
+        followUp &&
         (open ? (
-          <DatePicker label={labels.change} className="line__chip" value={task.intendedDate} min={today} onChange={onDate} clearLabel={labels.clear}>
-            {dateText}
+          <DatePicker
+            label="Mudar a data para cobrar"
+            className="line__chip"
+            value={task.intendedDate}
+            min={today}
+            onChange={(date) => taskCommands.setDate(task.id, date)}
+            clearLabel="Tirar a data para cobrar"
+          >
+            {followUp}
           </DatePicker>
         ) : (
-          <span className="muted">{dateText}</span>
+          <span className="muted">{followUp}</span>
         ))}
       {chips.deadline &&
         !hideDeadline &&
-        deadlineText &&
+        deadline &&
         (open ? (
           <DatePicker
             label="Mudar o prazo máximo"
@@ -91,10 +96,10 @@ export function TaskDateChips({
             onChange={(date) => taskCommands.setDeadline(task.id, date)}
             clearLabel="Tirar o prazo máximo"
           >
-            {deadlineText}
+            {deadline}
           </DatePicker>
         ) : (
-          <span className="chip chip--muted">{deadlineText}</span>
+          <span className="chip chip--muted">{deadline}</span>
         ))}
     </>
   );
@@ -112,7 +117,6 @@ export function TaskActionButtons({
   isQueued = false,
   chips = { date: false, deadline: false },
   projects = [],
-  onDate = (date) => taskCommands.setDate(task.id, date),
 }: {
   task: Task;
   today: DayKey;
@@ -123,11 +127,13 @@ export function TaskActionButtons({
   chips?: { date: boolean; deadline: boolean };
   /** The projects "Projeto" can link the task to. */
   projects?: readonly Project[];
-  /** Replaces the plain date change, as for a priority of the day. */
-  onDate?(date: DayKey | null): void;
 }) {
-  const labels = dateLabels(task);
   const buttons: Record<TaskAction, () => ReactNode> = {
+    details: () => (
+      <button type="button" className="line__action" title="Ver e editar todos os detalhes da tarefa" onClick={() => openTaskDetails(task.id)}>
+        Detalhes
+      </button>
+    ),
     // A priority's ★ stays visible on the line, outside the hover actions.
     priority: () => !isPriority && <PriorityStar on={false} onToggle={() => taskCommands.setPriority(task.id, true)} />,
     queue: () => (
@@ -157,17 +163,17 @@ export function TaskActionButtons({
         ))}
       </select>
     ),
-    date: () =>
+    followUp: () =>
       !chips.date && (
         <DatePicker
-          label={task.intendedDate ? labels.change : labels.set}
+          label="Data para cobrar"
           className="line__action"
           value={task.intendedDate}
           min={today}
-          onChange={onDate}
-          clearLabel={task.intendedDate ? labels.clear : undefined}
+          onChange={(date) => taskCommands.setDate(task.id, date)}
+          clearLabel={task.intendedDate ? 'Tirar a data para cobrar' : undefined}
         >
-          {labels.button}
+          Cobrar
         </DatePicker>
       ),
     deadline: () =>

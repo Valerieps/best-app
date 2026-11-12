@@ -6,12 +6,11 @@ import { moveItem } from '../../domain/order';
 import { ScreenHeader } from '../components/ScreenHeader';
 import { LoadingPage } from '../components/Skeleton';
 import { isSamePlace, useLineDrag } from '../dayNote/lineDrag';
-import { Linkified } from '../components/Linkified';
 import { routeHash } from '../hooks';
 import { ActiveTaskActions } from '../lists/ListScreens';
+import { TaskText } from '../taskDetails/TaskText';
 import { taskCommands } from '../tasks/taskCommands';
 import { TaskCheckbox } from '../tasks/TaskControls';
-import { taskText } from '../tasks/taskSurface';
 import { appContext, reader } from '../services';
 import { useLiveQuery } from '../useLiveQuery';
 
@@ -73,9 +72,9 @@ function QueueContent({ data, today, inPanel }: { data: ExecutionQueueData; toda
           )}
           <TaskCheckbox task={task} />
           <span className="task-row__text">
-            <Linkified text={taskText(task)} />
+            <TaskText taskId={task.id} text={task.text} />
           </span>
-          {/* The queue's own action; the rest are the same as in every list (taskSurface.ts). */}
+          {/* The queue's own action; the rest are the same as in every list (tasks/taskSurface.ts). */}
           <span className="active-tasks__actions">
             <button
               type="button"

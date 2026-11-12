@@ -23,7 +23,9 @@ export type TaskDecision =
   /** Section 6: the task becomes a habit. */
   | { kind: 'habit' }
   /** A waiting task stays as it is, without a new follow-up date (spec/pessoas.md). */
-  | { kind: 'keep' };
+  | { kind: 'keep' }
+  /** "Colocar na fila": the task goes to the end of the "Fila de execução" (ADR-072). */
+  | { kind: 'queue' };
 
 export type NotesDecision = 'wiki' | 'discarded';
 

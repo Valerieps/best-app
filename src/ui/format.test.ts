@@ -9,7 +9,6 @@ import {
   postponedLabel,
   relativeDay,
   boardDayLabel,
-  stuckReasonLabel,
 } from './format';
 
 const today = '2026-10-11'; // a Sunday
@@ -51,12 +50,6 @@ describe('format', () => {
     expect(postponedLabel(0)).toBeNull();
     expect(postponedLabel(1)).toBe('adiada 1 vez');
     expect(postponedLabel(4)).toBe('adiada 4 vezes');
-  });
-
-  it('spells out why a task is stuck', () => {
-    expect(stuckReasonLabel({ postponed: 3, since: '2026-09-18', overdueOn: null })).toBe('adiada 3 vezes · desde 18/09');
-    expect(stuckReasonLabel({ postponed: null, since: null, overdueOn: '2026-10-09' })).toBe('venceu em 09/10');
-    expect(stuckReasonLabel({ postponed: 4, since: '2026-09-18', overdueOn: '2026-10-09' })).toBe('venceu em 09/10 · adiada 4 vezes · desde 18/09');
   });
 
   it('writes the date block of the agenda', () => {

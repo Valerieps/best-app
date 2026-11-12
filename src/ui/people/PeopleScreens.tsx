@@ -25,7 +25,7 @@ function sectionLabel(section: Section | null): string {
   return `${section.title ?? 'Sem título'} · ${formatShortDate(section.day)} · ${formatTime(section.createdAt)}`;
 }
 
-/** One open task between me and someone: done by the checkbox, with its age and its date. */
+/** One open task between me and someone: done by the checkbox, with its age and, when waiting, the day to follow up. */
 function ItemRow({ item, today, person, section }: { item: PersonItem; today: DayKey; person?: Person | null; section: Section | null }) {
   const { task } = item;
   const finished = task.status === 'done';

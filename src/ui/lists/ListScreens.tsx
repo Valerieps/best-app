@@ -1,5 +1,5 @@
 import { useEffect, useState, type MouseEvent } from 'react';
-import { setDeadlines, setIntendedDates } from '../../application/dayTools';
+import { setDeadlines } from '../../application/dayTools';
 import { abandonTasks } from '../../application/notebook';
 import { loadActiveTasks, loadFinishedTasks, loadTaskListContext, type TaskListItem } from '../../application/queries';
 import { rangeBetween } from '../../domain/checkoutSteps';
@@ -12,6 +12,7 @@ import { AbandonAction } from '../components/AbandonAction';
 import { ProjectChip } from '../components/Chips';
 import { Icon } from '../components/Icon';
 import { Linkified } from '../components/Linkified';
+import { TaskText } from '../taskDetails/TaskText';
 import { ScreenHeader } from '../components/ScreenHeader';
 import { LoadingPage } from '../components/Skeleton';
 import { plural, relativeDay } from '../format';
@@ -32,7 +33,6 @@ function ListPage({ title, className = '', children }: { title: string; classNam
 
 const KEY_LABELS: Record<TaskListKey, string> = {
   project: 'projeto',
-  intendedDate: 'data de intenção',
   createdDate: 'data de criação',
   postponeCount: 'adiamentos',
 };
@@ -66,8 +66,7 @@ function groupTitle(groupBy: TaskListKey, key: string | null, items: TaskListIte
     const count = Number(key);
     return count === 0 ? 'Nunca adiada' : `Adiada ${count} ${count === 1 ? 'vez' : 'vezes'}`;
   }
-  if (key === null) return 'Sem data';
-  const day = relativeDay(key, today);
+  const day = relativeDay(key ?? '', today);
   return day.charAt(0).toUpperCase() + day.slice(1);
 }
 
@@ -110,9 +109,8 @@ function TaskGroupRows({
     </tbody>
   );
 }
-/** Bottom bar of the selection: the same intended date or deadline for all, or abandon them all. */
+/** Bottom bar of the selection: the same deadline for all, or abandon them all. */
 function BatchBar({ selected, today, onDone }: { selected: Set<string>; today: DayKey; onDone(message: string): void }) {
-  const [intended, setIntended] = useState<DayKey>(addDays(today, 1));
   const [deadline, setDeadlineDate] = useState<DayKey>(addDays(today, 7));
   const ids = [...selected];
   const none = ids.length === 0;
@@ -124,27 +122,6 @@ function BatchBar({ selected, today, onDone }: { selected: Set<string>; today: D
     <div className="batch-bar active-tasks__batch" role="region" aria-label="Edição em lote">
       <span className="batch-bar__count">
         <b>{none ? 'Nenhuma tarefa selecionada' : plural(ids.length, 'tarefa selecionada', 'tarefas selecionadas')}</b>
-      </span>
-      <span className="batch-bar__actions">
-        <span className="muted">Data de intenção</span>
-        <input
-          type="date"
-          className="date-input"
-          min={today}
-          value={intended}
-          onChange={(event) => event.target.value && setIntended(event.target.value)}
-          aria-label="Data de intenção para as tarefas selecionadas"
-        />
-        <button
-          type="button"
-          disabled={none}
-          onClick={() => run(setIntendedDates(appContext, ids, intended), `${count} → ${relativeDay(intended, today)}`)}
-        >
-          Aplicar
-        </button>
-        <button type="button" disabled={none} onClick={() => run(setIntendedDates(appContext, ids, null), `${count} sem data`)}>
-          Sem data
-        </button>
       </span>
       <span className="batch-bar__actions">
         <span className="muted">Prazo</span>
@@ -269,9 +246,7 @@ function ColumnCell({ column, item, today, selecting }: { column: TaskColumn; it
   const active = task.status === 'active';
   const dash = <span className="muted">—</span>;
   let content: React.ReactNode;
-  if (column === 'intendedDate') {
-    content = !active ? dash : task.intendedDate ? relativeDay(task.intendedDate, today) : <span className="muted">sem data</span>;
-  } else if (column === 'deadline') {
+  if (column === 'deadline') {
     content = active && task.deadline ? relativeDay(task.deadline, today) : dash;
   } else if (column === 'project') {
     content = project ? <ProjectChip name={project.name} href={selecting ? undefined : routeHash({ name: 'project', id: project.id })} /> : dash;
@@ -387,7 +362,9 @@ export function ActiveTasksScreen({ today }: { today: DayKey }) {
           onClick={picking ? (event) => pick(id, event) : undefined}
         >
           <td className="task-table__td task-table__td--check">
-            {!picking && <TaskCheckbox task={item.task} disabled={selecting} />}
+            {!picking && (
+              <TaskCheckbox task={item.task} disabled={selecting} />
+            )}
           </td>
           <td className="task-table__td task-table__td--text">
             <div className="task-row">
@@ -397,7 +374,7 @@ export function ActiveTasksScreen({ today }: { today: DayKey }) {
                 </button>
               ) : (
                 <span className="task-row__text">
-                  <Linkified text={taskText(item.task)} />
+                  <TaskText taskId={item.task.id} text={item.task.text} />
                 </span>
               )}
               {!selecting && open && <ActiveTaskActions item={item} today={today} projects={context.activeProjects} surface="table" inQueue={queueSet.has(id)} />}

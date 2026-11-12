@@ -1,13 +1,11 @@
-import { useEffect, useRef, useState, type ReactNode } from 'react';
+import { useState, type ReactNode } from 'react';
 import type { DayKey } from '../../domain/day';
 import type { DayPriority } from '../../domain/priorities';
 import { Icon } from '../components/Icon';
-import { Linkified } from '../components/Linkified';
-import { relativeDay } from '../format';
+import { TaskText } from '../taskDetails/TaskText';
 import { taskCommands } from '../tasks/taskCommands';
 import { PriorityStar, shownChips, TaskActionButtons, TaskCheckbox, TaskDateChips } from '../tasks/TaskControls';
-import { taskActions, taskText } from '../tasks/taskSurface';
-import { MOVE_COUNTDOWN_MS, PendingMoves, type PendingMove } from './pendingMoves';
+import { taskActions } from '../tasks/taskSurface';
 
 const PIN_KEY = 'best-app:pinPriorities';
 
@@ -46,29 +44,11 @@ interface Props {
   trailing?: ReactNode;
 }
 
-/** Where a moving priority goes, for the countdown's text. */
-function destination(date: DayKey | null, today: DayKey): string {
-  return date ? `Vai para ${relativeDay(date, today)}` : 'Vai ficar sem data';
-}
-
 /**
- * "Prioridades do dia": up to 3 tasks, highlighted. Their dates change here too: a new intended
- * date waits a short countdown, which I can cancel, before the task goes to that day.
+ * "Prioridades do dia": up to 3 tasks, highlighted. The deadline changes here too; a task of mine
+ * has no intended date any more (ADR-072).
  */
 export function PrioritiesBlock({ priorities, today, pinned, onTogglePin, queueIds, trailing }: Props) {
-  const [waiting, setWaiting] = useState<PendingMove[]>([]);
-  const moves = useRef<PendingMoves | null>(null);
-  moves.current ??= new PendingMoves((move) => taskCommands.movePriority(move.taskId, move.date), setWaiting);
-  // Leaving the screen never loses a date I picked.
-  useEffect(() => () => moves.current?.flush(), []);
-
-  const pickDate = (taskId: string, current: DayKey | null, date: DayKey | null) => {
-    if (date === current) return;
-    // Today keeps the task here, so there is nothing to wait for.
-    if (date === today) taskCommands.movePriority(taskId, date);
-    else moves.current?.start({ taskId, date });
-  };
-
   return (
     <section className={`priorities ${pinned ? 'priorities--pinned' : ''}`} aria-label="Prioridades do dia">
       <div className="priorities__header">
@@ -92,14 +72,12 @@ export function PrioritiesBlock({ priorities, today, pinned, onTogglePin, queueI
       ) : (
         <ol className="priorities__list">
           {priorities.map(({ task, automatic }) => {
-            const moving = waiting.find((move) => move.taskId === task.id);
             const deadline = task.deadline ?? null;
             // A deadline of today that made the task a priority shows as the icon instead of a chip.
             const dueToday = automatic && deadline === today;
-            const chips = shownChips(task, { day: today });
-            const onDate = (date: DayKey | null) => pickDate(task.id, task.intendedDate, date);
+            const chips = shownChips(task, today);
             return (
-            <li key={task.id} className={`priorities__item ${moving ? 'priorities__item--moving' : ''}`}>
+            <li key={task.id} className="priorities__item">
               {dueToday && (
                 // Outside the block, at the left of the task, so it is seen before the text.
                 <span className="priorities__due-today" role="img" title="Prazo máximo hoje" aria-label="Prazo máximo hoje">
@@ -108,40 +86,15 @@ export function PrioritiesBlock({ priorities, today, pinned, onTogglePin, queueI
               )}
               <TaskCheckbox task={task} />
               <span className="priorities__text">
-                <Linkified text={taskText(task)} />
+                <TaskText taskId={task.id} text={task.text} />
               </span>
-              {moving ? (
-                <span className="priorities__moving" role="status">
-                  <span>{destination(moving.date, today)}</span>
-                  <span className="countdown" aria-hidden="true">
-                    <span
-                      key={`${moving.taskId}:${moving.date}`}
-                      className="countdown__fill"
-                      style={{ animationDuration: `${MOVE_COUNTDOWN_MS}ms` }}
-                    />
-                  </span>
-                  <button type="button" className="tertiary" onClick={() => moves.current?.cancel(task.id)}>
-                    Cancelar
-                  </button>
-                </span>
-              ) : (
-                <>
-                  <span className="line__meta">
-                    <TaskDateChips task={task} today={today} chips={chips} hideDeadline={dueToday} onDate={onDate} />
-                  </span>
-                  <span className="line__actions">
-                    <TaskActionButtons
-                      task={task}
-                      today={today}
-                      actions={taskActions(task, 'priorities')}
-                      isQueued={queueIds.has(task.id)}
-                      chips={chips}
-                      onDate={onDate}
-                    />
-                  </span>
-                  {!automatic && <PriorityStar on label="Tirar das prioridades" onToggle={() => taskCommands.setPriority(task.id, false)} />}
-                </>
-              )}
+              <span className="line__meta">
+                <TaskDateChips task={task} today={today} chips={chips} hideDeadline={dueToday} />
+              </span>
+              <span className="line__actions">
+                <TaskActionButtons task={task} today={today} actions={taskActions(task, 'priorities')} isQueued={queueIds.has(task.id)} chips={chips} />
+              </span>
+              {!automatic && <PriorityStar on label="Tirar das prioridades" onToggle={() => taskCommands.setPriority(task.id, false)} />}
             </li>
             );
           })}
