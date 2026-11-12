@@ -57,6 +57,7 @@ Os termos marcados com ⚠ ainda têm mais de um sentido nos documentos.
 - **Projeto:** uma coleção de tarefas que fazem sentido juntas. Pode ter no máximo um objetivo. (`spec/projetos.md`)
 - **Atividade (de um projeto):** tarefa criada, tarefa finalizada, nota escrita ou seção aberta vinculada a ele. (`spec/projetos.md`)
 - **Projeto parado:** projeto ativo sem atividade há 14 dias ou mais. (`spec/projetos.md`)
+- **Backlog (de projetos):** os projetos que eu guardo para depois: não são ativos nem finalizados, e nunca contam como parados. Não confundir com as tarefas de um projeto. (`spec/projetos.md`)
 - **Objetivo:** meta, motivação, projetos e recursos. (`spec/objetivos.md`)
 - **Meta:** a frase que digo se atingi ou não. (`spec/objetivos.md`)
 - **Motivação:** o que me faz querer engajar com o objetivo. Nome provisório. (`spec/objetivos.md`)
