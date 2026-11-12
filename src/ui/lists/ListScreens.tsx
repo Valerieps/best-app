@@ -34,7 +34,6 @@ function ListPage({ title, className = '', children }: { title: string; classNam
 const KEY_LABELS: Record<TaskListKey, string> = {
   project: 'projeto',
   createdDate: 'data de criação',
-  postponeCount: 'adiamentos',
 };
 
 const VIEW_KEY = 'best-app:activeTasksView';
@@ -62,10 +61,6 @@ function useTaskListView(): [TaskListView, (view: TaskListView) => void] {
 }
 function groupTitle(groupBy: TaskListKey, key: string | null, items: TaskListItem[], today: DayKey): string {
   if (groupBy === 'project') return items[0]?.project?.name ?? 'Sem projeto';
-  if (groupBy === 'postponeCount') {
-    const count = Number(key);
-    return count === 0 ? 'Nunca adiada' : `Adiada ${count} ${count === 1 ? 'vez' : 'vezes'}`;
-  }
   const day = relativeDay(key ?? '', today);
   return day.charAt(0).toUpperCase() + day.slice(1);
 }
@@ -252,8 +247,6 @@ function ColumnCell({ column, item, today, selecting }: { column: TaskColumn; it
     content = project ? <ProjectChip name={project.name} href={selecting ? undefined : routeHash({ name: 'project', id: project.id })} /> : dash;
   } else if (column === 'createdDate') {
     content = relativeDay(creationDay(task), today);
-  } else {
-    content = task.postponeCount > 0 ? task.postponeCount : dash;
   }
   return <td className={`task-table__td task-table__td--${column}`}>{content}</td>;
 }

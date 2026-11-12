@@ -27,12 +27,6 @@ describe('synthetic data', () => {
     await importBackup(db, backup, NOW);
   });
 
-  const taskNamed = (text: string) => {
-    const task = backup.tables.blocks.find((block) => block.kind === 'task' && block.text === text);
-    if (!task) throw new Error(`No task "${text}"`);
-    return task;
-  };
-
   it('is a valid backup', () => {
     expect(parseBackup(JSON.parse(JSON.stringify(backup))).ok).toBe(true);
   });
@@ -55,8 +49,7 @@ describe('synthetic data', () => {
     const [threeDaysAgo, twoDaysAgo, yesterday] = await loadPendingTriages(reader, TODAY);
 
     const apiDocs = threeDaysAgo.rows.find((row): row is TaskRow => row.type === 'task' && row.task.text === 'Atualizar a documentação da API');
-    expect(apiDocs?.task.postponeCount).toBe(3);
-    expect(apiDocs).toMatchObject({ attention: true, suggestion: { kind: 'undate', untouched: true } });
+    expect(apiDocs).toMatchObject({ attention: false, suggestion: { kind: 'undate', untouched: true } });
     // Whiteboards no longer pass through the closing: they stay unlinked.
     expect(threeDaysAgo.automatic.some((item) => item.type === 'whiteboardUnlinked')).toBe(true);
     expect(threeDaysAgo.automatic.some((item) => item.type === 'finishedDuringDay')).toBe(true);
@@ -87,7 +80,6 @@ describe('synthetic data', () => {
         'Pedir orçamento de bancada de granito',
       ]),
     );
-    expect(taskNamed('Alugar uma caixa de som').postponeCount).toBe(1);
   });
 
   it("shows today's priorities, including the deadline of today", async () => {

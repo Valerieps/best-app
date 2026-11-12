@@ -5,7 +5,6 @@
 
 ## Em aberto
 
-- [ ] O limite de 3 adiamentos é o número certo? Ele decide quais tarefas aparecem destacadas na triagem do "Fechar o dia". Com o fim da data de intenção, quase nenhuma tarefa nova ganha adiamentos: o destaque ainda faz sentido?
 
 ## Fechar o dia *(1a)*
 
@@ -95,6 +94,6 @@ Cada regra vale a partir da parte da spec em que a funcionalidade dela aparece.
 
 - Quando há mais de um dia com fechamento pendente, por exemplo depois de vários dias úteis sem abrir o app, o aviso da nota do dia sugere "Fechar dias pendentes". Com um dia só, o aviso oferece apenas "Fechar o dia".
 - Ele aplica as decisões automáticas e as sugestões a todos os dias pendentes de uma vez.
-- As tarefas não feitas desses dias ficam na lista de tarefas, sem data e fora da fila, para não criar uma pilha no dia de hoje. Elas contam como adiamento.
+- As tarefas não feitas desses dias ficam na lista de tarefas, sem data e fora da fila, para não criar uma pilha no dia de hoje.
 - Seções em quadro branco ficam sem vínculo, como no fim de um dia comum.
 - Nada é apagado: abandonar nunca acontece sozinho.

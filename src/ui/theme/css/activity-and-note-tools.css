@@ -636,10 +636,6 @@ select.line__action.active-tasks__project {
   color: var(--color-text);
 }
 
-.task-table__td--postponeCount {
-  text-align: right;
-}
-
 .task-table__row:hover {
   background: var(--color-surface-soft);
 }

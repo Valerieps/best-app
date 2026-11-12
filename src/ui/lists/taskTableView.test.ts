@@ -40,7 +40,7 @@ describe('showing and hiding columns', () => {
   it('keeps the table order', () => {
     const hidden = toggleColumn(DEFAULT_VIEW, 'deadline');
     expect(hidden.columns).toEqual(['project']);
-    expect(toggleColumn(toggleColumn(hidden, 'postponeCount'), 'deadline').columns).toEqual(['deadline', 'project', 'postponeCount']);
+    expect(toggleColumn(toggleColumn(hidden, 'createdDate'), 'deadline').columns).toEqual(['deadline', 'project', 'createdDate']);
   });
 });
 
@@ -48,5 +48,14 @@ describe('the filter count', () => {
   it('counts what differs from the default', () => {
     expect(activeFilterCount(DEFAULT_VIEW, 'open')).toBe(0);
     expect(activeFilterCount({ ...DEFAULT_VIEW, project: 'focus' }, 'all')).toBe(2);
+  });
+});
+
+describe('a view saved before postponements were deprecated', () => {
+  it('drops the old column, grouping and sorting', () => {
+    const view = parseView(JSON.stringify({ groupBy: 'postponeCount', sortBy: 'postponeCount', columns: ['project', 'postponeCount'] }));
+    expect(view.groupBy).toBe(DEFAULT_VIEW.groupBy);
+    expect(view.sortBy).toBe(DEFAULT_VIEW.sortBy);
+    expect(view.columns).toEqual(['project']);
   });
 });

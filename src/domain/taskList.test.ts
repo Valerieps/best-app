@@ -31,9 +31,6 @@ describe('sorting the active tasks', () => {
     expect(ids(sortTasks(all, 'project'))).toEqual(['b', 'd', 'a', 'c']);
   });
 
-  it('by postponements puts the most postponed first, ties by creation', () => {
-    expect(ids(sortTasks(all, 'postponeCount'))).toEqual(['d', 'a', 'b', 'c']);
-  });
 
   it('by text goes from A to Z ignoring case, and back when descending', () => {
     const lower = entry('B', '2026-10-02T09:00:00', null);
@@ -49,7 +46,6 @@ describe('sorting the active tasks', () => {
   });
 
   it('descending reverses the key', () => {
-    expect(ids(sortTasks(all, 'postponeCount', 'desc'))).toEqual(['c', 'a', 'b', 'd']);
     expect(ids(sortTasks(all, 'createdDate', 'desc'))).toEqual(['c', 'b', 'a', 'd']);
   });
 
@@ -82,12 +78,6 @@ describe('grouping the active tasks', () => {
     const groups = groupTasks(all, 'createdDate', 'project');
     expect(groups.map((group) => group.key)).toEqual(['2026-09-28', '2026-10-01', '2026-10-03']);
     expect(ids(groups[1]!.items)).toEqual(['b', 'a']);
-  });
-
-  it('by postponements orders the groups from the most postponed', () => {
-    const groups = groupTasks(all, 'postponeCount', 'createdDate');
-    expect(groups.map((group) => group.key)).toEqual(['5', '2', '0']);
-    expect(ids(groups[1]!.items)).toEqual(['a', 'b']);
   });
 
   it('can group and sort by the same key', () => {
