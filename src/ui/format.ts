@@ -75,11 +75,6 @@ export function openForLabel(days: number): string {
   return days === 1 ? 'há 1 dia' : `há ${days} dias`;
 }
 
-export function postponedLabel(count: number): string | null {
-  if (count === 0) return null;
-  return count === 1 ? 'adiada 1 vez' : `adiada ${count} vezes`;
-}
-
 /** Supporting line of a link resource: "drive.google.com". Read from the text, nothing is fetched. */
 export function linkDomain(url: string): string {
   const trimmed = url.trim();

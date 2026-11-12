@@ -51,7 +51,6 @@ export function ClosePendingDaysDialog({ today, onClose }: Props) {
                     ? '1 tarefa não feita volta para a lista de tarefas, sem data'
                     : `${summary.tasks} tarefas não feitas voltam para a lista de tarefas, sem data`}
                 </span>
-                <span className="muted">contam como adiamento</span>
               </li>
             )}
             {summary.whiteboards > 0 && (

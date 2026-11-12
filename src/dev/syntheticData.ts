@@ -13,8 +13,8 @@ import { Simulation } from './simulation';
  * - Project list: the scheduling app and the remodel are the projects in focus, with one
  *   free slot. "Festa de fim-de-ano" has had no
  *   activity for 22 days, so it shows as stalled.
- * - Pending days: the last 3 days have no checkout. Day -3 has a task postponed 3 times
- *   (attention, "sem data") and a whiteboard that cites a project (link
+ * - Pending days: the last 3 days have no checkout. Day -3 has a task carried over many times
+ *   ("sem data") and a whiteboard that cites a project (link
  *   suggestion); day -2 has a task whose deadline passed; day -1 has a whiteboard with notes.
  * - Whiteboards assistant: "Daily do App de agendamento" left unlinked 3 times (link),
  *   "Ideias de decoração" twice (convert), "Orçamentos marcenaria" twice with different
@@ -24,7 +24,7 @@ import { Simulation } from './simulation';
  *   ano" / "Festa de fim-de-ano" (punctuation), and "Sprint 41" / "Sprint 42", a false
  *   positive for "Manter separados". The finished "Sprint 40" stays out.
  * - Active tasks without a date for weeks, for the "Tarefas esquecidas" assistant, among them
- *   a countertop quote postponed too often and ideas left for some day 31, 10 and 5 days ago.
+ *   a countertop quote carried over too often and ideas left for some day 31, 10 and 5 days ago.
  * - Today: a task planned for today as a priority, and a task whose deadline is today.
  * - People (spec/pessoas.md): Ana, Rafael, Jorge, Paula and Marcão, cited with `@`. Rafael owes
  *   an estimate to follow up today, Jorge a schedule in 3 days, and Ana and Paula things with
@@ -209,7 +209,7 @@ export async function buildSyntheticData(now: Date, ids: IdGenerator): Promise<S
   );
   await sim.checkout();
 
-  // Day -24: the countertop quote was postponed 3 times and goes back to the task list, without a date.
+  // Day -24: the countertop quote was carried over 3 times and goes back to the task list, without a date.
   sim.on(-24);
   await sim.done(availabilityApi, barbecue);
   const carpentry1 = await sim.section('general', 'Orçamentos marcenaria');
@@ -429,7 +429,7 @@ export async function buildSyntheticData(now: Date, ids: IdGenerator): Promise<S
   await englishClass('Inglês: revisão', 'Revisão do mês: conditionals e phrasal verbs.');
   await sim.checkout({ tasks: [[statusPage, { kind: 'undate' }]] });
 
-  // Day -4: the last day with a checkout. The API docs reach 3 postponements.
+  // Day -4: the last day with a checkout. The API docs are carried over once more.
   sim.on(-4);
   const daily4 = await sim.section('meeting', 'Daily', devs);
   await sim.link(daily4, app);
