@@ -24,7 +24,10 @@ import { ProjectScreen } from './projects/ProjectScreens';
 import { PeopleScreen, PersonScreen } from './people/PeopleScreens';
 import { IdeaScreen, IdeasScreen } from './ideas/IdeaScreens';
 import { backupNoticeLevel, needsBackupSetup, pickTopNotice, useSnoozedNotices } from './notices';
-import { autoBackup, db, reader } from './services';
+import { setCenterCollapsed } from '../application/settings';
+import { Icon } from './components/Icon';
+import { enqueue } from './writeQueue';
+import { appContext, autoBackup, db, reader } from './services';
 import { SettingsScreen } from './settings/SettingsScreen';
 import { RightPanel } from './RightPanel';
 import { Sidebar } from './Sidebar';
@@ -73,6 +76,17 @@ export function App() {
   useEffect(() => {
     if (appearance) applyAppearance(appearance);
   }, [appearance]);
+  // The center area can fold into a strip on the left, leaving the room to the right panel.
+  const storedCenterCollapsed = useLiveQueryState(async () => (await reader.settings())?.centerCollapsed ?? false).value;
+  const [centerNow, setCenterNow] = useState<boolean | undefined>(undefined);
+  const centerCollapsed = centerNow ?? storedCenterCollapsed ?? false;
+  const toggleCenter = () => {
+    const next = !centerCollapsed;
+    setCenterNow(next);
+    enqueue(() => setCenterCollapsed(appContext, next)).catch(() => {
+      // Logged by the queue; the choice still holds on screen until the next load.
+    });
+  };
   const backupInterval = useAutoBackupInterval();
   useEffect(() => autoBackup.setInterval(backupInterval), [backupInterval]);
 
@@ -115,7 +129,18 @@ export function App() {
     <div className="shell">
       <Sidebar route={route} pendingDays={pendingDays} backupState={backupState} />
       <PlacePalette />
-      <div className="shell__main">
+      <div className={`shell__main ${centerCollapsed ? 'shell__main--collapsed' : ''}`}>
+        <button
+          type="button"
+          className="sidebar__toggle shell__collapse"
+          onClick={toggleCenter}
+          aria-expanded={!centerCollapsed}
+          title={centerCollapsed ? 'Abrir a área central' : 'Recolher a área central'}
+        >
+          <Icon name="sidebarLeft" />
+          <span className="visually-hidden">{centerCollapsed ? 'Abrir a área central' : 'Recolher a área central'}</span>
+        </button>
+        <div className="shell__content">
         {!focus && (notice === 'backupProblem' || notice === 'backupSetup') && (
           <BackupBanner
             state={backupState}
@@ -173,6 +198,7 @@ export function App() {
             </main>
           )}
         </ErrorBoundary>
+        </div>
 
         {backup.pendingImport && (
           <ImportDialog
@@ -185,7 +211,7 @@ export function App() {
         <TaskDetailsHost today={today} />
         <SaveErrorNotice />
       </div>
-      <RightPanel route={route} today={today} />
+      <RightPanel route={route} today={today} fill={centerCollapsed} />
     </div>
   );
 }

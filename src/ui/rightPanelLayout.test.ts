@@ -11,10 +11,10 @@ import {
 const keys = { ctrlKey: false, metaKey: false, shiftKey: false, altKey: false };
 
 describe('right panel width', () => {
-  it('keeps a dragged width inside the limits, in whole pixels', () => {
+  it('keeps a dragged width above the minimum, with no maximum, in whole pixels', () => {
     expect(clampRightPanelWidth(400.4)).toBe(400);
     expect(clampRightPanelWidth(100)).toBe(RIGHT_PANEL_WIDTH.min);
-    expect(clampRightPanelWidth(2000)).toBe(RIGHT_PANEL_WIDTH.max);
+    expect(clampRightPanelWidth(2000)).toBe(2000);
     expect(clampRightPanelWidth(Number.NaN)).toBe(RIGHT_PANEL_WIDTH.default);
   });
 

@@ -257,6 +257,8 @@ export interface Settings {
   rightPanelMenu?: RightPanelMenu | null;
   /** Width of the open right panel, in pixels, dragged by the user. Absent means the default width. */
   rightPanelWidth?: number;
+  /** Whether the center area is collapsed to a narrow strip on the left. Absent means open. */
+  centerCollapsed?: boolean;
   /**
    * The part of the day note shown alone, in focus mode (spec/nota-do-dia.md, "Modo foco").
    * Absent or null shows the whole note. Only the user leaves it.

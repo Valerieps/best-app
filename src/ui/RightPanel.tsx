@@ -23,13 +23,15 @@ import { enqueue } from './writeQueue';
 interface Props {
   route: Route;
   today: DayKey;
+  /** The center is collapsed to a strip: the open menu takes all the room left. */
+  fill?: boolean;
 }
 
 /**
  * The right panel (spec/navegacao.md, "Painel da direita"): a strip of icons, always on the right
  * of the screens with the sidebar, that opens a menu beside the center. Collapsed by default.
  */
-export function RightPanel({ route, today }: Props) {
+export function RightPanel({ route, today, fill = false }: Props) {
   const stored = useLiveQueryState(async () => (await reader.settings())?.rightPanelMenu ?? null).value;
   // The toggle shows at once; the settings write follows (as in ADR-036).
   const [openNow, setOpenNow] = useState<RightPanelMenu | null | undefined>(undefined);
@@ -107,7 +109,7 @@ export function RightPanel({ route, today }: Props) {
 
   return (
     <aside
-      className={`right-panel ${entry ? 'right-panel--open' : ''}`}
+      className={`right-panel ${entry ? 'right-panel--open' : ''} ${entry && fill ? 'right-panel--fill' : ''}`}
       aria-label="Painel da direita"
       style={{ '--right-panel-width': `${width}px` } as CSSProperties}
     >
@@ -120,7 +122,6 @@ export function RightPanel({ route, today }: Props) {
             aria-label="Largura do painel da direita"
             aria-valuenow={width}
             aria-valuemin={RIGHT_PANEL_WIDTH.min}
-            aria-valuemax={RIGHT_PANEL_WIDTH.max}
             tabIndex={0}
             title="Arraste para mudar a largura (clique duplo volta ao normal)"
             onPointerDown={startResize}

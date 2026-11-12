@@ -11,3 +11,8 @@
 - **File names.** The pure logic is `rightPanelLayout.ts`, not `rightPanel.ts`: on a case-insensitive file system `./RightPanel` would resolve to `rightPanel.ts` before `RightPanel.tsx`.
 **Why:** A panel inside the shell needs no router change: the center keeps the one route of the hash, and the panel reads it only to avoid repeating a screen. Rendering the screen component keeps the panel and the screen identical with no extra code, and the filters of "Executar" are already shared through this browser's storage.
 **Not done here:** several columns dragged from the sidebar, which would need one route per column.
+
+## Amendment: no maximum width, and a collapsible center
+
+- The panel width has only a minimum (280 px); the 560 px maximum is gone, at the owner's request.
+- The center area folds into a strip with `Settings.centerCollapsed` (optional, so the version does not change), saved with `setCenterCollapsed`. Its content is hidden with CSS, not unmounted, so the screen keeps its state. While it is collapsed, an open panel gets `flex: 1` and fills the room left.
