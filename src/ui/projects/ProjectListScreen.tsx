@@ -6,19 +6,16 @@ import { setProjectListGroupOpen } from '../../application/settings';
 import { toDayKey, type DayKey } from '../../domain/day';
 import type { ProjectListGroup } from '../../domain/entities';
 import { FOCUS_PROJECT_LIMIT } from '../../domain/focusProjects';
-import { CARD_MAP_WEEKS } from '../../domain/projectActivity';
 import { Dropdown, DropdownItem } from '../components/Dropdown';
 import { Icon } from '../components/Icon';
 import { ScreenHeader } from '../components/ScreenHeader';
 import { LoadingPage } from '../components/Skeleton';
-import { formatShortDate, plural, relativeDay } from '../format';
+import { formatShortDate, plural } from '../format';
 import { navigate, routeHash } from '../hooks';
 import { appContext, reader } from '../services';
 import { useLiveQuery } from '../useLiveQuery';
 import { enqueue } from '../writeQueue';
-import { ActivityLegend, ActivityMap } from './ActivityMap';
 import { ProjectActionsMenu } from './ProjectActions';
-import { FEATURES } from '../features';
 import { ProjectIconBadge } from './ProjectIcon';
 
 function write(work: () => Promise<unknown>) {
@@ -29,7 +26,7 @@ function write(work: () => Promise<unknown>) {
 
 /**
  * The project list (spec/projetos.md, "Projetos"): where projects are followed. The projects in
- * focus are cards with a 16-week activity map; the other active ones are rows with 8 weeks.
+ * focus come first, as rows like the other active ones.
  */
 export function ProjectsScreen({ today }: { today: DayKey }) {
   const view = useLiveQuery(() => loadProjectList(reader, today), [today]);
@@ -52,20 +49,17 @@ export function ProjectsScreen({ today }: { today: DayKey }) {
 
       {hasActive && (
         <section className="projects__group" aria-labelledby="projects-priority">
-          <div className="projects__group-head">
-            <h2 className="projects__group-title" id="projects-priority">
-              Em foco
-            </h2>
-            <ActivityLegend />
-          </div>
-          <div className="priority-cards">
-            {view.priority.map((item) => (
-              <PriorityCard key={item.project.id} item={item} view={view} today={today} />
-            ))}
-            {Array.from({ length: freeSlots }, (_, index) => (
-              <FreeSlot key={index} candidates={candidates} />
-            ))}
-          </div>
+          <h2 className="projects__group-title" id="projects-priority">
+            Em foco
+          </h2>
+          {view.priority.length > 0 && (
+            <ul className="project-rows">
+              {view.priority.map((item) => (
+                <ProjectRow key={item.project.id} item={item} view={view} />
+              ))}
+            </ul>
+          )}
+          {freeSlots > 0 && <FreeSlot candidates={candidates} />}
         </section>
       )}
 
@@ -78,16 +72,7 @@ export function ProjectsScreen({ today }: { today: DayKey }) {
         >
           <ul className="project-rows">
             {view.others.map((item) => (
-              <li className="project-row" key={item.project.id}>
-                <a className="project-row__name project-link" href={routeHash({ name: 'project', id: item.project.id })}>
-                  <ProjectIconBadge project={item.project} size="sm" />
-                  <span className="project-row__label">{item.project.name}</span>
-                </a>
-                <span className={`project-row__state ${item.stalledDays !== null ? 'project-row__state--warning' : ''}`}>
-                  {item.stalledDays !== null ? `Parado há ${item.stalledDays} dias` : plural(item.activeTasks, 'ativa', 'ativas')}
-                </span>
-                <ProjectActionsMenu project={item.project} objectives={view.objectives} focus={item} />
-              </li>
+              <ProjectRow key={item.project.id} item={item} view={view} />
             ))}
           </ul>
         </Group>
@@ -115,63 +100,22 @@ export function ProjectsScreen({ today }: { today: DayKey }) {
   );
 }
 
-function PriorityCard({ item, view, today }: { item: ProjectListItem; view: ProjectListView; today: DayKey }) {
-  const { project } = item;
+function ProjectRow({ item, view }: { item: ProjectListItem; view: ProjectListView }) {
   return (
-    <article className="priority-card" aria-label={project.name}>
-      <header className="priority-card__head">
-        <a className="priority-card__name project-link" href={routeHash({ name: 'project', id: project.id })}>
-          <ProjectIconBadge project={project} size="md" />
-          <span className="priority-card__label">{project.name}</span>
-        </a>
-        <ProjectActionsMenu project={project} objectives={view.objectives} focus={item} />
-      </header>
-      <ActivityMap activity={item.activity} today={today} weeks={CARD_MAP_WEEKS} name={project.name} />
-      <div className="priority-card__stats">
-        <p>
-          <Count value={item.activeTasks} one="ativa" many="ativas" />
-          {' · '}
-          <span className={item.stuckTasks > 0 ? 'priority-card__stat--warning' : ''}>
-            <Count value={item.stuckTasks} one="travada" many="travadas" />
-          </span>
-        </p>
-        <p>
-          <Count value={item.finishedLastTwoWeeks} one="finalizada" many="finalizadas" /> nas últimas 2 semanas
-        </p>
-      </div>
-      {FEATURES.objectives && (
-        <p className="priority-card__objective" title={item.objective?.goal}>
-          {item.objective ? (
-            <>
-              <span className="muted">Objetivo: </span>
-              {item.objective.goal}
-            </>
-          ) : (
-            <span className="muted">Sem objetivo</span>
-          )}
-        </p>
-      )}
-      <p className={`priority-card__last ${item.stalledDays !== null ? 'priority-card__last--warning' : ''}`}>
-        {item.stalledDays !== null
-          ? `Parado há ${item.stalledDays} dias`
-          : item.lastActivityDay
-            ? `Última atividade ${relativeDay(item.lastActivityDay, today)}`
-            : 'Nenhuma atividade ainda'}
-      </p>
-    </article>
+    <li className="project-row">
+      <a className="project-row__name project-link" href={routeHash({ name: 'project', id: item.project.id })}>
+        <ProjectIconBadge project={item.project} size="sm" />
+        <span className="project-row__label">{item.project.name}</span>
+      </a>
+      <span className={`project-row__state ${item.stalledDays !== null ? 'project-row__state--warning' : ''}`}>
+        {item.stalledDays !== null ? `Parado há ${item.stalledDays} dias` : plural(item.activeTasks, 'ativa', 'ativas')}
+      </span>
+      <ProjectActionsMenu project={item.project} objectives={view.objectives} focus={item} />
+    </li>
   );
 }
 
-/** "3 ativas", with the number in bold. */
-function Count({ value, one, many }: { value: number; one: string; many: string }) {
-  return (
-    <>
-      <strong className="priority-card__number">{value}</strong> {value === 1 ? one : many}
-    </>
-  );
-}
-
-/** A dashed free slot: "Colocar em foco" lets an active project take it. */
+/** "Colocar em foco": lets an active project take a free focus slot. */
 function FreeSlot({ candidates }: { candidates: ProjectListItem['project'][] }) {
   return (
     <Dropdown

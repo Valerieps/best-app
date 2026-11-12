@@ -1,11 +1,10 @@
 import { addDays, daysBetween, toDayKey, type DayKey } from './day';
 import type { Project } from './entities';
 import type { DomainEvent } from './events';
-import { weekStart } from './week';
 
 /**
  * Section 2: a project's activity, computed from the event history, not from the current state
- * (ADR-034). It feeds the activity map of the project list, the stalled state and the tasks
+ * (ADR-034). It feeds the stalled state and the tasks
  * finished lately. There is no streak count, on purpose.
  */
 
@@ -13,8 +12,6 @@ import { weekStart } from './week';
 export const STALLED_AFTER_DAYS = 14;
 /** "Finalizadas nas últimas 2 semanas": today and the 13 days before it. */
 export const RECENT_FINISH_DAYS = 14;
-/** Columns of the map on a priority project's card; the other projects' rows show no map. */
-export const CARD_MAP_WEEKS = 16;
 
 export interface DayActivity {
   tasksCreated: number;
@@ -110,40 +107,4 @@ export function recentlyFinished(activity: ActivityByDay, today: DayKey): number
   let count = 0;
   for (const [day, counts] of activity) if (day >= start && day <= today) count += counts.tasksFinished;
   return count;
-}
-
-/** Intensity of a day on the map: 0 is empty, then four steps of the same hue. */
-export type ActivityLevel = 0 | 1 | 2 | 3 | 4;
-
-/** Fixed steps, so the same color means the same amount on every project: 1, 2–3, 4–5, 6 or more. */
-export function activityLevel(total: number): ActivityLevel {
-  if (total <= 0) return 0;
-  if (total === 1) return 1;
-  if (total <= 3) return 2;
-  if (total <= 5) return 3;
-  return 4;
-}
-
-export interface ActivityCell {
-  day: DayKey;
-  activity: DayActivity;
-  level: ActivityLevel;
-  /** After today: drawn as an empty slot, without detail. */
-  future: boolean;
-}
-
-/**
- * The map's grid, GitHub style: one column per week (Monday to Sunday), oldest first, the last
- * column being the current week. Each column has 7 cells, one per day.
- */
-export function activityGrid(activity: ActivityByDay, today: DayKey, weeks: number): ActivityCell[][] {
-  const firstMonday = addDays(weekStart(today), -7 * (weeks - 1));
-  return Array.from({ length: weeks }, (_, column) =>
-    Array.from({ length: 7 }, (_, row) => {
-      const day = addDays(firstMonday, column * 7 + row);
-      const counts = activity.get(day) ?? EMPTY;
-      const future = day > today;
-      return { day, activity: counts, level: future ? 0 : activityLevel(activityTotal(counts)), future };
-    }),
-  );
 }
