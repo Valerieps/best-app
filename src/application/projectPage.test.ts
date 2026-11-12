@@ -107,21 +107,20 @@ describe('project list', () => {
       ['Agitado', null],
       ['Quieto', 14],
     ]);
-    expect(view.summary).toEqual({ active: 2, stalled: 1, stuck: 0 });
+    expect(view.summary).toEqual({ active: 2, stalled: 1 });
   });
 
-  it('counts stuck tasks and keeps finished projects apart', async () => {
+  it('counts active tasks and keeps finished projects apart', async () => {
     const { ctx, reader } = createTestContext();
     const project = await createProject(ctx, 'Reforma da cozinha');
-    const task = (await createProjectTask(ctx, project.id, 'Pedir orçamento'))!;
-    await setIntendedDate(ctx, task.id, '2026-10-11');
+    await createProjectTask(ctx, project.id, 'Pedir orçamento');
     const done = await createProject(ctx, 'Mudança');
     await setProjectFinished(ctx, done.id, true);
 
     const view = await loadProjectList(reader, '2026-10-13');
-    expect(view.others.map((item) => [item.project.name, item.activeTasks, item.stuckTasks])).toEqual([['Reforma da cozinha', 1, 1]]);
+    expect(view.others.map((item) => [item.project.name, item.activeTasks])).toEqual([['Reforma da cozinha', 1]]);
     expect(view.finished.map((item) => [item.project.name, item.stalledDays])).toEqual([['Mudança', null]]);
-    expect(view.summary).toEqual({ active: 1, stalled: 0, stuck: 1 });
+    expect(view.summary).toEqual({ active: 1, stalled: 0 });
   });
 
   it('remembers which groups are open, in the settings', async () => {

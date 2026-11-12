@@ -52,7 +52,6 @@ const ASSISTANT_SLUGS: Record<AssistantId, string> = {
   pendingDays: 'dias-em-aberto',
   whiteboards: 'secoes-soltas',
   duplicates: 'projetos-repetidos',
-  forgottenTasks: 'tarefas-esquecidas',
 };
 
 export function parseRoute(hash: string): Route {

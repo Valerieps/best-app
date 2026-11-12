@@ -64,7 +64,7 @@ Os tipos estão em `src/domain/entities.ts`. Todo registro tem `id` (UUID), `cre
 | `sectionId` | Seção onde o bloco foi escrito |
 | `projectId` | Projeto vinculado: herdado da seção, escolhido no fechamento ou dado pela tag `#projeto` no texto, que vence a seção. Numa nota, só a tag o preenche; sem ela, a nota segue a seção (ADR-066). A ideia segue a seção como a tarefa |
 | `status` | Só tarefas: `active`, `done`, `abandoned` ou `converted` (virou hábito) |
-| `intendedDate` | Dia em que a tarefa aparece na nota do dia; numa tarefa `waiting`, a data para cobrar (ADR-052) |
+| `intendedDate` | Numa tarefa `waiting`, a data para cobrar (ADR-052). Numa tarefa minha, a data de intenção, que a interface não define mais (ADR-072): só as tarefas antigas a têm, e o fechamento a limpa sem contar adiamento |
 | `firstIntendedDate` | Primeira data de intenção, para medir a distância até a ação final |
 | `lastTriagedDay` | Último dia cujo fechamento decidiu a tarefa; é o que diz se ela está pendente (ADR-011) |
 | `deadline` | Prazo máximo |
@@ -105,7 +105,7 @@ Os tipos estão em `src/domain/entities.ts`. Todo registro tem `id` (UUID), `cre
 - **Editar o texto de um bloco não gera evento** (ADR-004); criar, apagar e mudar o tipo geram.
 - **Exclusões deixam rastro:** um bloco apagado ou um recurso removido sai da tabela, mas deixa `block.deleted` ou `resource.removed`. É assim que o backup automático distingue um registro apagado de um perdido (seção 7).
 - **Formato dos detalhes:** cada tipo tem o seu `data` em `EventData`, e `record` só aceita esse formato. Um formato já gravado nunca muda: os antigos ficam em `LegacyEventData`, e uma mudança incompatível sobe a versão do evento (`v`, ausente = 1). Quem lê confere o valor, porque um backup importado pode trazer qualquer coisa (ADR-043).
-- **Adiamento:** gera `task.postponed` e soma 1 em `postponeCount` quando a data de intenção muda para depois, ou quando "Fechar dias pendentes" devolve a tarefa sem data. A tarefa deixada sem mexer no "Fechar o dia" fica sem data e sem contar adiamento.
+- **Adiamento:** gera `task.postponed` e soma 1 em `postponeCount` quando a data de intenção muda para depois, ou quando "Fechar dias pendentes" devolve a tarefa sem data. A tarefa deixada sem mexer no "Fechar o dia", ou posta na fila por ele, fica sem data e sem contar adiamento (ADR-072).
 - **Ideias:** cada destino grava o seu evento no bloco da ideia: `idea.becameTask`, `idea.becameProject`, `idea.dropped` e `idea.notYet`, com a contagem (ADR-067).
 - **Métricas** são funções puras do domínio sobre os eventos de um período; uma métrica nova não exige migração.
 

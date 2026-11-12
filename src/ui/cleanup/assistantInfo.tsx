@@ -1,5 +1,4 @@
-import { COUNTED_ASSISTANTS, type AssistantId, type CleanupStatus } from '../../domain/cleanupStatus';
-import { plural } from '../format';
+import { type AssistantId, type CleanupStatus } from '../../domain/cleanupStatus';
 
 /** Name, description and icon of each cleanup assistant, as the user sees them. */
 export const ASSISTANT_INFO: Record<AssistantId, { name: string; description: string }> = {
@@ -14,10 +13,6 @@ export const ASSISTANT_INFO: Record<AssistantId, { name: string; description: st
   duplicates: {
     name: 'Projetos repetidos',
     description: 'Projetos com nomes parecidos. Juntar move as seções e tarefas para o projeto mais antigo.',
-  },
-  forgottenTasks: {
-    name: 'Tarefas esquecidas',
-    description: 'Tarefas sem data há muito tempo, contado desde a criação, em risco de abandono.',
   },
 };
 
@@ -50,20 +45,8 @@ export function AssistantIcon({ id }: { id: AssistantId }) {
           <path d="M16 8V5a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h3" />
         </>
       )}
-      {id === 'forgottenTasks' && (
-        <>
-          <path d="M12 21a9 9 0 1 1 0-18 9 9 0 0 1 0 18z" />
-          <path d="M12 7v5l3 2" />
-        </>
-      )}
     </svg>
   );
-}
-
-/** What a card says after its color: how long the oldest item waits, or how many there are. */
-export function cardStateLabel(id: AssistantId, count: number, ageInDays: number | null): string | null {
-  if (COUNTED_ASSISTANTS.has(id)) return count > 0 ? plural(count, 'tarefa', 'tarefas') : null;
-  return ageLabel(ageInDays);
 }
 
 /** "o mais antigo espera há 3 dias", for the cards and the assistant header. */

@@ -1,5 +1,5 @@
 import { useEffect, useState, type MouseEvent } from 'react';
-import { setDeadline, setDeadlines, setIntendedDate, setIntendedDates, setTaskProject } from '../../application/dayTools';
+import { setDeadline, setDeadlines, setTaskProject } from '../../application/dayTools';
 import { addToQueue } from '../../application/executionQueue';
 import { abandonTask, abandonTasks, setTaskDone } from '../../application/notebook';
 import { loadActiveTasks, loadFinishedTasks, loadTaskListContext, type TaskListItem } from '../../application/queries';
@@ -14,6 +14,7 @@ import { ProjectChip } from '../components/Chips';
 import { Icon } from '../components/Icon';
 import { DatePicker, type LineDragProps } from '../dayNote/BlockLine';
 import { Linkified } from '../components/Linkified';
+import { TaskText } from '../taskDetails/TaskText';
 import { ScreenHeader } from '../components/ScreenHeader';
 import { LoadingPage } from '../components/Skeleton';
 import { plural, postponedLabel, relativeDay } from '../format';
@@ -51,14 +52,13 @@ export function TaskRow({
   drag?: LineDragProps;
   /** The project as small muted text under the task, instead of the chip at the end. */
   quietProject?: boolean;
-  /** No date, deadline or postponement text on the row, as in the "Fila de execução". */
+  /** No deadline or postponement text on the row, as in the "Fila de execução". */
   hideMeta?: boolean;
 }) {
   const { task, project } = item;
-  const when = task.intendedDate ? relativeDay(task.intendedDate, today) : 'sem data';
   const active = task.status === 'active';
   const deadline = active && task.deadline ? `prazo ${relativeDay(task.deadline, today)}` : null;
-  const meta = hideMeta ? '' : [active ? when : null, deadline, postponedLabel(task.postponeCount)].filter(Boolean).join(' · ');
+  const meta = hideMeta ? '' : [deadline, postponedLabel(task.postponeCount)].filter(Boolean).join(' · ');
   return (
     <li
       className={`card-list__item card-list__item--stacked ${task.status === 'done' ? 'active-tasks__row--done' : ''} ${selection ? 'active-tasks__row--select' : ''} ${selection?.on ? 'active-tasks__row--on' : ''} ${drag?.dragging ? 'task-row--dragging' : ''} ${drag?.mark ? `task-row--drop-${drag.mark}` : ''}`}
@@ -79,7 +79,7 @@ export function TaskRow({
           </button>
         ) : (
           <span className="task-row__text">
-            <Linkified text={task.text || '(tarefa sem texto)'} />
+            <TaskText taskId={task.id} text={task.text} />
           </span>
         )}
         {meta && (
@@ -102,7 +102,6 @@ export function TaskRow({
 
 const KEY_LABELS: Record<TaskListKey, string> = {
   project: 'projeto',
-  intendedDate: 'data de intenção',
   createdDate: 'data de criação',
   postponeCount: 'adiamentos',
 };
@@ -136,8 +135,7 @@ function groupTitle(groupBy: TaskListKey, key: string | null, items: TaskListIte
     const count = Number(key);
     return count === 0 ? 'Nunca adiada' : `Adiada ${count} ${count === 1 ? 'vez' : 'vezes'}`;
   }
-  if (key === null) return 'Sem data';
-  const day = relativeDay(key, today);
+  const day = relativeDay(key ?? '', today);
   return day.charAt(0).toUpperCase() + day.slice(1);
 }
 
@@ -180,9 +178,8 @@ function TaskGroupRows({
     </tbody>
   );
 }
-/** Bottom bar of the selection: the same intended date or deadline for all, or abandon them all. */
+/** Bottom bar of the selection: the same deadline for all, or abandon them all. */
 function BatchBar({ selected, today, onDone }: { selected: Set<string>; today: DayKey; onDone(message: string): void }) {
-  const [intended, setIntended] = useState<DayKey>(addDays(today, 1));
   const [deadline, setDeadlineDate] = useState<DayKey>(addDays(today, 7));
   const ids = [...selected];
   const none = ids.length === 0;
@@ -194,27 +191,6 @@ function BatchBar({ selected, today, onDone }: { selected: Set<string>; today: D
     <div className="batch-bar active-tasks__batch" role="region" aria-label="Edição em lote">
       <span className="batch-bar__count">
         <b>{none ? 'Nenhuma tarefa selecionada' : plural(ids.length, 'tarefa selecionada', 'tarefas selecionadas')}</b>
-      </span>
-      <span className="batch-bar__actions">
-        <span className="muted">Data de intenção</span>
-        <input
-          type="date"
-          className="date-input"
-          min={today}
-          value={intended}
-          onChange={(event) => event.target.value && setIntended(event.target.value)}
-          aria-label="Data de intenção para as tarefas selecionadas"
-        />
-        <button
-          type="button"
-          disabled={none}
-          onClick={() => run(setIntendedDates(appContext, ids, intended), `${count} → ${relativeDay(intended, today)}`)}
-        >
-          Aplicar
-        </button>
-        <button type="button" disabled={none} onClick={() => run(setIntendedDates(appContext, ids, null), `${count} sem data`)}>
-          Sem data
-        </button>
       </span>
       <span className="batch-bar__actions">
         <span className="muted">Prazo</span>
@@ -245,21 +221,16 @@ function BatchBar({ selected, today, onDone }: { selected: Set<string>; today: D
   );
 }
 
-/** On hover: change the two dates, or abandon the task, with a second click to confirm. */
+/** On hover: queue, link to a project, change the deadline, or abandon the task, with a second click to confirm. */
 export function ActiveTaskActions({
   item,
-  today,
   projects,
   inQueue,
-  onIntendedDate,
 }: {
   item: TaskListItem;
-  today: DayKey;
   projects: Project[];
   /** Whether the task is in the "Fila de execução"; absent hides the queue action. */
   inQueue?: boolean;
-  /** Replaces the plain date change, as for a priority of the day, which leaves the priorities. */
-  onIntendedDate?(date: DayKey | null): void;
 }) {
   const { task } = item;
   return (
@@ -291,16 +262,6 @@ export function ActiveTaskActions({
           ))}
         </select>
       )}
-      <DatePicker
-        label="Mudar a data de intenção"
-        className="line__action"
-        value={task.intendedDate}
-        min={today}
-        onChange={(date) => (onIntendedDate ? onIntendedDate(date) : void setIntendedDate(appContext, task.id, date))}
-        clearLabel={task.intendedDate ? 'Tirar a data de intenção' : undefined}
-      >
-        Data
-      </DatePicker>
       <DatePicker
         label="Mudar o prazo máximo"
         className="line__action"
@@ -386,9 +347,7 @@ function ColumnCell({ column, item, today, selecting }: { column: TaskColumn; it
   const active = task.status === 'active';
   const dash = <span className="muted">—</span>;
   let content: React.ReactNode;
-  if (column === 'intendedDate') {
-    content = !active ? dash : task.intendedDate ? relativeDay(task.intendedDate, today) : <span className="muted">sem data</span>;
-  } else if (column === 'deadline') {
+  if (column === 'deadline') {
     content = active && task.deadline ? relativeDay(task.deadline, today) : dash;
   } else if (column === 'project') {
     content = project ? <ProjectChip name={project.name} href={selecting ? undefined : routeHash({ name: 'project', id: project.id })} /> : dash;
@@ -522,10 +481,10 @@ export function ActiveTasksScreen({ today }: { today: DayKey }) {
                 </button>
               ) : (
                 <span className="task-row__text">
-                  <Linkified text={item.task.text || '(tarefa sem texto)'} />
+                  <TaskText taskId={item.task.id} text={item.task.text} />
                 </span>
               )}
-              {!selecting && open && <ActiveTaskActions item={item} today={today} projects={context.activeProjects} inQueue={queueSet.has(id)} />}
+              {!selecting && open && <ActiveTaskActions item={item} projects={context.activeProjects} inQueue={queueSet.has(id)} />}
             </div>
           </td>
           {columns.map((column) => (

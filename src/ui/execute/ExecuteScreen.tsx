@@ -84,7 +84,7 @@ function QueueContent({ data, today, inPanel }: { data: ExecutionQueueData; toda
                 Remover da fila
               </button>
             </span>
-            <ActiveTaskActions item={item} today={today} projects={data.activeProjects} />
+            <ActiveTaskActions item={item} projects={data.activeProjects} />
           </>
         }
       />

@@ -1,6 +1,6 @@
 # Roadmap
 
-Atualizado em 10/11/2026
+Atualizado em 12/11/2026
 
 O que ainda não está pronto. É o único lugar que acompanha o progresso.
 
@@ -15,7 +15,7 @@ As fases seguem as seções do `SPEC.md`.
 | --- | --- | --- |
 | 0. Fundação | Feita | — |
 | 1a. Núcleo | Feita | — |
-| 1b. Acabamento | Feita em parte | A tela "Próximos dias" e o lugar dela na barra lateral (decididas em 12/10/2026, ainda sem código) |
+| 1b. Acabamento | Feita | — ("Próximos dias" saiu com a data de intenção em 12/11/2026) |
 | 2. Projetos | Feita em parte | Sugestão de agregar tarefas em projetos; assistente "Projetos parados" |
 | 3. Abertura do dia | Feita em parte | Mural; assistente "Warm up"; um ajuste do `SPEC.md` (veja "O SPEC mudou e o código ainda não") |
 | 4. Objetivos | Feita em parte | Nome do campo "motivação"; assistente "Objetivos soltos" |
@@ -34,7 +34,7 @@ As fases seguem as seções do `SPEC.md`.
 | Assistente "Hábitos sumidos" | `spec/assistentes.md`: os prazos de "parado" e "antigo" |
 | Revisão das ideias | `spec/ideias.md`: assistente de triagem ou ritual "Revisar ideias" |
 | Notas do projeto na hora | `spec/projetos.md`: aparecer antes do fechamento do dia |
-| Redescobrir tarefas sem data | `spec/prioridades.md`: sugestões em rodízio no planejamento do "Fechar o dia" |
+| Redescobrir tarefas fora da fila | `spec/prioridades.md`: sugestões em rodízio no quadro do "Fechar o dia" |
 
 ## Fase 7: ordem de implementação
 

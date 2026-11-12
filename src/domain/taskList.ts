@@ -2,14 +2,14 @@ import { toDayKey, type DayKey } from './day';
 import type { Block, Project } from './entities';
 
 /** What the active tasks list can be grouped or sorted by. */
-export type TaskListKey = 'project' | 'intendedDate' | 'createdDate' | 'postponeCount';
+export type TaskListKey = 'project' | 'createdDate' | 'postponeCount';
 export type TaskGroupBy = TaskListKey | 'none';
 
-export const TASK_LIST_KEYS: readonly TaskListKey[] = ['project', 'intendedDate', 'createdDate', 'postponeCount'];
+export const TASK_LIST_KEYS: readonly TaskListKey[] = ['project', 'createdDate', 'postponeCount'];
 
 /** What the table of tasks can be sorted by: a column. */
 export type TaskSortKey = TaskListKey | 'text' | 'deadline';
-export const TASK_SORT_KEYS: readonly TaskSortKey[] = ['text', 'intendedDate', 'deadline', 'project', 'createdDate', 'postponeCount'];
+export const TASK_SORT_KEYS: readonly TaskSortKey[] = ['text', 'deadline', 'project', 'createdDate', 'postponeCount'];
 
 /** 'asc' is each key's natural order (see `sortTasks`); 'desc' reverses it. */
 export type SortDirection = 'asc' | 'desc';
@@ -23,7 +23,7 @@ export interface TaskListEntry {
 }
 
 export interface TaskGroup<T extends TaskListEntry> {
-  /** Project id, day or number of postponements; null for "sem projeto" / "sem data". Unused when not grouped. */
+  /** Project id, day of creation or number of postponements; null for "sem projeto". Unused when not grouped. */
   key: string | null;
   items: T[];
 }
@@ -50,7 +50,6 @@ export function creationDay(task: Block): DayKey {
 /** The value a task is grouped by; null when it has none. */
 function groupKey(entry: TaskListEntry, by: TaskListKey): string | null {
   if (by === 'project') return entry.project?.id ?? null;
-  if (by === 'intendedDate') return entry.task.intendedDate;
   if (by === 'postponeCount') return String(entry.task.postponeCount);
   return creationDay(entry.task);
 }
@@ -73,9 +72,6 @@ function compareBy(by: TaskSortKey, a: TaskListEntry, b: TaskListEntry, sign = 1
   if (by === 'project') {
     return compareMissingLast(a.project?.name ?? null, b.project?.name ?? null, compareText, sign);
   }
-  if (by === 'intendedDate') {
-    return compareMissingLast(a.task.intendedDate, b.task.intendedDate, compareText, sign);
-  }
   if (by === 'deadline') {
     return compareMissingLast(a.task.deadline ?? null, b.task.deadline ?? null, compareText, sign);
   }
@@ -85,16 +81,16 @@ function compareBy(by: TaskSortKey, a: TaskListEntry, b: TaskListEntry, sign = 1
 }
 
 /**
- * Sorts by the chosen key, then by intended date, then by creation, so the order is total.
+ * Sorts by the chosen key, then by creation, so the order is total.
  * Ascending is each key's natural order: text A to Z, dates from the nearest (creation from the
  * oldest), projects by name, the most postponed first. Tasks without the value always go last.
+ * Tasks have no intended date any more (ADR-072).
  */
 export function sortTasks<T extends TaskListEntry>(items: readonly T[], by: TaskSortKey, direction: SortDirection = 'asc'): T[] {
   const sign = direction === 'asc' ? 1 : -1;
   return [...items].sort(
     (a, b) =>
       compareBy(by, a, b, sign) ||
-      compareBy('intendedDate', a, b) ||
       compareCreation(a, b) ||
       compareText(a.task.id, b.task.id),
   );
@@ -102,8 +98,8 @@ export function sortTasks<T extends TaskListEntry>(items: readonly T[], by: Task
 
 /**
  * Groups the active tasks and sorts each group. Groups follow the order of their key: projects
- * by name, days from the earliest, the most postponed first; the group without a project or a
- * date comes last.
+ * by name, days from the earliest, the most postponed first; the group without a project comes
+ * last.
  * Not grouped, the list is a single group with a null key.
  */
 export function groupTasks<T extends TaskListEntry>(

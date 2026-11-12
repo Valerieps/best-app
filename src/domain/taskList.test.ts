@@ -23,10 +23,6 @@ const all = [a, b, c, d];
 const ids = (items: TaskListEntry[]) => items.map((item) => item.task.id);
 
 describe('sorting the active tasks', () => {
-  it('by intended date puts tasks without a date last, ties by creation', () => {
-    expect(ids(sortTasks(all, 'intendedDate'))).toEqual(['d', 'c', 'a', 'b']);
-  });
-
   it('by creation goes from the oldest', () => {
     expect(ids(sortTasks(all, 'createdDate'))).toEqual(['d', 'a', 'b', 'c']);
   });
@@ -35,7 +31,7 @@ describe('sorting the active tasks', () => {
     expect(ids(sortTasks(all, 'project'))).toEqual(['b', 'd', 'a', 'c']);
   });
 
-  it('by postponements puts the most postponed first, ties by intended date', () => {
+  it('by postponements puts the most postponed first, ties by creation', () => {
     expect(ids(sortTasks(all, 'postponeCount'))).toEqual(['d', 'a', 'b', 'c']);
   });
 
@@ -52,8 +48,7 @@ describe('sorting the active tasks', () => {
     expect(ids(sortTasks(list, 'deadline', 'desc'))).toEqual(['a', 'c', 'd', 'b']);
   });
 
-  it('descending reverses the key but keeps tasks without a date last', () => {
-    expect(ids(sortTasks(all, 'intendedDate', 'desc'))).toEqual(['a', 'd', 'c', 'b']);
+  it('descending reverses the key', () => {
     expect(ids(sortTasks(all, 'postponeCount', 'desc'))).toEqual(['c', 'a', 'b', 'd']);
     expect(ids(sortTasks(all, 'createdDate', 'desc'))).toEqual(['c', 'b', 'a', 'd']);
   });
@@ -66,28 +61,21 @@ describe('sorting the active tasks', () => {
 
 describe('grouping the active tasks', () => {
   it('without grouping keeps a single group', () => {
-    const groups = groupTasks(all, 'none', 'intendedDate');
+    const groups = groupTasks(all, 'none', 'createdDate');
     expect(groups).toHaveLength(1);
     expect(groups[0]!.key).toBeNull();
-    expect(ids(groups[0]!.items)).toEqual(['d', 'c', 'a', 'b']);
+    expect(ids(groups[0]!.items)).toEqual(['d', 'a', 'b', 'c']);
   });
 
   it('an empty list has no groups', () => {
-    expect(groupTasks([], 'none', 'intendedDate')).toEqual([]);
-    expect(groupTasks([], 'project', 'intendedDate')).toEqual([]);
+    expect(groupTasks([], 'none', 'createdDate')).toEqual([]);
+    expect(groupTasks([], 'project', 'createdDate')).toEqual([]);
   });
 
   it('by project orders the groups by name, "sem projeto" last', () => {
     const groups = groupTasks(all, 'project', 'createdDate');
     expect(groups.map((group) => group.key)).toEqual(['p2', 'p1', null]);
     expect(ids(groups[1]!.items)).toEqual(['d', 'a']);
-  });
-
-  it('by intended date orders the days from the earliest, "sem data" last', () => {
-    const groups = groupTasks(all, 'intendedDate', 'project');
-    expect(groups.map((group) => group.key)).toEqual(['2026-10-16', '2026-10-20', null]);
-    // Sorted by project inside the day: Casa before the task without a project.
-    expect(ids(groups[0]!.items)).toEqual(['d', 'c']);
   });
 
   it('by creation date gathers the tasks created on the same day', () => {
@@ -103,8 +91,8 @@ describe('grouping the active tasks', () => {
   });
 
   it('can group and sort by the same key', () => {
-    const groups = groupTasks(all, 'intendedDate', 'intendedDate');
-    expect(ids(groups[0]!.items)).toEqual(['d', 'c']);
+    const groups = groupTasks(all, 'createdDate', 'createdDate');
+    expect(ids(groups[1]!.items)).toEqual(['a', 'b']);
   });
 });
 
