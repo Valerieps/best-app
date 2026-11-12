@@ -912,12 +912,6 @@ button:not(.link, .day-part__handle):active:not(:disabled) {
   padding: 0 0.3em;
 }
 
-/* Mark of a task chosen as one of its project's next steps. */
-.chip--next {
-  background: var(--color-accent);
-  color: var(--color-accent-text);
-}
-
 /* "Fila de execução": a handle to reorder, and the project quiet under the task */
 .task-row__handle {
   color: var(--color-text-muted);

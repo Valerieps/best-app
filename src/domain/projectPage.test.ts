@@ -43,14 +43,14 @@ describe('isStuckTask', () => {
 });
 
 describe('groupProjectTasks', () => {
-  it('puts the next steps in their own group, in the order marked, outside the other groups', () => {
+  it('puts the queued tasks in their own group, in the queue order, outside the other groups', () => {
     const groups = groupProjectTasks(
       [task('a', { intendedDate: '2026-10-20' }), task('b'), task('c', { intendedDate: TODAY }), task('stuck', { postponeCount: 3 })],
       TODAY,
-      ['b', 'stuck', 'a'],
+      ['other-project', 'b', 'stuck', 'a'],
     );
-    expect(groups.next.map((t) => t.id)).toEqual(['b', 'a']);
-    // A stuck next step stays only among the stuck ones.
+    expect(groups.queued.map((t) => t.id)).toEqual(['b', 'a']);
+    // A stuck queued task stays only among the stuck ones.
     expect(groups.stuck.map((t) => t.id)).toEqual(['stuck']);
     expect(groups.upcoming.map((t) => t.id)).toEqual(['c']);
     expect(groups.undated).toEqual([]);

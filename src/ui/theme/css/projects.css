@@ -782,7 +782,7 @@ button.project-actions {
   color: var(--color-text-muted);
 }
 
-/* "Próximos passos": right after the stuck tasks, before "Próximos dias". */
-.next-steps {
+/* "Na fila": the project's tasks in the execution queue, right after the stuck tasks. */
+.project-queue {
   margin-top: var(--space-4);
 }
