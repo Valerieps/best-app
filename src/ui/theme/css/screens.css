@@ -1091,3 +1091,68 @@ button.plan-card--on:hover {
 .project-ideas__item .line__idea {
   margin-top: 4px;
 }
+
+/* Task details window: every field of a task, over the app */
+.task-text {
+  cursor: pointer;
+}
+
+.task-text:hover {
+  text-decoration: underline;
+  text-decoration-color: var(--color-border-strong);
+}
+
+.task-details {
+  width: min(640px, calc(100vw - 2 * var(--space-4)));
+}
+
+.task-details__field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  margin-bottom: var(--space-3);
+  flex: 1;
+}
+
+.task-details__field--inline {
+  flex-direction: row;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.task-details__label {
+  font-size: var(--font-size-xs);
+  color: var(--color-text-muted);
+}
+
+.task-details__text {
+  width: 100%;
+  resize: vertical;
+}
+
+.task-details__row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-4);
+}
+
+.task-details__facts {
+  display: grid;
+  grid-template-columns: max-content 1fr;
+  gap: var(--space-1) var(--space-4);
+  margin: var(--space-4) 0 0;
+  font-size: var(--font-size-sm);
+}
+
+.task-details__facts dt {
+  color: var(--color-text-muted);
+}
+
+.task-details__facts dd {
+  margin: 0;
+}
+
+.task-details__actions {
+  align-items: center;
+}

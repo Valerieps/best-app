@@ -44,4 +44,5 @@ Toda opção do app mora num de três níveis, e cada nível tem um lugar fixo, 
 
 - Ações de uma linha ou de um item aparecem quando passo o mouse por cima ou quando o cursor está na linha, como data, prazo e prioridade numa tarefa.
 - O que já está definido fica visível na própria linha, sem hover: a data de intenção e o prazo viram etiquetas, e clicar numa delas muda a data. A estrela é uma só: cheia, ela marca a prioridade do dia e fica sempre visível; vazia, aparece no hover e promove a tarefa. Finalizar é pelo checkbox, sem botão repetido.
+- Em qualquer tela, clicar no texto de uma tarefa (ou em "Detalhes" no hover, na nota do dia) abre uma janela por cima do app com todos os detalhes dela, e todos os campos são editáveis: texto, projeto, data de intenção, prazo máximo, aguardando, fila de execução e conclusão. Esc ou clicar fora fecha e salva o texto.
 - Uma linha vazia mostra uma dica de como criar tarefa enquanto eu escrevo nela.

@@ -14,6 +14,7 @@ import { ProjectChip } from '../components/Chips';
 import { Icon } from '../components/Icon';
 import { DatePicker, type LineDragProps } from '../dayNote/BlockLine';
 import { Linkified } from '../components/Linkified';
+import { TaskText } from '../taskDetails/TaskText';
 import { ScreenHeader } from '../components/ScreenHeader';
 import { LoadingPage } from '../components/Skeleton';
 import { plural, postponedLabel, relativeDay } from '../format';
@@ -79,7 +80,7 @@ export function TaskRow({
           </button>
         ) : (
           <span className="task-row__text">
-            <Linkified text={task.text || '(tarefa sem texto)'} />
+            <TaskText taskId={task.id} text={task.text} />
           </span>
         )}
         {meta && (
@@ -522,7 +523,7 @@ export function ActiveTasksScreen({ today }: { today: DayKey }) {
                 </button>
               ) : (
                 <span className="task-row__text">
-                  <Linkified text={item.task.text || '(tarefa sem texto)'} />
+                  <TaskText taskId={item.task.id} text={item.task.text} />
                 </span>
               )}
               {!selecting && open && <ActiveTaskActions item={item} today={today} projects={context.activeProjects} inQueue={queueSet.has(id)} />}
