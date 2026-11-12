@@ -46,7 +46,7 @@ export interface TaskRow {
 
 /**
  * What the app settles on its own. Notes and whiteboards no longer pass through the closing (the
- * project page and the "Seções soltas" assistant take care of them); tasks finished or given a
+ * project page takes care of them); tasks finished or given a
  * future date during the day already have their destination.
  */
 export type AutomaticItem =

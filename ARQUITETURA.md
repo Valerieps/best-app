@@ -42,7 +42,7 @@ As telas chamam as funções de `application/queries.ts` dentro de `useLiveQuery
 ## 3. Invariantes
 
 - **Um registro por entidade.** Um bloco existe uma vez só; a nota do dia, os projetos e os recursos apontam para ele, sem cópias (ADR-002). A seção "De outros dias" só existe na tela: as tarefas com a data do dia aparecem ali sem sair da seção onde foram escritas.
-- **O que dá para calcular não é guardado.** Se um dia está pendente, a etapa do dia (ADR-023), a nota do dia, as listas de tarefas, a página do projeto, a cor dos assistentes (ADR-045) e o estado parado dos projetos (ADR-034) são calculados das tabelas e dos eventos. `days` guarda só o que não dá para calcular.
+- **O que dá para calcular não é guardado.** Se um dia está pendente, a etapa do dia (ADR-023), a nota do dia, as listas de tarefas, a página do projeto e o estado parado dos projetos (ADR-034) são calculados das tabelas e dos eventos. `days` guarda só o que não dá para calcular.
 - **Atalhos recalculáveis.** `postponeCount` e as listas de prioridades podem ser refeitos a partir do histórico.
 - **Datas** de calendário são `AAAA-MM-DD` no fuso local, e o dia vira à meia-noite (ADR-005). Semanas são ISO, como `2026-W42` (ADR-020).
 - **Ordem sem reescrever vizinhos.** `position` é um índice fracionário; a ordem das partes do dia fica em `days.sectionOrder` (ADR-040).

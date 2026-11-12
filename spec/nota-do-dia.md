@@ -105,5 +105,5 @@ Quando a nota do dia acumula muitas seções, eu posso focar numa só, para escr
 
 - Não existe wiki: não há motivo para centralizar notas sem conexão com projetos. As notas ficam onde foram escritas, na nota do dia, e eu as encontro pela paginação entre dias. *(1a)*
 - As notas de uma seção vinculada a um projeto também aparecem na página do projeto, na aba "Notas", depois que o dia é fechado (`projetos.md`, "Página do projeto"). As notas não moram num lugar só: é o mesmo bloco nos dois lugares. *(2)*
-- As notas de uma seção sem vínculo também aparecem no assistente "Seções soltas", até eu converter a seção em projeto, vincular a um existente ou deixar como está (`assistentes.md`). *(1b)*
+- As notas de uma seção sem vínculo ficam onde foram escritas, até eu vincular a seção a um projeto. *(1b)*
 - Não existe mais descartar notas. Para tirar uma nota de circulação, eu apago a linha: na nota do dia, enquanto ela pode ser editada, ou na página do projeto. *(2)*

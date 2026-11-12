@@ -7,7 +7,7 @@ Por quê: muitas coisas que eu coleto são ideias incompletas, que talvez algum 
 
 ## Em aberto
 
-- [ ] Como eu reviso as ideias para elas não virarem um cemitério? A proposta: separar a triagem (dar destino rápido, as mais antigas primeiro, no máximo umas 7 por vez) da incubação (pensar com calma em 1 a 3 ideias). A triagem seria um assistente da tela "Rituais" (`assistentes.md`), com um aviso no "Iniciar Dia" quando passar de N ideias sem revisão ou de N dias; a incubação seria a própria página da ideia. Ou um ritual "Revisar ideias" com data?
+- [ ] Como eu reviso as ideias para elas não virarem um cemitério? A proposta: separar a triagem (dar destino rápido, as mais antigas primeiro, no máximo umas 7 por vez) da incubação (pensar com calma em 1 a 3 ideias). A triagem teria um aviso no "Iniciar Dia" quando passar de N ideias sem revisão ou de N dias; a incubação seria a própria página da ideia. Ou um ritual "Revisar ideias" com data?
 
 ## Ideia
 

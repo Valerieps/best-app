@@ -47,7 +47,7 @@ function laterOf(a: DayKey | null, b: DayKey): DayKey {
   return a !== null && a > b ? a : b;
 }
 
-/** Applies one task decision inside a transaction. Shared by the checkout and the assistants. */
+/** Applies one task decision inside a transaction. Used by the checkout. */
 export async function applyTaskDecision(
   ctx: AppContext,
   tx: StoreTransaction,

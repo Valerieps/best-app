@@ -35,7 +35,7 @@ Depois da pasta, não há onboarding: eu já saio usando o ciclo diário, e os r
 
 ## Aparência
 
-- O app tem uma cor própria, o lilás dos projetos. Ela marca o que é ação ou lugar: o botão principal de cada tela, o item atual da barra lateral, os links, o foco do teclado, o checkbox e o contador de "Rituais". As cores de alerta (backup, prazos, assistentes) ficam só para alertas, para o contador de "Rituais" não parecer um problema. *(1b)*
+- O app tem uma cor própria, o lilás dos projetos. Ela marca o que é ação ou lugar: o botão principal de cada tela, o item atual da barra lateral, os links, o foco do teclado, o checkbox e os contadores. As cores de alerta (backup, prazos) ficam só para alertas, para os contadores não parecerem um problema. *(1b)*
 - O texto usa a fonte Inter, que vem junto com o app: nada é baixado da internet. *(1b)*
 - Em Configurações eu escolho a aparência: clara, escura ou igual à do sistema. Ela começa igual à do sistema, e o app lembra a escolha. *(1b)*
 

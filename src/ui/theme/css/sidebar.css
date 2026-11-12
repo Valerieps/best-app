@@ -77,7 +77,7 @@ button.sidebar__item.sidebar__icon {
   padding: var(--space-2);
 }
 
-/* The "Rituais" counter and the backup dot sit on the corner of their icon */
+/* The backup dot sits on the corner of its icon */
 .sidebar__icon > .badge {
   position: absolute;
   top: 0;

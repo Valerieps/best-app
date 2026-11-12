@@ -211,7 +211,6 @@ export async function buildSyntheticData(now: Date, ids: IdGenerator): Promise<S
 
   // Day -24: the countertop quote was postponed 3 times and goes back to the task list, without a date.
   sim.on(-24);
-  await sim.keepWhiteboard(groceries);
   await sim.done(availabilityApi, barbecue);
   const carpentry1 = await sim.section('general', 'Orçamentos marcenaria');
   const [, , thirdQuote] = await sim.write(
