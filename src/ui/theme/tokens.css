@@ -101,6 +101,19 @@
   --color-firework-3: #2f6fe0;
   --color-firework-4: #e0607e;
 
+  /* Theme hooks (ADR-077): what a theme changes beyond the palette. These values keep the
+     Clássico theme's look; each theme below may redefine them */
+  --font-display: var(--font-body);
+  --letter-spacing-display: 0;
+  --color-nav-current-bg: var(--color-brand-soft);
+  --color-nav-current-text: var(--color-brand-strong);
+  --color-star: var(--color-firework-1);
+  --logo-mark-display: none;
+  --close-day-bg: var(--color-surface-soft);
+  --close-day-bg-hover: var(--color-hover);
+  --close-day-border: var(--color-border-strong);
+  --close-day-text: var(--color-text);
+
   /* Typography: Inter, bundled with the app (ADR-054); nothing is downloaded at run time */
   --font-body: 'Inter Variable', system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
   --font-size-xs: 0.75rem;
@@ -323,4 +336,104 @@
   --color-status2-border: #64401f;
   --color-status2-strong: #f09a55;
 
+}
+
+/*
+ * Crepúsculo theme (ADR-077): Vesper is the evening star. A violet night, the star's orange only
+ * on the logo, the priorities and "Fechar o dia", and Bricolage Grotesque in the titles. The light
+ * block redefines tokens of :root; both dark blocks must redefine every color of the light one,
+ * since the light block would otherwise win over the base dark blocks (same specificity, later).
+ * The two dark blocks hold the same values: keep them in sync, as the base ones (ADR-055).
+ */
+:root[data-app-theme="crepusculo"] {
+  --font-display: 'Bricolage Grotesque Variable', var(--font-body);
+  --letter-spacing-display: -0.02em;
+  --logo-mark-display: inline-block;
+  --close-day-border: transparent;
+
+  /* 6:1 for muted text on the background, 6.6:1 on the surface */
+  --color-bg: #f1eef9;
+  --color-surface: #fbfaff;
+  --color-surface-soft: #f6f4fc;
+  --color-text: #1c1838;
+  --color-text-muted: #5c5679;
+  --color-border: #e3def3;
+  --color-border-strong: #c7c0de;
+  --color-hover: #e9e5f5;
+  --color-select-bg: #ded8f0;
+  --color-brand-soft: #e8e4fa;
+  --color-brand-strong: #2e2470;
+  --color-general-bg: #f6f4fc;
+  --color-general-border: #d9d3ea;
+  --color-general-bar: #c9c1e0;
+  --color-project-bg: #e8e4fa;
+  --color-skeleton: #e7e3f3;
+  /* The night: the current place in the sidebar, filled, with white text on it (13:1) */
+  --color-night: #2e2470;
+  --color-nav-current-bg: var(--color-night);
+  --color-nav-current-text: #ffffff;
+  /* The evening star, 4:1 on the surface: for the logo and the ★, never small text */
+  --color-star: #c2621f;
+  /* Dusk, night to star, only on "Fechar o dia"; white text holds 4.7:1 even at the orange end */
+  --close-day-bg: linear-gradient(135deg, #2e2470, #5b45b8 60%, #b5582a);
+  --close-day-bg-hover: linear-gradient(135deg, #241c5c, #4d3aa3 60%, #9e4b22);
+  --close-day-text: #ffffff;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root[data-app-theme="crepusculo"]:not([data-theme="light"]) {
+    color-scheme: dark;
+
+    --color-bg: #13111c;
+    --color-surface: #1b1928;
+    --color-surface-soft: #171523;
+    --color-text: #ece9f7;
+    --color-text-muted: #aaa4c2;
+    --color-border: #322e45;
+    --color-border-strong: #625c7c;
+    --color-hover: #262338;
+    --color-select-bg: #2f2b45;
+    --color-brand-soft: #2b2650;
+    --color-brand-strong: #d4cdfb;
+    --color-general-bg: #191726;
+    --color-general-border: #38344c;
+    --color-general-bar: #58527a;
+    --color-project-bg: #2a2648;
+    --color-skeleton: #262338;
+    --color-night: #3a3170;
+    --color-nav-current-bg: var(--color-night);
+    --color-nav-current-text: #f1eeff;
+    --color-star: #f0a060;
+    --close-day-bg: linear-gradient(135deg, #3a2f8f, #6b55d0 60%, #b5582a);
+    --close-day-bg-hover: linear-gradient(135deg, #30277a, #5d48c0 60%, #a04c23);
+    --close-day-text: #ffffff;
+  }
+}
+
+:root[data-app-theme="crepusculo"][data-theme="dark"] {
+  color-scheme: dark;
+
+  --color-bg: #13111c;
+  --color-surface: #1b1928;
+  --color-surface-soft: #171523;
+  --color-text: #ece9f7;
+  --color-text-muted: #aaa4c2;
+  --color-border: #322e45;
+  --color-border-strong: #625c7c;
+  --color-hover: #262338;
+  --color-select-bg: #2f2b45;
+  --color-brand-soft: #2b2650;
+  --color-brand-strong: #d4cdfb;
+  --color-general-bg: #191726;
+  --color-general-border: #38344c;
+  --color-general-bar: #58527a;
+  --color-project-bg: #2a2648;
+  --color-skeleton: #262338;
+  --color-night: #3a3170;
+  --color-nav-current-bg: var(--color-night);
+  --color-nav-current-text: #f1eeff;
+  --color-star: #f0a060;
+  --close-day-bg: linear-gradient(135deg, #3a2f8f, #6b55d0 60%, #b5582a);
+  --close-day-bg-hover: linear-gradient(135deg, #30277a, #5d48c0 60%, #a04c23);
+  --close-day-text: #ffffff;
 }

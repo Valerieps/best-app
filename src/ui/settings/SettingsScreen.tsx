@@ -1,13 +1,13 @@
 import { useEffect, useState } from 'react';
-import { setActiveDays, setAppearance, setWarmupItems } from '../../application/settings';
+import { setActiveDays, setAppearance, setAppTheme, setWarmupItems } from '../../application/settings';
 import { ALL_DAYS } from '../../domain/dayFlow';
-import type { Appearance, WarmupItem } from '../../domain/entities';
+import type { Appearance, AppTheme, WarmupItem } from '../../domain/entities';
 import { appContext, reader } from '../services';
 import { Icon } from '../components/Icon';
 import { ScreenHeader } from '../components/ScreenHeader';
 import { Segmented, type SegmentOption } from '../components/Segmented';
 import { LoadingPage } from '../components/Skeleton';
-import { parseAppearance } from '../theme/appearance';
+import { APP_THEMES, parseAppearance, parseAppTheme } from '../theme/appearance';
 import { useLiveQuery } from '../useLiveQuery';
 
 const WEEKDAYS = ['domingo', 'segunda', 'terça', 'quarta', 'quinta', 'sexta', 'sábado'];
@@ -18,6 +18,7 @@ const APPEARANCES: readonly SegmentOption<Appearance>[] = [
   { value: 'dark', label: 'Escura' },
   { value: 'system', label: 'Igual à do sistema' },
 ];
+const THEMES: readonly SegmentOption<AppTheme>[] = APP_THEMES.map(({ id, label }) => ({ value: id, label }));
 
 /** User settings: warm up and active days (section 3), appearance. */
 export function SettingsScreen() {
@@ -64,6 +65,17 @@ export function SettingsScreen() {
           options={APPEARANCES}
           value={parseAppearance(settings?.appearance)}
           onChange={(appearance) => void setAppearance(appContext, appearance)}
+        />
+      </section>
+
+      <section className="panel settings__panel">
+        <h2>Tema</h2>
+        <p className="muted">As cores e as fontes do app. Cada tema tem a versão clara e a escura.</p>
+        <Segmented
+          label="Tema"
+          options={THEMES}
+          value={parseAppTheme(settings?.appTheme)}
+          onChange={(theme) => void setAppTheme(appContext, theme)}
         />
       </section>
     </main>

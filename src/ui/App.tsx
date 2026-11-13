@@ -38,7 +38,7 @@ import { SaveErrorNotice } from './components/SaveErrorNotice';
 import { TaskDetailsHost } from './taskDetails/TaskDetailsDialog';
 import { reportSaveError } from './saveErrors';
 import { enabledRoute } from './features';
-import { applyAppearance, parseAppearance } from './theme/appearance';
+import { applyAppearance, applyAppTheme, parseAppearance, parseAppTheme } from './theme/appearance';
 import { cx } from './classNames';
 
 export function App() {
@@ -76,6 +76,10 @@ export function App() {
   useEffect(() => {
     if (appearance) applyAppearance(appearance);
   }, [appearance]);
+  const appTheme = useLiveQueryState(async () => parseAppTheme((await reader.settings())?.appTheme)).value;
+  useEffect(() => {
+    if (appTheme) applyAppTheme(appTheme);
+  }, [appTheme]);
   // The center area can fold into a strip on the left, leaving the room to the right panel.
   const storedCenterCollapsed = useLiveQueryState(async () => (await reader.settings())?.centerCollapsed ?? false).value;
   const [centerNow, setCenterNow] = useState<boolean | undefined>(undefined);

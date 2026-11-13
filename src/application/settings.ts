@@ -1,5 +1,5 @@
 import { toDayKey } from '../domain/day';
-import type { Appearance, AutoBackupInterval, DayNoteFocus, ProjectListGroup, RightPanelMenu, Settings, WarmupItem } from '../domain/entities';
+import type { Appearance, AppTheme, AutoBackupInterval, DayNoteFocus, ProjectListGroup, RightPanelMenu, Settings, WarmupItem } from '../domain/entities';
 import { record } from './events';
 import type { AppContext } from './ports';
 
@@ -60,6 +60,14 @@ export function setCenterCollapsed(ctx: AppContext, collapsed: boolean): Promise
 /** The app's appearance; "system" follows the system and is stored as absent, the default. */
 export function setAppearance(ctx: AppContext, appearance: Appearance): Promise<void> {
   return updateSettings(ctx, { appearance: appearance === 'system' ? undefined : appearance });
+}
+
+/** The theme a new install starts with. */
+export const DEFAULT_APP_THEME: AppTheme = 'crepusculo';
+
+/** The app's theme; the default, Crepúsculo, is stored as absent. */
+export function setAppTheme(ctx: AppContext, theme: AppTheme): Promise<void> {
+  return updateSettings(ctx, { appTheme: theme === DEFAULT_APP_THEME ? undefined : theme });
 }
 
 /** Width of the open sidebar, in pixels, set by dragging its edge; null brings back the default. */
