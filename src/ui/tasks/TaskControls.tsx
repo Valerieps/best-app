@@ -7,6 +7,7 @@ import { PRIORITY_SHORTCUT } from '../dayNote/priorityShortcut';
 import { openTaskDetails } from '../taskDetails/taskDetailsStore';
 import { taskCommands } from './taskCommands';
 import { deadlineLabel, doneLabel, followUpLabel, type TaskAction, type TaskFields } from './taskSurface';
+import { cx } from '../classNames';
 
 /**
  * The pieces every task line is made of, shared by all screens (ADR-073). Which actions show
@@ -33,7 +34,7 @@ export function TaskCheckbox({ task, className, disabled }: { task: Task; classN
 export function PriorityStar({ on, onToggle, label }: { on: boolean; onToggle(): void; label?: string }) {
   const name = label ?? `${on ? 'Tirar das prioridades do dia' : 'Promover a prioridade do dia'} (${PRIORITY_SHORTCUT})`;
   return (
-    <button type="button" className={`line__star ${on ? 'line__star--on' : ''}`} title={name} aria-label={name} aria-pressed={on} onClick={onToggle}>
+    <button type="button" className={cx('line__star', on && 'line__star--on')} title={name} aria-label={name} aria-pressed={on} onClick={onToggle}>
       {on ? '★' : '☆'}
     </button>
   );

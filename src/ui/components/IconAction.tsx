@@ -1,4 +1,5 @@
 import { Icon, type IconName } from './Icon';
+import { cx } from '../classNames';
 
 /**
  * An action shown as an icon, with its name as a tooltip on hover and focus and as the label
@@ -27,7 +28,7 @@ export function IconAction({
   return (
     <button
       type="button"
-      className={`icon-button icon-button--sm icon-action ${pressed ? 'icon-action--on' : ''} ${className ?? ''}`}
+      className={cx('icon-button icon-button--sm icon-action', pressed && 'icon-action--on', className)}
       aria-label={label}
       aria-pressed={pressed}
       data-tip={label}

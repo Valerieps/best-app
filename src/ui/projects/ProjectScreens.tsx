@@ -23,6 +23,7 @@ import { ProjectIconPicker } from './ProjectIcon';
 import { panelOnOpen } from './panelState';
 import { ProjectNotes } from './ProjectNotes';
 import { ProjectSidePanel } from './ProjectSidePanel';
+import { cx } from '../classNames';
 
 
 /** Below this width the docked column would squeeze the tasks, so it only opens over them. */
@@ -90,7 +91,7 @@ function FoldedGroup({ label, count, initiallyOpen, className, children }: { lab
   const [open, setOpen] = useState(initiallyOpen);
   if (count === 0) return null;
   return (
-    <section className={`task-group ${className}`} aria-label={label}>
+    <section className={cx('task-group', className)} aria-label={label}>
       <button type="button" className="task-group__toggle" aria-expanded={open} onClick={() => setOpen(!open)}>
         <Icon name={open ? 'chevronDown' : 'chevronRight'} size="sm" />
         {label} <span className="task-group__count">{count}</span>
@@ -196,7 +197,7 @@ export function ProjectScreen({ id, tab, today }: { id: string; tab: 'tasks' | '
   const goTab = (next: 'tasks' | 'notes') => navigate(next === 'notes' ? { name: 'project', id, tab: 'notes' } : { name: 'project', id });
 
   return (
-    <main className={`page page--project ${docked ? 'page--project-docked' : ''}`}>
+    <main className={cx('page page--project', docked && 'page--project-docked')}>
       <div className="project-layout">
         <div className="project-layout__main">
           <header className="project-head">

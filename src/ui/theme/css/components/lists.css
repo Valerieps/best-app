@@ -1,0 +1,64 @@
+/* Lists */
+.card-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  background: var(--color-surface);
+  border: var(--border-width) solid var(--color-border);
+  border-radius: var(--radius-md);
+}
+
+.card-list__item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  padding: var(--space-2) var(--space-4);
+}
+
+.card-list__item + .card-list__item {
+  border-top: var(--border-width) solid var(--color-border);
+}
+
+.card-list__item--stacked {
+  flex-direction: column;
+  align-items: stretch;
+  gap: var(--space-1);
+}
+
+.check-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  cursor: pointer;
+}
+
+.list-meta {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  flex-shrink: 0;
+}
+
+.task-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.task-row > .chip {
+  flex-shrink: 0;
+}
+
+.task-row__text {
+  flex: 1;
+  text-align: left;
+  border: none;
+  background: none;
+  padding: 0;
+}
+
+.wiki__note {
+  margin: 0;
+  white-space: pre-wrap;
+}

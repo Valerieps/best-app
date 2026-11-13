@@ -1,0 +1,94 @@
+/* Panels */
+.panel {
+  background: var(--color-surface);
+  border: var(--border-width) solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: var(--space-4) var(--space-5);
+}
+
+.panel__intro {
+  margin-top: 0;
+}
+
+.panel h2 {
+  font-size: var(--font-size-md);
+  font-weight: 600;
+  margin: 0 0 var(--space-2);
+}
+
+.panel__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  margin: var(--space-3) 0;
+}
+
+.status {
+  font-size: var(--font-size-sm);
+  margin: var(--space-2) 0 0;
+}
+
+.status--error {
+  color: var(--color-danger);
+}
+
+/* Dialog */
+.dialog::backdrop {
+  background: var(--color-backdrop);
+}
+
+.dialog {
+  width: min(560px, calc(100vw - 2 * var(--space-4)));
+  border: var(--border-width) solid var(--color-border);
+  border-radius: var(--radius-lg);
+  padding: var(--space-5);
+  color: var(--color-text);
+  background: var(--color-surface);
+}
+
+.dialog h2 {
+  margin-top: 0;
+  font-size: var(--font-size-lg);
+  font-weight: 500;
+}
+
+.dialog__actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--space-2);
+  margin-top: var(--space-5);
+}
+
+/* Prominent data-loss warning */
+.loss-warning {
+  background: var(--color-danger-bg);
+  border: 2px solid var(--color-danger-border);
+  border-radius: var(--radius-md);
+  padding: var(--space-3) var(--space-4);
+  color: var(--color-danger);
+}
+
+.loss-warning strong {
+  display: block;
+  margin-bottom: var(--space-1);
+}
+
+.loss-warning ul {
+  margin: var(--space-2) 0 0;
+  padding-left: var(--space-5);
+}
+
+/* Celebration */
+.fireworks {
+  position: fixed;
+  inset: 0;
+  z-index: var(--z-overlay);
+  pointer-events: none;
+}
+
+@media (max-width: 640px) {
+  .page--note {
+    /* Still room on the left for the drag handles */
+    padding: var(--space-4) var(--space-3) var(--space-6) var(--space-5);
+  }
+}

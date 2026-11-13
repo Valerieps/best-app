@@ -1,0 +1,60 @@
+/* "Fila de execução": a handle to reorder, and the project quiet under the task */
+.task-row__handle {
+  color: var(--color-text-muted);
+  font-size: var(--font-size-sm);
+  cursor: grab;
+  touch-action: none;
+  user-select: none;
+  visibility: hidden;
+}
+
+.card-list__item:hover .task-row__handle,
+.task-row--dragging .task-row__handle {
+  visibility: visible;
+}
+
+.task-row--dragging {
+  opacity: 0.5;
+}
+
+.task-row--dragging .task-row__handle {
+  cursor: grabbing;
+}
+
+.task-row--drop-before,
+.task-row--drop-after {
+  position: relative;
+}
+
+.task-row--drop-before::before,
+.task-row--drop-after::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 2px;
+  border-radius: var(--radius-pill);
+  background: var(--color-focus);
+  pointer-events: none;
+}
+
+.task-row--drop-before::before {
+  top: -1px;
+}
+
+.task-row--drop-after::after {
+  bottom: -1px;
+}
+
+.task-row__project {
+  display: block;
+  margin-top: 2px;
+  padding-left: calc(var(--space-4) + var(--space-3) * 2);
+  font-size: var(--font-size-xs);
+  color: var(--color-text-muted);
+  text-decoration: none;
+}
+
+.task-row__project:hover {
+  text-decoration: underline;
+}

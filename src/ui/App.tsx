@@ -39,6 +39,7 @@ import { TaskDetailsHost } from './taskDetails/TaskDetailsDialog';
 import { reportSaveError } from './saveErrors';
 import { enabledRoute } from './features';
 import { applyAppearance, parseAppearance } from './theme/appearance';
+import { cx } from './classNames';
 
 export function App() {
   // Screens of features hidden until their spec is done open the day note (ui/features.ts).
@@ -128,7 +129,7 @@ export function App() {
     <div className="shell">
       <Sidebar route={route} backupState={backupState} />
       <PlacePalette />
-      <div className={`shell__main ${centerCollapsed ? 'shell__main--collapsed' : ''}`}>
+      <div className={cx('shell__main', centerCollapsed && 'shell__main--collapsed')}>
         <button
           type="button"
           className="sidebar__toggle shell__collapse"

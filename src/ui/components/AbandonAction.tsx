@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { IconAction } from './IconAction';
+import { cx } from '../classNames';
 
 /**
  * "Abandonar tarefa" as a trash icon: the first click arms it (the icon turns warning-colored),
@@ -33,7 +34,7 @@ export function AbandonAction({
       title="Tira a tarefa de circulação sem fazer. O histórico guarda o abandono."
       disabled={disabled}
       pressed={confirming}
-      className={`${confirming ? 'active-tasks__abandon--confirm' : ''} ${className ?? ''}`}
+      className={cx(confirming && 'active-tasks__abandon--confirm', className)}
       onClick={() => {
         if (!confirming) return setConfirming(true);
         setConfirming(false);

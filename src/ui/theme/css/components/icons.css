@@ -1,0 +1,66 @@
+/* Line icons (components/Icon.tsx) */
+.icon {
+  width: var(--icon-size-md);
+  height: var(--icon-size-md);
+  flex-shrink: 0;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  vertical-align: -4px;
+}
+
+.icon--sm {
+  width: var(--icon-size-sm);
+  height: var(--icon-size-sm);
+  vertical-align: -2px;
+}
+
+.icon--lg {
+  width: var(--icon-size-lg);
+  height: var(--icon-size-lg);
+}
+
+.icon--filled {
+  fill: currentColor;
+}
+
+/* Tints for project icons, from the section and feedback tokens */
+.tone--lilac { background: var(--color-project-bg); color: var(--color-project-text); }
+.tone--blue { background: var(--color-meeting-bg); color: var(--color-meeting-text); }
+.tone--amber { background: var(--color-whiteboard-bg); color: var(--color-whiteboard-text); }
+.tone--green { background: var(--color-success-bg); color: var(--color-success-text); }
+.tone--pink { background: var(--color-danger-bg); color: var(--color-danger); }
+
+.project-icon {
+  display: inline-grid;
+  place-items: center;
+  flex-shrink: 0;
+  border-radius: var(--radius-md);
+  font-weight: 600;
+}
+
+.project-icon--sm {
+  width: var(--icon-size-lg);
+  height: var(--icon-size-lg);
+  border-radius: var(--radius-sm);
+  font-size: var(--font-size-sm);
+}
+
+.project-icon--md {
+  width: var(--icon-size-xl);
+  height: var(--icon-size-xl);
+}
+
+.project-icon--lg {
+  width: var(--icon-size-2xl);
+  height: var(--icon-size-2xl);
+  font-size: var(--font-size-lg);
+}
+
+.project-link {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+}

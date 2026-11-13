@@ -39,9 +39,10 @@ interface Particle {
 
 function readColors(): string[] {
   const style = getComputedStyle(document.documentElement);
-  return ['--color-firework-1', '--color-firework-2', '--color-firework-3', '--color-firework-4'].map(
-    (name) => style.getPropertyValue(name).trim() || '#2f5d50',
-  );
+  // The colors live in tokens.css only; an unset token is skipped rather than given a stray hex
+  return ['--color-firework-1', '--color-firework-2', '--color-firework-3', '--color-firework-4']
+    .map((name) => style.getPropertyValue(name).trim())
+    .filter(Boolean);
 }
 
 /** A quick fireworks animation over the page, then `onDone`. Skipped with reduced motion. */

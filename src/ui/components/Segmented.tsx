@@ -1,3 +1,4 @@
+import { cx } from '../classNames';
 export interface SegmentOption<T extends string> {
   value: T;
   label: string;
@@ -20,7 +21,7 @@ export function Segmented<T extends string>({ label, options, value, onChange }:
           type="button"
           role="radio"
           aria-checked={option.value === value}
-          className={`segmented__option ${option.value === value ? 'segmented__option--on' : ''}`}
+          className={cx('segmented__option', option.value === value && 'segmented__option--on')}
           onClick={() => onChange(option.value)}
         >
           {option.label}

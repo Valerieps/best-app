@@ -3,6 +3,7 @@ import { FEATURES } from '../features';
 import { navigate } from '../hooks';
 import { filterPlaces, isPaletteShortcut, moveActive, palettePlaces } from '../placePalette';
 import { Icon } from './Icon';
+import { cx } from '../classNames';
 
 const LIST_ID = 'place-palette-list';
 const optionId = (key: string) => `place-palette-${key}`;
@@ -108,7 +109,7 @@ function PaletteDialog({ onClose }: { onClose: () => void }) {
               id={optionId(place.key)}
               role="option"
               aria-selected={index === current}
-              className={`palette__option ${index === current ? 'palette__option--active' : ''}`}
+              className={cx('palette__option', index === current && 'palette__option--active')}
               onMouseMove={() => setActive(index)}
               // Keep the focus in the input when clicking an option.
               onMouseDown={(event) => event.preventDefault()}

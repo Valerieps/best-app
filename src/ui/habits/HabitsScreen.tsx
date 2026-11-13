@@ -7,6 +7,7 @@ import { appContext, reader } from '../services';
 import { ScreenHeader } from '../components/ScreenHeader';
 import { LoadingPage } from '../components/Skeleton';
 import { useLiveQuery } from '../useLiveQuery';
+import { cx } from '../classNames';
 
 const WEEKDAYS = ['dom', 'seg', 'ter', 'qua', 'qui', 'sex', 'sáb'];
 const WEEK_ORDER = [1, 2, 3, 4, 5, 6, 0];
@@ -21,7 +22,7 @@ export function HabitToggle({ view, today }: { view: HabitView; today: DayKey })
     <span className="warmup__actions">
       <button
         type="button"
-        className={`small ${view.doneToday === true ? 'primary' : ''}`}
+        className={cx('small', view.doneToday === true && 'primary')}
         aria-pressed={view.doneToday === true}
         onClick={() => void logHabit(appContext, view.habit.id, today, true)}
       >
@@ -29,7 +30,7 @@ export function HabitToggle({ view, today }: { view: HabitView; today: DayKey })
       </button>
       <button
         type="button"
-        className={`small ${view.doneToday === false ? 'primary' : ''}`}
+        className={cx('small', view.doneToday === false && 'primary')}
         aria-pressed={view.doneToday === false}
         onClick={() => void logHabit(appContext, view.habit.id, today, false)}
       >

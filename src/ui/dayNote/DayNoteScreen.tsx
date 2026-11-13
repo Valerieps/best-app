@@ -57,6 +57,7 @@ import { opensLineBelow } from './lineBelow';
 import { SectionHeader } from './SectionHeader';
 import { FormatToolbar } from './FormatToolbar';
 import { useLineSelection } from './useLineSelection';
+import { cx } from '../classNames';
 
 interface Props {
   /** The day shown: today, or a past day with pending items (1b). */
@@ -365,7 +366,7 @@ export function DayNoteScreen({
 
   if (!view) {
     return (
-      <main className={`page page--note ${focus ? 'page--focus' : ''}`} aria-busy="true">
+      <main className={cx('page page--note', focus && 'page--focus')} aria-busy="true">
         {!focus && header}
         <SkeletonLines />
       </main>
@@ -710,7 +711,7 @@ export function DayNoteScreen({
     const kind = section?.kind ?? 'general';
     return (
       <section
-        className={`section section--${kind} ${section?.projectId ? 'section--project' : ''} ${isCollapsed(part.key) ? 'section--collapsed' : ''}`}
+        className={cx('section', `section--${kind}`, section?.projectId && 'section--project', isCollapsed(part.key) && 'section--collapsed')}
         aria-label={kind === 'meeting' ? 'Seção de reunião' : 'Seção geral'}
       >
         <SectionHeader
@@ -798,7 +799,7 @@ export function DayNoteScreen({
         : parts.find((item) => isFocused(item.key, item.kind === 'section' ? item.entry.key : undefined));
     return (
       <main className="page page--note page--focus">
-        <div className={`note note--focus ${glides ? '' : 'note--focus-fade'}`} {...noteProps} onKeyDown={lineSelection.onKeyDown}>
+        <div className={cx('note note--focus', !glides && 'note--focus-fade')} {...noteProps} onKeyDown={lineSelection.onKeyDown}>
           {part ? (
             <div
               className={`day-part day-part--${part.kind}`}
@@ -832,7 +833,7 @@ export function DayNoteScreen({
 
   return (
     <>
-      <main className={`page page--note ${fromFocus ? 'page--from-focus' : ''}`}>
+      <main className={cx('page page--note', fromFocus && 'page--from-focus')}>
         {header}
         {isToday && (showPendingNotice || reminders.length > 0) && (
           <div className="screen-notices">
@@ -843,12 +844,12 @@ export function DayNoteScreen({
         {/* Pinned, the priorities stay at the top and do not move with the other parts. */}
         {isToday && pinned && prioritiesBlock}
         <NoteSettledContext.Provider value={settled}>
-          <div className={`note ${typing ? 'note--typing' : ''}`} {...noteProps} {...typingProps}>
+          <div className={cx('note', typing && 'note--typing')} {...noteProps} {...typingProps}>
             {onlyPriorities && !isToday && <p className="muted">Nada pendente neste dia.</p>}
             {parts.map((part, index) => (
               <div
                 key={part.kind === 'section' ? part.entry.key : part.key}
-                className={`day-part day-part--${part.kind} ${enteringParts.has(part.key) ? 'day-part--entering' : ''} ${dragClasses(part.key, index)}`}
+                className={cx('day-part', `day-part--${part.kind}`, enteringParts.has(part.key) && 'day-part--entering', dragClasses(part.key, index))}
                 data-drag-group={PARTS_GROUP}
                 data-drag-id={part.key}
                 style={morphPart === part.key ? { viewTransitionName: FOCUS_PART_TRANSITION } : undefined}

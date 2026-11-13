@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState, type ReactNode } from 'react';
+import { cx } from '../classNames';
 
 interface Props {
   /** Content of the button that opens the list. */
@@ -38,8 +39,8 @@ export function Dropdown({ trigger, label, children, align = 'right', className 
   }, [open]);
 
   return (
-    <div className={`dropdown ${className}`} ref={ref}>
-      <button type="button" className={`dropdown__trigger ${triggerClassName}`} aria-haspopup="menu" aria-expanded={open} aria-label={label} onClick={() => setOpen(!open)}>
+    <div className={cx('dropdown', className)} ref={ref}>
+      <button type="button" className={cx('dropdown__trigger', triggerClassName)} aria-haspopup="menu" aria-expanded={open} aria-label={label} onClick={() => setOpen(!open)}>
         {trigger}
       </button>
       {open && (

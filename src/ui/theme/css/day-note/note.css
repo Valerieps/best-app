@@ -90,7 +90,7 @@
 
 .suggestions {
   position: absolute;
-  z-index: 5;
+  z-index: var(--z-sticky);
   top: calc(100% + var(--space-1));
   left: 0;
   min-width: 280px;
@@ -100,7 +100,7 @@
   background: var(--color-surface);
   border: var(--border-width) solid var(--color-border);
   border-radius: var(--radius-md);
-  box-shadow: 0 6px 24px var(--color-shadow-soft);
+  box-shadow: var(--shadow-popover);
 }
 
 .suggestions__item {
@@ -233,7 +233,7 @@
   position: absolute;
   top: 0;
   left: 0;
-  z-index: 1;
+  z-index: var(--z-inline);
   display: flex;
   visibility: hidden;
   align-items: center;
@@ -350,7 +350,7 @@
 .priorities--pinned {
   position: sticky;
   top: var(--space-2);
-  z-index: 5;
+  z-index: var(--z-sticky);
 }
 
 .priorities__header {
@@ -405,29 +405,12 @@ button.priorities__pin[aria-pressed='true'] {
   color: var(--color-text-muted);
 }
 
-.priorities__moving {
-  display: flex;
-  align-items: center;
-  gap: var(--space-2);
-  margin-left: auto;
-  font-size: var(--font-size-sm);
-  color: var(--color-text-muted);
-}
-
 .countdown {
   width: 80px;
   height: 3px;
   overflow: hidden;
   border-radius: var(--radius-pill);
   background: var(--color-border);
-}
-
-.countdown__fill {
-  display: block;
-  height: 100%;
-  background: var(--color-focus);
-  transform-origin: left;
-  animation: countdown-shrink linear forwards;
 }
 
 @keyframes countdown-shrink {
@@ -462,76 +445,4 @@ button.priorities__pin[aria-pressed='true'] {
 
 .day-part--priorities .priorities__due-today {
   left: calc(-1 * var(--space-5) - var(--section-bar-width));
-}
-
-.topbar__date {
-  display: flex;
-  align-items: center;
-  gap: var(--space-2);
-}
-
-.topbar__arrow {
-  font-size: var(--font-size-xl);
-  color: var(--color-text-muted);
-}
-
-.topbar__arrow:disabled {
-  opacity: 0.25;
-}
-
-/* Wiki toolbar (1b) */
-.toolbar {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--space-2);
-  margin-bottom: var(--space-3);
-}
-
-.toolbar__search {
-  flex: 1;
-  min-width: 200px;
-}
-
-.card-list__item--focus {
-  background: var(--color-warning-bg);
-}
-
-/* Cleanup assistants (1b) */
-.assistant {
-  margin-bottom: var(--space-6);
-}
-
-.assistant__title {
-  font-size: var(--font-size-lg);
-  font-weight: 500;
-  margin: 0 0 var(--space-1);
-}
-
-.assistant__actions {
-  display: flex;
-  justify-content: flex-end;
-  margin-top: var(--space-3);
-}
-
-.assistant__select {
-  align-self: flex-start;
-}
-
-/* An idea's line (spec/ideias.md): a bulb before the text opens the idea's page. */
-.line__idea {
-  display: inline-flex;
-  align-items: center;
-  margin-top: 4px;
-  padding: 0;
-  border: none;
-  background: transparent;
-  color: var(--color-whiteboard-text);
-}
-
-button.line__idea {
-  cursor: pointer;
-}
-
-button.line__idea:hover {
-  color: var(--color-brand);
 }

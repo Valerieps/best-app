@@ -12,6 +12,7 @@ import { clampSidebarWidth, SIDEBAR_WIDTH, SIDEBAR_WIDTH_STEP } from './sidebarW
 import { useLiveQueryState } from './useLiveQuery';
 import { FEATURES } from './features';
 import { enqueue } from './writeQueue';
+import { cx } from './classNames';
 
 interface Props {
   route: Route;
@@ -99,7 +100,7 @@ export function Sidebar({ route, backupState }: Props) {
       <button
         key={entry.place}
         type="button"
-        className={`sidebar__item sidebar__icon ${isCurrent(entry) ? 'sidebar__item--current' : ''}`}
+        className={cx('sidebar__item sidebar__icon', isCurrent(entry) && 'sidebar__item--current')}
         aria-current={isCurrent(entry) ? 'page' : undefined}
         title={entry.label}
         onClick={() => navigate(entry.route)}
@@ -136,7 +137,7 @@ export function Sidebar({ route, backupState }: Props) {
     <button
       key={entry.place}
       type="button"
-      className={`sidebar__item ${extraClass} ${entry.place === 'day' ? 'sidebar__item--day' : ''} ${isCurrent(entry) ? 'sidebar__item--current' : ''}`}
+      className={cx('sidebar__item', extraClass, entry.place === 'day' && 'sidebar__item--day', isCurrent(entry) && 'sidebar__item--current')}
       aria-current={isCurrent(entry) ? 'page' : undefined}
       onClick={() => navigate(entry.route)}
     >

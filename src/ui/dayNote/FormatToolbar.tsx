@@ -1,6 +1,7 @@
 import type { MouseEvent, ReactNode } from 'react';
 import { Icon } from '../components/Icon';
 import { FORMAT_EVENT, FORMAT_SHORTCUTS, type FormatCommand } from './markdown';
+import { cx } from '../classNames';
 
 const BUTTONS: { command: FormatCommand; label: string; content: ReactNode }[] = [
   { command: 'bold', label: 'Negrito', content: <Icon name="bold" size="sm" /> },
@@ -51,7 +52,7 @@ export function FormatToolbar() {
         <button
           key={command}
           type="button"
-          className={`format-toolbar__button ${typeof content === 'string' || command === 'strike' ? 'format-toolbar__button--text' : ''}`}
+          className={cx('format-toolbar__button', (typeof content === 'string' || command === 'strike') && 'format-toolbar__button--text')}
           title={`${label} (${FORMAT_SHORTCUTS[command]})`}
           aria-label={label}
           // Keeps the focus, and the selection, on the line being edited.

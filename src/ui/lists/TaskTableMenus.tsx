@@ -4,6 +4,7 @@ import type { ProjectFilter } from '../../domain/taskList';
 import { Dropdown } from '../components/Dropdown';
 import { Icon } from '../components/Icon';
 import { COLUMN_LABELS, TASK_COLUMNS, activeFilterCount, toggleColumn, type TaskListView, type TaskShow } from './taskTableView';
+import { cx } from '../classNames';
 
 type FilterCategory = 'show' | 'project';
 
@@ -77,7 +78,7 @@ export function FiltersMenu({
               <button
                 key={key}
                 type="button"
-                className={`table-menu__category ${key === category ? 'table-menu__category--on' : ''}`}
+                className={cx('table-menu__category', key === category && 'table-menu__category--on')}
                 aria-pressed={key === category}
                 onClick={() => setCategory(key)}
               >

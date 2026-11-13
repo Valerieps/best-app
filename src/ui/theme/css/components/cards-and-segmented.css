@@ -1,0 +1,61 @@
+/* Cards (checkout, dialogs) */
+.card {
+  background: var(--color-surface);
+  border: var(--border-width) solid var(--color-border);
+  border-radius: var(--radius-lg);
+}
+
+.card__header {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-3) var(--space-4);
+  border-bottom: var(--border-width) solid var(--color-border);
+}
+
+.card__title {
+  margin: 0;
+  font-size: var(--font-size-lg);
+  font-weight: 500;
+  text-align: center;
+}
+
+.card__body {
+  padding: var(--space-3) var(--space-5) var(--space-5);
+}
+
+.card__footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  padding: var(--space-3) var(--space-5);
+  border-top: var(--border-width) solid var(--color-border);
+}
+
+/* Triage */
+
+.segmented {
+  display: inline-flex;
+  border: var(--border-width) solid var(--color-border-strong);
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+}
+
+.segmented__option {
+  border: none;
+  border-radius: 0;
+  font-size: var(--font-size-sm);
+  padding: 2px var(--space-3);
+  color: var(--color-text-muted);
+}
+
+.segmented__option + .segmented__option {
+  border-left: var(--border-width) solid var(--color-border);
+}
+
+.segmented__option--on {
+  background: var(--color-accent);
+  color: var(--color-accent-text);
+}

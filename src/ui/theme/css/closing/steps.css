@@ -1,0 +1,323 @@
+/* Checkout in steps (spec/checkout.md, "Checkout em etapas") */
+.checkout-stepper {
+  padding: var(--space-3) var(--space-5) 0;
+}
+
+.checkout-stepper ol {
+  display: flex;
+  gap: var(--space-2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.checkout-stepper li {
+  flex: 1 1 0;
+  min-width: 0;
+  font-size: var(--font-size-xs);
+  line-height: 1.3;
+  color: var(--color-text-muted);
+}
+
+.checkout-stepper__bar {
+  display: block;
+  height: 4px;
+  margin-bottom: var(--space-1);
+  border-radius: var(--radius-pill);
+  background: var(--color-border);
+}
+
+.checkout-stepper__done .checkout-stepper__bar {
+  background: var(--color-text-muted);
+}
+
+.checkout-stepper__current {
+  color: var(--color-text);
+  font-weight: 600;
+}
+
+.checkout-stepper__current .checkout-stepper__bar {
+  background: var(--color-accent);
+}
+
+.checkout-step {
+  max-width: 680px;
+}
+
+.checkout-step__head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-4);
+  margin-top: var(--space-3);
+}
+
+.checkout-step__progress {
+  flex-shrink: 0;
+  font-size: var(--font-size-sm);
+  color: var(--color-text-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.checkout-step__question {
+  margin: 0;
+  font-size: var(--font-size-xl);
+  font-weight: 600;
+  line-height: 1.3;
+  text-wrap: balance;
+  outline: none;
+}
+
+.checkout-step__hint {
+  color: var(--color-text-muted);
+  font-size: var(--font-size-xs);
+}
+
+.checkout-step__hint kbd,
+.choice-pill__key {
+  font-family: inherit;
+  font-size: var(--font-size-xs);
+  padding: 0 5px;
+  border: var(--border-width) solid var(--color-border-strong);
+  border-bottom-width: 2px;
+  border-radius: 4px;
+  background: var(--color-surface-soft);
+  color: var(--color-text-muted);
+}
+
+.task-box {
+  flex: none;
+  display: inline-block;
+  width: 12px;
+  height: 12px;
+  border: 1.5px solid var(--color-border-strong);
+  border-radius: 3px;
+  background: var(--color-surface);
+  transform: translateY(1px);
+}
+
+.task-replica {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-3);
+  margin-top: var(--space-4);
+  padding: var(--space-3) var(--space-4);
+  border: var(--border-width) solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-surface-soft);
+  font-size: var(--font-size-md);
+}
+
+.task-replica .task-box {
+  width: 16px;
+  height: 16px;
+  transform: translateY(4px);
+}
+
+.task-replica__text {
+  min-width: 0;
+}
+
+.task-replica__meta {
+  display: block;
+  font-size: var(--font-size-sm);
+  color: var(--color-text-muted);
+}
+
+/* What to decide: a row of pills, with the chosen one's explanation below */
+/* What exists (the task) and what to decide (the pills) are apart by space alone */
+.task-replica + .choice-pills {
+  margin-top: var(--space-5);
+}
+
+.choice-pills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+button.choice-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: 4px var(--space-3) 4px 6px;
+  border-radius: var(--radius-pill);
+  font-size: var(--font-size-sm);
+}
+
+button.choice-pill:hover {
+  background: var(--color-hover);
+}
+
+button.choice-pill--on,
+button.choice-pill--on:hover {
+  background: var(--color-accent);
+  border-color: var(--color-accent);
+  color: var(--color-accent-text);
+}
+
+.choice-pill--on .choice-pill__key {
+  background: transparent;
+  border-color: var(--color-text-muted);
+  color: var(--color-accent-text);
+}
+
+.choice-pill__tag {
+  padding: 0 6px;
+  border-radius: var(--radius-pill);
+  background: var(--color-success-bg);
+  color: var(--color-success-text);
+  font-size: var(--font-size-xs);
+}
+
+.choice-detail {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--space-2);
+  margin-top: var(--space-3);
+  font-size: var(--font-size-sm);
+  color: var(--color-text-muted);
+}
+
+/* Planning: one task, one date; batch editing selects rows, never boxes */
+.plan-intro {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: var(--space-2) var(--space-4);
+}
+
+.plan-intro p {
+  flex: 1 1 300px;
+  margin: 0;
+}
+
+.plan-total {
+  margin: var(--space-4) 0 0;
+  font-variant-numeric: tabular-nums;
+}
+
+.batch-bar {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: var(--z-bar);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: var(--space-2) var(--space-4);
+  padding: var(--space-3) var(--space-4) calc(var(--space-3) + env(safe-area-inset-bottom, 0px));
+  border-top: var(--border-width) solid var(--color-border-strong);
+  background: var(--color-surface);
+  box-shadow: var(--shadow-bar);
+}
+
+.batch-bar__actions {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+/* "Fechar o dia": a board of two columns, the tasks of the day and the queue, with a card per task. */
+.plan-board {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-3);
+  margin-top: var(--space-3);
+  align-items: start;
+}
+
+.plan-column {
+  min-height: 120px;
+  padding: var(--space-2);
+  border: var(--border-width) solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-surface-soft);
+}
+
+.plan-column--drop {
+  border-color: var(--color-accent);
+  background: var(--color-select-bg);
+}
+
+.plan-column__title {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin: 0 0 var(--space-2);
+  font-size: var(--font-size-sm);
+  font-weight: 600;
+}
+
+.plan-column--queue .plan-column__title {
+  color: var(--color-accent);
+}
+
+.plan-column__cards {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.plan-column__empty {
+  margin: 0;
+  font-size: var(--font-size-sm);
+}
+
+.plan-card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  padding: var(--space-2);
+  border: var(--border-width) solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: var(--color-surface);
+  box-shadow: var(--shadow-card);
+  line-height: 1.4;
+}
+
+li.plan-card {
+  cursor: grab;
+}
+
+li.plan-card:active {
+  cursor: grabbing;
+}
+
+.plan-card--away {
+  opacity: 0.6;
+}
+
+/* A task already in the queue: there for context, not dragged. */
+li.plan-card--fixed {
+  cursor: default;
+  box-shadow: none;
+}
+
+.plan-card__text {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.plan-card__meta {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  font-size: var(--font-size-xs);
+}
+
+.plan-card__meta:empty {
+  display: none;
+}

@@ -1,0 +1,42 @@
+/* Wiki toolbar (1b) */
+.toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  margin-bottom: var(--space-3);
+}
+
+.toolbar__search {
+  flex: 1;
+  min-width: 200px;
+}
+
+/* Cleanup assistants (1b) */
+.assistant {
+  margin-bottom: var(--space-6);
+}
+
+.assistant__actions {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: var(--space-3);
+}
+
+/* An idea's line (spec/ideias.md): a bulb before the text opens the idea's page. */
+.line__idea {
+  display: inline-flex;
+  align-items: center;
+  margin-top: 4px;
+  padding: 0;
+  border: none;
+  background: transparent;
+  color: var(--color-whiteboard-text);
+}
+
+button.line__idea {
+  cursor: pointer;
+}
+
+button.line__idea:hover {
+  color: var(--color-brand);
+}

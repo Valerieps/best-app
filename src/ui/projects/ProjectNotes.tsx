@@ -15,6 +15,7 @@ import { formatShortDate, formatTime } from '../format';
 import { appContext, reader } from '../services';
 import { useLiveQuery } from '../useLiveQuery';
 import { write } from '../writeQueue';
+import { cx } from '../classNames';
 
 
 /**
@@ -39,7 +40,7 @@ export function ProjectNotes({ entries, projectId, projectName, today }: { entri
       ) : (
         <ol className="timeline">
           {entries.map(({ section, notes }) => (
-            <li key={section.id} className={`timeline__entry ${section.kind === 'meeting' ? 'timeline__entry--meeting' : ''}`}>
+            <li key={section.id} className={cx('timeline__entry', section.kind === 'meeting' && 'timeline__entry--meeting')}>
               <span className="timeline__dot" aria-hidden="true" />
               <div className="timeline__when-row">
                 <p className="timeline__when">
@@ -175,7 +176,7 @@ function NoteLine({ note }: { note: Block }) {
       <span className="timeline__note-actions">
         <button
           type="button"
-          className={`line__action ${confirming ? 'active-tasks__abandon--confirm' : ''}`}
+          className={cx('line__action', confirming && 'active-tasks__abandon--confirm')}
           onClick={() => (confirming ? void deleteKeptNote(appContext, note.id) : setConfirming(true))}
           onBlur={() => setConfirming(false)}
           title="Apagar a nota. O histórico guarda o que ela dizia."

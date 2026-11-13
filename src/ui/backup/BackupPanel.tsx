@@ -7,6 +7,7 @@ import { autoBackup, db } from '../services';
 import { useLiveQueryState } from '../useLiveQuery';
 import { BackupIntervalSelect } from './BackupIntervalSelect';
 import type { BackupActions } from './useBackup';
+import { cx } from '../classNames';
 
 interface Props {
   state: AutoBackupState;
@@ -135,7 +136,7 @@ export function BackupPanel({ state, actions, storagePersisted }: Props) {
       )}
 
       {actions.message && (
-        <p className={`status ${actions.message.kind === 'error' ? 'status--error' : ''}`} role="status">
+        <p className={cx('status', actions.message.kind === 'error' && 'status--error')} role="status">
           {actions.message.text}
         </p>
       )}

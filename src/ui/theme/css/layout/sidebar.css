@@ -1,0 +1,180 @@
+/* The sidebar's right edge can be dragged to change its width; the main area shrinks along */
+.sidebar__resize {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: var(--resize-handle-width);
+  cursor: col-resize;
+  touch-action: none;
+}
+
+.sidebar__resize:hover,
+.sidebar__resize:focus-visible,
+.resizing-sidebar .sidebar__resize {
+  background: var(--color-border-strong);
+  outline: none;
+}
+
+.resizing-sidebar {
+  cursor: col-resize;
+  user-select: none;
+}
+
+/* Dragging the edge follows the mouse at once */
+.resizing-sidebar .sidebar {
+  transition: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sidebar {
+    transition: none;
+  }
+}
+
+.sidebar--collapsed {
+  width: var(--sidebar-collapsed-width);
+  align-items: center;
+  padding: var(--space-4) var(--space-1);
+}
+
+.sidebar__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+  margin-bottom: var(--space-4);
+}
+
+button.sidebar__name {
+  border: none;
+  background: none;
+  padding: var(--space-1) var(--space-3);
+  font-weight: 600;
+  font-size: var(--font-size-md);
+}
+
+button.sidebar__toggle {
+  display: inline-flex;
+  border: none;
+  background: none;
+  padding: var(--space-1);
+  color: var(--color-text-muted);
+}
+
+button.sidebar__toggle:hover {
+  color: var(--color-text);
+}
+
+/* Collapsed, each place is its icon alone; the name shows on hover */
+.sidebar--collapsed > .sidebar__toggle {
+  margin-bottom: var(--space-4);
+}
+
+button.sidebar__item.sidebar__icon {
+  position: relative;
+  justify-content: center;
+  padding: var(--space-2);
+}
+
+/* The backup dot sits on the corner of its icon */
+.sidebar__icon > .badge {
+  position: absolute;
+  top: 0;
+  right: 0;
+  margin-left: 0;
+  min-width: 14px;
+  padding: 0 3px;
+  line-height: 14px;
+}
+
+.sidebar__icon > .backup-status {
+  position: absolute;
+  right: var(--space-1);
+  bottom: var(--space-1);
+}
+
+.sidebar__icon .backup-status__label {
+  display: none;
+}
+
+.sidebar__group {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  margin-bottom: var(--space-4);
+}
+
+button.sidebar__item {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  text-align: left;
+  border: var(--border-width) solid transparent;
+  background: none;
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--radius-md);
+  font-size: var(--font-size-md);
+}
+
+button.sidebar__item:hover {
+  background: var(--color-surface);
+}
+
+button.sidebar__item--current {
+  background: var(--color-brand-soft);
+  color: var(--color-brand-strong);
+  font-weight: 600;
+}
+
+button.sidebar__item > .icon {
+  color: var(--color-text-muted);
+}
+
+/* "Hoje" is where the day starts and ends, so it weighs more than the other places */
+button.sidebar__item--day {
+  font-weight: 600;
+}
+
+button.sidebar__item--day > .icon {
+  color: var(--color-brand);
+}
+
+button.sidebar__item--current > .icon {
+  color: var(--color-brand-strong);
+}
+
+.sidebar__label {
+  flex: 1;
+  min-width: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+}
+
+.sidebar__footer {
+  margin-top: auto;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  border-top: var(--border-width) solid var(--color-border);
+  padding-top: var(--space-3);
+}
+
+button.sidebar__footer-item {
+  font-size: var(--font-size-sm);
+}
+
+.sidebar__footer .sidebar__label {
+  white-space: nowrap;
+}
+
+.sidebar__footer .backup-status {
+  min-width: 0;
+}
+
+.sidebar__footer .backup-status__label {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}

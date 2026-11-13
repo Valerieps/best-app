@@ -21,10 +21,11 @@ import { taskActions, taskText } from '../tasks/taskSurface';
 import { routeHash } from '../hooks';
 import { appContext, reader } from '../services';
 import { useLiveQuery } from '../useLiveQuery';
+import { cx } from '../classNames';
 
 function ListPage({ title, className = '', children }: { title: string; className?: string; children: React.ReactNode }) {
   return (
-    <main className={`page ${className}`}>
+    <main className={cx('page', className)}>
       <ScreenHeader title={title} />
       {children}
     </main>
@@ -224,7 +225,7 @@ function SortHeader({ column, view, onChange }: { column: TaskSortKey; view: Tas
     <th scope="col" aria-sort={direction} className={`task-table__th task-table__th--${column}`}>
       <button
         type="button"
-        className={`task-table__sort ${on ? 'task-table__sort--on' : ''}`}
+        className={cx('task-table__sort', on && 'task-table__sort--on')}
         onClick={() => onChange(sortByColumn(view, column))}
         title={on ? 'Inverter a ordem' : `Ordenar por ${COLUMN_LABELS[column].toLowerCase()}`}
       >
@@ -351,7 +352,7 @@ export function ActiveTasksScreen({ today }: { today: DayKey }) {
       return (
         <tr
           key={id}
-          className={`task-table__row ${open ? '' : 'active-tasks__row--done'} ${picking ? 'active-tasks__row--select' : ''} ${on ? 'active-tasks__row--on' : ''}`}
+          className={cx('task-table__row', !open && 'active-tasks__row--done', picking && 'active-tasks__row--select', on && 'active-tasks__row--on')}
           onClick={picking ? (event) => pick(id, event) : undefined}
         >
           <td className="task-table__td task-table__td--check">
@@ -401,7 +402,7 @@ export function ActiveTasksScreen({ today }: { today: DayKey }) {
             )}
             <button
               type="button"
-              className={`small ${selecting ? 'primary' : ''}`}
+              className={cx('small', selecting && 'primary')}
               aria-pressed={selecting}
               onClick={selecting ? leaveSelection : () => setSelecting(true)}
             >
