@@ -69,7 +69,7 @@ export function RightPanel({ route, today, fill = false }: Props) {
     });
   };
 
-  // The handle is on the left edge, so dragging left makes the panel wider.
+  // The handle is on the right edge (the panel is the middle column), so dragging right makes it wider.
   const startResize = (event: PointerEvent<HTMLDivElement>) => {
     if (event.button !== 0) return;
     event.preventDefault();
@@ -80,7 +80,7 @@ export function RightPanel({ route, today, fill = false }: Props) {
     let last = startWidth;
     document.body.classList.add('resizing-right-panel');
     const move = (moveEvent: globalThis.PointerEvent) => {
-      last = clampRightPanelWidth(startWidth - (moveEvent.clientX - startX));
+      last = clampRightPanelWidth(startWidth + (moveEvent.clientX - startX));
       setWidthNow(last);
     };
     const end = () => {
@@ -96,7 +96,7 @@ export function RightPanel({ route, today, fill = false }: Props) {
   };
 
   const resizeKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
-    const step = event.key === 'ArrowLeft' ? RIGHT_PANEL_WIDTH_STEP : event.key === 'ArrowRight' ? -RIGHT_PANEL_WIDTH_STEP : 0;
+    const step = event.key === 'ArrowRight' ? RIGHT_PANEL_WIDTH_STEP : event.key === 'ArrowLeft' ? -RIGHT_PANEL_WIDTH_STEP : 0;
     if (step !== 0) {
       event.preventDefault();
       saveWidth(clampRightPanelWidth(width + step));

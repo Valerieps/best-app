@@ -8,11 +8,7 @@
   display: flex;
   height: 100vh;
   background: var(--color-surface-soft);
-  border-left: var(--border-width) solid var(--color-border);
-}
-
-.right-panel {
-  margin-left: auto;
+  border-right: var(--border-width) solid var(--color-border);
 }
 
 .right-panel--fill {
@@ -61,7 +57,7 @@
 .right-panel__resize {
   position: absolute;
   top: 0;
-  left: 0;
+  right: 0;
   bottom: 0;
   width: var(--resize-handle-width);
   cursor: col-resize;

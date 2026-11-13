@@ -133,6 +133,8 @@ export function App() {
     <div className="shell">
       <Sidebar route={route} backupState={backupState} />
       <PlacePalette />
+      {/* The queue panel sits in the middle column; the center (the day note) is on the right. */}
+      <RightPanel route={route} today={today} fill={centerCollapsed} />
       <div className={cx('shell__main', centerCollapsed && 'shell__main--collapsed')}>
         <button
           type="button"
@@ -212,7 +214,6 @@ export function App() {
         <TaskDetailsHost today={today} />
         <SaveErrorNotice />
       </div>
-      <RightPanel route={route} today={today} fill={centerCollapsed} />
     </div>
   );
 }
