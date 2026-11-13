@@ -6,6 +6,7 @@ import { Icon } from '../components/Icon';
 import { titleOptions, titleToSaveOnBlur, type TitleOption } from './sectionTitle';
 import { isFocusToggleKey } from './focusMode';
 import { partMoveKey } from './lineDrag';
+import { cx } from '../classNames';
 
 interface Props {
   section: Section | null;
@@ -197,7 +198,7 @@ export function SectionHeader({ section, kind, projects, people, onSaveTitle, on
                 key={option.type === 'person' ? option.person.id : 'create'}
                 role="option"
                 aria-selected={index === highlight}
-                className={`suggestions__item ${index === highlight ? 'suggestions__item--active' : ''}`}
+                className={cx('suggestions__item', index === highlight && 'suggestions__item--active')}
                 onMouseDown={(event) => {
                   event.preventDefault();
                   choosePerson(option);
@@ -215,7 +216,7 @@ export function SectionHeader({ section, kind, projects, people, onSaveTitle, on
                 key={option.type === 'project' ? option.project.id : option.type}
                 role="option"
                 aria-selected={index === highlight}
-                className={`suggestions__item ${index === highlight ? 'suggestions__item--active' : ''}`}
+                className={cx('suggestions__item', index === highlight && 'suggestions__item--active')}
                 onMouseDown={(event) => {
                   event.preventDefault();
                   choose(option);

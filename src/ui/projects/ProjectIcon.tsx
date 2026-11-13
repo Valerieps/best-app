@@ -2,6 +2,7 @@ import { isProjectIcon, PROJECT_ICONS, projectInitial, type ProjectIcon as Proje
 import type { Project } from '../../domain/entities';
 import { Dropdown } from '../components/Dropdown';
 import { Icon } from '../components/Icon';
+import { cx } from '../classNames';
 
 type Tone = 'lilac' | 'blue' | 'amber' | 'green' | 'pink';
 
@@ -25,7 +26,7 @@ const ICONS: Record<ProjectIconId, { label: string; tone: Tone }> = {
 export function ProjectIconBadge({ project, size = 'md' }: { project: Project; size?: 'sm' | 'md' | 'lg' }) {
   const icon = isProjectIcon(project.icon) ? project.icon : null;
   return (
-    <span className={`project-icon project-icon--${size} tone--${icon ? ICONS[icon].tone : 'lilac'}`} aria-hidden="true">
+    <span className={cx('project-icon', `project-icon--${size}`, `tone--${icon ? ICONS[icon].tone : 'lilac'}`)} aria-hidden="true">
       {icon ? <Icon name={icon} size={size === 'sm' ? 'sm' : 'lg'} /> : <span className="project-icon__initial">{projectInitial(project.name)}</span>}
     </span>
   );
@@ -53,7 +54,7 @@ export function ProjectIconPicker({ project, onChange }: { project: Project; onC
                 aria-checked={project.icon === id}
                 aria-label={ICONS[id].label}
                 title={ICONS[id].label}
-                className={`icon-picker__option tone--${ICONS[id].tone} ${project.icon === id ? 'icon-picker__option--on' : ''}`}
+                className={cx('icon-picker__option', `tone--${ICONS[id].tone}`, project.icon === id && 'icon-picker__option--on')}
                 onClick={() => {
                   close();
                   onChange(id);

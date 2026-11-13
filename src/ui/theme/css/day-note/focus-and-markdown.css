@@ -1,0 +1,274 @@
+/* Clears a date already set, next to its chip (issue #70); shown with the line's other shortcuts */
+.line__clear {
+  border: none;
+  background: none;
+  padding: 0 var(--space-1);
+  color: var(--color-text-muted);
+  font-size: var(--font-size-sm);
+  line-height: 1.4;
+}
+
+.line__clear:hover {
+  color: var(--color-text);
+}
+
+/* Focus mode on one part of the day note (spec/nota-do-dia.md, "Modo foco") */
+button.part-focus {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2px;
+  font-size: var(--font-size-sm);
+  color: var(--color-text-muted);
+  opacity: 0;
+}
+
+.day-part:hover button.part-focus,
+.day-part:focus-within button.part-focus,
+button.part-focus:focus-visible,
+button.part-focus[aria-pressed='true'] {
+  opacity: 1;
+}
+
+button.part-focus:hover {
+  color: var(--color-text);
+}
+
+/* The focus mode button sits at the right end of its part's header */
+.section__header > button.part-focus,
+.priorities__header > button.part-focus {
+  margin-left: auto;
+}
+
+/* Collapsing a part, right of the focus mode button: shown like it, and always while collapsed */
+button.part-collapse {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2px;
+  color: var(--color-text-muted);
+  opacity: 0;
+}
+
+.day-part:hover button.part-collapse,
+.day-part:focus-within button.part-collapse,
+button.part-collapse:focus-visible,
+button.part-collapse[aria-expanded='false'] {
+  opacity: 1;
+}
+
+button.part-collapse:hover {
+  color: var(--color-text);
+}
+
+/* A collapsed section keeps only its header, without the free space below the lines */
+.section.section--collapsed {
+  padding-bottom: var(--space-2);
+  min-height: 0;
+}
+
+/* Markdown formatting toolbar (spec/nota-do-dia.md, "Formatação"): discreet, at the right of a
+   section's header, before the focus mode button; it shows on hover or while writing in the section */
+.format-toolbar {
+  display: inline-flex;
+  align-items: center;
+  gap: 1px;
+  margin-left: auto;
+  opacity: 0;
+  transition: opacity var(--motion-fast) ease;
+}
+
+.day-part:hover .format-toolbar,
+.day-part:focus-within .format-toolbar {
+  opacity: 0.55;
+}
+
+.format-toolbar:hover,
+.format-toolbar:focus-within {
+  opacity: 1;
+}
+
+.section__header > .format-toolbar + button.part-focus {
+  margin-left: 0;
+}
+
+button.format-toolbar__button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: var(--control-min-size);
+  height: var(--control-min-size);
+  padding: 0 2px;
+  border: none;
+  background: none;
+  color: var(--color-text-muted);
+  font-size: var(--font-size-sm);
+  font-weight: 600;
+  line-height: 1;
+}
+
+button.format-toolbar__button .icon--sm {
+  width: 17px;
+  height: 17px;
+  vertical-align: -3px;
+}
+
+button.format-toolbar__button:hover,
+button.format-toolbar__button:focus-visible {
+  color: var(--color-text);
+  background: var(--color-surface-soft);
+}
+
+/* Markdown on the lines: headings size the text field too, so writing one already looks like it */
+.line--h1 { font-size: var(--font-size-2xl); font-weight: 700; }
+.line--h2 { font-size: var(--font-size-xl); font-weight: 700; }
+.line--h3 { font-size: var(--font-size-lg); font-weight: 600; }
+.line--h4 { font-size: var(--font-size-md); font-weight: 600; }
+
+.line--h1 .line__meta,
+.line--h2 .line__meta,
+.line--h3 .line__meta,
+.line--h1 .line__actions,
+.line--h2 .line__actions,
+.line--h3 .line__actions {
+  font-size: var(--font-size-md);
+  font-weight: 400;
+}
+
+/* Away from the cursor, the line shows formatted; the text field stays, unseen, to take the focus */
+.line--preview .line__text {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  min-height: 0;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.line__rendered {
+  flex: 0 1 auto;
+  min-width: 0;
+  display: flex;
+  align-items: baseline;
+  line-height: var(--line-height);
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  cursor: text;
+}
+
+.line--done .line__rendered {
+  text-decoration: line-through;
+  color: var(--color-text-muted);
+}
+
+.md-list-marker {
+  flex-shrink: 0;
+  min-width: 1.5em;
+  line-height: var(--line-height);
+  color: var(--color-text-muted);
+}
+
+/* The text field, with a list item's marker beside it while the line is edited */
+.line__field {
+  flex: 0 1 auto;
+  min-width: 0;
+  display: flex;
+  align-items: flex-start;
+}
+
+/* Away from the cursor the field leaves the row, like the text field in it */
+.line--preview .line__field {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+}
+
+.md-content {
+  flex: 1;
+  min-width: 0;
+}
+
+.line__rendered a {
+  color: var(--color-link);
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+/* After the pin, which already takes the free space */
+.priorities__header > button.priorities__pin + button.part-focus {
+  margin-left: 0;
+}
+
+.page--focus {
+  padding-top: var(--space-6);
+}
+
+/* Entering and leaving focus mode glides the part between its place and the whole screen
+   (`focusTransition.ts`), while the rest of the note fades */
+::view-transition-group(focus-part) {
+  animation-duration: var(--motion-focus-glide);
+  animation-timing-function: var(--ease-out);
+}
+
+::view-transition-old(focus-part),
+::view-transition-new(focus-part) {
+  animation-duration: var(--motion-focus-new);
+  animation-timing-function: ease-out;
+}
+
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation-duration: var(--motion-focus-root);
+  animation-timing-function: ease-out;
+}
+
+/* Without view transitions, the part fades and settles in place, instead of a cut */
+.note--focus-fade {
+  animation: focus-enter var(--motion-focus-enter) var(--ease-out) both;
+}
+
+.page--from-focus .note {
+  animation: focus-leave var(--motion-focus-leave) var(--ease-out) both;
+}
+
+@keyframes focus-enter {
+  from {
+    opacity: 0;
+    transform: scale(0.985) translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes focus-leave {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .note--focus-fade,
+  .page--from-focus .note {
+    animation-duration: 0s;
+  }
+}
+
+/* Focused, the one part takes the whole height of the main area */
+.note--focus .section,
+.note--focus .priorities {
+  min-height: calc(100vh - var(--space-6) - var(--space-7));
+  padding: var(--space-5) var(--space-6);
+}
+
+.note__focus-gone {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}

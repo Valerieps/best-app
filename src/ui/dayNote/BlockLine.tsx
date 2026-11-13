@@ -32,6 +32,7 @@ import {
 import { ListMarker, MarkdownText } from './MarkdownText';
 import { emptyHistory, recordEdit, redo, undo, type History } from './lineHistory';
 import { applyPaste, linkOverSelection, pastedLines, splits } from './paste';
+import { cx } from '../classNames';
 
 /** What a line suggests while I type: people after `@`, projects after `#` (ADR-066). */
 type LineOption = PersonOption | { type: 'project'; project: Project };
@@ -481,7 +482,7 @@ export function BlockLine({ block, free, day, today, isPriority, isQueued = fals
 
   return (
     <div
-      className={`line line--${block.kind} ${done ? 'line--done' : ''} ${headingClass} ${preview ? 'line--preview' : ''} ${selected ? 'line--selected' : ''} ${entering ? 'line--entering' : ''} ${dragClasses}`}
+      className={cx('line', `line--${block.kind}`, done && 'line--done', headingClass, preview && 'line--preview', selected && 'line--selected', entering && 'line--entering', dragClasses)}
       data-drag-group={drag?.group}
       data-drag-id={block.id}
       onMouseDown={editFromRow}
@@ -554,7 +555,7 @@ export function BlockLine({ block, free, day, today, isPriority, isQueued = fals
               key={option.type === 'person' ? option.person.id : option.type === 'project' ? option.project.id : 'create'}
               role="option"
               aria-selected={index === active}
-              className={`suggestions__item ${index === active ? 'suggestions__item--active' : ''}`}
+              className={cx('suggestions__item', index === active && 'suggestions__item--active')}
               onMouseDown={(event) => {
                 // Keeps the focus in the line, so the choice lands where I was typing.
                 event.preventDefault();

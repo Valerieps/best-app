@@ -5,6 +5,7 @@ import type { Block, Project } from '../../domain/entities';
 import type { DayTriage } from '../../domain/triage';
 import { Icon, type IconName } from '../components/Icon';
 import { TaskText } from '../taskDetails/TaskText';
+import { cx } from '../classNames';
 
 /** Pieces shared by the steps of the checkout (spec/checkout.md, "Fechamento em etapas"). */
 
@@ -36,7 +37,7 @@ export function ChoicePills<T extends string>({
           type="button"
           role="radio"
           aria-checked={option.value === value}
-          className={`choice-pill icon-action ${option.value === value ? 'choice-pill--on' : ''}`}
+          className={cx('choice-pill icon-action', option.value === value && 'choice-pill--on')}
           aria-label={option.suggested ? `${option.label} (sugerido)` : option.label}
           data-tip={option.suggested ? `${option.label} (sugerido)` : option.label}
           onClick={() => onChange(option.value)}

@@ -19,6 +19,7 @@ import {
 import { appContext, reader } from './services';
 import { useLiveQueryState } from './useLiveQuery';
 import { enqueue } from './writeQueue';
+import { cx } from './classNames';
 
 interface Props {
   route: Route;
@@ -109,7 +110,7 @@ export function RightPanel({ route, today, fill = false }: Props) {
 
   return (
     <aside
-      className={`right-panel ${entry ? 'right-panel--open' : ''} ${entry && fill ? 'right-panel--fill' : ''}`}
+      className={cx('right-panel', entry && 'right-panel--open', entry && fill && 'right-panel--fill')}
       aria-label="Painel da direita"
       style={{ '--right-panel-width': `${width}px` } as CSSProperties}
     >
@@ -155,7 +156,7 @@ export function RightPanel({ route, today, fill = false }: Props) {
             <button
               key={menu.menu}
               type="button"
-              className={`sidebar__item sidebar__icon ${current ? 'sidebar__item--current' : ''}`}
+              className={cx('sidebar__item sidebar__icon', current && 'sidebar__item--current')}
               aria-pressed={current}
               disabled={onScreen}
               title={onScreen ? `${menu.label} já está aberto no centro` : menu.label}

@@ -13,6 +13,7 @@ import { taskCommands } from '../tasks/taskCommands';
 import { TaskCheckbox } from '../tasks/TaskControls';
 import { appContext, reader } from '../services';
 import { useLiveQuery } from '../useLiveQuery';
+import { cx } from '../classNames';
 
 /** "Fila de execução" (spec/prioridades.md): the tasks I chose to do next, in my order. */
 
@@ -60,7 +61,7 @@ function QueueContent({ data, today, inPanel }: { data: ExecutionQueueData; toda
     return (
       <li
         key={task.id}
-        className={`card-list__item card-list__item--stacked ${dragging ? 'task-row--dragging' : ''} ${drop ? `task-row--drop-${drop}` : ''}`}
+        className={cx('card-list__item card-list__item--stacked', dragging && 'task-row--dragging', drop && `task-row--drop-${drop}`)}
         data-drag-group={GROUP}
         data-drag-id={task.id}
       >

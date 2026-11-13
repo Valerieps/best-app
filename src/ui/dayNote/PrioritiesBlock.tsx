@@ -6,6 +6,7 @@ import { TaskText } from '../taskDetails/TaskText';
 import { taskCommands } from '../tasks/taskCommands';
 import { PriorityStar, shownChips, TaskActionButtons, TaskCheckbox, TaskDateChips } from '../tasks/TaskControls';
 import { taskActions } from '../tasks/taskSurface';
+import { cx } from '../classNames';
 
 const PIN_KEY = 'best-app:pinPriorities';
 
@@ -50,7 +51,7 @@ interface Props {
  */
 export function PrioritiesBlock({ priorities, today, pinned, onTogglePin, queueIds, trailing }: Props) {
   return (
-    <section className={`priorities ${pinned ? 'priorities--pinned' : ''}`} aria-label="Prioridades do dia">
+    <section className={cx('priorities', pinned && 'priorities--pinned')} aria-label="Prioridades do dia">
       <div className="priorities__header">
         <h2 className="priorities__title">Prioridades do dia</h2>
         {onTogglePin && (

@@ -2,6 +2,7 @@ import type { ReactNode } from 'react';
 import type { AutoBackupState } from '../../infrastructure/autoBackup';
 import { daysSinceBackup } from '../notices';
 import type { BackupActions } from './useBackup';
+import { cx } from '../classNames';
 
 interface Props {
   state: AutoBackupState;
@@ -20,7 +21,7 @@ interface Props {
 
 function Banner({ tone = 'warning', children }: { tone?: 'warning' | 'danger'; children: ReactNode }) {
   return (
-    <div className={`banner ${tone === 'danger' ? 'banner--danger' : ''}`} role="status">
+    <div className={cx('banner', tone === 'danger' && 'banner--danger')} role="status">
       {children}
     </div>
   );

@@ -1,0 +1,76 @@
+/* "Ideias" and an idea's page (spec/ideias.md). */
+.ideas__item {
+  align-items: flex-start;
+  cursor: pointer;
+}
+
+.ideas__text {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-width: 0;
+  gap: 2px;
+}
+
+.ideas__meta {
+  font-size: var(--font-size-xs);
+}
+
+.idea__title {
+  flex: 1;
+  min-width: 0;
+  font: inherit;
+  font-size: var(--font-size-xl);
+  font-weight: 600;
+  color: inherit;
+  border: none;
+  background: transparent;
+  resize: none;
+  padding: 0;
+  field-sizing: content;
+}
+
+.idea__title:focus {
+  outline: none;
+}
+
+.idea__meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+  margin-bottom: var(--space-4);
+}
+
+.idea__destinations {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  margin-bottom: var(--space-5);
+}
+
+.idea__lines {
+  min-height: 3em;
+}
+
+.project-ideas__item {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-2);
+  width: 100%;
+  padding: 2px 0;
+  border: none;
+  background: transparent;
+  font: inherit;
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.project-ideas__item:hover {
+  color: var(--color-brand);
+}
+
+.project-ideas__item .line__idea {
+  margin-top: 4px;
+}

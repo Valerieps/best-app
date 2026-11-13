@@ -1,0 +1,25 @@
+/* Backup status: a colored dot and a short label; details on hover and in "Dados e backup" */
+.backup-status {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: var(--font-size-sm);
+  color: var(--color-text-muted);
+}
+
+.backup-status__dot {
+  width: 8px;
+  height: 8px;
+  border-radius: var(--radius-pill);
+  flex-shrink: 0;
+  background: var(--color-dot-off);
+}
+
+.backup-status--ok .backup-status__dot { background: var(--color-dot-ok); }
+.backup-status--attention .backup-status__dot { background: var(--color-dot-attention); }
+.backup-status--problem .backup-status__dot { background: var(--color-dot-problem); }
+
+.backup-status--problem {
+  color: var(--color-danger);
+  font-weight: 600;
+}

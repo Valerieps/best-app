@@ -1,8 +1,3 @@
-.triage-row--flush {
-  padding: 0;
-  width: 100%;
-}
-
 /* Section 2: projects, settings */
 
 .field {
@@ -68,10 +63,6 @@
   margin-top: var(--space-3);
 }
 
-.settings__number {
-  width: 5em;
-}
-
 /* Section 3: opening the day, reminders, settings */
 .opening {
   min-height: 100vh;
@@ -81,12 +72,6 @@
   justify-content: center;
   gap: var(--space-5);
   background: var(--color-surface);
-}
-
-.opening__date {
-  margin: 0;
-  color: var(--color-text-muted);
-  font-size: var(--font-size-lg);
 }
 
 .opening__start {
@@ -203,15 +188,6 @@
 
 .habit__stats {
   margin-left: 0;
-}
-
-.card-list--flat {
-  border: none;
-  background: none;
-}
-
-.card-list--flat > .card-list__item {
-  padding: 0;
 }
 
 /* New sections, at the end of the day note */

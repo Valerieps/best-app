@@ -14,6 +14,7 @@ import { appContext, reader } from '../services';
 import { useLiveQuery } from '../useLiveQuery';
 import { noDecisions, StepFooter, StepQuestion, useStepKeys } from './StepParts';
 import { taskText } from '../tasks/taskSurface';
+import { cx } from '../classNames';
 
 interface Props {
   day: DayKey;
@@ -137,7 +138,7 @@ export function BoardStep({ day, today, triage, projects, busy, onBack, onNext, 
     return (
       <li
         key={id}
-        className={`plan-card ${isAbandoned || isFinished ? 'plan-card--away' : ''}`}
+        className={cx('plan-card', (isAbandoned || isFinished) && 'plan-card--away')}
         draggable
         onDragStart={(event) => {
           event.dataTransfer.setData(DRAG_TYPE, id);
@@ -166,7 +167,7 @@ export function BoardStep({ day, today, triage, projects, busy, onBack, onNext, 
 
   const column = (target: 'day' | 'queue', title: string, count: number, cards: React.ReactNode, empty: string) => (
     <section
-      className={`plan-column ${target === 'queue' ? 'plan-column--queue' : ''} ${dropOn === target ? 'plan-column--drop' : ''}`}
+      className={cx('plan-column', target === 'queue' && 'plan-column--queue', dropOn === target && 'plan-column--drop')}
       aria-label={title}
       {...dropTarget(target)}
     >
@@ -190,7 +191,7 @@ export function BoardStep({ day, today, triage, projects, busy, onBack, onNext, 
         </div>
         <div className="plan-drops">
           <div
-            className={`plan-drop plan-drop--danger ${dropOn === 'abandon' ? 'plan-drop--on' : ''}`}
+            className={cx('plan-drop plan-drop--danger', dropOn === 'abandon' && 'plan-drop--on')}
             {...dropTarget('abandon')}
             role="img"
             aria-label="Abandonar tarefa"

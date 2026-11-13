@@ -70,13 +70,13 @@ button.icon-picker__trigger {
 
 .icon-picker__grid {
   display: grid;
-  grid-template-columns: repeat(4, 44px);
+  grid-template-columns: repeat(4, var(--icon-size-2xl));
   gap: var(--space-2);
 }
 
 button.icon-picker__option {
-  width: 44px;
-  height: 44px;
+  width: var(--icon-size-2xl);
+  height: var(--icon-size-2xl);
   padding: 0;
   display: grid;
   place-items: center;
@@ -122,10 +122,6 @@ button.project-tabs__tab[aria-selected='true'] {
   color: var(--color-text-muted);
 }
 
-.project-tabs__spacer {
-  flex: 1;
-}
-
 button.project-tabs__side {
   position: relative;
   color: var(--color-text-muted);
@@ -135,23 +131,6 @@ button.project-tabs__side {
 button.project-tabs__side:hover,
 button.project-tabs__side[aria-expanded='true'] {
   color: var(--color-text);
-}
-
-/* Number of resources inside the side column */
-.project-tabs__badge {
-  position: absolute;
-  top: -4px;
-  right: -6px;
-  min-width: 16px;
-  height: 16px;
-  padding: 0 4px;
-  border-radius: var(--radius-pill);
-  background: var(--color-check);
-  color: var(--color-accent-text);
-  font-size: var(--font-size-xs);
-  font-weight: 600;
-  line-height: 16px;
-  text-align: center;
 }
 
 .project-tasks {
@@ -304,10 +283,10 @@ button.task-group__toggle {
   position: absolute;
   top: 0;
   right: 0;
-  z-index: 8;
+  z-index: var(--z-floating-panel);
   max-width: 100%;
   border-color: var(--color-border-strong);
-  box-shadow: 0 8px 24px var(--color-shadow-soft);
+  box-shadow: var(--shadow-panel);
 }
 
 .project-panel__head {
@@ -481,165 +460,4 @@ button.resource-card__toggle {
 
 .paste-link__input:focus {
   outline: none;
-}
-
-/* Project list (spec/projetos.md, "Projetos"): where projects are followed */
-.projects__group {
-  margin-bottom: var(--space-6);
-}
-
-.section-title,
-.projects__group-title {
-  margin: 0;
-  font-size: var(--font-size-md);
-  font-weight: 600;
-}
-
-h2.section-title {
-  margin-bottom: var(--space-2);
-}
-
-button.projects__toggle {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--space-2);
-  border: none;
-  background: none;
-  padding: 0;
-  color: var(--color-text);
-}
-
-.projects__toggle-note {
-  font-size: var(--font-size-sm);
-  color: var(--color-warning-text);
-}
-
-.new-project {
-  display: flex;
-  align-items: center;
-  gap: var(--space-3);
-  padding: var(--space-2) var(--space-3);
-  background: var(--color-surface);
-  border: var(--border-width) solid var(--color-border-strong);
-  border-radius: var(--radius-md);
-  color: var(--color-text-muted);
-}
-
-.new-project__input {
-  flex: 1;
-  font: inherit;
-  border: none;
-  background: transparent;
-  color: var(--color-text);
-  padding: 0;
-}
-
-.new-project__input:focus {
-  outline: none;
-}
-
-.project-row__label {
-  overflow: hidden;
-  white-space: nowrap;
-  text-overflow: ellipsis;
-}
-
-/* "Colocar em foco", under the focus rows while there is a free slot */
-.priority-slot {
-  display: flex;
-  margin-top: var(--space-2);
-}
-
-.priority-slot > .dropdown__trigger {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--space-2);
-  border: none;
-  background: transparent;
-  padding: var(--space-1) 0;
-  color: var(--color-text-muted);
-}
-
-.priority-slot > .dropdown__trigger:hover,
-.priority-slot > .dropdown__trigger[aria-expanded='true'] {
-  color: var(--color-text);
-}
-
-.dropdown__empty {
-  margin: 0;
-  padding: var(--space-2) var(--space-3);
-  font-size: var(--font-size-sm);
-}
-
-/* "Outros ativos" and "Finalizados": one row per project */
-.project-rows {
-  list-style: none;
-  margin: var(--space-3) 0 0;
-  padding: 0;
-  background: var(--color-surface);
-  border: var(--border-width) solid var(--color-border);
-  border-radius: var(--radius-lg);
-}
-
-.project-row {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) 9rem auto auto;
-  align-items: center;
-  gap: var(--space-3);
-  padding: var(--space-2) var(--space-3) var(--space-2) var(--space-4);
-}
-
-.project-row + .project-row {
-  border-top: var(--border-width) solid var(--color-border);
-}
-
-.project-row--finished {
-  grid-template-columns: minmax(0, 1fr) auto auto auto;
-}
-
-/* "Em foco · Ativo · Backlog": only while the mouse is over the row, or a button has the focus. */
-.project-row__places {
-  opacity: 0;
-  pointer-events: none;
-}
-
-.project-row:hover .project-row__places,
-.project-row__places:focus-within {
-  opacity: 1;
-  pointer-events: auto;
-}
-
-.project-row__places .segmented__option:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-
-.project-row__name {
-  min-width: 0;
-  color: var(--color-text);
-  text-decoration: none;
-}
-
-.project-row__name:hover .project-row__label {
-  text-decoration: underline;
-}
-
-.project-row__state {
-  font-size: var(--font-size-sm);
-  color: var(--color-text-muted);
-  white-space: nowrap;
-}
-
-.project-row__state--warning {
-  color: var(--color-warning-text);
-}
-
-button.project-actions {
-  padding: var(--space-1);
-  color: var(--color-text-muted);
-}
-
-/* "Na fila": the project's tasks in the execution queue, first on the page. */
-.project-queue {
-  margin-top: var(--space-4);
 }

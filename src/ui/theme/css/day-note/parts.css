@@ -1,0 +1,139 @@
+/* Parts of the day note (sections, carried tasks, priorities) can be moved as a whole */
+.day-part {
+  position: relative;
+}
+
+.day-part__handle {
+  position: absolute;
+  left: calc(-1 * var(--space-5));
+  top: var(--space-3);
+  width: var(--space-5);
+  padding: 0;
+  border: none;
+  background: none;
+  text-align: center;
+  color: var(--color-text-muted);
+  font-size: var(--font-size-sm);
+  line-height: 1.6;
+  cursor: grab;
+  touch-action: none;
+  user-select: none;
+  opacity: 0;
+}
+
+.day-part:hover > .day-part__handle,
+.day-part__handle:focus-visible,
+.day-part--dragging > .day-part__handle {
+  opacity: 1;
+}
+
+/* The handles show only under the mouse, and hide while I type until the mouse moves again */
+.note--typing .line:not(.line--dragging) .line__handle {
+  visibility: hidden;
+}
+
+.note--typing .day-part:not(.day-part--dragging) > .day-part__handle {
+  opacity: 0;
+}
+
+.day-part__handle:hover {
+  color: var(--color-text);
+}
+
+.day-part--dragging {
+  opacity: 0.5;
+}
+
+.day-part--dragging > .day-part__handle {
+  cursor: grabbing;
+}
+
+.day-part--drop-before::before,
+.day-part--drop-after::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 2px;
+  border-radius: var(--radius-pill);
+  background: var(--color-focus);
+  pointer-events: none;
+}
+
+.day-part--drop-before::before {
+  top: 0;
+}
+
+.day-part--drop-after::after {
+  bottom: 0;
+}
+
+/* Between two parts, under the mouse: new sections in that place. The strip covers the gap
+   between the parts (.note's gap), above the next part's top edge. */
+.part-insert {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: calc(-1 * var(--space-4) - var(--space-1));
+  z-index: var(--z-inline-over);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  height: calc(var(--space-4) + 2 * var(--space-1));
+  opacity: 0;
+  transition: opacity var(--motion-fast) ease-out;
+}
+
+.part-insert::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 50%;
+  height: 1px;
+  background: var(--color-focus);
+  opacity: 0.4;
+  pointer-events: none;
+}
+
+.part-insert:hover,
+.part-insert:focus-within {
+  opacity: 1;
+}
+
+.part-insert button {
+  position: relative;
+  padding: 0 var(--space-2);
+  background: var(--color-surface);
+  border: var(--border-width) solid var(--color-border);
+  border-radius: var(--radius-pill);
+  color: var(--color-text-muted);
+  font-size: var(--font-size-xs);
+  line-height: 1.6;
+}
+
+.part-insert button:hover {
+  color: var(--color-text);
+  border-color: var(--color-border-strong);
+}
+
+.day-part--dragging > .part-insert {
+  display: none;
+}
+
+/* Unpinned, the priorities sit among the sections and look like one */
+.day-part--priorities .priorities {
+  margin: 0;
+  padding: var(--space-3) var(--space-4) var(--space-4);
+  border: none;
+  border-left: var(--section-bar-width) solid var(--color-firework-1);
+  border-bottom: var(--border-width) solid var(--color-border);
+  border-radius: 0;
+}
+
+.section__carried-title {
+  font-size: var(--font-size-sm);
+  font-weight: 500;
+  color: var(--color-text-muted);
+}

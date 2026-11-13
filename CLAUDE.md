@@ -109,7 +109,9 @@ Each step rereads the whole conversation, so long sessions and back-and-forth co
 - `src/infrastructure` - Dexie database, store implementation, backup files, browser APIs.
 - `src/dev` - dev-only tools, such as the synthetic data behind "Carregar dados sintéticos" in
   "Dados e backup" (only in `npm run dev`).
-- `src/ui` - React components. All colors, fonts and spacing live in `src/ui/theme/tokens.css`.
+- `src/ui` - React components. Every style value (colors, fonts, spacing, sizes, z-index, shadows,
+  durations) lives in `src/ui/theme/tokens.css`; stylesheets sit in `src/ui/theme/css/<area>/`, and
+  conditional class names use `cx()` (ADR-076). `src/ui/theme/styles.test.ts` enforces both.
 - `public/` - static files: service worker, manifest, Cloudflare `_headers`.
 
 ## Commands

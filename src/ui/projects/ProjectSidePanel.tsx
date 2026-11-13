@@ -10,6 +10,7 @@ import { formatShortDate, linkDomain } from '../format';
 import { navigate } from '../hooks';
 import { FEATURES } from '../features';
 import { appContext } from '../services';
+import { cx } from '../classNames';
 
 interface Props {
   view: ProjectView;
@@ -205,13 +206,13 @@ export function ProjectSidePanel({ view, objectives, resources, pinned, floating
           ? 'Backlog'
           : 'Ativo';
   return (
-    <aside className={`project-panel ${floating ? 'project-panel--floating' : ''}`} aria-label="Sobre o projeto">
+    <aside className={cx('project-panel', floating && 'project-panel--floating')} aria-label="Sobre o projeto">
       <div className="project-panel__head">
         <span className="project-panel__title">Sobre o projeto</span>
         <span>
           <button
             type="button"
-            className={`tertiary project-panel__icon-button ${pinned ? 'project-panel__icon-button--on' : ''}`}
+            className={cx('tertiary project-panel__icon-button', pinned && 'project-panel__icon-button--on')}
             aria-pressed={pinned}
             aria-label={pinned ? 'Desafixar a coluna' : 'Fixar a coluna'}
             title={pinned ? 'Desafixar a coluna' : 'Fixar a coluna'}

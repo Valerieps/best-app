@@ -1,3 +1,4 @@
+import { cx } from '../classNames';
 /**
  * Line icons drawn inline, so nothing is downloaded (SEGURANCA.md). Paths are on a 24 × 24
  * grid, in the style of Tabler Icons (MIT).
@@ -72,7 +73,7 @@ export type IconName = keyof typeof PATHS;
 /** A decorative icon; the button or text around it carries the label. */
 export function Icon({ name, size = 'md', filled = false }: { name: IconName; size?: 'sm' | 'md' | 'lg'; filled?: boolean }) {
   return (
-    <svg className={`icon icon--${size} ${filled ? 'icon--filled' : ''}`} viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+    <svg className={cx('icon', `icon--${size}`, filled && 'icon--filled')} viewBox="0 0 24 24" aria-hidden="true" focusable="false">
       <path d={PATHS[name]} />
     </svg>
   );

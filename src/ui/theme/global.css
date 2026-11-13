@@ -1,14 +1,54 @@
 @import './tokens.css';
 
 /*
- * Global styles, in the cascade order they were written. The files below are one stylesheet cut
- * into pieces by area; the design tokens (colors, spacing) stay in tokens.css.
+ * Global styles, one file per area under css/:
+ *   base/        elements, buttons, inputs, utilities, motion
+ *   layout/      the shell: sidebar, screen header, right panel
+ *   components/  pieces shared by several screens (cards, dialogs, icons, menus, chips)
+ *   day-note/    the day note and its tools
+ *   closing/     "Fechar o dia" (steps and board)
+ *   screens/     one file per screen or screen family
+ * Every value (color, size, z-index, duration) comes from tokens.css; src/ui/theme/styles.test.ts
+ * enforces it.
+ *
+ * The import order below IS the cascade order, kept from when this was one stylesheet: a rule
+ * later in the list wins over an equally specific one earlier. Add new files at the end of the
+ * list, and before moving a rule to an earlier file, check that no later rule of the same
+ * specificity sets the same property on the same element.
  */
-@import './css/base.css';
-@import './css/day-note.css';
-@import './css/dashboard-settings.css';
-@import './css/screens.css';
-@import './css/sidebar.css';
-@import './css/projects.css';
-@import './css/activity-and-note-tools.css';
-@import './css/motion-and-palette.css';
+@import './css/base/elements.css';
+@import './css/components/banners-and-chips.css';
+@import './css/day-note/note.css';
+@import './css/day-note/wiki-and-cleanup.css';
+@import './css/screens/opening-settings-objectives.css';
+@import './css/components/skeleton.css';
+@import './css/components/cards-and-segmented.css';
+@import './css/closing/steps.css';
+@import './css/components/icon-action.css';
+@import './css/components/lists.css';
+@import './css/components/panels-and-dialogs.css';
+@import './css/layout/shell.css';
+@import './css/screens/ideas.css';
+@import './css/screens/task-details.css';
+@import './css/layout/sidebar.css';
+@import './css/components/backup-status.css';
+@import './css/components/badge-and-dropdown.css';
+@import './css/layout/screen-header.css';
+@import './css/components/icons.css';
+@import './css/layout/right-panel.css';
+@import './css/screens/project-page.css';
+@import './css/screens/project-list.css';
+@import './css/day-note/parts.css';
+@import './css/components/error-and-save-notices.css';
+@import './css/day-note/focus-and-markdown.css';
+@import './css/screens/backup-copies.css';
+@import './css/screens/active-tasks.css';
+@import './css/screens/project-notes.css';
+@import './css/screens/people.css';
+@import './css/base/micro-animations.css';
+@import './css/day-note/markdown-blocks.css';
+@import './css/screens/execution-queue.css';
+@import './css/base/motion.css';
+@import './css/screens/first-use.css';
+@import './css/components/place-palette.css';
+@import './css/closing/board.css';

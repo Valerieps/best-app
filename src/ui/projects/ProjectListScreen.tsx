@@ -16,6 +16,7 @@ import { useLiveQuery } from '../useLiveQuery';
 import { enqueue, write } from '../writeQueue';
 import { ProjectActionsMenu } from './ProjectActions';
 import { ProjectIconBadge } from './ProjectIcon';
+import { cx } from '../classNames';
 
 
 /**
@@ -111,7 +112,7 @@ function ProjectRow({ item, view }: { item: ProjectListItem; view: ProjectListVi
         <ProjectIconBadge project={item.project} size="sm" />
         <span className="project-row__label">{item.project.name}</span>
       </a>
-      <span className={`project-row__state ${item.stalledDays !== null ? 'project-row__state--warning' : ''}`}>
+      <span className={cx('project-row__state', item.stalledDays !== null && 'project-row__state--warning')}>
         {item.stalledDays !== null ? `Parado há ${item.stalledDays} dias` : plural(item.activeTasks, 'ativa', 'ativas')}
       </span>
       <PlaceSwitch item={item} />
@@ -146,7 +147,7 @@ function PlaceSwitch({ item }: { item: ProjectListItem }) {
           <button
             key={place}
             type="button"
-            className={`segmented__option ${current === place ? 'segmented__option--on' : ''}`}
+            className={cx('segmented__option', current === place && 'segmented__option--on')}
             aria-pressed={current === place}
             onClick={() => current !== place && write(() => setProjectPlace(appContext, item.project.id, place))}
           >

@@ -1,0 +1,68 @@
+/* Navigation in three levels (spec/navegacao.md, "Navegação"): the sidebar on the left, the screen beside it */
+.shell {
+  display: flex;
+  align-items: flex-start;
+  min-height: 100vh;
+}
+
+.shell__main {
+  flex: 1;
+  min-width: 0;
+  /* The whole main area is white on every screen, so all of it feels like the place to work */
+  min-height: 100vh;
+  background: var(--color-surface);
+  position: relative;
+}
+
+/* The center folds into a narrow strip on the left; the right panel takes the room */
+.shell__main--collapsed {
+  flex: none;
+  width: var(--sidebar-collapsed-width);
+  overflow: hidden;
+  background: var(--color-surface-soft);
+  border-right: var(--border-width) solid var(--color-border);
+}
+
+.shell__main--collapsed > .shell__content {
+  display: none;
+}
+
+.shell__collapse {
+  position: absolute;
+  top: var(--space-2);
+  right: var(--space-2);
+  z-index: var(--z-sticky);
+}
+
+.shell__main--collapsed > .shell__collapse {
+  right: auto;
+  left: 50%;
+  transform: translateX(-50%);
+  top: var(--space-4);
+}
+
+.sidebar {
+  position: sticky;
+  top: 0;
+  z-index: var(--z-chrome);
+  flex: none;
+  width: var(--sidebar-width);
+  height: 100vh;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  padding: var(--space-4) var(--space-3);
+  background: var(--color-surface-soft);
+  border-right: var(--border-width) solid var(--color-border);
+  /* Collapsing and opening slide smoothly; the main area follows */
+  overflow-x: hidden;
+  transition:
+    width var(--motion-medium) ease,
+    padding var(--motion-medium) ease;
+}
+
+/* While the sidebar opens, its content keeps the open width and is revealed, without wrapping */
+.sidebar:not(.sidebar--collapsed) > :not(.sidebar__resize) {
+  min-width: calc(var(--sidebar-width) - 2 * var(--space-3) - var(--border-width));
+}

@@ -130,6 +130,33 @@
   --border-width: 1px;
   --section-bar-width: 3px;
 
+  /* Elevation: popovers, floating panels and the bottom bar */
+  --shadow-card: 0 1px 2px var(--color-shadow-soft);
+  --shadow-popover: 0 6px 24px var(--color-shadow-soft);
+  --shadow-panel: 0 8px 24px var(--color-shadow-soft);
+  --shadow-bar: 0 -4px 16px var(--color-shadow);
+  --shadow-dialog: 0 var(--space-3) var(--space-6) var(--color-shadow);
+
+  /* Sizes: icons, and the smallest click target (WCAG 2.2's 24px, 2.5.8) */
+  --icon-size-sm: 14px;
+  --icon-size-md: 18px;
+  --icon-size-lg: 24px;
+  --icon-size-xl: 32px;
+  --icon-size-2xl: 44px;
+  --control-min-size: 24px;
+  /* The draggable edge of the sidebar and of the right panel */
+  --resize-handle-width: 6px;
+
+  /* Stacking order, lowest first. Every z-index in the app is one of these */
+  --z-inline: 1;
+  --z-inline-over: 2;
+  --z-sticky: 5;
+  --z-floating-panel: 8;
+  --z-chrome: 10;
+  --z-dropdown: 15;
+  --z-bar: 20;
+  --z-overlay: 30;
+
   /* Layout */
   --content-width: 760px;
   --content-width-wide: 860px;
@@ -142,6 +169,15 @@
   /* Motion: short transitions where the screen changes state (issue #120), off with reduced motion */
   --motion-fast: 120ms;
   --motion-base: 180ms;
+  --motion-medium: 200ms;
+  /* Fast queries never show the loading skeleton: it waits this long before fading in */
+  --motion-skeleton-delay: 150ms;
+  /* Focus mode's own transition (ADR-051): the part glides, the rest cross-fades */
+  --motion-focus-glide: 380ms;
+  --motion-focus-new: 300ms;
+  --motion-focus-root: 260ms;
+  --motion-focus-enter: 320ms;
+  --motion-focus-leave: 280ms;
   --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
 }
 

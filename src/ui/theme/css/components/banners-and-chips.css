@@ -1,0 +1,91 @@
+/* Banners: warn, never block */
+.banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+  padding: var(--space-2) var(--space-4);
+  background: var(--color-warning-bg);
+  border-bottom: var(--border-width) solid var(--color-warning-border);
+  color: var(--color-warning-text);
+}
+
+.banner--danger {
+  background: var(--color-danger-bg);
+  border-bottom-color: var(--color-danger-border);
+  color: var(--color-danger);
+}
+
+.banner__actions {
+  display: flex;
+  gap: var(--space-4);
+  flex-shrink: 0;
+}
+
+/* Page */
+.page {
+  max-width: var(--content-width);
+  margin: 0 auto;
+  padding: var(--space-5) var(--space-4) var(--space-7);
+}
+
+.page--wide {
+  max-width: var(--content-width-wide);
+}
+
+/* Chips */
+.chip {
+  display: inline-block;
+  font-size: var(--font-size-sm);
+  line-height: 1.4;
+  padding: 1px var(--space-2);
+  border-radius: var(--radius-pill);
+  white-space: nowrap;
+  /* Every chip has a border (transparent unless it needs one), so all have the same size */
+  border: var(--border-width) solid transparent;
+}
+
+.chip--general {
+  background: var(--color-general-bg);
+  border-color: var(--color-general-border);
+}
+
+.chip--meeting {
+  background: var(--color-meeting-bg);
+  color: var(--color-meeting-text);
+}
+
+/* The kind of a day note section, as an icon */
+.section__kind {
+  display: inline-flex;
+  align-items: center;
+  color: var(--color-text-muted);
+}
+
+.section__kind--meeting {
+  color: var(--color-mark);
+}
+
+.chip--project {
+  background: var(--color-project-bg);
+  color: var(--color-project-text);
+}
+
+a.chip--link {
+  text-decoration: none;
+}
+
+a.chip--link:hover,
+a.chip--link:focus-visible {
+  text-decoration: underline;
+}
+
+.chip--whiteboard {
+  background: var(--color-whiteboard-bg);
+  color: var(--color-whiteboard-text);
+}
+
+.chip--muted {
+  color: var(--color-text-muted);
+}
