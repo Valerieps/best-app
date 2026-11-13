@@ -256,6 +256,8 @@ export interface Settings {
   dayNoteFocus?: DayNoteFocus | null;
   /** Light, dark or the system's appearance (spec/principios.md, "Aparência"). Absent means the system's. */
   appearance?: Appearance;
+  /** The app's theme, its colors and fonts (spec/principios.md, "Aparência"). Absent means the default, Crepúsculo. */
+  appTheme?: AppTheme;
   /** How often the automatic backup writes the file (spec/principios.md, "Backup"). Absent means after every change. */
   autoBackupInterval?: AutoBackupInterval;
   updatedAt: string;
@@ -263,6 +265,9 @@ export interface Settings {
 
 /** The app's appearance: always light, always dark, or following the system. */
 export type Appearance = 'light' | 'dark' | 'system';
+
+/** The app's theme: its palette and fonts, each with a light and a dark version. */
+export type AppTheme = 'crepusculo' | 'classico';
 
 /** How often the automatic backup writes: a few seconds after every change, or at most every 15 minutes or hour. */
 export type AutoBackupInterval = 'afterChange' | 'quarterHour' | 'hour';

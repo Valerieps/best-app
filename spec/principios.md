@@ -36,8 +36,10 @@ Depois da pasta, não há onboarding: eu já saio usando o ciclo diário, e os r
 ## Aparência
 
 - O app tem uma cor própria, o lilás dos projetos. Ela marca o que é ação ou lugar: o botão principal de cada tela, o item atual da barra lateral, os links, o foco do teclado, o checkbox e os contadores. As cores de alerta (backup, prazos) ficam só para alertas, para os contadores não parecerem um problema. *(1b)*
-- O texto usa a fonte Inter, que vem junto com o app: nada é baixado da internet. *(1b)*
+- O texto usa a fonte Inter, que vem junto com o app: nada é baixado da internet. *(1b)* As fontes de cada tema também vêm junto com o app.
 - Em Configurações eu escolho a aparência: clara, escura ou igual à do sistema. Ela começa igual à do sistema, e o app lembra a escolha. *(1b)*
+- Em Configurações eu também escolho o tema, que são as cores e as fontes do app. Cada tema tem a versão clara e a escura, e a aparência escolhe entre elas. O primeiro tema é o Crepúsculo, e ele é o padrão: Vesper é a estrela da tarde, então o violeta da noite marca o item atual da barra lateral, a estrela laranja aparece antes do nome do app e na ★ das prioridades, o botão "Fechar o dia" ganha o degradê do pôr do sol e os títulos usam a fonte Bricolage Grotesque, que também vem junto com o app. O visual de antes continua como o tema Clássico. *(1b)*
+  Por quê: o app não tinha identidade visual, e o nome já trazia uma.
 
 ## Backup
 

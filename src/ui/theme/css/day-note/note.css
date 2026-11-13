@@ -212,7 +212,7 @@
 
 .line__star:hover,
 .line__star--on {
-  color: var(--color-firework-1);
+  color: var(--color-star);
 }
 
 /* Right after the text and as wide as nothing: the shortcuts float from here over what follows,

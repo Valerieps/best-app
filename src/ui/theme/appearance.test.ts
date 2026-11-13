@@ -1,5 +1,15 @@
 import { describe, expect, it } from 'vitest';
-import { APPEARANCE_KEY, applyAppearance, parseAppearance, readStoredAppearance } from './appearance';
+import {
+  APP_THEME_KEY,
+  APP_THEMES,
+  APPEARANCE_KEY,
+  applyAppearance,
+  applyAppTheme,
+  parseAppearance,
+  parseAppTheme,
+  readStoredAppearance,
+  readStoredAppTheme,
+} from './appearance';
 
 function fakeRoot() {
   const attributes = new Map<string, string>();
@@ -66,5 +76,30 @@ describe('appearance', () => {
     expect(root.attributes.get('data-theme')).toBe('light');
     expect(readStoredAppearance(blockedStorage)).toBe('system');
     expect(readStoredAppearance(undefined)).toBe('system');
+  });
+});
+
+describe('app theme', () => {
+  it('offers Crepúsculo first, and falls back to it for anything unknown', () => {
+    expect(APP_THEMES[0].id).toBe('crepusculo');
+    expect(parseAppTheme('classico')).toBe('classico');
+    expect(parseAppTheme(undefined)).toBe('crepusculo');
+    expect(parseAppTheme('neon')).toBe('crepusculo');
+  });
+
+  it('marks the root with the theme and keeps a copy in this browser', () => {
+    const root = fakeRoot();
+    const storage = fakeStorage();
+    applyAppTheme('classico', root, storage);
+    expect(root.attributes.get('data-app-theme')).toBe('classico');
+    expect(storage.items.get(APP_THEME_KEY)).toBe('classico');
+    expect(readStoredAppTheme(storage)).toBe('classico');
+  });
+
+  it('still applies the theme when storage is blocked, and reads the default', () => {
+    const root = fakeRoot();
+    expect(() => applyAppTheme('classico', root, blockedStorage)).not.toThrow();
+    expect(root.attributes.get('data-app-theme')).toBe('classico');
+    expect(readStoredAppTheme(blockedStorage)).toBe('crepusculo');
   });
 });

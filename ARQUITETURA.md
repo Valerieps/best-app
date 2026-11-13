@@ -13,7 +13,7 @@ O desenho técnico que o código não mostra sozinho. A spec (`SPEC.md`) diz o q
 - **Só Chrome no computador nesta fase.** O modelo já está pronto para juntar dados de aparelhos diferentes: ids são UUIDs, todo registro tem `updatedAt` e toda mudança fica no histórico de eventos.
 - **Arquivos estáticos** no Cloudflare Pages. Cada pessoa tem um banco próprio no próprio navegador.
 - **Avisar em vez de bloquear**, também na parte técnica: backup pausado, armazenamento não persistente e checkout pendente são avisos, nunca telas que impedem o uso. Com mais de um aviso, a interface escolhe um só para o topo (ADR-029). As exceções são a pasta do backup no primeiro uso (ADR-056) e um banco mais novo que o código (ADR-059).
-- **Dependências mínimas:** só React, React DOM, Dexie e a fonte Inter vão para o app (ADR-001, ADR-054).
+- **Dependências mínimas:** só React, React DOM, Dexie e as fontes Inter e Bricolage Grotesque vão para o app (ADR-001, ADR-054, ADR-077).
 
 ## 2. Camadas
 

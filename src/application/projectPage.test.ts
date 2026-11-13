@@ -6,7 +6,7 @@ import { createBlock, linkSectionToProject, setTaskDone } from './notebook';
 import { renameResource, addLinkResource } from './objectives';
 import { createProject, createProjectTask, setProjectFinished, setProjectIcon } from './projects';
 import { loadDayNote, loadDayTriage, loadPendingDays, loadProject, loadProjectList } from './queries';
-import { setAppearance, setCenterCollapsed,setProjectListGroupOpen, setProjectPanelPinned, setRightPanelMenu, setRightPanelWidth, setSidebarCollapsed, setSidebarWidth } from './settings';
+import { setAppearance, setAppTheme, setCenterCollapsed,setProjectListGroupOpen, setProjectPanelPinned, setRightPanelMenu, setRightPanelWidth, setSidebarCollapsed, setSidebarWidth } from './settings';
 
 const TODAY = '2026-10-11';
 
@@ -225,5 +225,9 @@ describe('appearance', () => {
     expect((await reader.settings())?.appearance).toBe('light');
     await setAppearance(ctx, 'system');
     expect((await reader.settings())?.appearance).toBeUndefined();
+    await setAppTheme(ctx, 'classico');
+    expect((await reader.settings())?.appTheme).toBe('classico');
+    await setAppTheme(ctx, 'crepusculo');
+    expect((await reader.settings())?.appTheme).toBeUndefined();
   });
 });

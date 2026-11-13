@@ -50,8 +50,22 @@ button.sidebar__name {
   border: none;
   background: none;
   padding: var(--space-1) var(--space-3);
+  font-family: var(--font-display);
   font-weight: 600;
   font-size: var(--font-size-md);
+  letter-spacing: var(--letter-spacing-display);
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+/* The evening star before the app's name; only themes that set --logo-mark-display show it */
+.sidebar__mark {
+  display: var(--logo-mark-display);
+  width: var(--icon-size-sm);
+  height: var(--icon-size-sm);
+  fill: var(--color-star);
+  flex: none;
 }
 
 button.sidebar__toggle {
@@ -122,8 +136,8 @@ button.sidebar__item:hover {
 }
 
 button.sidebar__item--current {
-  background: var(--color-brand-soft);
-  color: var(--color-brand-strong);
+  background: var(--color-nav-current-bg);
+  color: var(--color-nav-current-text);
   font-weight: 600;
 }
 
@@ -141,7 +155,7 @@ button.sidebar__item--day > .icon {
 }
 
 button.sidebar__item--current > .icon {
-  color: var(--color-brand-strong);
+  color: var(--color-nav-current-text);
 }
 
 .sidebar__label {

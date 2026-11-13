@@ -40,4 +40,34 @@ describe('tokens.css', () => {
     expect(contrast(light.get('--color-status1-strong')!, light.get('--color-status1-bg')!)).toBeGreaterThanOrEqual(4.5);
     expect(contrast(dark.get('--color-status1-strong')!, dark.get('--color-status1-bg')!)).toBeGreaterThanOrEqual(4.5);
   });
+
+  describe('every theme but the base one (ADR-077)', () => {
+    const themes = [...css.matchAll(/:root\[data-app-theme="([\w-]+)"\] \{/g)].map((m) => m[1]);
+
+    it('finds the themes', () => {
+      expect(themes).toContain('crepusculo');
+    });
+
+    it.each(themes)('%s keeps its two dark blocks identical', (theme) => {
+      const forced = declarations(`:root[data-app-theme="${theme}"][data-theme="dark"]`);
+      const system = declarations(`:root[data-app-theme="${theme}"]:not([data-theme="light"])`);
+      expect([...system]).toEqual([...forced]);
+    });
+
+    it.each(themes)('%s redefines in dark every color of its light block', (theme) => {
+      const light = declarations(`:root[data-app-theme="${theme}"] {`);
+      const dark = declarations(`:root[data-app-theme="${theme}"][data-theme="dark"]`);
+      const colors = [...light].filter(([, value]) => /#[0-9a-f]{3,8}|gradient|var\(--color-/i.test(value)).map(([name]) => name);
+      expect(colors.filter((name) => !dark.has(name))).toEqual([]);
+    });
+
+    it.each(themes)('%s keeps text readable in light and dark', (theme) => {
+      for (const opener of [`:root[data-app-theme="${theme}"] {`, `:root[data-app-theme="${theme}"][data-theme="dark"]`]) {
+        const t = declarations(opener);
+        expect(contrast(t.get('--color-text-muted')!, t.get('--color-bg')!)).toBeGreaterThanOrEqual(4.5);
+        expect(contrast(t.get('--color-text-muted')!, t.get('--color-surface')!)).toBeGreaterThanOrEqual(4.5);
+        expect(contrast(t.get('--color-nav-current-text')!, t.get('--color-night')!)).toBeGreaterThanOrEqual(4.5);
+      }
+    });
+  });
 });
