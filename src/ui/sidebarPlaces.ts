@@ -51,7 +51,7 @@ export function sidebarGroups({ counts, features }: Input): SidebarGroup[] {
     {
       key: 'planning',
       entries: [
-        { place: 'projects', route: { name: 'projects' }, label: 'Projetos', count: counts?.projects },
+        { place: 'active', route: { name: 'active' }, label: 'Tarefas', count: counts?.active },
         // Hidden until their spec is done (ui/features.ts).
         ...(features.objectives
           ? [{ place: 'objectives' as const, route: { name: 'objectives' as const }, label: 'Objetivos' }]
@@ -62,7 +62,7 @@ export function sidebarGroups({ counts, features }: Input): SidebarGroup[] {
     {
       key: 'lists',
       entries: [
-        { place: 'active', route: { name: 'active' }, label: 'Tarefas', count: counts?.active },
+        { place: 'projects', route: { name: 'projects' }, label: 'Projetos', count: counts?.projects },
         { place: 'people', route: { name: 'people' }, label: 'Pessoas', count: counts?.people },
         { place: 'ideas', route: { name: 'ideas' }, label: 'Ideias', count: counts?.ideas },
       ],

@@ -9,8 +9,8 @@ describe('sidebar places', () => {
     const groups = sidebarGroups({ counts, features: hidden });
     expect(groups.map((group) => [group.key, group.entries.map((entry) => entry.label)])).toEqual([
       ['start', ['Hoje', 'Fila de execução']],
-      ['planning', ['Projetos']],
-      ['lists', ['Tarefas', 'Pessoas', 'Ideias']],
+      ['planning', ['Tarefas']],
+      ['lists', ['Projetos', 'Pessoas', 'Ideias']],
       ['footer', ['Dados e backup', 'Configurações']],
     ]);
   });
@@ -18,7 +18,7 @@ describe('sidebar places', () => {
   it('shows objectives and habits only when their feature is on', () => {
     const groups = sidebarGroups({ counts, features: { objectives: true, habits: true } });
     const planning = groups.find((group) => group.key === 'planning');
-    expect(planning?.entries.map((entry) => entry.place)).toEqual(['projects', 'objectives', 'habits']);
+    expect(planning?.entries.map((entry) => entry.place)).toEqual(['active', 'objectives', 'habits']);
   });
 
   it('carries the counts', () => {
